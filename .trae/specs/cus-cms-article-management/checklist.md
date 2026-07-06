@@ -1,0 +1,31 @@
+# 文章管理功能 Checklist
+
+- [x] 数据库迁移 SQL 文件存在且字段与 Spec 一致
+- [x] articles 表包含所有必要字段（title, slug, content, type, article_type, status 等）
+- [x] media 表包含所有必要字段
+- [x] 索引创建正确（articles_status, articles_category, articles_slug）
+- [x] Article Model 实现完整 CRUD、列表查询（条件筛选+分页）、状态更新、软删除
+- [x] Category Model 实现 CRUD + 名称查重
+- [x] Tag Model 实现 CRUD + ArticleTag 批量关联/替换
+- [x] Media Model 实现创建 + 列表 + 删除
+- [x] DTO 层请求/响应结构体定义完整
+- [x] 媒体上传 API 可实现文件接收、本地存储、返回 URL
+- [x] 分类 API 五个接口（GET/POST/PUT/DELETE）全部可用
+- [x] 标签 API 五个接口（GET/POST/PUT/DELETE）全部可用
+- [x] 文章创建时自动处理分类关联和标签关联
+- [x] 文章列表支持按 status/category_id/keyword 筛选和分页
+- [x] 文章状态可流转（1→2→3）
+- [x] 公共 API GET /public/articles 仅返回已发布文章
+- [x] 公共 API GET /public/articles/:slug 返回文章完整内容
+- [x] 前端 API 层文件定义完整（article/category/tag/media）
+- [x] articleStore 实现列表/详情/CRUD/状态变更 actions
+- [x] MarkdownEditor 组件封装完成，支持 v-model
+- [x] MarkdownEditor 支持粘贴图片自动上传
+- [x] MarkdownEditor 支持拖拽图片自动上传
+- [x] 文章列表页展示文章卡片网格 + 筛选 + 分页
+- [x] 文章创建页可编辑标题、正文、摘要、封面、分类、标签
+- [x] 文章创建页可发布/保存草稿
+- [x] 文章编辑页可加载已有文章数据并更新
+- [x] 分类标签管理页可实现分类和标签的 CRUD
+- [x] 空状态、加载骨架屏、错误状态覆盖
+- [x] 前后端接口对接正常无错误

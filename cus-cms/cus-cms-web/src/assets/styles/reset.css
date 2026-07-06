@@ -1,0 +1,4 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Inter", "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif; font-size: 14px; line-height: 1.6; color: var(--text-primary); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+code, pre { font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace; }
+a { color: inherit; text-decoration: none; }

@@ -1,0 +1,12 @@
+- [x] ArticleForm.vue 中不存在状态 radio group 和文章类型 radio group
+- [x] ArticleForm.vue 布局为紧凑水平工具栏，包含摘要、封面图、分类、标签、置顶、评论
+- [x] ArticleCreateView.vue 元信息栏位于标题下方并居中，编辑器占满全宽，无右侧边栏
+- [x] ArticleEditView.vue 布局与创建页一致
+- [x] 前端 types/article.ts 中无 article_type 字段
+- [x] 前端创建/编辑页表单提交不包含 article_type
+- [x] 后端 dto/req/article_req.go 中无 ArticleType 字段
+- [x] 后端 model/article.go 中无 ArticleType 字段
+- [x] 后端 logic/article_logic.go 无 article_type 处理逻辑
+- [x] 后端 dto/res/article_res.go 中无 ArticleType 字段
+- [x] 数据库迁移脚本中无 article_type 列
+- [x] 保存草稿/发布按钮功能正常

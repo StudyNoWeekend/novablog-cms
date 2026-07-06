@@ -1,0 +1,98 @@
+# Tasks
+
+- [x] Task 1: 创建后端项目脚手架
+  - [x] SubTask 1.1: 初始化 Go module，创建 `cus-cms/` 目录结构与所有分层目录（cmd/config/bootstrap/internal/utils/enum/migrations）
+  - [x] SubTask 1.2: 编写 `go.mod`，引入 gin、gorm、jwt、zap、bcrypt、redis、uuid 等依赖
+  - [x] SubTask 1.3: 编写 `config/config.yaml` 配置文件（app/http/log/mysql/redis/jwt 配置段）
+  - [x] SubTask 1.4: 编写 `bootstrap/` 启动初始化模块（app.go/db.go/logger.go/redis.go）
+  - [x] SubTask 1.5: 编写 `enum/error.go` 错误码定义（BizError 结构体 + 所有错误码常量）
+  - [x] SubTask 1.6: 编写 `utils/response/response.go` 统一响应封装（Success/Fail）
+  - [x] SubTask 1.7: 编写 `utils/jwt/jwt.go` JWT Token 生成与解析工具
+  - [x] SubTask 1.8: 编写 `utils/hash/bcrypt.go` 密码哈希工具
+  - [x] SubTask 1.9: 编写 `internal/model/blogger.go` Blogger 模型（建表 + CRUD 方法）
+  - [x] SubTask 1.10: 编写 `internal/cache/token_cache.go` Token 黑名单缓存
+  - [x] SubTask 1.11: 编写 `internal/dto/req/auth_req.go` 认证请求 DTO
+  - [x] SubTask 1.12: 编写 `internal/dto/res/auth_res.go` 认证响应 DTO
+  - [x] SubTask 1.13: 编写 `internal/logic/auth_logic.go` 登录/刷新/登出/改密业务逻辑
+  - [x] SubTask 1.14: 编写 `internal/controller/auth_controller.go` 认证控制器
+  - [x] SubTask 1.15: 编写 `internal/middleware/auth.go` JWT 认证中间件
+  - [x] SubTask 1.16: 编写 `internal/middleware/cors.go` 跨域中间件
+  - [x] SubTask 1.17: 编写 `internal/middleware/recovery.go` Panic 恢复中间件
+  - [x] SubTask 1.18: 编写 `internal/middleware/logger.go` 访问日志中间件
+  - [x] SubTask 1.19: 编写 `internal/middleware/trace.go` TraceID 注入中间件
+  - [x] SubTask 1.20: 编写 `internal/router/router.go` 路由总入口 + 健康检查端点
+  - [x] SubTask 1.21: 编写 `internal/router/auth.go` 认证路由注册
+  - [x] SubTask 1.22: 编写 `cmd/api/main.go` HTTP 服务入口（含优雅关闭）
+  - [x] SubTask 1.23: 编写 `migrations/001_init_schema.up.sql` 数据库初始化 SQL
+  - [x] SubTask 1.24: 编写 `Makefile` 和 `.golangci.yml`
+
+- [x] Task 2: 创建前端项目脚手架
+  - [x] SubTask 2.1: 使用 Vite 5 + Vue 3 + TypeScript 初始化前端项目 `cus-cms-web/`
+  - [x] SubTask 2.2: 安装依赖（ant-design-vue、pinia、vue-router、axios、@ant-design/icons-vue、unocss）
+  - [x] SubTask 2.3: 编写 `uno.config.ts` 主题配置（品牌色、快捷方式）
+  - [x] SubTask 2.4: 编写 `src/assets/styles/variables.css` CSS 变量定义
+  - [x] SubTask 2.5: 编写 `src/assets/styles/reset.css` 基础重置样式
+  - [x] SubTask 2.6: 编写 `src/assets/styles/global.css` 全局样式
+  - [x] SubTask 2.7: 编写 `src/assets/styles/transition.css` 动效定义
+  - [x] SubTask 2.8: 编写 `src/types/api.ts` API 响应类型定义
+  - [x] SubTask 2.9: 编写 `src/utils/storage.ts` localStorage 封装
+  - [x] SubTask 2.10: 编写 `src/api/request.ts` Axios 封装 + 请求/响应拦截器（含 401 处理与 Token 自动刷新）
+  - [x] SubTask 2.11: 编写 `src/api/auth.ts` 认证 API 接口
+  - [x] SubTask 2.12: 编写 `src/stores/auth.ts` 认证状态管理（login/logout/refreshToken/fetchUserInfo）
+  - [x] SubTask 2.13: 编写 `src/stores/app.ts` 应用全局状态（sidebarCollapsed/breadcrumbs）
+  - [x] SubTask 2.14: 编写 `src/router/index.ts` 路由入口 + `src/router/routes.ts` 路由配置
+  - [x] SubTask 2.15: 编写 `src/router/guards.ts` 路由守卫（未登录跳转、已登录放行、角色校验）
+  - [x] SubTask 2.16: 编写 `src/App.vue` 根组件
+  - [x] SubTask 2.17: 编写 `src/main.ts` 应用入口
+
+- [x] Task 3: 实现登录页面
+  - [x] SubTask 3.1: 编写 `src/views/auth/LoginView.vue` 登录页面组件
+  - [x] SubTask 3.2: 实现用户名/邮箱输入框（focus 边框亮色动效）
+  - [x] SubTask 3.3: 实现密码输入框（可见/不可见切换图标）
+  - [x] SubTask 3.4: 实现"记住我"复选框
+  - [x] SubTask 3.5: 实现"忘记密码"链接
+  - [x] SubTask 3.6: 实现登录按钮（loading 状态 + 脉冲动画）
+  - [x] SubTask 3.7: 实现表单实时校验（空值提示、格式校验）
+  - [x] SubTask 3.8: 实现登录成功过渡动画跳转 Dashboard
+  - [x] SubTask 3.9: 实现登录失败错误提示（用户名或密码错误等）
+  - [x] SubTask 3.10: 实现页面品牌标语展示
+  - [x] SubTask 3.11: 确保登录页视觉符合设计文档规范（墨蓝品牌色、留白设计）
+
+- [x] Task 4: 实现 CMS 主页面布局
+  - [x] SubTask 4.1: 编写 `src/components/layout/AppLayout.vue` 主布局组件（侧边栏 + 顶栏 + 内容区）
+  - [x] SubTask 4.2: 编写 `src/components/layout/AppSidebar.vue` 侧边栏导航（菜单项、折叠/展开、Logo）
+  - [x] SubTask 4.3: 编写 `src/components/layout/AppHeader.vue` 顶部栏（面包屑、通知、用户菜单）
+  - [x] SubTask 4.4: 编写 `src/components/layout/AppContent.vue` 内容区包装
+  - [x] SubTask 4.5: 编写 `src/components/common/AppLogo.vue` Logo 组件
+  - [x] SubTask 4.6: 编写 `src/components/common/AppBreadcrumb.vue` 面包屑组件
+  - [x] SubTask 4.7: 编写 `src/components/common/AppAvatar.vue` 用户头像组件
+  - [x] SubTask 4.8: 编写 `src/views/dashboard/DashboardView.vue` 工作台页面（统计卡片、快速操作、最近文章列表）
+  - [x] SubTask 4.9: 实现侧边栏折叠/展开动画（宽度过渡 350ms、文字淡入淡出）
+  - [x] SubTask 4.10: 实现当前路由对应菜单项高亮
+  - [x] SubTask 4.11: 实现顶部通知下拉菜单
+  - [x] SubTask 4.12: 实现用户下拉菜单（个人资料、退出登录）
+
+- [x] Task 5: 实现前端 401 自动跳转与状态码处理
+  - [x] SubTask 5.1: 在 `src/api/request.ts` 响应拦截器中实现 HTTP 401 时自动尝试 Refresh Token 刷新
+  - [x] SubTask 5.2: 在 `src/api/request.ts` 响应拦截器中实现 Refresh Token 失败时清除 Token 并跳转登录页
+  - [x] SubTask 5.3: 在 `src/router/guards.ts` 中实现未登录访问后台页面时跳转登录页（含 redirect 参数）
+  - [x] SubTask 5.4: 在 `src/router/guards.ts` 中实现已登录访问登录页时重定向 Dashboard
+  - [x] SubTask 5.5: 在 `src/stores/auth.ts` 中实现"记住我"功能（Token 持久化到 localStorage）
+
+- [x] Task 6: 前后端联调与验证
+  - [x] SubTask 6.1: 启动后端服务，验证 `/health`、`/ready` 健康检查端点
+  - [x] SubTask 6.2: 验证登录接口 `POST /api/v1/auth/login` 完整流程
+  - [x] SubTask 6.3: 验证 Token 刷新接口 `POST /api/v1/auth/refresh`
+  - [x] SubTask 6.4: 验证登出接口 `POST /api/v1/auth/logout`
+  - [x] SubTask 6.5: 验证未认证访问受保护接口返回 401
+  - [x] SubTask 6.6: 启动前端开发服务器，验证登录页渲染与交互
+  - [x] SubTask 6.7: 验证登录成功后跳转 Dashboard
+  - [x] SubTask 6.8: 验证主页面布局渲染（侧边栏、顶栏、内容区）
+  - [x] SubTask 6.9: 验证 401 自动跳转登录页的前端处理流程
+  - [x] SubTask 6.10: 验证路由守卫拦截与 redirect 参数
+
+# Task Dependencies
+- Task 3 依赖 Task 1、Task 2（需要后端 API 和前端基础设施）
+- Task 4 依赖 Task 2、Task 3（需要登录成功后进入主页面）
+- Task 5 依赖 Task 1、Task 2（需要后端状态码规范和前端 Axios 封装）
+- Task 6 依赖 Task 1、Task 2、Task 3、Task 4、Task 5（全部功能开发完毕后联调验证）

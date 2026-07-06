@@ -1,0 +1,72 @@
+import request from './request'
+import type { MediaPreset, MediaPresetListRes } from '@/types/api'
+
+export interface MediaItem {
+  id: string
+  filename: string
+  file_type: number
+  mime_type: string
+  size: number
+  url: string
+  thumb_url: string
+  width: number
+  height: number
+  created_at: string
+}
+
+export interface MediaListRes {
+  list: MediaItem[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
+
+export const mediaApi = {
+  upload(file: File, onProgress?: (percent: number) => void) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post<MediaItem>('/media/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (e) => {
+        if (e.total && onProgress) {
+          onProgress(Math.round((e.loaded * 100) / e.total))
+        }
+      },
+    })
+  },
+  getList(params?: { file_type?: number; keyword?: string; page?: number; page_size?: number }) {
+    return request.get<MediaListRes>('/media', { params })
+  },
+  remove(id: string) {
+    return request.delete(`/media/${id}`)
+  },
+  getPresets(mediaId: string) {
+    return request.get<MediaPresetListRes>(`/media/${mediaId}/presets`)
+  },
+  createPreset(payload: {
+    media_id: string
+    name: string
+    frame_config: string
+    display_params: string
+    file: Blob
+  }, onProgress?: (percent: number) => void) {
+    const formData = new FormData()
+    formData.append('media_id', payload.media_id)
+    formData.append('name', payload.name)
+    formData.append('frame_config', payload.frame_config)
+    formData.append('display_params', payload.display_params)
+    formData.append('file', payload.file, `${payload.name}.jpg`)
+    return request.post<MediaPreset>('/media/preset', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (e) => {
+        if (e.total && onProgress) {
+          onProgress(Math.round((e.loaded * 100) / e.total))
+        }
+      },
+    })
+  },
+  deletePreset(id: string) {
+    return request.delete(`/media/preset/${id}`)
+  },
+}

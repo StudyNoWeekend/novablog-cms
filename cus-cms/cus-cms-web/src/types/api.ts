@@ -1,0 +1,87 @@
+export interface ApiResponse<T = any> {
+  code: number
+  msg: string
+  data: T
+  trace_id: string
+}
+
+export interface PaginatedData<T> {
+  list: T[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
+
+export interface LoginReq {
+  username: string
+  password: string
+}
+
+export interface LoginRes {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+}
+
+export interface UserInfo {
+  id: string
+  username: string
+  nickname: string
+  avatar: string
+  email: string
+}
+
+export interface FrameConfig {
+  template: 'gallery' | 'movie' | 'floating'
+  fontScale: number
+  borderScale: number
+  borderColor: string
+  textColor: 'auto' | 'black' | 'white'
+  fontFamily: string
+  logoMode: 'text' | 'image'
+  showExif: boolean
+}
+
+export interface DisplayParams {
+  make: string
+  model: string
+  lens: string
+  focalLength: string
+  aperture: string
+  shutter: string
+  iso: string
+  date: string
+}
+
+export interface ExifInfo {
+  filename: string
+  width: number
+  height: number
+  size: number
+  make: string
+  model: string
+  lens: string
+  software: string
+  focalLength: string
+  aperture: string
+  shutter: string
+  iso: string
+}
+
+export interface MediaPreset {
+  id: string
+  media_id: string
+  name: string
+  frame_config: string
+  display_params: string
+  output_url: string
+  output_storage_path: string
+  output_size: number
+  mime_type: string
+  created_at: string
+}
+
+export interface MediaPresetListRes {
+  list: MediaPreset[]
+}

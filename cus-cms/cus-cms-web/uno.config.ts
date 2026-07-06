@@ -1,0 +1,40 @@
+import { defineConfig, presetUno } from 'unocss'
+
+export default defineConfig({
+  presets: [presetUno()],
+  theme: {
+    colors: {
+      primary: '#4a6cf7',
+      'primary-hover': '#3b5de7',
+      'primary-light': 'rgba(74, 108, 247, 0.08)',
+      accent: '#7c3aed',
+      success: '#10b981',
+      warning: '#f59e0b',
+      error: '#ef4444',
+      'bg-page': '#f8f9fb',
+      'bg-card': '#ffffff',
+      'bg-sidebar': '#111827',
+      'bg-sidebar-hover': '#1e293b',
+      'text-primary': '#1e293b',
+      'text-secondary': '#64748b',
+      'text-tertiary': '#94a3b8',
+      'text-sidebar': '#cbd5e1',
+      'text-sidebar-active': '#ffffff',
+      'border-color': '#e2e8f0',
+    },
+  },
+  shortcuts: {
+    'page-container': 'max-w-1400px mx-auto p-6',
+    'card': 'bg-white rounded-lg shadow-sm p-6',
+    'card-hover': 'card transition-all duration-250 hover:-translate-y-2px hover:shadow-md',
+    'btn-primary': 'bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover transition-colors',
+    'input-field': 'w-full px-3 py-2 border border-border-color rounded-md focus:border-primary focus:ring-2 focus:ring-primary-light outline-none transition-all',
+    'sidebar-link': 'flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-text-sidebar hover:bg-bg-sidebar-hover transition-all duration-200',
+    'sidebar-link-active': 'sidebar-link bg-primary/15 text-text-sidebar-active border-l-3 border-primary',
+    'page-header': 'flex items-center justify-between mb-6',
+    'page-title': 'text-xl font-semibold text-text-primary',
+    'stat-card': 'card flex items-center gap-4',
+    'stat-value': 'text-2xl font-bold text-primary',
+    'stat-label': 'text-sm text-text-secondary',
+  },
+})
