@@ -10,7 +10,7 @@
     <a-steps :current="currentStep" size="small" class="picker-steps">
       <a-step title="选择原图" />
       <a-step title="选择预设" />
-      <a-step title="填写信息" />
+      <a-step v-if="!presetOnly" title="填写信息" />
     </a-steps>
 
     <!-- 步骤一：媒体库图片列表 -->
@@ -113,7 +113,7 @@
       <div class="footer-right">
         <a-button @click="handleCancel">取消</a-button>
         <a-button
-          v-if="currentStep < 2"
+          v-if="currentStep < (presetOnly ? 1 : 2)"
           type="primary"
           :disabled="!canNext"
           @click="handleNext"
@@ -123,10 +123,10 @@
         <a-button
           v-else
           type="primary"
-          :disabled="!itemTitle.trim()"
+          :disabled="presetOnly ? !canNext : !itemTitle.trim()"
           @click="handleConfirm"
         >
-          确认添加
+          确认选择
         </a-button>
       </div>
     </div>
@@ -144,11 +144,21 @@ import { useDebounce } from '@/composables/useDebounce'
 const props = defineProps<{
   visible: boolean
   title?: string
+  presetOnly?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:visible', v: boolean): void
-  (e: 'selected', payload: { preset_id: string; title: string; description: string }): void
+  (
+    e: 'selected',
+    payload: {
+      preset_id: string
+      title: string
+      description: string
+      output_url?: string
+      preset_name?: string
+    },
+  ): void
 }>()
 
 const open = ref(props.visible)
@@ -253,7 +263,7 @@ function handleNext() {
     currentStep.value = 1
     selectedPresetId.value = null
     fetchPresets()
-  } else if (currentStep.value === 1 && selectedPresetId.value) {
+  } else if (currentStep.value === 1 && selectedPresetId.value && !props.presetOnly) {
     currentStep.value = 2
   }
 }
@@ -263,11 +273,26 @@ function handlePrev() {
 }
 
 function handleConfirm() {
-  if (!itemTitle.value.trim() || !selectedPresetId.value) return
+  if (!selectedPresetId.value) return
+  const preset = selectedPreset.value
+  if (props.presetOnly) {
+    emit('selected', {
+      preset_id: selectedPresetId.value,
+      title: preset?.name || '',
+      description: '',
+      output_url: preset?.output_url || '',
+      preset_name: preset?.name || '',
+    })
+    open.value = false
+    return
+  }
+  if (!itemTitle.value.trim()) return
   emit('selected', {
     preset_id: selectedPresetId.value,
     title: itemTitle.value.trim(),
     description: itemDescription.value.trim(),
+    output_url: preset?.output_url || '',
+    preset_name: preset?.name || '',
   })
   open.value = false
 }

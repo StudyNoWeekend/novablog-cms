@@ -101,8 +101,37 @@
             show-count
           />
         </a-form-item>
+        <a-form-item label="封面设置">
+          <a-radio-group v-model:value="createForm.cover_mode">
+            <a-radio :value="0">使用首张作品</a-radio>
+            <a-radio :value="1">独立设置封面</a-radio>
+          </a-radio-group>
+          <div v-if="createForm.cover_mode === 1" class="create-cover-custom">
+            <div v-if="createCoverPreviewUrl" class="create-cover-preview">
+              <img :src="createCoverPreviewUrl" alt="封面预览" />
+              <div class="create-cover-actions">
+                <a-button type="link" size="small" @click="openCreateCoverPicker">更换</a-button>
+                <a-button type="link" size="small" danger @click="clearCreateCoverPreset">清除</a-button>
+              </div>
+            </div>
+            <a-button v-else type="dashed" @click="openCreateCoverPicker">
+              <PictureOutlined /> 选择封面预设
+            </a-button>
+          </div>
+          <div v-else class="create-cover-tip">
+            将自动使用排序第一的作品作为封面
+          </div>
+        </a-form-item>
       </a-form>
     </a-modal>
+
+    <!-- 封面预设选择器 -->
+    <PortfolioItemPicker
+      v-model:visible="createCoverPickerVisible"
+      title="选择封面预设"
+      preset-only
+      @selected="handleSelectCreateCover"
+    />
   </div>
 </template>
 
@@ -118,6 +147,7 @@ import {
 } from '@ant-design/icons-vue'
 import { portfolioApi } from '@/api/portfolio'
 import type { Portfolio, CreatePortfolioReq } from '@/types/portfolio'
+import PortfolioItemPicker from '@/components/portfolio/PortfolioItemPicker.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
@@ -133,7 +163,10 @@ const { page, pageSize, total, reset, handlePageChange: changePagination } = use
 
 const createVisible = ref(false)
 const creating = ref(false)
-const createForm = ref<CreatePortfolioReq>({ name: '', description: '' })
+const createForm = ref<CreatePortfolioReq>({ name: '', description: '', cover_mode: 0 })
+const createCoverPresetId = ref<string | null>(null)
+const createCoverPreviewUrl = ref('')
+const createCoverPickerVisible = ref(false)
 
 watch(keyword, setDebounce)
 
@@ -170,7 +203,9 @@ function handlePageChange(newPage: number, newPageSize?: number) {
 }
 
 function openCreateModal() {
-  createForm.value = { name: '', description: '' }
+  createForm.value = { name: '', description: '', cover_mode: 0 }
+  createCoverPresetId.value = null
+  createCoverPreviewUrl.value = ''
   createVisible.value = true
 }
 
@@ -179,11 +214,20 @@ async function handleCreate() {
     message.warning('请输入作品集名称')
     return
   }
+  if (createForm.value.cover_mode === 1 && !createCoverPresetId.value) {
+    message.warning('独立封面模式下请选择封面预设')
+    return
+  }
   creating.value = true
   try {
     const res = await portfolioApi.create({
       name: createForm.value.name.trim(),
       description: createForm.value.description?.trim() || undefined,
+      cover_mode: createForm.value.cover_mode,
+      cover_preset_id:
+        createForm.value.cover_mode === 1
+          ? createCoverPresetId.value || undefined
+          : undefined,
     })
     message.success('创建成功')
     createVisible.value = false
@@ -193,6 +237,25 @@ async function handleCreate() {
   } finally {
     creating.value = false
   }
+}
+
+function openCreateCoverPicker() {
+  createCoverPickerVisible.value = true
+}
+
+function handleSelectCreateCover(payload: {
+  preset_id: string
+  output_url?: string
+  preset_name?: string
+}) {
+  createCoverPresetId.value = payload.preset_id
+  createCoverPreviewUrl.value = payload.output_url || ''
+  createCoverPickerVisible.value = false
+}
+
+function clearCreateCoverPreset() {
+  createCoverPresetId.value = null
+  createCoverPreviewUrl.value = ''
 }
 
 function handleEdit(id: string) {
@@ -361,5 +424,36 @@ function formatDateTime(time?: string): string {
   display: flex;
   justify-content: center;
   margin-top: 24px;
+}
+
+.create-cover-custom {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.create-cover-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.create-cover-preview img {
+  width: 96px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #f0f0f0);
+}
+
+.create-cover-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-cover-tip {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary, #8c8c8c);
 }
 </style>

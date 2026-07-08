@@ -4,7 +4,8 @@ package req
 type CreatePortfolioReq struct {
 	Name          string  `json:"name" binding:"required,min=1,max=255"`
 	Description   string  `json:"description"`
-	CoverPresetID *string `json:"cover_preset_id"`
+	CoverMode     *int    `json:"cover_mode"`      // 0=使用排序第一的作品, 1=独立设置封面
+	CoverPresetID *string `json:"cover_preset_id"` // cover_mode=1 时必填
 	Status        *int    `json:"status"`
 	SortOrder     *int    `json:"sort_order"`
 }
@@ -13,7 +14,8 @@ type CreatePortfolioReq struct {
 type UpdatePortfolioReq struct {
 	Name          *string `json:"name"`
 	Description   *string `json:"description"`
-	CoverPresetID *string `json:"cover_preset_id"`
+	CoverMode     *int    `json:"cover_mode"`      // 0=使用排序第一的作品, 1=独立设置封面
+	CoverPresetID *string `json:"cover_preset_id"` // cover_mode=1 时必填
 	Status        *int    `json:"status"`
 	SortOrder     *int    `json:"sort_order"`
 }

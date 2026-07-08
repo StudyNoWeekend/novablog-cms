@@ -12,6 +12,7 @@ type Portfolio struct {
 	ID            string         `gorm:"type:uuid;primaryKey"`
 	Name          string         `gorm:"type:varchar(255);not null"`
 	Description   string         `gorm:"type:text"`
+	CoverMode     int            `gorm:"column:cover_mode;type:int;default:0"` // 0=使用排序第一的作品, 1=独立设置封面
 	CoverPresetID *string        `gorm:"column:cover_preset_id;type:uuid"`
 	Status        int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
 	SortOrder     int            `gorm:"column:sort_order;type:int;default:0"`
@@ -113,6 +114,78 @@ func (m *PortfolioModel) CountItems(ctx context.Context, portfolioIDs []string) 
 	for _, r := range rows {
 		result[r.PortfolioID] = r.Count
 	}
+	return result, nil
+}
+
+// ResolveCoverURLs 批量解析作品集封面 URL，返回 map[portfolioID]coverURL。
+// cover_mode=0：取排序第一的作品项关联预设的 output_url；
+// cover_mode=1：取 cover_preset_id 对应预设的 output_url。
+func (m *PortfolioModel) ResolveCoverURLs(ctx context.Context, portfolios []Portfolio) (map[string]string, error) {
+	result := make(map[string]string)
+	if len(portfolios) == 0 {
+		return result, nil
+	}
+
+	autoIDs := make([]string, 0)
+	customPresetIDs := make([]string, 0)
+	for _, p := range portfolios {
+		if p.CoverMode == 1 && p.CoverPresetID != nil && *p.CoverPresetID != "" {
+			customPresetIDs = append(customPresetIDs, *p.CoverPresetID)
+		} else {
+			autoIDs = append(autoIDs, p.ID)
+		}
+	}
+
+	// 独立封面：批量查询 media_presets 取 output_url
+	if len(customPresetIDs) > 0 {
+		type presetRow struct {
+			ID        string `gorm:"column:id"`
+			OutputURL string `gorm:"column:output_url"`
+		}
+		var presetRows []presetRow
+		err := m.db.WithContext(ctx).
+			Table("media_presets").
+			Select("id, output_url").
+			Where("id IN ? AND deleted_at IS NULL", customPresetIDs).
+			Scan(&presetRows).Error
+		if err != nil {
+			return nil, err
+		}
+		presetURLMap := make(map[string]string, len(presetRows))
+		for _, r := range presetRows {
+			presetURLMap[r.ID] = r.OutputURL
+		}
+		for _, p := range portfolios {
+			if p.CoverMode == 1 && p.CoverPresetID != nil {
+				if url, ok := presetURLMap[*p.CoverPresetID]; ok {
+					result[p.ID] = url
+				}
+			}
+		}
+	}
+
+	// 自动封面：取每个作品集排序第一的作品项预设 output_url
+	if len(autoIDs) > 0 {
+		type itemRow struct {
+			PortfolioID string `gorm:"column:portfolio_id"`
+			OutputURL   string `gorm:"column:output_url"`
+		}
+		var itemRows []itemRow
+		err := m.db.WithContext(ctx).
+			Table("portfolio_items pi").
+			Select("DISTINCT ON (pi.portfolio_id) pi.portfolio_id, mp.output_url").
+			Joins("LEFT JOIN media_presets mp ON mp.id = pi.preset_id AND mp.deleted_at IS NULL").
+			Where("pi.portfolio_id IN ? AND pi.deleted_at IS NULL", autoIDs).
+			Order("pi.portfolio_id, pi.sort_order ASC, pi.created_at ASC").
+			Scan(&itemRows).Error
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range itemRows {
+			result[r.PortfolioID] = r.OutputURL
+		}
+	}
+
 	return result, nil
 }
 

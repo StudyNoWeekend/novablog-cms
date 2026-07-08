@@ -7,7 +7,9 @@ type PortfolioRes struct {
 	ID            string    `json:"id"`
 	Name          string    `json:"name"`
 	Description   string    `json:"description"`
-	CoverPresetID string    `json:"cover_preset_id"`
+	CoverMode     int       `json:"cover_mode"`      // 0=使用排序第一的作品, 1=独立设置封面
+	CoverPresetID string    `json:"cover_preset_id"` // 独立封面预设ID
+	CoverURL      string    `json:"cover_url"`       // 解析后的封面图地址
 	Status        int       `json:"status"`
 	SortOrder     int       `json:"sort_order"`
 	ItemCount     int64     `json:"item_count"`

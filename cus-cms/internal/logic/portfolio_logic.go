@@ -35,7 +35,16 @@ func (l *PortfolioLogic) Create(ctx context.Context, r *req.CreatePortfolioReq) 
 		Name:        r.Name,
 		Description: r.Description,
 	}
-	if r.CoverPresetID != nil {
+	if r.CoverMode != nil {
+		portfolio.CoverMode = *r.CoverMode
+	}
+	if portfolio.CoverMode == 1 {
+		if r.CoverPresetID == nil || *r.CoverPresetID == "" {
+			return nil, fmt.Errorf("独立封面模式下必须指定封面预设")
+		}
+		if _, err := l.presetModel.GetByID(ctx, *r.CoverPresetID); err != nil {
+			return nil, fmt.Errorf("封面预设不存在")
+		}
 		portfolio.CoverPresetID = r.CoverPresetID
 	}
 	if r.Status != nil {
@@ -49,7 +58,8 @@ func (l *PortfolioLogic) Create(ctx context.Context, r *req.CreatePortfolioReq) 
 		return nil, fmt.Errorf("创建作品集失败: %w", err)
 	}
 
-	return l.toPortfolioRes(portfolio, 0), nil
+	coverMap, _ := l.portfolioModel.ResolveCoverURLs(ctx, []model.Portfolio{*portfolio})
+	return l.toPortfolioRes(portfolio, 0, coverMap[portfolio.ID]), nil
 }
 
 // GetList 分页查询作品集列表，含每个作品集的作品数量。
@@ -67,10 +77,14 @@ func (l *PortfolioLogic) GetList(ctx context.Context, r *req.PortfolioListReq) (
 	if err != nil {
 		return nil, fmt.Errorf("统计作品数量失败: %w", err)
 	}
+	coverMap, err := l.portfolioModel.ResolveCoverURLs(ctx, list)
+	if err != nil {
+		return nil, fmt.Errorf("解析封面失败: %w", err)
+	}
 
 	items := make([]res.PortfolioRes, 0, len(list))
 	for _, p := range list {
-		items = append(items, *l.toPortfolioRes(&p, countMap[p.ID]))
+		items = append(items, *l.toPortfolioRes(&p, countMap[p.ID], coverMap[p.ID]))
 	}
 
 	return &res.PortfolioListRes{
@@ -100,8 +114,9 @@ func (l *PortfolioLogic) GetByID(ctx context.Context, id string) (*res.Portfolio
 	}
 
 	countMap, _ := l.portfolioModel.CountItems(ctx, []string{id})
+	coverMap, _ := l.portfolioModel.ResolveCoverURLs(ctx, []model.Portfolio{*portfolio})
 	detail := &res.PortfolioDetailRes{
-		PortfolioRes: *(l.toPortfolioRes(portfolio, countMap[id])),
+		PortfolioRes: *(l.toPortfolioRes(portfolio, countMap[id], coverMap[portfolio.ID])),
 		Items:        itemRes,
 	}
 	return detail, nil
@@ -120,8 +135,26 @@ func (l *PortfolioLogic) Update(ctx context.Context, id string, r *req.UpdatePor
 	if r.Description != nil {
 		portfolio.Description = *r.Description
 	}
-	if r.CoverPresetID != nil {
-		portfolio.CoverPresetID = r.CoverPresetID
+	// 封面设置：cover_mode 与 cover_preset_id 一起处理
+	if r.CoverMode != nil || r.CoverPresetID != nil {
+		if r.CoverMode != nil {
+			portfolio.CoverMode = *r.CoverMode
+		}
+		if r.CoverPresetID != nil {
+			portfolio.CoverPresetID = r.CoverPresetID
+		}
+		if portfolio.CoverMode == 1 {
+			// 独立封面模式：必须有有效预设
+			if portfolio.CoverPresetID == nil || *portfolio.CoverPresetID == "" {
+				return nil, fmt.Errorf("独立封面模式下必须指定封面预设")
+			}
+			if _, err := l.presetModel.GetByID(ctx, *portfolio.CoverPresetID); err != nil {
+				return nil, fmt.Errorf("封面预设不存在")
+			}
+		} else {
+			// 自动封面模式：清空独立封面预设
+			portfolio.CoverPresetID = nil
+		}
 	}
 	if r.Status != nil {
 		portfolio.Status = *r.Status
@@ -135,7 +168,8 @@ func (l *PortfolioLogic) Update(ctx context.Context, id string, r *req.UpdatePor
 	}
 
 	countMap, _ := l.portfolioModel.CountItems(ctx, []string{id})
-	return l.toPortfolioRes(portfolio, countMap[id]), nil
+	coverMap, _ := l.portfolioModel.ResolveCoverURLs(ctx, []model.Portfolio{*portfolio})
+	return l.toPortfolioRes(portfolio, countMap[id], coverMap[portfolio.ID]), nil
 }
 
 // Delete 删除作品集，事务内级联软删除作品项。
@@ -290,7 +324,7 @@ func (l *PortfolioLogic) SortItems(ctx context.Context, portfolioID string, r *r
 }
 
 // toPortfolioRes 转换为作品集响应。
-func (l *PortfolioLogic) toPortfolioRes(p *model.Portfolio, count int64) *res.PortfolioRes {
+func (l *PortfolioLogic) toPortfolioRes(p *model.Portfolio, count int64, coverURL string) *res.PortfolioRes {
 	coverID := ""
 	if p.CoverPresetID != nil {
 		coverID = *p.CoverPresetID
@@ -299,7 +333,9 @@ func (l *PortfolioLogic) toPortfolioRes(p *model.Portfolio, count int64) *res.Po
 		ID:            p.ID,
 		Name:          p.Name,
 		Description:   p.Description,
+		CoverMode:     p.CoverMode,
 		CoverPresetID: coverID,
+		CoverURL:      coverURL,
 		Status:        p.Status,
 		SortOrder:     p.SortOrder,
 		ItemCount:     count,

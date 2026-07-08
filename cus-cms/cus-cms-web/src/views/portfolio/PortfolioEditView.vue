@@ -28,6 +28,29 @@
             :maxlength="500"
             class="desc-input"
           />
+          <!-- 封面设置 -->
+          <div class="cover-setting">
+            <div class="cover-label">封面设置</div>
+            <a-radio-group v-model:value="coverMode">
+              <a-radio :value="0">使用首张作品</a-radio>
+              <a-radio :value="1">独立设置封面</a-radio>
+            </a-radio-group>
+            <div v-if="coverMode === 1" class="cover-custom">
+              <div v-if="coverPreviewUrl" class="cover-preview">
+                <img :src="coverPreviewUrl" alt="封面预览" />
+                <div class="cover-preview-actions">
+                  <a-button type="link" size="small" @click="openCoverPicker">更换</a-button>
+                  <a-button type="link" size="small" danger @click="clearCoverPreset">清除</a-button>
+                </div>
+              </div>
+              <a-button v-else type="dashed" @click="openCoverPicker">
+                <PictureOutlined /> 选择封面预设
+              </a-button>
+            </div>
+            <div v-else class="cover-tip">
+              将自动使用排序第一的作品作为封面
+            </div>
+          </div>
         </div>
       </div>
 
@@ -152,6 +175,14 @@
         title="重新选择预设"
         @selected="handleReselectPreset"
       />
+
+      <!-- 封面预设选择器 -->
+      <PortfolioItemPicker
+        v-model:visible="coverPickerVisible"
+        title="选择封面预设"
+        preset-only
+        @selected="handleSelectCover"
+      />
     </template>
   </div>
 </template>
@@ -188,6 +219,12 @@ const form = reactive({
   name: '',
   description: '',
 })
+
+// 封面设置
+const coverMode = ref(0)
+const coverPresetId = ref<string | null>(null)
+const coverPreviewUrl = ref('')
+const coverPickerVisible = ref(false)
 
 // 拖拽排序
 const dragIndex = ref<number | null>(null)
@@ -233,6 +270,9 @@ async function fetchDetail() {
     detail.value = res
     form.name = res.name
     form.description = res.description || ''
+    coverMode.value = res.cover_mode ?? 0
+    coverPresetId.value = res.cover_preset_id || null
+    coverPreviewUrl.value = res.cover_url || ''
     items.value = [...(res.items || [])].sort((a, b) => a.sort_order - b.sort_order)
   } catch {
     // 错误由拦截器处理
@@ -246,18 +286,46 @@ async function handleSave() {
     message.warning('请输入作品集名称')
     return
   }
+  if (coverMode.value === 1 && !coverPresetId.value) {
+    message.warning('独立封面模式下请选择封面预设')
+    return
+  }
   saving.value = true
   try {
     await portfolioApi.update(portfolioId.value, {
       name: form.name.trim(),
       description: form.description.trim(),
+      cover_mode: coverMode.value,
+      cover_preset_id:
+        coverMode.value === 1 ? coverPresetId.value || undefined : undefined,
     })
     message.success('保存成功')
+    await fetchDetail()
   } catch {
     // 错误由拦截器处理
   } finally {
     saving.value = false
   }
+}
+
+function openCoverPicker() {
+  coverPickerVisible.value = true
+}
+
+function handleSelectCover(payload: {
+  preset_id: string
+  output_url?: string
+  preset_name?: string
+}) {
+  coverPresetId.value = payload.preset_id
+  coverPreviewUrl.value = payload.output_url || ''
+  coverPickerVisible.value = false
+  message.success('已选择封面，请点击保存信息')
+}
+
+function clearCoverPreset() {
+  coverPresetId.value = null
+  coverPreviewUrl.value = ''
 }
 
 function openAddPicker() {
@@ -426,6 +494,47 @@ async function persistSort() {
 .name-input {
   font-size: 18px;
   font-weight: 600;
+}
+
+.cover-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cover-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #262626);
+}
+
+.cover-custom {
+  display: flex;
+  align-items: center;
+}
+
+.cover-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cover-preview img {
+  width: 96px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #f0f0f0);
+}
+
+.cover-preview-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.cover-tip {
+  font-size: 13px;
+  color: var(--text-secondary, #8c8c8c);
 }
 
 .items-toolbar {

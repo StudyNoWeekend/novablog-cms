@@ -2,6 +2,7 @@ export interface Portfolio {
   id: string
   name: string
   description: string
+  cover_mode: number
   cover_preset_id: string
   cover_url: string
   status: number
@@ -40,6 +41,7 @@ export interface PortfolioListRes {
 export interface CreatePortfolioReq {
   name: string
   description?: string
+  cover_mode?: number
   cover_preset_id?: string
 }
 
