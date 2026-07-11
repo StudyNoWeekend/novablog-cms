@@ -20,8 +20,10 @@ import type { Category } from '@/types/category'
 const props = withDefaults(defineProps<{
   modelValue?: string
   placeholder?: string
+  type?: string
 }>(), {
   placeholder: '选择分类',
+  type: 'article',
 })
 
 const emit = defineEmits<{
@@ -36,7 +38,7 @@ watch(() => props.modelValue, (val) => { selectedValue.value = val })
 
 onMounted(async () => {
   loading.value = true
-  try { categories.value = await categoryApi.getList() as unknown as Category[] }
+  try { categories.value = await categoryApi.getList(props.type) as unknown as Category[] }
   catch {}
   finally { loading.value = false }
 })

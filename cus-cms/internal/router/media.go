@@ -12,6 +12,7 @@ func RegisterMediaRoutes(r *gin.RouterGroup, mediaController *controller.MediaCo
 	media.Use(authMiddleware)
 	{
 		media.POST("/upload", mediaController.Upload)
+		media.POST("/upload-with-preset", mediaController.UploadWithPreset)
 		media.GET("", mediaController.GetList)
 		media.DELETE("/:id", mediaController.Delete)
 

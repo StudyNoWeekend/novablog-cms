@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
     "@ant-design/icons-vue": "^7.0.1",
     "@bytemd/plugin-gfm": "^1.22.0",
     "@bytemd/plugin-highlight": "^1.22.0",
     "@bytemd/vue-next": "^1.22.0",
+    "@googlemaps/js-api-loader": "^2.1.1",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
     "ant-design-vue": "^4.2.6",
@@ -29,6 +31,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.65.2",
     "@types/node": "^24.12.3",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",

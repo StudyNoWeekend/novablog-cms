@@ -22,11 +22,31 @@ export interface MediaListRes {
   total_pages: number
 }
 
+export interface UploadWithPresetRes {
+  media: MediaItem
+  preset: MediaPreset
+}
+
 export const mediaApi = {
   upload(file: File, onProgress?: (percent: number) => void) {
     const formData = new FormData()
     formData.append('file', file)
     return request.post<MediaItem>('/media/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (e) => {
+        if (e.total && onProgress) {
+          onProgress(Math.round((e.loaded * 100) / e.total))
+        }
+      },
+    })
+  },
+  uploadWithPreset(file: File, name?: string, onProgress?: (percent: number) => void) {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (name) {
+      formData.append('name', name)
+    }
+    return request.post<UploadWithPresetRes>('/media/upload-with-preset', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (e) => {
         if (e.total && onProgress) {

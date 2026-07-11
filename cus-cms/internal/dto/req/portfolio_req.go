@@ -8,6 +8,7 @@ type CreatePortfolioReq struct {
 	CoverPresetID *string `json:"cover_preset_id"` // cover_mode=1 时必填
 	Status        *int    `json:"status"`
 	SortOrder     *int    `json:"sort_order"`
+	CategoryID    *string `json:"category_id"`
 }
 
 // UpdatePortfolioReq 更新作品集请求参数。
@@ -18,13 +19,15 @@ type UpdatePortfolioReq struct {
 	CoverPresetID *string `json:"cover_preset_id"` // cover_mode=1 时必填
 	Status        *int    `json:"status"`
 	SortOrder     *int    `json:"sort_order"`
+	CategoryID    *string `json:"category_id"`
 }
 
 // PortfolioListReq 作品集列表查询请求参数。
 type PortfolioListReq struct {
 	PageReq
-	Keyword *string `form:"keyword" json:"keyword"`
-	Status  *int    `form:"status" json:"status"`
+	Keyword    *string `form:"keyword" json:"keyword"`
+	Status     *int    `form:"status" json:"status"`
+	CategoryID *string `form:"category_id" json:"category_id"`
 }
 
 // CreatePortfolioItemReq 添加作品项请求参数。

@@ -12,6 +12,8 @@ type PortfolioRes struct {
 	CoverURL      string    `json:"cover_url"`       // 解析后的封面图地址
 	Status        int       `json:"status"`
 	SortOrder     int       `json:"sort_order"`
+	CategoryID    string    `json:"category_id"`
+	CategoryName  string    `json:"category_name"`
 	ItemCount     int64     `json:"item_count"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`

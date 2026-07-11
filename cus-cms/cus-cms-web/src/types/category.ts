@@ -4,6 +4,7 @@ export interface Category {
   slug: string
   description: string
   sort_order: number
+  type: string
   created_at: string
 }
 
@@ -12,6 +13,7 @@ export interface CategoryCreateReq {
   slug?: string
   description?: string
   sort_order?: number
+  type?: string
 }
 
 export interface CategoryUpdateReq extends Partial<CategoryCreateReq> {}

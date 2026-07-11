@@ -13,6 +13,7 @@ type Category struct {
 	Name        string    `gorm:"type:varchar(100);not null"`
 	Slug        string    `gorm:"type:varchar(100);uniqueIndex"`
 	Description string    `gorm:"type:varchar(500)"`
+	Type        string    `gorm:"type:varchar(50);default:article" json:"type"`
 	SortOrder   int       `gorm:"column:sort_order;default:0"`
 	CreatedAt   time.Time `gorm:"type:timestamptz;autoCreateTime"`
 }
@@ -47,20 +48,28 @@ func (m *CategoryModel) GetByID(ctx context.Context, id string) (*Category, erro
 	return &category, nil
 }
 
-// GetByName 根据名称查询分类。
-func (m *CategoryModel) GetByName(ctx context.Context, name string) (*Category, error) {
+// GetByName 根据名称查询分类，可按 type 过滤。
+func (m *CategoryModel) GetByName(ctx context.Context, name string, categoryType ...string) (*Category, error) {
 	var category Category
-	err := m.db.WithContext(ctx).Where("name = ?", name).First(&category).Error
+	query := m.db.WithContext(ctx).Where("name = ?", name)
+	if len(categoryType) > 0 && categoryType[0] != "" {
+		query = query.Where("type = ?", categoryType[0])
+	}
+	err := query.First(&category).Error
 	if err != nil {
 		return nil, err
 	}
 	return &category, nil
 }
 
-// GetAll 获取所有分类，按 sort_order 排序。
-func (m *CategoryModel) GetAll(ctx context.Context) ([]Category, error) {
+// GetAll 获取所有分类，按 sort_order 排序，可按 type 过滤。
+func (m *CategoryModel) GetAll(ctx context.Context, categoryType ...string) ([]Category, error) {
 	var categories []Category
-	err := m.db.WithContext(ctx).Order("sort_order").Find(&categories).Error
+	query := m.db.WithContext(ctx)
+	if len(categoryType) > 0 && categoryType[0] != "" {
+		query = query.Where("type = ?", categoryType[0])
+	}
+	err := query.Order("sort_order").Find(&categories).Error
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +90,36 @@ func (m *CategoryModel) Delete(ctx context.Context, id string) error {
 func (m *CategoryModel) HasArticles(ctx context.Context, id string) (bool, error) {
 	var count int64
 	err := m.db.WithContext(ctx).Model(&Article{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasSongs 检查分类下是否有歌曲。
+func (m *CategoryModel) HasSongs(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&Song{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasPortfolios 检查分类下是否有作品集。
+func (m *CategoryModel) HasPortfolios(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&Portfolio{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasTravelGuides 检查分类下是否有旅行攻略。
+func (m *CategoryModel) HasTravelGuides(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&TravelGuide{}).Where("category_id = ?", id).Count(&count).Error
 	if err != nil {
 		return false, err
 	}

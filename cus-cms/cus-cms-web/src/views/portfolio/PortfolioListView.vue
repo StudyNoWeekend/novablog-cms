@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="portfolio" @select="handleCategorySelect" />
+
     <a-card>
       <div class="portfolio-toolbar">
         <a-input-search
@@ -42,6 +45,9 @@
               <div class="portfolio-name" :title="item.name">{{ item.name }}</div>
               <div class="portfolio-desc" :title="item.description">
                 {{ item.description || '暂无介绍' }}
+              </div>
+              <div v-if="item.category_name" class="portfolio-category">
+                <a-tag color="blue" :bordered="false">{{ item.category_name }}</a-tag>
               </div>
               <div class="portfolio-meta">
                 <span class="meta-item">
@@ -101,6 +107,9 @@
             show-count
           />
         </a-form-item>
+        <a-form-item label="分类">
+          <CategorySelect v-model="createForm.category_id" type="portfolio" placeholder="选择分类（可选）" />
+        </a-form-item>
         <a-form-item label="封面设置">
           <a-radio-group v-model:value="createForm.cover_mode">
             <a-radio :value="0">使用首张作品</a-radio>
@@ -148,6 +157,8 @@ import {
 import { portfolioApi } from '@/api/portfolio'
 import type { Portfolio, CreatePortfolioReq } from '@/types/portfolio'
 import PortfolioItemPicker from '@/components/portfolio/PortfolioItemPicker.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
@@ -158,12 +169,13 @@ const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const list = ref<Portfolio[]>([])
 const loading = ref(false)
+const selectedCategory = ref<string | undefined>(undefined)
 
 const { page, pageSize, total, reset, handlePageChange: changePagination } = usePagination(12)
 
 const createVisible = ref(false)
 const creating = ref(false)
-const createForm = ref<CreatePortfolioReq>({ name: '', description: '', cover_mode: 0 })
+const createForm = ref<CreatePortfolioReq>({ name: '', description: '', cover_mode: 0, category_id: undefined })
 const createCoverPresetId = ref<string | null>(null)
 const createCoverPreviewUrl = ref('')
 const createCoverPickerVisible = ref(false)
@@ -186,6 +198,7 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
+      category_id: selectedCategory.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -203,7 +216,7 @@ function handlePageChange(newPage: number, newPageSize?: number) {
 }
 
 function openCreateModal() {
-  createForm.value = { name: '', description: '', cover_mode: 0 }
+  createForm.value = { name: '', description: '', cover_mode: 0, category_id: undefined }
   createCoverPresetId.value = null
   createCoverPreviewUrl.value = ''
   createVisible.value = true
@@ -228,6 +241,7 @@ async function handleCreate() {
         createForm.value.cover_mode === 1
           ? createCoverPresetId.value || undefined
           : undefined,
+      category_id: createForm.value.category_id,
     })
     message.success('创建成功')
     createVisible.value = false
@@ -256,6 +270,12 @@ function handleSelectCreateCover(payload: {
 function clearCreateCoverPreset() {
   createCoverPresetId.value = null
   createCoverPreviewUrl.value = ''
+}
+
+function handleCategorySelect(id: string | undefined) {
+  selectedCategory.value = id
+  reset()
+  fetchList()
 }
 
 function handleEdit(id: string) {
@@ -395,6 +415,10 @@ function formatDateTime(time?: string): string {
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: 39px;
+}
+
+.portfolio-category {
+  margin-top: 2px;
 }
 
 .portfolio-meta {

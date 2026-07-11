@@ -41,12 +41,6 @@ export default [
         component: () => import('@/views/article/ArticleEditView.vue'),
       },
       {
-        path: 'categories',
-        name: 'Categories',
-        meta: { title: '分类标签', icon: 'TagsOutlined' },
-        component: () => import('@/views/category/CategoryManageView.vue'),
-      },
-      {
         path: 'media',
         name: 'MediaLibrary',
         meta: { title: '媒体库', icon: 'PictureOutlined' },
@@ -75,6 +69,24 @@ export default [
         name: 'Travels',
         meta: { title: '旅行攻略', icon: 'CompassOutlined' },
         component: () => import('@/views/travel/TravelListView.vue'),
+      },
+      {
+        path: 'travels/create',
+        name: 'TravelCreate',
+        meta: { title: '新建攻略', hidden: true },
+        component: () => import('@/views/travel/TravelEditView.vue'),
+      },
+      {
+        path: 'travels/:id/edit',
+        name: 'TravelEdit',
+        meta: { title: '编辑攻略', hidden: true },
+        component: () => import('@/views/travel/TravelEditView.vue'),
+      },
+      {
+        path: 'travels/:id',
+        name: 'TravelDetail',
+        meta: { title: '攻略详情', hidden: true },
+        component: () => import('@/views/travel/TravelDetailView.vue'),
       },
       {
         path: 'playlists',

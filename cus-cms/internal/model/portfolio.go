@@ -16,6 +16,8 @@ type Portfolio struct {
 	CoverPresetID *string        `gorm:"column:cover_preset_id;type:uuid"`
 	Status        int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
 	SortOrder     int            `gorm:"column:sort_order;type:int;default:0"`
+	CategoryID    *string        `gorm:"type:uuid;column:category_id" json:"category_id"`
+	Category      *Category      `gorm:"foreignKey:CategoryID" json:"-"`
 	CreatedAt     time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt     time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
@@ -44,7 +46,7 @@ func (m *PortfolioModel) Create(ctx context.Context, portfolio *Portfolio) error
 // GetByID 根据 ID 查询作品集。
 func (m *PortfolioModel) GetByID(ctx context.Context, id string) (*Portfolio, error) {
 	var portfolio Portfolio
-	err := m.db.WithContext(ctx).Where("id = ?", id).First(&portfolio).Error
+	err := m.db.WithContext(ctx).Preload("Category").Where("id = ?", id).First(&portfolio).Error
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +54,7 @@ func (m *PortfolioModel) GetByID(ctx context.Context, id string) (*Portfolio, er
 }
 
 // GetList 分页查询作品集列表，支持按 keyword 模糊搜索名称、按 status 过滤。
-func (m *PortfolioModel) GetList(ctx context.Context, keyword *string, status *int, page, pageSize int) ([]Portfolio, int64, error) {
+func (m *PortfolioModel) GetList(ctx context.Context, keyword *string, status *int, categoryID *string, page, pageSize int) ([]Portfolio, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&Portfolio{})
 
@@ -61,6 +63,9 @@ func (m *PortfolioModel) GetList(ctx context.Context, keyword *string, status *i
 	}
 	if status != nil {
 		query = query.Where("status = ?", *status)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("category_id = ?", *categoryID)
 	}
 
 	if err := query.Count(&total).Error; err != nil {

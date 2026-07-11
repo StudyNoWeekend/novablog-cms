@@ -8,6 +8,7 @@ type CategoryRes struct {
 	Name        string    `json:"name"`
 	Slug        string    `json:"slug"`
 	Description string    `json:"description"`
+	Type        string    `json:"type"`
 	SortOrder   int       `json:"sort_order"`
 	CreatedAt   time.Time `json:"created_at"`
 }

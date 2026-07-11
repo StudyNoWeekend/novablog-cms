@@ -53,6 +53,9 @@ func (l *PortfolioLogic) Create(ctx context.Context, r *req.CreatePortfolioReq) 
 	if r.SortOrder != nil {
 		portfolio.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil {
+		portfolio.CategoryID = r.CategoryID
+	}
 
 	if err := l.portfolioModel.Create(ctx, portfolio); err != nil {
 		return nil, fmt.Errorf("创建作品集失败: %w", err)
@@ -64,7 +67,7 @@ func (l *PortfolioLogic) Create(ctx context.Context, r *req.CreatePortfolioReq) 
 
 // GetList 分页查询作品集列表，含每个作品集的作品数量。
 func (l *PortfolioLogic) GetList(ctx context.Context, r *req.PortfolioListReq) (*res.PortfolioListRes, error) {
-	list, total, err := l.portfolioModel.GetList(ctx, r.Keyword, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.portfolioModel.GetList(ctx, r.Keyword, r.Status, r.CategoryID, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询作品集列表失败: %w", err)
 	}
@@ -161,6 +164,9 @@ func (l *PortfolioLogic) Update(ctx context.Context, id string, r *req.UpdatePor
 	}
 	if r.SortOrder != nil {
 		portfolio.SortOrder = *r.SortOrder
+	}
+	if r.CategoryID != nil {
+		portfolio.CategoryID = r.CategoryID
 	}
 
 	if err := l.portfolioModel.Update(ctx, portfolio); err != nil {
@@ -329,6 +335,14 @@ func (l *PortfolioLogic) toPortfolioRes(p *model.Portfolio, count int64, coverUR
 	if p.CoverPresetID != nil {
 		coverID = *p.CoverPresetID
 	}
+	categoryID := ""
+	categoryName := ""
+	if p.CategoryID != nil {
+		categoryID = *p.CategoryID
+	}
+	if p.Category != nil {
+		categoryName = p.Category.Name
+	}
 	return &res.PortfolioRes{
 		ID:            p.ID,
 		Name:          p.Name,
@@ -338,6 +352,8 @@ func (l *PortfolioLogic) toPortfolioRes(p *model.Portfolio, count int64, coverUR
 		CoverURL:      coverURL,
 		Status:        p.Status,
 		SortOrder:     p.SortOrder,
+		CategoryID:    categoryID,
+		CategoryName:  categoryName,
 		ItemCount:     count,
 		CreatedAt:     p.CreatedAt,
 		UpdatedAt:     p.UpdatedAt,

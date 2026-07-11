@@ -105,7 +105,7 @@ func (ctrl *PublicController) GetArticleBySlug(ctx *gin.Context) {
 
 // GetCategories 公开分类列表 GET /api/v1/public/categories
 func (ctrl *PublicController) GetCategories(ctx *gin.Context) {
-	result, err := ctrl.categoryLogic.GetAll(ctx)
+	result, err := ctrl.categoryLogic.GetAll(ctx, "article")
 	if err != nil {
 		response.Error(ctx, err.Error())
 		return

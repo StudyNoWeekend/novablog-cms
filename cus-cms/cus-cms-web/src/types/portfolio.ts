@@ -7,6 +7,8 @@ export interface Portfolio {
   cover_url: string
   status: number
   sort_order: number
+  category_id: string
+  category_name: string
   item_count: number
   created_at: string
   updated_at: string
@@ -43,6 +45,7 @@ export interface CreatePortfolioReq {
   description?: string
   cover_mode?: number
   cover_preset_id?: string
+  category_id?: string
 }
 
 export interface UpdatePortfolioReq extends Partial<CreatePortfolioReq> {

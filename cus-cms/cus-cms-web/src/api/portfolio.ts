@@ -16,6 +16,7 @@ export const portfolioApi = {
     page_size?: number
     keyword?: string
     status?: number
+    category_id?: string
   }) {
     return request.get<PortfolioListRes>('/portfolios', { params })
   },

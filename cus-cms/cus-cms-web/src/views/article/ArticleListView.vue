@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="article" @select="handleCategorySelect" />
+
     <!-- 筛选栏 -->
     <div class="filter-bar">
       <a-select
@@ -110,6 +113,7 @@ import { useArticleStore } from '@/stores/article'
 import { categoryApi } from '@/api/category'
 import type { Category } from '@/types/category'
 import ArticleCard from '@/components/article/ArticleCard.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
 
 const router = useRouter()
 const store = useArticleStore()
@@ -143,7 +147,7 @@ async function retry() {
 async function loadCategories() {
   categoriesLoading.value = true
   try {
-    categories.value = await categoryApi.getList() as unknown as Category[]
+    categories.value = await categoryApi.getList('article') as unknown as Category[]
   } catch {
     // 错误由拦截器处理
   } finally {
@@ -158,6 +162,11 @@ function handleFilterChange() {
     keyword: filterKeyword.value || undefined,
   })
   fetchList()
+}
+
+function handleCategorySelect(id: string | undefined) {
+  filterCategory.value = id
+  handleFilterChange()
 }
 
 function handlePageChange(page: number) {

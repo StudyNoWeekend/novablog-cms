@@ -125,7 +125,6 @@ import { useAppStore } from '@/stores/app'
 import {
   DashboardOutlined,
   FileTextOutlined,
-  TagsOutlined,
   PictureOutlined,
   CameraOutlined,
   PlaySquareOutlined,
@@ -149,7 +148,6 @@ const contentExpanded = ref(true)
 
 const contentMenuItems = [
   { path: '/articles', label: '文章管理', icon: FileTextOutlined },
-  { path: '/categories', label: '分类标签', icon: TagsOutlined },
   { path: '/portfolios', label: '摄影作品集', icon: CameraOutlined },
   { path: '/videos', label: '视频作品', icon: PlaySquareOutlined },
   { path: '/travels', label: '旅行攻略', icon: CompassOutlined },

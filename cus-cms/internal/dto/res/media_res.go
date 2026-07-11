@@ -4,16 +4,16 @@ import "time"
 
 // MediaRes 媒体响应结构体。
 type MediaRes struct {
-	ID        string     `json:"id"`
-	Filename  string     `json:"filename"`
-	FileType  int16      `json:"file_type"`
-	MimeType  string     `json:"mime_type"`
-	Size      int64      `json:"size"`
-	URL       string     `json:"url"`
-	ThumbURL  string     `json:"thumb_url"`
-	Width     *int       `json:"width"`
-	Height    *int       `json:"height"`
-	CreatedAt time.Time  `json:"created_at"`
+	ID        string    `json:"id"`
+	Filename  string    `json:"filename"`
+	FileType  int16     `json:"file_type"`
+	MimeType  string    `json:"mime_type"`
+	Size      int64     `json:"size"`
+	URL       string    `json:"url"`
+	ThumbURL  string    `json:"thumb_url"`
+	Width     *int      `json:"width"`
+	Height    *int      `json:"height"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // MediaListRes 媒体列表响应结构体。
@@ -42,4 +42,10 @@ type MediaPresetRes struct {
 // MediaPresetListRes 媒体预设列表响应结构体。
 type MediaPresetListRes struct {
 	List []MediaPresetRes `json:"list"`
+}
+
+// UploadWithPresetRes 上传原图并自动生成预设响应结构体。
+type UploadWithPresetRes struct {
+	Media  MediaRes       `json:"media"`
+	Preset MediaPresetRes `json:"preset"`
 }

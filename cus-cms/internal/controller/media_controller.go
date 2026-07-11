@@ -94,6 +94,34 @@ func (c *MediaController) CreatePreset(ctx *gin.Context) {
 	response.Success(ctx, preset)
 }
 
+// UploadWithPreset 上传原图并自动生成预设 POST /api/v1/media/upload-with-preset
+func (c *MediaController) UploadWithPreset(ctx *gin.Context) {
+	var req req.UploadWithPresetReq
+	if err := ctx.ShouldBind(&req); err != nil {
+		response.Error(ctx, "参数错误")
+		return
+	}
+
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		response.Error(ctx, "请选择上传文件")
+		return
+	}
+
+	// 限制文件大小 100MB
+	if file.Size > 100*1024*1024 {
+		response.Error(ctx, "文件大小不能超过100MB")
+		return
+	}
+
+	result, err := c.logic.UploadWithPreset(ctx, &req, file)
+	if err != nil {
+		response.Error(ctx, err.Error())
+		return
+	}
+	response.Success(ctx, result)
+}
+
 // GetPresets 获取原图下的所有预设 GET /api/v1/media/:id/presets
 func (c *MediaController) GetPresets(ctx *gin.Context) {
 	id := ctx.Param("id")

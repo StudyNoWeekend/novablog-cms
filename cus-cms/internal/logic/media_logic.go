@@ -1,8 +1,12 @@
 package logic
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"mime/multipart"
 	"path/filepath"
 	"strings"
@@ -14,6 +18,7 @@ import (
 	"cus-cms/internal/storage"
 
 	"github.com/google/uuid"
+	"golang.org/x/image/webp"
 )
 
 // MediaLogic 媒体业务逻辑结构体。
@@ -209,6 +214,98 @@ func (l *MediaLogic) CreatePreset(ctx context.Context, req *req.CreatePresetReq,
 		OutputSize:        preset.OutputSize,
 		MimeType:          preset.MimeType,
 		CreatedAt:         preset.CreatedAt,
+	}, nil
+}
+
+// UploadWithPreset 上传原图并自动生成一个默认无 EXIF 的预设成品图。
+func (l *MediaLogic) UploadWithPreset(ctx context.Context, req *req.UploadWithPresetReq, fileHeader *multipart.FileHeader) (*res.UploadWithPresetRes, error) {
+	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" {
+		return nil, fmt.Errorf("不支持的文件格式，仅支持 .jpg/.jpeg/.png/.webp")
+	}
+
+	mediaRes, err := l.UploadFile(ctx, fileHeader)
+	if err != nil {
+		return nil, err
+	}
+
+	src, err := fileHeader.Open()
+	if err != nil {
+		return nil, fmt.Errorf("打开上传文件失败: %w", err)
+	}
+	defer src.Close()
+
+	var img image.Image
+	switch ext {
+	case ".jpg", ".jpeg":
+		img, err = jpeg.Decode(src)
+	case ".png":
+		img, err = png.Decode(src)
+	case ".webp":
+		img, err = webp.Decode(src)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("解码图片失败: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: 95}); err != nil {
+		return nil, fmt.Errorf("编码 JPEG 失败: %w", err)
+	}
+
+	provider := l.manager.GetProvider()
+	if provider == nil {
+		return nil, fmt.Errorf("对象存储未配置")
+	}
+
+	storeFilename := uuid.New().String() + ".jpg"
+	key := fmt.Sprintf("presets/%s/%s", mediaRes.ID, storeFilename)
+	if activeCfg := l.manager.GetActiveConfig(); activeCfg != nil && activeCfg.PathPrefix != "" {
+		key = fmt.Sprintf("%s/%s", strings.Trim(activeCfg.PathPrefix, "/"), key)
+	}
+
+	mimeType := "image/jpeg"
+	url, err := provider.Upload(ctx, key, bytes.NewReader(buf.Bytes()), int64(buf.Len()), mimeType)
+	if err != nil {
+		return nil, fmt.Errorf("上传预设成品图失败: %w", err)
+	}
+
+	name := req.Name
+	if name == "" {
+		name = "默认无 EXIF"
+	}
+	frameConfig := `{"template":"gallery","showExif":false,"fontScale":1,"borderScale":1,"borderColor":"#ffffff","textColor":"auto","fontFamily":"system","logoMode":"text"}`
+	displayParams := "{}"
+
+	preset := &model.MediaPreset{
+		ID:                uuid.New().String(),
+		MediaID:           mediaRes.ID,
+		Name:              name,
+		FrameConfig:       frameConfig,
+		DisplayParams:     displayParams,
+		OutputURL:         url,
+		OutputStoragePath: key,
+		OutputSize:        int64(buf.Len()),
+		MimeType:          mimeType,
+	}
+	if err := l.presetModel.Create(ctx, preset); err != nil {
+		return nil, fmt.Errorf("保存预设记录失败: %w", err)
+	}
+
+	return &res.UploadWithPresetRes{
+		Media: *mediaRes,
+		Preset: res.MediaPresetRes{
+			ID:                preset.ID,
+			MediaID:           preset.MediaID,
+			Name:              preset.Name,
+			FrameConfig:       preset.FrameConfig,
+			DisplayParams:     preset.DisplayParams,
+			OutputURL:         preset.OutputURL,
+			OutputStoragePath: preset.OutputStoragePath,
+			OutputSize:        preset.OutputSize,
+			MimeType:          preset.MimeType,
+			CreatedAt:         preset.CreatedAt,
+		},
 	}, nil
 }
 

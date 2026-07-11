@@ -2,8 +2,8 @@ import request from './request'
 import type { Category, CategoryCreateReq, CategoryUpdateReq } from '@/types/category'
 
 export const categoryApi = {
-  getList() {
-    return request.get<Category[]>('/categories')
+  getList(type?: string) {
+    return request.get<Category[]>('/categories', { params: type ? { type } : {} })
   },
   create(data: CategoryCreateReq) {
     return request.post<Category>('/categories', data)

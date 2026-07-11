@@ -114,5 +114,8 @@ func autoMigrate(db *gorm.DB) error {
 		&model.StorageConfig{},
 		&model.StorageMigrationTask{},
 		&model.StorageMigrationItem{},
+		&model.TravelGuide{},
+		&model.Song{},
+		&model.Comment{},
 	)
 }

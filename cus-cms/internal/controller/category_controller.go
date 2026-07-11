@@ -35,7 +35,9 @@ func (c *CategoryController) Create(ctx *gin.Context) {
 
 // GetAll 获取所有分类 GET /api/v1/categories
 func (c *CategoryController) GetAll(ctx *gin.Context) {
-	result, err := c.logic.GetAll(ctx)
+	var r req.CategoryListReq
+	_ = ctx.ShouldBindQuery(&r)
+	result, err := c.logic.GetAll(ctx, r.Type)
 	if err != nil {
 		response.Error(ctx, err.Error())
 		return

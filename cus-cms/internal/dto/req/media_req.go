@@ -14,3 +14,8 @@ type CreatePresetReq struct {
 	FrameConfig   string `form:"frame_config" json:"frame_config" binding:"required"`
 	DisplayParams string `form:"display_params" json:"display_params" binding:"required"`
 }
+
+// UploadWithPresetReq 上传原图并自动生成预设请求参数（multipart 表单）。
+type UploadWithPresetReq struct {
+	Name string `form:"name"`
+}

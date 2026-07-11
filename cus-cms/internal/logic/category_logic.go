@@ -20,8 +20,14 @@ func NewCategoryLogic() *CategoryLogic {
 }
 
 func (l *CategoryLogic) Create(ctx context.Context, r *req.CreateCategoryReq) (*res.CategoryRes, error) {
+	// 默认类型为 article
+	categoryType := r.Type
+	if categoryType == "" {
+		categoryType = "article"
+	}
+
 	// 检查名称是否重复
-	existing, _ := l.model.GetByName(ctx, r.Name)
+	existing, _ := l.model.GetByName(ctx, r.Name, categoryType)
 	if existing != nil {
 		return nil, fmt.Errorf("分类名称已存在")
 	}
@@ -36,6 +42,7 @@ func (l *CategoryLogic) Create(ctx context.Context, r *req.CreateCategoryReq) (*
 		Name:        r.Name,
 		Slug:        slug,
 		Description: r.Description,
+		Type:        categoryType,
 		SortOrder:   r.SortOrder,
 	}
 
@@ -48,13 +55,14 @@ func (l *CategoryLogic) Create(ctx context.Context, r *req.CreateCategoryReq) (*
 		Name:        cat.Name,
 		Slug:        cat.Slug,
 		Description: cat.Description,
+		Type:        cat.Type,
 		SortOrder:   cat.SortOrder,
 		CreatedAt:   cat.CreatedAt,
 	}, nil
 }
 
-func (l *CategoryLogic) GetAll(ctx context.Context) ([]res.CategoryRes, error) {
-	categories, err := l.model.GetAll(ctx)
+func (l *CategoryLogic) GetAll(ctx context.Context, categoryType string) ([]res.CategoryRes, error) {
+	categories, err := l.model.GetAll(ctx, categoryType)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +73,7 @@ func (l *CategoryLogic) GetAll(ctx context.Context) ([]res.CategoryRes, error) {
 			Name:        c.Name,
 			Slug:        c.Slug,
 			Description: c.Description,
+			Type:        c.Type,
 			SortOrder:   c.SortOrder,
 			CreatedAt:   c.CreatedAt,
 		})
@@ -85,6 +94,7 @@ func (l *CategoryLogic) GetByID(ctx context.Context, id string) (*res.CategoryRe
 		Name:        c.Name,
 		Slug:        c.Slug,
 		Description: c.Description,
+		Type:        c.Type,
 		SortOrder:   c.SortOrder,
 		CreatedAt:   c.CreatedAt,
 	}, nil
@@ -97,7 +107,7 @@ func (l *CategoryLogic) Update(ctx context.Context, id string, r *req.UpdateCate
 	}
 
 	if r.Name != nil {
-		existing, _ := l.model.GetByName(ctx, *r.Name)
+		existing, _ := l.model.GetByName(ctx, *r.Name, c.Type)
 		if existing != nil && existing.ID != id {
 			return nil, fmt.Errorf("分类名称已存在")
 		}
@@ -108,6 +118,9 @@ func (l *CategoryLogic) Update(ctx context.Context, id string, r *req.UpdateCate
 	}
 	if r.Description != nil {
 		c.Description = *r.Description
+	}
+	if r.Type != nil {
+		c.Type = *r.Type
 	}
 	if r.SortOrder != nil {
 		c.SortOrder = *r.SortOrder
@@ -122,6 +135,7 @@ func (l *CategoryLogic) Update(ctx context.Context, id string, r *req.UpdateCate
 		Name:        c.Name,
 		Slug:        c.Slug,
 		Description: c.Description,
+		Type:        c.Type,
 		SortOrder:   c.SortOrder,
 		CreatedAt:   c.CreatedAt,
 	}, nil
@@ -134,6 +148,27 @@ func (l *CategoryLogic) Delete(ctx context.Context, id string) error {
 	}
 	if hasArticles {
 		return fmt.Errorf("该分类下存在文章，无法删除")
+	}
+	hasSongs, err := l.model.HasSongs(ctx, id)
+	if err != nil {
+		return fmt.Errorf("检查分类关联失败: %w", err)
+	}
+	if hasSongs {
+		return fmt.Errorf("该分类下存在歌曲，无法删除")
+	}
+	hasPortfolios, err := l.model.HasPortfolios(ctx, id)
+	if err != nil {
+		return fmt.Errorf("检查分类关联失败: %w", err)
+	}
+	if hasPortfolios {
+		return fmt.Errorf("该分类下存在作品集，无法删除")
+	}
+	hasTravelGuides, err := l.model.HasTravelGuides(ctx, id)
+	if err != nil {
+		return fmt.Errorf("检查分类关联失败: %w", err)
+	}
+	if hasTravelGuides {
+		return fmt.Errorf("该分类下存在旅行攻略，无法删除")
 	}
 	return l.model.Delete(ctx, id)
 }
