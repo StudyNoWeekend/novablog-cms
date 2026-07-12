@@ -41,6 +41,7 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	travelController := controller.NewTravelGuideController()
 	musicController := controller.NewMusicController()
 	commentController := controller.NewCommentController()
+	analyticsController := controller.NewAnalyticsController()
 	authMiddleware := middleware.AuthMiddleware(accessSecret)
 
 	// 存储配置管理依赖
@@ -84,6 +85,9 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册评论管理路由
 	RegisterCommentRoutes(api, commentController, authMiddleware)
+
+	// 注册工作台统计路由
+	RegisterAnalyticsRoutes(api, analyticsController, authMiddleware)
 }
 
 // RegisterHealthRouter 注册健康检查路由。

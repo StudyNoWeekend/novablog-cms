@@ -1,5 +1,5 @@
 import request from './request'
-import type { Comment, CommentListReq, ReplyReq, UpdateCommentStatusReq } from '@/types/comment'
+import type { Comment, CommentListReq, ReplyReq } from '@/types/comment'
 import type { PaginatedData } from '@/types/api'
 
 export const commentApi = {
@@ -11,8 +11,5 @@ export const commentApi = {
   },
   remove(id: string) {
     return request.delete(`/comments/${id}`)
-  },
-  updateStatus(id: string, data: UpdateCommentStatusReq) {
-    return request.put(`/comments/${id}/status`, data)
   },
 }

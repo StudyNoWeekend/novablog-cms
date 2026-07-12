@@ -59,18 +59,3 @@ func (c *CommentController) Delete(ctx *gin.Context) {
 	}
 	response.Success(ctx, nil)
 }
-
-// UpdateStatus 更新评论状态 PUT /api/v1/comments/:id/status
-func (c *CommentController) UpdateStatus(ctx *gin.Context) {
-	id := ctx.Param("id")
-	var r req.UpdateCommentStatusReq
-	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: status 必须为 2 或 3")
-		return
-	}
-	if err := c.logic.UpdateStatus(ctx, id, &r); err != nil {
-		response.Error(ctx, err.Error())
-		return
-	}
-	response.Success(ctx, nil)
-}

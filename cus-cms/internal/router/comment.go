@@ -14,6 +14,5 @@ func RegisterCommentRoutes(r *gin.RouterGroup, commentController *controller.Com
 		comments.GET("", commentController.GetList)
 		comments.POST("/:id/reply", commentController.Reply)
 		comments.DELETE("/:id", commentController.Delete)
-		comments.PUT("/:id/status", commentController.UpdateStatus)
 	}
 }

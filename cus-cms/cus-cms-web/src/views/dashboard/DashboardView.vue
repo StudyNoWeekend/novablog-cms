@@ -1,133 +1,165 @@
 <template>
   <div class="dashboard">
-    <!-- 顶部统计卡片 -->
-    <div class="stat-grid">
-      <div v-for="(s, i) in stats" :key="i" class="stat-card">
-        <div class="stat-card-top">
+    <!-- Loading skeleton -->
+    <div v-if="loading" class="dashboard-skeleton">
+      <div class="skeleton-grid">
+        <div class="skeleton-card" v-for="i in 4" :key="i"></div>
+      </div>
+      <div class="skeleton-row">
+        <div class="skeleton-block skeleton-left"></div>
+        <div class="skeleton-block skeleton-right"></div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div v-else-if="!overview" class="empty-state">
+      <div class="empty-icon">
+        <FileTextOutlined />
+      </div>
+      <p class="empty-text">暂无工作台数据</p>
+    </div>
+
+    <!-- Main content -->
+    <template v-else>
+      <!-- 顶部统计卡片 -->
+      <div class="stat-grid">
+        <div v-for="(s, i) in statsCards" :key="i" class="stat-card">
           <div class="stat-card-label">
             <span class="stat-icon" :class="s.iconBg">
               <component :is="s.icon" />
             </span>
             <span class="stat-name">{{ s.label }}</span>
           </div>
-          <div class="mini-chart">
-            <div v-for="(h, idx) in s.miniBars" :key="idx" class="mini-bar" :style="{ height: h + '%' }" />
-          </div>
-        </div>
-        <div class="stat-card-value">{{ s.value }}</div>
-        <div class="stat-card-bottom">
-          <span class="stat-compare">{{ s.compare }}</span>
-          <span class="stat-badge">{{ s.trend }}</span>
+          <div class="stat-card-value">{{ s.value.toLocaleString() }}</div>
+          <div class="stat-card-sub">{{ s.sub }}</div>
         </div>
       </div>
-    </div>
 
-    <!-- 中间两列布局 -->
-    <div class="dashboard-row">
-      <!-- 左列：整体趋势 -->
-      <div class="dashboard-col-left">
-        <div class="card">
-          <div class="chart-header">
-            <div class="chart-header-left">
-              <h3 class="card-title">整体趋势</h3>
-              <div class="chart-metric">
-                <span class="metric-value">¥23,8461</span>
-                <span class="metric-trend">+218.23</span>
+      <!-- 待办提醒区 -->
+      <div v-if="todoReminder.show" class="todo-reminder">
+        <div v-if="todoReminder.drafts > 0" class="todo-item" @click="goToArticles">
+          <span class="todo-count">{{ todoReminder.drafts }}</span>
+          <span class="todo-text">篇草稿待发布</span>
+          <span class="todo-arrow">&rarr;</span>
+        </div>
+      </div>
+
+      <!-- 中间两列布局 -->
+      <div class="dashboard-row">
+        <!-- 左列：内容产出趋势 -->
+        <div class="dashboard-col-left">
+          <div class="card">
+            <div class="chart-header">
+              <h3 class="card-title">内容产出趋势</h3>
+              <div class="time-tabs">
+                <button
+                  v-for="t in timeTabs"
+                  :key="t.value"
+                  :class="['tab-btn', { active: activeRange === t.value }]"
+                  @click="switchRange(t.value)"
+                >
+                  {{ t.label }}
+                </button>
               </div>
             </div>
-            <div class="time-tabs">
-              <button
-                v-for="t in timeTabs"
-                :key="t"
-                :class="['tab-btn', { active: activeTab === t }]"
-                @click="activeTab = t"
-              >
-                {{ t }}
-              </button>
+            <div class="chart-wrap">
+              <v-chart
+                v-if="trendData && trendData.items.length"
+                class="trend-chart"
+                :option="trendOption"
+                autoresize
+              />
+              <div v-else class="chart-empty">暂无趋势数据</div>
             </div>
-          </div>
-          <div class="chart-wrap">
-            <v-chart class="trend-chart" :option="trendOption" autoresize />
-          </div>
-          <div class="summary-bar">
-            <div v-for="(item, idx) in summaryStats" :key="idx" class="summary-pill">
-              <div class="summary-pill-label">{{ item.label }}</div>
-              <div class="summary-pill-value">{{ item.value }}</div>
-            </div>
-          </div>
-          <div class="data-table">
-            <div class="table-row table-head">
-              <div class="cell">月份</div>
-              <div class="cell">7天阅读</div>
-              <div class="cell">30天阅读</div>
-              <div class="cell">本月阅读</div>
-              <div class="cell">本年阅读</div>
-              <div class="cell">增长率</div>
-            </div>
-            <div v-for="(row, idx) in tableData" :key="idx" class="table-row">
-              <div class="cell">{{ row.month }}</div>
-              <div class="cell">{{ row.d7 }}</div>
-              <div class="cell">{{ row.d30 }}</div>
-              <div class="cell">{{ row.monthly }}</div>
-              <div class="cell">{{ row.yearly }}</div>
-              <div class="cell">
-                <span :class="['growth-badge', row.growth >= 0 ? 'up' : 'down']">
-                  {{ row.growth >= 0 ? '+' : '' }}{{ row.growth }}%
-                </span>
+            <div class="summary-bar">
+              <div v-for="(item, idx) in summaryStats" :key="idx" class="summary-pill">
+                <div class="summary-pill-label">{{ item.label }}</div>
+                <div class="summary-pill-value">{{ item.value }}</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 右列：内容分布 + 互动历史 -->
-      <div class="dashboard-col-right">
-        <div class="card">
-          <div class="card-header-between">
+        <!-- 右列：内容分布 -->
+        <div class="dashboard-col-right">
+          <div class="card">
             <h3 class="card-title">内容分布</h3>
-            <span class="dropdown-trigger">一月 ▼</span>
-          </div>
-          <div class="pie-wrap">
-            <v-chart class="pie-chart" :option="pieOption" autoresize />
-          </div>
-          <div class="pie-legend">
-            <div v-for="(item, idx) in pieLegend" :key="idx" class="legend-row">
-              <span class="legend-dot" :style="{ background: item.color }" />
-              <span class="legend-name">{{ item.name }}</span>
-              <span class="legend-percent">{{ item.value }}%</span>
+            <div class="pie-wrap">
+              <v-chart
+                v-if="distribution && distribution.items.length"
+                class="pie-chart"
+                :option="pieOption"
+                autoresize
+              />
+              <div v-else class="chart-empty">暂无分布数据</div>
             </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header-between">
-            <h3 class="card-title">互动历史</h3>
-            <span class="menu-dots">⋯</span>
-          </div>
-          <div class="interaction-list">
-            <div v-for="(item, idx) in interactions" :key="idx" class="interaction-item">
-              <div class="interaction-avatar" :style="{ backgroundColor: item.avatarColor }">
-                {{ item.initials }}
-              </div>
-              <div class="interaction-body">
-                <div class="interaction-title">{{ item.name }}</div>
-                <div class="interaction-desc">{{ item.date }} · {{ item.action }}</div>
+            <div class="pie-legend">
+              <div v-for="(item, idx) in pieLegend" :key="idx" class="legend-row">
+                <span class="legend-dot" :style="{ background: item.color }" />
+                <span class="legend-name">{{ item.name }}</span>
+                <span class="legend-percent">{{ item.percentage }}%</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- 底部：热门内容排行 + 最近评论 -->
+      <div class="dashboard-row bottom-row">
+        <div class="dashboard-col-left">
+          <div class="card top-content-card">
+            <h3 class="card-title">热门内容排行</h3>
+            <div class="top-content-list">
+              <div
+                v-for="(item, idx) in topContentList"
+                :key="item.id"
+                class="top-content-item"
+              >
+                <span :class="['rank-badge', `rank-${idx + 1}`]">{{ idx + 1 }}</span>
+                <span class="top-content-title">{{ item.title }}</span>
+                <span class="top-content-views">{{ item.view_count.toLocaleString() }} 浏览</span>
+                <span class="top-content-comments">{{ item.comment_count }} 评论</span>
+              </div>
+              <div v-if="topContentList.length === 0" class="list-empty">暂无热门内容</div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-col-right">
+          <div class="card">
+            <h3 class="card-title">最近评论</h3>
+            <div class="comment-list">
+              <div v-for="item in recentCommentsList" :key="item.id" class="comment-item">
+                <div class="comment-avatar" :class="{ blogger: item.is_blogger }">
+                  {{ item.nickname.charAt(0) }}
+                </div>
+                <div class="comment-body">
+                  <div class="comment-top">
+                    <span class="comment-name">{{ item.nickname }}</span>
+                    <span v-if="item.is_blogger" class="blogger-tag">博主</span>
+                    <span class="comment-time">{{ formatCommentTime(item.created_at) }}</span>
+                  </div>
+                  <div class="comment-text">{{ item.content }}</div>
+                  <div class="comment-target">{{ item.target_title }}</div>
+                </div>
+              </div>
+              <div v-if="recentCommentsList.length === 0" class="list-empty">暂无评论</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import type { Component } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   FileTextOutlined,
   EyeOutlined,
-  ReadOutlined,
   MessageOutlined,
+  PictureOutlined,
 } from '@ant-design/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -138,6 +170,14 @@ import {
   LegendComponent,
 } from 'echarts/components'
 import VChart from 'vue-echarts'
+import { analyticsApi } from '@/api/analytics'
+import type {
+  OverviewData,
+  ContentTrendData,
+  TopContentData,
+  DistributionData,
+  RecentCommentsData,
+} from '@/types/analytics'
 
 use([
   CanvasRenderer,
@@ -148,138 +188,243 @@ use([
   LegendComponent,
 ])
 
-const stats = [
-  {
-    label: '文章总数',
-    value: '128',
-    compare: '+12 篇本周新增',
-    trend: '+14.67%',
-    icon: FileTextOutlined,
-    iconBg: 'bg-blue',
-    miniBars: [40, 60, 35, 75, 50, 85, 65],
-  },
-  {
-    label: '总访问量',
-    value: '89,421',
-    compare: '+2,560 本周新增',
-    trend: '+0.67%',
-    icon: EyeOutlined,
-    iconBg: 'bg-green',
-    miniBars: [55, 45, 70, 40, 60, 50, 80],
-  },
-  {
-    label: '平均阅读',
-    value: '892',
-    compare: '+218 本周新增',
-    trend: '+1.4%',
-    icon: ReadOutlined,
-    iconBg: 'bg-orange',
-    miniBars: [30, 50, 40, 65, 45, 70, 55],
-  },
-  {
-    label: '评论总数',
-    value: '456',
-    compare: '+560 本周新增',
-    trend: '+0.52%',
-    icon: MessageOutlined,
-    iconBg: 'bg-purple',
-    miniBars: [45, 35, 60, 50, 75, 55, 65],
-  },
+const distributionColors: Record<string, string> = {
+  article: '#4a6cf7',
+  portfolio: '#10b981',
+  video: '#f59e0b',
+  travel: '#8b5cf6',
+  song: '#ec4899',
+}
+
+const timeTabs = [
+  { label: '7天', value: '7d' },
+  { label: '30天', value: '30d' },
+  { label: '90天', value: '90d' },
 ]
 
-const timeTabs = ['12个月', '6个月', '30天', '7天']
-const activeTab = ref('12个月')
+const loading = ref(true)
+const overview = ref<OverviewData | null>(null)
+const trendData = ref<ContentTrendData | null>(null)
+const topContent = ref<TopContentData | null>(null)
+const distribution = ref<DistributionData | null>(null)
+const recentComments = ref<RecentCommentsData | null>(null)
+const activeRange = ref('30d')
+const router = useRouter()
 
-const trendOption = computed(() => ({
-  grid: { left: 0, right: 0, top: 10, bottom: 0, containLabel: true },
-  tooltip: { trigger: 'axis' },
-  xAxis: {
-    type: 'category',
-    data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-    axisLine: { show: false },
-    axisTick: { show: false },
-    axisLabel: { color: '#94a3b8' },
-  },
-  yAxis: {
-    type: 'value',
-    splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } },
-    axisLabel: { show: false },
-  },
-  series: [
+async function loadOverview() {
+  try {
+    overview.value = await analyticsApi.getOverview()
+  } catch (e) {
+    console.error('Failed to load overview:', e)
+  }
+}
+
+async function loadTrend(range: string) {
+  try {
+    trendData.value = await analyticsApi.getContentTrend({
+      range: range as '7d' | '30d' | '90d',
+    })
+  } catch (e) {
+    console.error('Failed to load trend:', e)
+  }
+}
+
+async function loadTopContent() {
+  try {
+    topContent.value = await analyticsApi.getTopContent({ limit: 5 })
+  } catch (e) {
+    console.error('Failed to load top content:', e)
+  }
+}
+
+async function loadDistribution() {
+  try {
+    distribution.value = await analyticsApi.getDistribution()
+  } catch (e) {
+    console.error('Failed to load distribution:', e)
+  }
+}
+
+async function loadRecentComments() {
+  try {
+    recentComments.value = await analyticsApi.getRecentComments({ limit: 5 })
+  } catch (e) {
+    console.error('Failed to load recent comments:', e)
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([
+    loadOverview(),
+    loadTrend('30d'),
+    loadTopContent(),
+    loadDistribution(),
+    loadRecentComments(),
+  ])
+  loading.value = false
+})
+
+async function switchRange(range: string) {
+  activeRange.value = range
+  await loadTrend(range)
+}
+
+function goToArticles() {
+  router.push('/articles')
+}
+
+interface StatsCardItem {
+  label: string
+  value: number
+  sub: string
+  icon: Component
+  iconBg: string
+}
+
+const statsCards = computed((): StatsCardItem[] => {
+  if (!overview.value) return []
+  const o = overview.value
+  return [
     {
-      type: 'bar',
-      data: [4200, 5500, 4800, 6200, 5100, 7300, 6800, 5900, 7100, 6500, 7800, 8200],
-      barWidth: '40%',
-      itemStyle: {
-        borderRadius: [4, 4, 0, 0],
-        color: {
-          type: 'linear',
-          x: 0,
-          y: 0,
-          x2: 0,
-          y2: 1,
-          colorStops: [
-            { offset: 0, color: '#4a6cf7' },
-            { offset: 1, color: '#8faafa' },
-          ],
-        },
+      label: '文章总数',
+      value: o.article_total,
+      sub: `已发布 ${o.article_published} · 草稿 ${o.article_draft}`,
+      icon: FileTextOutlined,
+      iconBg: 'bg-blue',
+    },
+    {
+      label: '攻略浏览',
+      value: o.travel_views,
+      sub: '旅行攻略总浏览量',
+      icon: EyeOutlined,
+      iconBg: 'bg-green',
+    },
+    {
+      label: '评论总数',
+      value: o.comment_total,
+      sub: '全部评论',
+      icon: MessageOutlined,
+      iconBg: 'bg-purple',
+    },
+    {
+      label: '作品总数',
+      value: o.portfolio_total + o.video_total + o.song_total,
+      sub: `摄影 ${o.portfolio_total} · 视频 ${o.video_total} · 音乐 ${o.song_total}`,
+      icon: PictureOutlined,
+      iconBg: 'bg-orange',
+    },
+  ]
+})
+
+const todoReminder = computed(() => {
+  if (!overview.value) return { show: false, drafts: 0 }
+  return {
+    show: overview.value.article_draft > 0,
+    drafts: overview.value.article_draft,
+  }
+})
+
+const trendOption = computed(() => {
+  if (!trendData.value) return {}
+  const items = trendData.value.items
+  return {
+    grid: { left: 0, right: 0, top: 42, bottom: 8, containLabel: true },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['文章', '旅行攻略'], top: 0, textStyle: { color: '#64748b' } },
+    xAxis: {
+      type: 'category',
+      data: items.map((i) => i.date.slice(5)),
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#94a3b8', fontSize: 11 },
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } },
+      axisLabel: { color: '#94a3b8' },
+    },
+    series: [
+      {
+        name: '文章',
+        type: 'bar',
+        data: items.map((i) => i.article_count),
+        barWidth: '35%',
+        itemStyle: { borderRadius: [4, 4, 0, 0], color: '#4a6cf7' },
       },
-    },
-  ],
-}))
+      {
+        name: '旅行攻略',
+        type: 'bar',
+        data: items.map((i) => i.travel_count),
+        barWidth: '35%',
+        itemStyle: { borderRadius: [4, 4, 0, 0], color: '#10b981' },
+      },
+    ],
+  }
+})
 
-const summaryStats = [
-  { label: '7天阅读', value: '12,847' },
-  { label: '30天阅读', value: '45,231' },
-  { label: '本月阅读', value: '89,421' },
-  { label: '本年阅读', value: '1,024,893' },
-]
+const pieOption = computed(() => {
+  if (!distribution.value) return {}
+  return {
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    series: [
+      {
+        type: 'pie',
+        radius: ['55%', '75%'],
+        center: ['50%', '50%'],
+        label: { show: false },
+        labelLine: { show: false },
+        data: distribution.value.items.map((i) => ({
+          value: i.count,
+          name: i.name,
+          itemStyle: { color: distributionColors[i.type] || '#94a3b8' },
+        })),
+      },
+    ],
+  }
+})
 
-const tableData = [
-  { month: '2024-06', d7: '12,847', d30: '45,231', monthly: '89,421', yearly: '1,024,893', growth: 14.67 },
-  { month: '2024-05', d7: '11,230', d30: '42,100', monthly: '78,000', yearly: '935,472', growth: 8.32 },
-  { month: '2024-04', d7: '10,500', d30: '38,900', monthly: '72,000', yearly: '857,472', growth: -2.14 },
-  { month: '2024-03', d7: '13,200', d30: '41,500', monthly: '75,000', yearly: '785,472', growth: 5.67 },
-  { month: '2024-02', d7: '9,800', d30: '35,200', monthly: '68,000', yearly: '710,472', growth: 12.3 },
-  { month: '2024-01', d7: '11,000', d30: '39,000', monthly: '70,000', yearly: '642,472', growth: 3.45 },
-]
+const pieLegend = computed(() => {
+  if (!distribution.value) return []
+  return distribution.value.items.map((i) => ({
+    name: i.name,
+    percentage: i.percentage,
+    color: distributionColors[i.type] || '#94a3b8',
+  }))
+})
 
-const pieOption = computed(() => ({
-  tooltip: { trigger: 'item' },
-  series: [
-    {
-      type: 'pie',
-      radius: ['55%', '75%'],
-      center: ['50%', '50%'],
-      avoidLabelOverlap: false,
-      label: { show: false },
-      emphasis: { label: { show: false } },
-      labelLine: { show: false },
-      data: [
-        { value: 65, name: '文章', itemStyle: { color: '#4a6cf7' } },
-        { value: 20.5, name: '摄影作品', itemStyle: { color: '#10b981' } },
-        { value: 14.5, name: '视频', itemStyle: { color: '#f59e0b' } },
-      ],
-    },
-  ],
-}))
+const summaryStats = computed(() => {
+  if (!trendData.value) return []
+  const items = trendData.value.items
+  const totalPublish = items.reduce((s, i) => s + i.article_count + i.travel_count, 0)
+  const totalArticles = items.reduce((s, i) => s + i.article_count, 0)
+  const totalTravel = items.reduce((s, i) => s + i.travel_count, 0)
+  const avgPerDay = items.length > 0 ? (totalPublish / items.length).toFixed(1) : '0'
+  return [
+    { label: '总发布', value: totalPublish },
+    { label: '文章', value: totalArticles },
+    { label: '旅行攻略', value: totalTravel },
+    { label: '日均发布', value: avgPerDay },
+  ]
+})
 
-const pieLegend = [
-  { name: '文章', value: 65, color: '#4a6cf7' },
-  { name: '摄影作品', value: 20.5, color: '#10b981' },
-  { name: '视频', value: 14.5, color: '#f59e0b' },
-]
+const recentCommentsList = computed(() => {
+  if (!recentComments.value) return []
+  return recentComments.value.items
+})
 
-const interactions = [
-  { name: '张三', date: '2024-06-12', action: '评论了文章', initials: '张', avatarColor: '#4a6cf7' },
-  { name: '李四', date: '2024-06-11', action: '点赞了作品', initials: '李', avatarColor: '#10b981' },
-  { name: '王五', date: '2024-06-11', action: '收藏了文章', initials: '王', avatarColor: '#f59e0b' },
-  { name: '赵六', date: '2024-06-10', action: '评论了视频', initials: '赵', avatarColor: '#ef4444' },
-  { name: '孙七', date: '2024-06-10', action: '点赞了文章', initials: '孙', avatarColor: '#8b5cf6' },
-  { name: '周八', date: '2024-06-09', action: '评论了作品', initials: '周', avatarColor: '#06b6d4' },
-  { name: '吴九', date: '2024-06-08', action: '收藏了视频', initials: '吴', avatarColor: '#ec4899' },
-  { name: '郑十', date: '2024-06-08', action: '点赞了文章', initials: '郑', avatarColor: '#84cc16' },
-]
+const topContentList = computed(() => {
+  if (!topContent.value) return []
+  return topContent.value.items
+})
+
+function formatCommentTime(dateStr: string): string {
+  const d = new Date(dateStr)
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${mm}-${dd} ${hh}:${min}`
+}
 </script>
 
 <style scoped>
@@ -312,21 +457,11 @@ const interactions = [
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.stat-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .stat-card-label {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
-  min-width: 0;
+  margin-bottom: 16px;
 }
 
 .stat-icon {
@@ -365,52 +500,58 @@ const interactions = [
   font-weight: 500;
 }
 
-.mini-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 28px;
-  flex-shrink: 0;
-}
-
-.mini-bar {
-  width: 4px;
-  min-height: 2px;
-  background: #dbeafe;
-  border-radius: 2px;
-  transition: height 0.3s ease;
-}
-
-.stat-card:hover .mini-bar {
-  background: #93bbfc;
-}
-
 .stat-card-value {
   font-size: 28px;
   font-weight: 700;
   color: #1e293b;
   line-height: 1.2;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-.stat-card-bottom {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stat-compare {
+.stat-card-sub {
   font-size: 13px;
   color: #64748b;
 }
 
-.stat-badge {
-  font-size: 12px;
-  font-weight: 600;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.08);
-  padding: 2px 8px;
+/* Todo Reminder */
+.todo-reminder {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: #fff7ed;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 12px;
   border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.todo-item:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.todo-count {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.todo-text {
+  font-size: 14px;
+  color: #92400e;
+}
+
+.todo-arrow {
+  font-size: 14px;
+  color: #f59e0b;
 }
 
 /* Dashboard Row */
@@ -442,40 +583,20 @@ const interactions = [
 /* Chart Header */
 .chart-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
-}
-
-.chart-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
 .card-title {
   font-size: 16px;
   font-weight: 600;
   color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.chart-header .card-title {
   margin: 0;
-}
-
-.chart-metric {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.metric-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.metric-trend {
-  font-size: 14px;
-  font-weight: 600;
-  color: #10b981;
 }
 
 .time-tabs {
@@ -513,14 +634,20 @@ const interactions = [
   height: 100%;
 }
 
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
 /* Summary Bar */
 .summary-bar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #f1f5f9;
 }
 
 .summary-pill {
@@ -542,74 +669,7 @@ const interactions = [
   color: #1e293b;
 }
 
-/* Data Table */
-.data-table {
-  display: flex;
-  flex-direction: column;
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr 0.8fr;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f8fafc;
-}
-
-.table-head {
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.table-head .cell {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 500;
-}
-
-.cell {
-  font-size: 13px;
-  color: #475569;
-}
-
-.growth-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
-.growth-badge.up {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.08);
-}
-
-.growth-badge.down {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
-}
-
-/* Right Column */
-.card-header-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.dropdown-trigger {
-  font-size: 13px;
-  color: #64748b;
-  cursor: pointer;
-}
-
-.menu-dots {
-  font-size: 18px;
-  color: #94a3b8;
-  cursor: pointer;
-  letter-spacing: 1px;
-}
-
+/* Pie Chart */
 .pie-wrap {
   height: 200px;
   margin-bottom: 16px;
@@ -651,47 +711,247 @@ const interactions = [
   color: #1e293b;
 }
 
-/* Interaction List */
-.interaction-list {
+/* Comment List */
+.comment-list {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.interaction-item {
+.comment-item {
   display: flex;
-  align-items: center;
   gap: 12px;
 }
 
-.interaction-avatar {
+.comment-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #ffffff;
+  background: #4a6cf7;
   flex-shrink: 0;
 }
 
-.interaction-body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.comment-avatar.blogger {
+  background: #8b5cf6;
 }
 
-.interaction-title {
+.comment-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comment-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comment-name {
   font-size: 14px;
   font-weight: 500;
   color: #1e293b;
 }
 
-.interaction-desc {
+.blogger-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.comment-time {
   font-size: 12px;
   color: #94a3b8;
+  margin-left: auto;
+}
+
+.comment-text {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.comment-target {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Bottom Row */
+.bottom-row {
+  margin-top: 24px;
+}
+
+.bottom-row .dashboard-col-left,
+.bottom-row .dashboard-col-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.bottom-row .card {
+  flex: 1;
+}
+
+.top-content-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-content-item {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.top-content-item:last-child {
+  border-bottom: none;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.rank-badge.rank-1 {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.rank-badge.rank-2 {
+  background: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+}
+
+.rank-badge.rank-3 {
+  background: rgba(180, 83, 9, 0.1);
+  color: #b45309;
+}
+
+.top-content-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-content-views {
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.top-content-comments {
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.list-empty {
+  text-align: center;
+  padding: 24px 0;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+/* Skeleton */
+.dashboard-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.skeleton-card {
+  height: 120px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 20px;
+}
+
+.skeleton-block {
+  background: #f1f5f9;
+  border-radius: 12px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-left {
+  flex: 0 0 65%;
+  height: 400px;
+}
+
+.skeleton-right {
+  flex: 0 0 35%;
+  height: 400px;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #cbd5e1;
+}
+
+.empty-text {
+  font-size: 15px;
+  color: #94a3b8;
+  margin: 0;
 }
 
 /* Responsive */
@@ -717,6 +977,20 @@ const interactions = [
   .summary-bar {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .skeleton-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .skeleton-row {
+    flex-direction: column;
+  }
+
+  .skeleton-left,
+  .skeleton-right {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 767px) {
@@ -739,6 +1013,7 @@ const interactions = [
   .chart-header {
     flex-direction: column;
     gap: 12px;
+    align-items: flex-start;
   }
 
   .chart-wrap {
@@ -753,6 +1028,10 @@ const interactions = [
     padding: 10px;
   }
 
+  .summary-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .time-tabs {
     flex-wrap: wrap;
   }
@@ -762,12 +1041,22 @@ const interactions = [
     font-size: 12px;
   }
 
-  .data-table {
-    overflow-x: auto;
+  .top-content-item {
+    grid-template-columns: 28px 1fr auto;
+    gap: 8px;
   }
 
-  .table-row {
-    min-width: 600px;
+  .top-content-comments {
+    display: none;
+  }
+
+  .todo-reminder {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .skeleton-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

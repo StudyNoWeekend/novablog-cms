@@ -15,7 +15,6 @@ type CommentRes struct {
 	Avatar      string    `json:"avatar"`       // 评论者头像
 	Content     string    `json:"content"`      // 评论内容
 	IsBlogger   bool      `json:"is_blogger"`   // 是否为博主回复
-	Status      int16     `json:"status"`       // 评论状态
 	IPAddress   string    `json:"ip_address"`   // IP 地址
 	CreatedAt   time.Time `json:"created_at"`   // 创建时间
 	UpdatedAt   time.Time `json:"updated_at"`   // 更新时间

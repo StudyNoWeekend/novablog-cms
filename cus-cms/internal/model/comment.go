@@ -19,7 +19,7 @@ type Comment struct {
 	Avatar     string         `gorm:"type:varchar(500)"`                            // 评论者头像 URL
 	Content    string         `gorm:"type:text;not null"`                           // 评论内容
 	IsBlogger  bool           `gorm:"type:boolean;default:false;column:is_blogger"` // 是否为博主回复
-	Status     int16          `gorm:"type:smallint;default:1"`                      // 1=待审核 2=已通过 3=已拒绝
+	Status     int16          `gorm:"type:smallint;default:2"`                      // 默认已通过，无需审核
 	IPAddress  string         `gorm:"type:varchar(50);column:ip_address"`           // 评论者 IP 地址
 	CreatedAt  time.Time      `gorm:"type:timestamptz;autoCreateTime"`              // 创建时间
 	UpdatedAt  time.Time      `gorm:"type:timestamptz;autoUpdateTime"`              // 更新时间
@@ -56,8 +56,8 @@ func (m *CommentModel) GetByID(ctx context.Context, id string) (*Comment, error)
 	return &comment, nil
 }
 
-// GetList 分页查询评论列表，支持 target_type、target_id、status 筛选和 keyword 模糊搜索 content。
-func (m *CommentModel) GetList(ctx context.Context, page, pageSize int, targetType *string, targetID *string, status *int16, keyword *string) ([]Comment, int64, error) {
+// GetList 分页查询评论列表，支持 target_type、target_id 筛选和 keyword 模糊搜索 content。
+func (m *CommentModel) GetList(ctx context.Context, page, pageSize int, targetType *string, targetID *string, keyword *string) ([]Comment, int64, error) {
 	query := m.db.WithContext(ctx).Model(&Comment{})
 
 	if targetType != nil && *targetType != "" {
@@ -65,9 +65,6 @@ func (m *CommentModel) GetList(ctx context.Context, page, pageSize int, targetTy
 	}
 	if targetID != nil && *targetID != "" {
 		query = query.Where("target_id = ?", *targetID)
-	}
-	if status != nil {
-		query = query.Where("status = ?", *status)
 	}
 	if keyword != nil && *keyword != "" {
 		query = query.Where("content LIKE ?", "%"+*keyword+"%")
@@ -89,11 +86,6 @@ func (m *CommentModel) GetList(ctx context.Context, page, pageSize int, targetTy
 		return nil, 0, err
 	}
 	return comments, total, nil
-}
-
-// UpdateStatus 更新评论状态。
-func (m *CommentModel) UpdateStatus(ctx context.Context, id string, status int16) error {
-	return m.db.WithContext(ctx).Model(&Comment{}).Where("id = ?", id).Update("status", status).Error
 }
 
 // SoftDelete 软删除评论。

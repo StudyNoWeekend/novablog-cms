@@ -18,19 +18,6 @@
         <a-select-option value="travel">旅行攻略</a-select-option>
       </a-select>
 
-      <a-select
-        v-model:value="filterStatus"
-        placeholder="全部状态"
-        allow-clear
-        style="width: 140px"
-        @change="handleFilterChange"
-      >
-        <a-select-option :value="undefined">全部状态</a-select-option>
-        <a-select-option :value="1">待审核</a-select-option>
-        <a-select-option :value="2">已通过</a-select-option>
-        <a-select-option :value="3">已拒绝</a-select-option>
-      </a-select>
-
       <a-input-search
         v-model:value="filterKeyword"
         placeholder="搜索评论内容..."
@@ -60,7 +47,7 @@
         :loading="loading"
         :pagination="false"
         row-key="id"
-        :scroll="{ x: 1000 }"
+        :scroll="{ x: 900 }"
       >
         <template #emptyText>
           <a-empty description="暂无评论" />
@@ -92,11 +79,6 @@
             </div>
           </template>
 
-          <!-- 状态 -->
-          <template v-else-if="column.key === 'status'">
-            <a-tag :color="statusColor(record.status)">{{ statusText(record.status) }}</a-tag>
-          </template>
-
           <!-- 时间 -->
           <template v-else-if="column.key === 'created_at'">
             <span class="time-text">{{ formatDate(record.created_at) }}</span>
@@ -107,23 +89,6 @@
             <div class="action-cell">
               <a-button type="link" size="small" @click="openReply(record)">
                 <MessageOutlined /> 回复
-              </a-button>
-              <a-button
-                v-if="record.status === 1"
-                type="link"
-                size="small"
-                @click="handleStatusChange(record.id, 2)"
-              >
-                <CheckOutlined /> 通过
-              </a-button>
-              <a-button
-                v-if="record.status === 1"
-                type="link"
-                size="small"
-                danger
-                @click="handleStatusChange(record.id, 3)"
-              >
-                <CloseOutlined /> 拒绝
               </a-button>
               <a-button type="link" size="small" danger @click="handleDelete(record.id)">
                 <DeleteOutlined /> 删除
@@ -177,8 +142,6 @@ import { Modal, message, type TableColumnsType } from 'ant-design-vue'
 import {
   MessageOutlined,
   DeleteOutlined,
-  CheckOutlined,
-  CloseOutlined,
   FileTextOutlined,
   CompassOutlined,
 } from '@ant-design/icons-vue'
@@ -192,7 +155,6 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
 const filterTargetType = ref<string | undefined>(undefined)
-const filterStatus = ref<number | undefined>(undefined)
 const filterKeyword = ref('')
 const error = ref(false)
 
@@ -207,9 +169,8 @@ const columns: TableColumnsType<Comment> = [
   { title: '评论者', key: 'commenter', width: 180 },
   { title: '内容', key: 'content', ellipsis: true },
   { title: '来源', key: 'target', width: 200 },
-  { title: '状态', key: 'status', width: 100 },
   { title: '时间', key: 'created_at', width: 170 },
-  { title: '操作', key: 'action', width: 260 },
+  { title: '操作', key: 'action', width: 200 },
 ]
 
 onMounted(() => {
@@ -224,7 +185,6 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       target_type: filterTargetType.value,
-      status: filterStatus.value,
       keyword: filterKeyword.value || undefined,
     }
     const data = await commentApi.getList(params)
@@ -301,42 +261,6 @@ function handleDelete(id: string) {
       }
     },
   })
-}
-
-async function handleStatusChange(id: string, status: number) {
-  try {
-    await commentApi.updateStatus(id, { status })
-    message.success(status === 2 ? '已通过审核' : '已拒绝')
-    fetchList()
-  } catch {
-    // 错误由请求拦截器处理
-  }
-}
-
-function statusText(status: number): string {
-  switch (status) {
-    case 1:
-      return '待审核'
-    case 2:
-      return '已通过'
-    case 3:
-      return '已拒绝'
-    default:
-      return '-'
-  }
-}
-
-function statusColor(status: number): string {
-  switch (status) {
-    case 1:
-      return 'orange'
-    case 2:
-      return 'green'
-    case 3:
-      return 'red'
-    default:
-      return 'default'
-  }
 }
 
 function formatDate(dateStr: string): string {

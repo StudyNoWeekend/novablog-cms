@@ -33,7 +33,7 @@ func NewCommentLogic() *CommentLogic {
 func (l *CommentLogic) GetList(ctx context.Context, r *req.CommentListReq) (*res.PageRes[res.CommentRes], error) {
 	comments, total, err := l.commentModel.GetList(
 		ctx, r.GetPage(), r.GetPageSize(),
-		r.TargetType, r.TargetID, r.Status, r.Keyword,
+		r.TargetType, r.TargetID, r.Keyword,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("查询评论列表失败: %w", err)
@@ -88,18 +88,6 @@ func (l *CommentLogic) Reply(ctx context.Context, bloggerID string, commentID st
 	titleCache := make(map[string]string)
 	result := l.toCommentRes(ctx, reply, titleCache)
 	return &result, nil
-}
-
-// UpdateStatus 更新评论状态。
-func (l *CommentLogic) UpdateStatus(ctx context.Context, id string, r *req.UpdateCommentStatusReq) error {
-	_, err := l.commentModel.GetByID(ctx, id)
-	if err != nil {
-		return fmt.Errorf("评论不存在")
-	}
-	if err := l.commentModel.UpdateStatus(ctx, id, r.Status); err != nil {
-		return fmt.Errorf("更新评论状态失败: %w", err)
-	}
-	return nil
 }
 
 // Delete 软删除评论及其所有子回复。
@@ -160,7 +148,6 @@ func (l *CommentLogic) toCommentRes(ctx context.Context, c *model.Comment, title
 		Avatar:      c.Avatar,
 		Content:     c.Content,
 		IsBlogger:   c.IsBlogger,
-		Status:      c.Status,
 		IPAddress:   c.IPAddress,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
