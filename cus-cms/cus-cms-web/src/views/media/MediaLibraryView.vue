@@ -61,7 +61,7 @@
               <div class="media-content">
                 <img
                   v-if="item.file_type === 1"
-                  :src="item.url"
+                  :src="item.thumb_url || getThumbUrl(item.url, 300)"
                   :alt="item.filename"
                 />
                 <div v-else class="video-card">
@@ -131,6 +131,7 @@ import {
 } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
+import { getThumbUrl } from '@/utils/image'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 import MediaPresetWorkbench from '@/components/media/MediaPresetWorkbench.vue'

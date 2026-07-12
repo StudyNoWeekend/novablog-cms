@@ -110,3 +110,8 @@ func (p *AliyunProvider) Exists(ctx context.Context, key string) (bool, error) {
 func (p *AliyunProvider) Type() string {
 	return "aliyun"
 }
+
+// GetThumbURL 阿里云 OSS 暂不支持缩略图 URL，返回原始 URL。
+func (p *AliyunProvider) GetThumbURL(url string, width int) string {
+	return url
+}

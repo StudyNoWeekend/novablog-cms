@@ -113,3 +113,8 @@ func (p *MinioProvider) Exists(ctx context.Context, key string) (bool, error) {
 func (p *MinioProvider) Type() string {
 	return "minio"
 }
+
+// GetThumbURL MinIO 暂不支持缩略图 URL，返回原始 URL。
+func (p *MinioProvider) GetThumbURL(url string, width int) string {
+	return url
+}

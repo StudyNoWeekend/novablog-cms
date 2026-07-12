@@ -31,7 +31,7 @@
             <div class="portfolio-cover" @click="handleEdit(item.id)">
               <img
                 v-if="item.cover_url"
-                :src="item.cover_url"
+                :src="getThumbUrl(item.cover_url, 400)"
                 :alt="item.name"
               />
               <div v-else class="cover-placeholder">
@@ -156,6 +156,7 @@ import {
 } from '@ant-design/icons-vue'
 import { portfolioApi } from '@/api/portfolio'
 import type { Portfolio, CreatePortfolioReq } from '@/types/portfolio'
+import { getThumbUrl } from '@/utils/image'
 import PortfolioItemPicker from '@/components/portfolio/PortfolioItemPicker.vue'
 import CategoryBar from '@/components/common/CategoryBar.vue'
 import CategorySelect from '@/components/article/CategorySelect.vue'

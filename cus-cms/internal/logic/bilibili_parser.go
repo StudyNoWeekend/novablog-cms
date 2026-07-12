@@ -24,6 +24,7 @@ type BiliVideoPage struct {
 type BiliVideoInfo struct {
 	Title     string
 	Pic       string
+	Desc      string
 	OwnerName string
 	CID       int64 // 默认分P的cid
 	Duration  int
@@ -56,6 +57,7 @@ type biliVideoInfoResp struct {
 	Data struct {
 		Title    string `json:"title"`
 		Pic      string `json:"pic"`
+		Desc     string `json:"desc"`
 		CID      int64  `json:"cid"`
 		Duration int    `json:"duration"`
 		Owner    struct {
@@ -141,6 +143,7 @@ func FetchVideoInfo(ctx context.Context, bvid string) (*BiliVideoInfo, error) {
 	info := &BiliVideoInfo{
 		Title:     body.Data.Title,
 		Pic:       body.Data.Pic,
+		Desc:      body.Data.Desc,
 		OwnerName: body.Data.Owner.Name,
 		CID:       body.Data.CID,
 		Duration:  body.Data.Duration,

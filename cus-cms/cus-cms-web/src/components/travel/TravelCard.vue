@@ -10,7 +10,7 @@
     <div class="travel-card-cover">
       <img
         v-if="guide.coverImage"
-        :src="guide.coverImage"
+        :src="getThumbUrl(guide.coverImage, 400)"
         :alt="`${guide.title} 封面图`"
         loading="lazy"
       />
@@ -124,6 +124,7 @@ import {
   TagsOutlined,
 } from '@ant-design/icons-vue'
 import { TravelStatus, getRegionPath, type TravelGuide, type TravelStatus as TTravelStatus } from '@/types/travel'
+import { getThumbUrl } from '@/utils/image'
 
 const props = withDefaults(
   defineProps<{

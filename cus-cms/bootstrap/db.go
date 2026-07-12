@@ -117,5 +117,7 @@ func autoMigrate(db *gorm.DB) error {
 		&model.TravelGuide{},
 		&model.Song{},
 		&model.Comment{},
+		&model.VideoWork{},
+		&model.VideoPlatformLink{},
 	)
 }

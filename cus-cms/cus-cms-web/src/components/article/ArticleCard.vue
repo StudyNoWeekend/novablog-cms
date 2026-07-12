@@ -1,7 +1,7 @@
 <template>
   <div class="article-card" @click="handleEdit">
     <div class="article-card-cover">
-      <img v-if="article.cover_image" :src="article.cover_image" :alt="article.title" />
+      <img v-if="article.cover_image" :src="getThumbUrl(article.cover_image, 400)" :alt="article.title" />
       <div v-else class="article-card-cover-placeholder">
         <FileTextOutlined />
       </div>
@@ -62,6 +62,7 @@ import {
   SendOutlined, StopOutlined, DeleteOutlined,
 } from '@ant-design/icons-vue'
 import type { Article } from '@/types/article'
+import { getThumbUrl } from '@/utils/image'
 
 const props = defineProps<{
   article: Article

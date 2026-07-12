@@ -119,3 +119,16 @@ func (p *TencentProvider) Exists(ctx context.Context, key string) (bool, error) 
 func (p *TencentProvider) Type() string {
 	return "tencent"
 }
+
+// GetThumbURL 为腾讯云 COS 图片 URL 生成缩略图 URL。
+// 利用数据万象 imageMogr2 接口在 URL 后追加缩放、格式转换、质量参数。
+func (p *TencentProvider) GetThumbURL(url string, width int) string {
+	if url == "" {
+		return url
+	}
+	param := fmt.Sprintf("imageMogr2/thumbnail/%dx/format/webp/q/80", width)
+	if strings.Contains(url, "?") {
+		return url + "&" + param
+	}
+	return url + "?" + param
+}

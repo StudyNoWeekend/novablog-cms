@@ -14,7 +14,7 @@
         :class="{ selected: selectedId === item.id }"
         @click="selectedId = item.id"
       >
-        <img :src="item.url" :alt="item.filename" />
+        <img :src="item.thumb_url || getThumbUrl(item.url, 300)" :alt="item.filename" />
         <div v-if="selectedId === item.id" class="selected-overlay">
           <CheckCircleFilled />
         </div>
@@ -41,6 +41,7 @@ import { ref, watch } from 'vue'
 import { CheckCircleFilled } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
+import { getThumbUrl } from '@/utils/image'
 
 const props = defineProps<{
   visible: boolean

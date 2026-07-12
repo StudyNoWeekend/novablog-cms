@@ -18,4 +18,7 @@ type StorageProvider interface {
 	Exists(ctx context.Context, key string) (bool, error)
 	// Type 返回 provider 类型标识。
 	Type() string
+	// GetThumbURL 根据原始 URL 生成指定宽度的缩略图 URL。
+	// 不支持缩略图的 Provider 返回原始 URL。
+	GetThumbURL(url string, width int) string
 }

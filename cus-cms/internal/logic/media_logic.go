@@ -106,8 +106,14 @@ func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.M
 		return nil, err
 	}
 
+	provider := l.manager.GetProvider()
+
 	var items []res.MediaRes
 	for _, m := range list {
+		thumbURL := ptrToString(m.ThumbURL)
+		if thumbURL == "" && provider != nil {
+			thumbURL = provider.GetThumbURL(m.URL, 300)
+		}
 		items = append(items, res.MediaRes{
 			ID:        m.ID,
 			Filename:  m.Filename,
@@ -115,7 +121,7 @@ func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.M
 			MimeType:  m.MimeType,
 			Size:      m.Size,
 			URL:       m.URL,
-			ThumbURL:  ptrToString(m.ThumbURL),
+			ThumbURL:  thumbURL,
 			Width:     m.Width,
 			Height:    m.Height,
 			CreatedAt: m.CreatedAt,

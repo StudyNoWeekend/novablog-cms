@@ -37,6 +37,7 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	tagController := controller.NewTagController()
 	articleController := controller.NewArticleController()
 	portfolioController := controller.NewPortfolioController()
+	videoController := controller.NewVideoController()
 	travelController := controller.NewTravelGuideController()
 	musicController := controller.NewMusicController()
 	commentController := controller.NewCommentController()
@@ -71,6 +72,9 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册摄影作品集管理路由
 	RegisterPortfolioRoutes(api, portfolioController, authMiddleware)
+
+	// 注册视频作品管理路由
+	RegisterVideoRoutes(api, videoController, authMiddleware)
 
 	// 注册旅行攻略管理路由
 	RegisterTravelRoutes(api, travelController, authMiddleware)
