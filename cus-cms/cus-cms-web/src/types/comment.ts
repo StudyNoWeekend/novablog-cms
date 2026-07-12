@@ -6,8 +6,7 @@ export interface Comment {
   parent_id: string | null
   blogger_id: string | null
   nickname: string
-  email: string
-  avatar: string
+  website: string
   content: string
   is_blogger: boolean
   ip_address: string

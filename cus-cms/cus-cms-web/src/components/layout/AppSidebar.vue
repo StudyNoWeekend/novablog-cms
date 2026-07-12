@@ -85,6 +85,47 @@
           </router-link>
         </div>
 
+        <!-- API 文档 -->
+        <div class="menu-group">
+          <router-link
+            to="/api-doc"
+            class="nav-item"
+            :class="{ active: isActive('/api-doc') }"
+          >
+            <span class="nav-icon"><BookOutlined /></span>
+            <span class="nav-text">API 文档</span>
+          </router-link>
+        </div>
+
+        <!-- 安全中心（可展开） -->
+        <div class="menu-group">
+          <div
+            class="nav-item submenu-title"
+            :class="{ active: isSecurityActive }"
+            @click="securityExpanded = !securityExpanded"
+          >
+            <span class="nav-icon"><SafetyOutlined /></span>
+            <span class="nav-text">安全中心</span>
+            <span class="submenu-arrow" :class="{ expanded: securityExpanded }">
+              <RightOutlined />
+            </span>
+          </div>
+          <div class="submenu" :class="{ expanded: securityExpanded }">
+            <router-link
+              v-for="item in securityMenuItems"
+              :key="item.path"
+              :to="item.path"
+              class="nav-item sub-item"
+              :class="{ active: isActiveExact(item.path) }"
+            >
+              <span class="nav-icon">
+                <component :is="item.icon" />
+              </span>
+              <span class="nav-text">{{ item.label }}</span>
+            </router-link>
+          </div>
+        </div>
+
         <!-- 模板风格 -->
         <div class="menu-group">
           <router-link
@@ -138,6 +179,10 @@ import {
   QuestionCircleOutlined,
   CloseOutlined,
   RightOutlined,
+  BookOutlined,
+  SafetyOutlined,
+  SafetyCertificateOutlined,
+  EyeOutlined,
 } from '@ant-design/icons-vue'
 import AppLogo from '@/components/common/AppLogo.vue'
 
@@ -145,6 +190,7 @@ const route = useRoute()
 const appStore = useAppStore()
 const isMobile = ref(false)
 const contentExpanded = ref(true)
+const securityExpanded = ref(false)
 
 const contentMenuItems = [
   { path: '/articles', label: '文章管理', icon: FileTextOutlined },
@@ -154,6 +200,13 @@ const contentMenuItems = [
   { path: '/playlists', label: '音乐播放列表', icon: CustomerServiceOutlined },
 ]
 
+const securityMenuItems = [
+  { path: '/security/config', label: '安全配置', icon: SafetyCertificateOutlined },
+  { path: '/security/monitor', label: '安全监控', icon: EyeOutlined },
+]
+
+const securityPaths = securityMenuItems.map((item) => item.path)
+
 const contentPaths = contentMenuItems.map((item) => item.path)
 
 const isContentActive = computed(() => {
@@ -161,10 +214,18 @@ const isContentActive = computed(() => {
   return contentPaths.includes(currentRoot)
 })
 
+const isSecurityActive = computed(() => {
+  return securityPaths.some((p) => route.path.startsWith(p))
+})
+
 function isActive(path: string): boolean {
   const currentRoot = '/' + route.path.split('/')[1]
   if (path === '/dashboard') return currentRoot === '/dashboard'
   return currentRoot === path
+}
+
+function isActiveExact(path: string): boolean {
+  return route.path === path
 }
 
 function handleResize() {

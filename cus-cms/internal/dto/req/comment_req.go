@@ -12,3 +12,13 @@ type CommentListReq struct {
 type ReplyCommentReq struct {
 	Content string `json:"content" binding:"required,min=1,max=2000"` // 回复内容
 }
+
+// CreatePublicCommentReq 公开评论创建请求参数。
+type CreatePublicCommentReq struct {
+	TargetType string  `json:"target_type" binding:"required,oneof=article travel_guide"` // 目标类型
+	TargetID   string  `json:"target_id" binding:"required"`                              // 目标 ID
+	ParentID   *string `json:"parent_id"`                                                 // 父评论 ID
+	Nickname   string  `json:"nickname" binding:"required,min=1,max=50"`                  // 评论者名称
+	Website    string  `json:"website"`                                                   // 评论者博客地址
+	Content    string  `json:"content" binding:"required,min=1,max=2000"`                 // 评论内容
+}

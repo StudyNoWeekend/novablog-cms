@@ -162,6 +162,40 @@ func (l *TravelGuideLogic) Delete(ctx context.Context, id string) error {
 	return l.model.SoftDelete(ctx, id)
 }
 
+// GetPublicList 获取已发布旅行攻略列表（强制 status=2）。
+func (l *TravelGuideLogic) GetPublicList(ctx context.Context, r *req.TravelGuideListReq) (*res.PageRes[res.TravelGuideRes], error) {
+	published := int16(2)
+	r.Status = &published
+	return l.GetList(ctx, r)
+}
+
+// GetPublicDetail 获取已发布旅行攻略详情，验证 status=2。
+func (l *TravelGuideLogic) GetPublicDetail(ctx context.Context, id string) (*model.TravelGuide, error) {
+	guide, err := l.model.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("旅行攻略不存在")
+	}
+	if guide.Status != 2 {
+		return nil, fmt.Errorf("旅行攻略不存在")
+	}
+	return guide, nil
+}
+
+// GetHotList 获取热门旅行攻略列表。
+func (l *TravelGuideLogic) GetHotList(ctx context.Context, count int) ([]model.TravelGuide, error) {
+	return l.model.GetHotList(ctx, count)
+}
+
+// IncrementView 增加旅行攻略浏览量。
+func (l *TravelGuideLogic) IncrementView(ctx context.Context, id string) error {
+	return l.model.IncrementViewCount(ctx, id)
+}
+
+// IncrementLike 增加旅行攻略点赞数。
+func (l *TravelGuideLogic) IncrementLike(ctx context.Context, id string) error {
+	return l.model.IncrementLikeCount(ctx, id)
+}
+
 // toGuideRes 转换为列表响应。
 func (l *TravelGuideLogic) toGuideRes(g *model.TravelGuide) res.TravelGuideRes {
 	categoryID := ""

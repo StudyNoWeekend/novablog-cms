@@ -2,8 +2,10 @@
 package router
 
 import (
+	"context"
 	"net/http"
 
+	"cus-cms/internal/cache"
 	"cus-cms/internal/controller"
 	"cus-cms/internal/logic"
 	"cus-cms/internal/middleware"
@@ -42,7 +44,21 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	musicController := controller.NewMusicController()
 	commentController := controller.NewCommentController()
 	analyticsController := controller.NewAnalyticsController()
+	securityController := controller.NewSecurityController()
+	apiDocController := controller.NewAPIDocController()
+	profileController := controller.NewProfileController(storageMgr)
 	authMiddleware := middleware.AuthMiddleware(accessSecret)
+
+	// 安全缓存与中间件
+	securityCache := cache.NewSecurityCache()
+	ipBlacklistMiddleware := middleware.IPBlacklistMiddleware(securityCache)
+	rateLimitMiddleware := middleware.RateLimitMiddleware(securityCache)
+
+	// 启动时预加载安全配置到缓存，确保限流中间件立即生效
+	securityLogic := logic.NewSecurityLogic()
+	if err := securityLogic.InitCache(context.Background()); err != nil {
+		logger.Warn("预加载安全配置缓存失败", zap.Error(err))
+	}
 
 	// 存储配置管理依赖
 	storageLogic := logic.NewStorageLogic(storageMgr, cryptoKey, model.NewStorageMigration())
@@ -52,8 +68,10 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	migrationLogic := logic.NewMigrationLogic(storageMgr, cryptoKey, uploadDir, logger)
 	migrationController := controller.NewMigrationController(migrationLogic)
 
-	// 注册公开路由（无需认证）
+	// 注册公开路由（无需认证，应用 IP 黑名单与限流中间件）
 	public := api.Group("/public")
+	public.Use(ipBlacklistMiddleware)
+	public.Use(rateLimitMiddleware)
 	RegisterPublicRoutes(public, publicController)
 
 	// 注册认证路由
@@ -88,6 +106,15 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册工作台统计路由
 	RegisterAnalyticsRoutes(api, analyticsController, authMiddleware)
+
+	// 注册安全管理路由
+	RegisterSecurityRoutes(api, securityController, authMiddleware)
+
+	// 注册 API 文档路由
+	RegisterAPIDocRoutes(api, apiDocController, authMiddleware)
+
+	// 注册个人资料管理路由
+	RegisterProfileRoutes(api, profileController, authMiddleware)
 }
 
 // RegisterHealthRouter 注册健康检查路由。

@@ -145,3 +145,43 @@ func (m *ArticleModel) ExistsBySlug(ctx context.Context, slug string, excludeID 
 	}
 	return count > 0, nil
 }
+
+// GetHotList 查询热门文章列表，按浏览量降序取指定数量。
+func (m *ArticleModel) GetHotList(ctx context.Context, count int) ([]Article, error) {
+	var articles []Article
+	err := m.db.WithContext(ctx).
+		Preload("Category").
+		Preload("Tags").
+		Where("status = ?", 2).
+		Order("view_count DESC").
+		Limit(count).
+		Find(&articles).Error
+	if err != nil {
+		return nil, err
+	}
+	return articles, nil
+}
+
+// GetRandomList 随机查询已发布文章列表，取指定数量。
+func (m *ArticleModel) GetRandomList(ctx context.Context, count int) ([]Article, error) {
+	var articles []Article
+	err := m.db.WithContext(ctx).
+		Preload("Category").
+		Preload("Tags").
+		Where("status = ?", 2).
+		Order("RANDOM()").
+		Limit(count).
+		Find(&articles).Error
+	if err != nil {
+		return nil, err
+	}
+	return articles, nil
+}
+
+// IncrementViewCount 根据slug增加文章浏览量，仅对已发布文章生效。
+func (m *ArticleModel) IncrementViewCount(ctx context.Context, slug string) error {
+	return m.db.WithContext(ctx).
+		Model(&Article{}).
+		Where("slug = ? AND status = ?", slug, 2).
+		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
+}

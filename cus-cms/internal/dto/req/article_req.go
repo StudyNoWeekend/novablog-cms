@@ -42,3 +42,13 @@ type ArticleListReq struct {
 type UpdateStatusReq struct {
 	Status int16 `json:"status" binding:"required,oneof=1 2 3"`
 }
+
+// HotArticleReq 热门文章请求参数。
+type HotArticleReq struct {
+	Count int `form:"count" json:"count"`
+}
+
+// RandomArticleReq 随机文章请求参数。
+type RandomArticleReq struct {
+	Count int `form:"count" json:"count"`
+}

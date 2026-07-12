@@ -136,3 +136,33 @@ func (m *TravelGuideModel) UpdateStatus(ctx context.Context, id string, status i
 func (m *TravelGuideModel) SoftDelete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&TravelGuide{}).Error
 }
+
+// GetHotList 查询热门旅行攻略列表，按浏览量降序取指定数量。
+func (m *TravelGuideModel) GetHotList(ctx context.Context, count int) ([]TravelGuide, error) {
+	var guides []TravelGuide
+	err := m.db.WithContext(ctx).
+		Where("status = ?", 2).
+		Order("view_count DESC").
+		Limit(count).
+		Find(&guides).Error
+	if err != nil {
+		return nil, err
+	}
+	return guides, nil
+}
+
+// IncrementViewCount 根据ID增加旅行攻略浏览量，仅对已发布攻略生效。
+func (m *TravelGuideModel) IncrementViewCount(ctx context.Context, id string) error {
+	return m.db.WithContext(ctx).
+		Model(&TravelGuide{}).
+		Where("id = ? AND status = ?", id, 2).
+		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
+}
+
+// IncrementLikeCount 根据ID增加旅行攻略点赞数，仅对已发布攻略生效。
+func (m *TravelGuideModel) IncrementLikeCount(ctx context.Context, id string) error {
+	return m.db.WithContext(ctx).
+		Model(&TravelGuide{}).
+		Where("id = ? AND status = ?", id, 2).
+		UpdateColumn("like_count", gorm.Expr("like_count + 1")).Error
+}

@@ -211,6 +211,39 @@ func (l *ArticleLogic) Delete(ctx context.Context, id string) error {
 	return l.model.SoftDelete(ctx, id)
 }
 
+// GetHotList 获取热门文章列表。
+func (l *ArticleLogic) GetHotList(ctx context.Context, count int) ([]res.ArticleRes, error) {
+	articles, err := l.model.GetHotList(ctx, count)
+	if err != nil {
+		return nil, fmt.Errorf("查询热门文章失败: %w", err)
+	}
+
+	items := make([]res.ArticleRes, 0, len(articles))
+	for i := range articles {
+		items = append(items, l.toArticleRes(&articles[i]))
+	}
+	return items, nil
+}
+
+// GetRandomList 获取随机文章列表。
+func (l *ArticleLogic) GetRandomList(ctx context.Context, count int) ([]res.ArticleRes, error) {
+	articles, err := l.model.GetRandomList(ctx, count)
+	if err != nil {
+		return nil, fmt.Errorf("查询随机文章失败: %w", err)
+	}
+
+	items := make([]res.ArticleRes, 0, len(articles))
+	for i := range articles {
+		items = append(items, l.toArticleRes(&articles[i]))
+	}
+	return items, nil
+}
+
+// IncrementView 增加文章浏览量。
+func (l *ArticleLogic) IncrementView(ctx context.Context, slug string) error {
+	return l.model.IncrementViewCount(ctx, slug)
+}
+
 // toArticleRes 转换为列表响应
 func (l *ArticleLogic) toArticleRes(a *model.Article) res.ArticleRes {
 	var tagIDs []string

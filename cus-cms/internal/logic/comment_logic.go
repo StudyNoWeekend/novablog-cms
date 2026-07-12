@@ -73,8 +73,6 @@ func (l *CommentLogic) Reply(ctx context.Context, bloggerID string, commentID st
 		ParentID:   &parent.ID,
 		BloggerID:  &blogger.ID,
 		Nickname:   blogger.Nickname,
-		Email:      blogger.Email,
-		Avatar:     blogger.Avatar,
 		Content:    r.Content,
 		IsBlogger:  true,
 		Status:     2, // 博主回复默认已通过
@@ -144,12 +142,68 @@ func (l *CommentLogic) toCommentRes(ctx context.Context, c *model.Comment, title
 		ParentID:    c.ParentID,
 		BloggerID:   c.BloggerID,
 		Nickname:    c.Nickname,
-		Email:       c.Email,
-		Avatar:      c.Avatar,
+		Website:     c.Website,
 		Content:     c.Content,
 		IsBlogger:   c.IsBlogger,
 		IPAddress:   c.IPAddress,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
 	}
+}
+
+// GetPublicList 获取公开评论列表（仅已通过审核的评论）。
+func (l *CommentLogic) GetPublicList(ctx context.Context, targetType, targetID string, page, pageSize int) (*res.PageRes[res.CommentPublicRes], error) {
+	comments, total, err := l.commentModel.GetPublicList(ctx, targetType, targetID, page, pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("查询评论列表失败: %w", err)
+	}
+
+	items := make([]res.CommentPublicRes, 0, len(comments))
+	for _, c := range comments {
+		items = append(items, res.CommentPublicRes{
+			ID:         c.ID,
+			TargetType: c.TargetType,
+			TargetID:   c.TargetID,
+			ParentID:   c.ParentID,
+			Nickname:   c.Nickname,
+			Website:    c.Website,
+			Content:    c.Content,
+			IsBlogger:  c.IsBlogger,
+			CreatedAt:  c.CreatedAt,
+		})
+	}
+
+	return res.NewPageRes(items, total, page, pageSize), nil
+}
+
+// CreatePublic 创建公开评论，状态默认为已通过，记录 IP 地址。
+func (l *CommentLogic) CreatePublic(ctx context.Context, r *req.CreatePublicCommentReq, ip string) (*res.CommentPublicRes, error) {
+	comment := &model.Comment{
+		ID:         uuid.New().String(),
+		TargetType: r.TargetType,
+		TargetID:   r.TargetID,
+		ParentID:   r.ParentID,
+		Nickname:   r.Nickname,
+		Website:    r.Website,
+		Content:    r.Content,
+		IsBlogger:  false,
+		Status:     2,
+		IPAddress:  ip,
+	}
+
+	if err := l.commentModel.Create(ctx, comment); err != nil {
+		return nil, fmt.Errorf("创建评论失败: %w", err)
+	}
+
+	return &res.CommentPublicRes{
+		ID:         comment.ID,
+		TargetType: comment.TargetType,
+		TargetID:   comment.TargetID,
+		ParentID:   comment.ParentID,
+		Nickname:   comment.Nickname,
+		Website:    comment.Website,
+		Content:    comment.Content,
+		IsBlogger:  comment.IsBlogger,
+		CreatedAt:  comment.CreatedAt,
+	}, nil
 }

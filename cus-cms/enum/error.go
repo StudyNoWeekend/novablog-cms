@@ -40,8 +40,12 @@ var (
 	ErrForbidden = NewBizError(403000, "无权限访问该资源", 403)
 	// ErrAlreadyInitialized 系统已初始化，无法重复创建
 	ErrAlreadyInitialized = NewBizError(403001, "系统已初始化，无法重复创建", 403)
+	// ErrIPBlocked IP 已被暂时限制访问
+	ErrIPBlocked = NewBizError(403002, "您已被暂时限制访问，请稍后再试", 403)
 	// ErrNotFound 资源不存在
 	ErrNotFound = NewBizError(404001, "资源不存在", 404)
 	// ErrInternalServer 系统内部错误
 	ErrInternalServer = NewBizError(500001, "系统内部错误", 500)
+	// ErrTooManyRequests 操作过于频繁
+	ErrTooManyRequests = NewBizError(429001, "操作过于频繁，请稍后再试", 429)
 )

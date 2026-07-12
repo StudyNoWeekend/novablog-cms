@@ -209,6 +209,21 @@ func (l *MusicLogic) GetAudioURL(ctx context.Context, songID string) (string, er
 	return audioURL, nil
 }
 
+// GetPublicSongList 获取公开歌曲列表（无需状态过滤）。
+func (l *MusicLogic) GetPublicSongList(ctx context.Context, r *req.SongListReq) (*res.PageRes[res.SongRes], error) {
+	return l.GetSongList(ctx, r)
+}
+
+// GetPublicSongByID 根据 ID 获取歌曲。
+func (l *MusicLogic) GetPublicSongByID(ctx context.Context, id string) (*model.Song, error) {
+	return l.songModel.GetByID(ctx, id)
+}
+
+// GetPublicAudioURL 获取歌曲的音频播放地址（复用已有 GetAudioURL 逻辑）。
+func (l *MusicLogic) GetPublicAudioURL(ctx context.Context, songID string) (string, error) {
+	return l.GetAudioURL(ctx, songID)
+}
+
 // toSongRes 转换为歌曲响应
 func (l *MusicLogic) toSongRes(s *model.Song) *res.SongRes {
 	return &res.SongRes{

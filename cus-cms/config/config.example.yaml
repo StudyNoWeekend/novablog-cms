@@ -44,6 +44,18 @@ jwt:
 crypto:
   secret_key: "<a-random-32-char-secret-key>"
 
+security:
+  get_max_tokens: 20
+  get_window_seconds: 60
+  post_max_tokens: 5
+  post_window_seconds: 60
+  view_max_tokens: 10
+  view_window_seconds: 60
+  like_max_tokens: 10
+  like_window_seconds: 60
+  blacklist_threshold: 5
+  blacklist_ttl_minutes: 60
+
 # upload 段保留（作为迁移只读源，不再用于新上传）
 # upload:
 #   dir: ./uploads

@@ -125,6 +125,41 @@ func (l *PortfolioLogic) GetByID(ctx context.Context, id string) (*res.Portfolio
 	return detail, nil
 }
 
+// GetPublicList 获取已发布作品集列表（强制 status=1，含封面 URL 解析）。
+func (l *PortfolioLogic) GetPublicList(ctx context.Context, r *req.PortfolioListReq) (*res.PortfolioListRes, error) {
+	published := 1
+	r.Status = &published
+	return l.GetList(ctx, r)
+}
+
+// GetPublicDetail 获取已发布作品集详情（验证 status=1，含作品项列表）。
+func (l *PortfolioLogic) GetPublicDetail(ctx context.Context, id string) (map[string]interface{}, error) {
+	detail, err := l.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("作品集不存在")
+	}
+	if detail.Status != 1 {
+		return nil, fmt.Errorf("作品集不存在")
+	}
+	result := map[string]interface{}{
+		"id":              detail.ID,
+		"name":            detail.Name,
+		"description":     detail.Description,
+		"cover_mode":      detail.CoverMode,
+		"cover_preset_id": detail.CoverPresetID,
+		"cover_url":       detail.CoverURL,
+		"status":          detail.Status,
+		"sort_order":      detail.SortOrder,
+		"category_id":     detail.CategoryID,
+		"category_name":   detail.CategoryName,
+		"item_count":      detail.ItemCount,
+		"items":           detail.Items,
+		"created_at":      detail.CreatedAt,
+		"updated_at":      detail.UpdatedAt,
+	}
+	return result, nil
+}
+
 // Update 更新作品集。
 func (l *PortfolioLogic) Update(ctx context.Context, id string, r *req.UpdatePortfolioReq) (*res.PortfolioRes, error) {
 	portfolio, err := l.portfolioModel.GetByID(ctx, id)

@@ -14,9 +14,8 @@ type Comment struct {
 	TargetID   string         `gorm:"type:uuid;not null;column:target_id"`          // 目标 ID
 	ParentID   *string        `gorm:"type:uuid;column:parent_id"`                   // 父评论 ID，顶级评论为 nil
 	BloggerID  *string        `gorm:"type:uuid;column:blogger_id"`                  // 博主 ID（博主回复时填充）
-	Nickname   string         `gorm:"type:varchar(50);not null"`                    // 评论者昵称
-	Email      string         `gorm:"type:varchar(100)"`                            // 评论者邮箱
-	Avatar     string         `gorm:"type:varchar(500)"`                            // 评论者头像 URL
+	Nickname   string         `gorm:"type:varchar(50);not null"`                    // 评论者名称
+	Website    string         `gorm:"type:varchar(500)"`                            // 评论者博客地址
 	Content    string         `gorm:"type:text;not null"`                           // 评论内容
 	IsBlogger  bool           `gorm:"type:boolean;default:false;column:is_blogger"` // 是否为博主回复
 	Status     int16          `gorm:"type:smallint;default:2"`                      // 默认已通过，无需审核
@@ -96,4 +95,27 @@ func (m *CommentModel) SoftDelete(ctx context.Context, id string) error {
 // SoftDeleteByParentID 根据父评论 ID 级联软删除所有子回复。
 func (m *CommentModel) SoftDeleteByParentID(ctx context.Context, parentID string) error {
 	return m.db.WithContext(ctx).Where("parent_id = ?", parentID).Delete(&Comment{}).Error
+}
+
+// GetPublicList 分页查询已通过审核的评论列表，按 target_type 和 target_id 筛选。
+func (m *CommentModel) GetPublicList(ctx context.Context, targetType, targetID string, page, pageSize int) ([]Comment, int64, error) {
+	query := m.db.WithContext(ctx).Model(&Comment{}).
+		Where("status = ? AND target_type = ? AND target_id = ?", 2, targetType, targetID)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	var comments []Comment
+	err := query.
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&comments).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return comments, total, nil
 }

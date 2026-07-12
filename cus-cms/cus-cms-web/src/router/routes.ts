@@ -101,6 +101,24 @@ export default [
         component: () => import('@/views/comment/CommentManageView.vue'),
       },
       {
+        path: 'api-doc',
+        name: 'ApiDoc',
+        meta: { title: 'API 文档', icon: 'BookOutlined' },
+        component: () => import('@/views/api-doc/ApiDocView.vue'),
+      },
+      {
+        path: 'security/config',
+        name: 'SecurityConfig',
+        meta: { title: '安全配置' },
+        component: () => import('@/views/security/SecurityConfigView.vue'),
+      },
+      {
+        path: 'security/monitor',
+        name: 'SecurityMonitor',
+        meta: { title: '安全监控' },
+        component: () => import('@/views/security/SecurityMonitorView.vue'),
+      },
+      {
         path: 'templates',
         name: 'Templates',
         meta: { title: '模板风格', icon: 'SkinOutlined' },

@@ -22,6 +22,8 @@ type Blogger struct {
 	Email           string         `gorm:"type:varchar(100)"`                     // 邮箱
 	BlogTitle       string         `gorm:"type:varchar(100)"`                     // 博客标题
 	BlogDescription string         `gorm:"type:text"`                             // 博客描述
+	BlogIcon        string         `gorm:"type:varchar(500)"`                     // 博客 icon 图 URL
+	PageBackground  string         `gorm:"type:varchar(500)"`                     // 页面背景图 URL
 	LastLoginAt     *time.Time     `gorm:"type:timestamptz"`                      // 最后登录时间
 	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间
 	UpdatedAt       time.Time      `gorm:"type:timestamptz;autoUpdateTime"`       // 更新时间
@@ -87,4 +89,14 @@ func (m *BloggerModel) Count(ctx context.Context) (int64, error) {
 // Create 创建博主记录。
 func (m *BloggerModel) Create(ctx context.Context, blogger *Blogger) error {
 	return m.db.WithContext(ctx).Create(blogger).Error
+}
+
+// GetFirst 查询第一条博主记录。
+func (m *BloggerModel) GetFirst(ctx context.Context) (*Blogger, error) {
+	var blogger Blogger
+	err := m.db.WithContext(ctx).First(&blogger).Error
+	if err != nil {
+		return nil, err
+	}
+	return &blogger, nil
 }

@@ -29,7 +29,22 @@ export interface UserInfo {
   username: string
   nickname: string
   avatar: string
+  bio: string
+  page_background: string
+  blog_icon: string
+  blog_title: string
+  blog_description: string
   email: string
+}
+
+export interface UpdateProfileReq {
+  nickname?: string
+  avatar?: string
+  bio?: string
+  page_background?: string
+  blog_icon?: string
+  blog_title?: string
+  blog_description?: string
 }
 
 export interface FrameConfig {

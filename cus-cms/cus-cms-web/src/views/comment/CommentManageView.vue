@@ -57,11 +57,24 @@
           <!-- 评论者 -->
           <template v-if="column.key === 'commenter'">
             <div class="commenter-cell">
-              <a-avatar :src="record.avatar || undefined" :size="32">
+              <a-avatar :size="32">
                 {{ record.nickname?.charAt(0) || '?' }}
               </a-avatar>
-              <span class="commenter-name">{{ record.nickname }}</span>
-              <a-tag v-if="record.is_blogger" color="blue" class="blogger-tag">博主</a-tag>
+              <div class="commenter-info">
+                <div class="commenter-name-row">
+                  <span class="commenter-name">{{ record.nickname }}</span>
+                  <a-tag v-if="record.is_blogger" color="blue" class="blogger-tag">博主</a-tag>
+                </div>
+                <a
+                  v-if="record.website"
+                  :href="record.website"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="commenter-website"
+                >
+                  {{ record.website }}
+                </a>
+              </div>
             </div>
           </template>
 
@@ -166,7 +179,7 @@ const replySubmitting = ref(false)
 
 // 表格列定义
 const columns: TableColumnsType<Comment> = [
-  { title: '评论者', key: 'commenter', width: 180 },
+  { title: '评论者', key: 'commenter', width: 220 },
   { title: '内容', key: 'content', ellipsis: true },
   { title: '来源', key: 'target', width: 200 },
   { title: '时间', key: 'created_at', width: 170 },
@@ -293,9 +306,35 @@ function formatDate(dateStr: string): string {
   gap: 8px;
 }
 
+.commenter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.commenter-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .commenter-name {
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.commenter-website {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.commenter-website:hover {
+  color: var(--color-primary);
 }
 
 .blogger-tag {

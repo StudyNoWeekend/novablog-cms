@@ -114,6 +114,36 @@ func (l *VideoLogic) GetByID(ctx context.Context, id string) (*res.VideoWorkRes,
 	return l.toVideoWorkRes(video, links), nil
 }
 
+// GetPublicList 获取已发布视频作品列表（强制 status=1，含平台链接）。
+func (l *VideoLogic) GetPublicList(ctx context.Context, r *req.VideoListReq) (*res.VideoWorkListRes, error) {
+	published := 1
+	r.Status = &published
+	return l.GetList(ctx, r)
+}
+
+// GetPublicDetail 获取已发布视频作品详情（验证 status=1，含平台链接）。
+func (l *VideoLogic) GetPublicDetail(ctx context.Context, id string) (map[string]interface{}, error) {
+	detail, err := l.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("视频作品不存在")
+	}
+	if detail.Status != 1 {
+		return nil, fmt.Errorf("视频作品不存在")
+	}
+	result := map[string]interface{}{
+		"id":          detail.ID,
+		"title":       detail.Title,
+		"cover_url":   detail.CoverURL,
+		"description": detail.Description,
+		"status":      detail.Status,
+		"sort_order":  detail.SortOrder,
+		"platforms":   detail.Platforms,
+		"created_at":  detail.CreatedAt,
+		"updated_at":  detail.UpdatedAt,
+	}
+	return result, nil
+}
+
 // Update 更新视频作品，若 Platforms 非空则事务内重建平台链接。
 func (l *VideoLogic) Update(ctx context.Context, id string, r *req.UpdateVideoReq) (*res.VideoWorkRes, error) {
 	video, err := l.videoModel.GetByID(ctx, id)
