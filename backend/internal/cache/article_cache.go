@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"cus-cms/internal/model"
+	"novablog/internal/model"
 
 	"github.com/go-redis/redis/v8"
 )

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"cus-cms/internal/model"
+	"novablog/internal/model"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"

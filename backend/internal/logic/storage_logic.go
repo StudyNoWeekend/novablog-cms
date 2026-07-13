@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"cus-cms/internal/dto/req"
-	"cus-cms/internal/dto/res"
-	"cus-cms/internal/model"
-	"cus-cms/internal/storage"
-	"cus-cms/utils/crypto"
+	"novablog/internal/dto/req"
+	"novablog/internal/dto/res"
+	"novablog/internal/model"
+	"novablog/internal/storage"
+	"novablog/utils/crypto"
 )
 
 // StorageLogic 存储配置业务逻辑。

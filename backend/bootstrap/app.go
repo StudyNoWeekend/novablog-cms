@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"cus-cms/internal/logic"
-	"cus-cms/internal/middleware"
+	"novablog/internal/logic"
+	"novablog/internal/middleware"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"cus-cms/internal/dto/req"
-	"cus-cms/internal/dto/res"
-	"cus-cms/internal/model"
+	"novablog/internal/dto/req"
+	"novablog/internal/dto/res"
+	"novablog/internal/model"
 
 	"github.com/google/uuid"
 )

@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"cus-cms/internal/cache"
-	"cus-cms/internal/dto/req"
-	"cus-cms/internal/dto/res"
-	"cus-cms/internal/model"
+	"novablog/internal/cache"
+	"novablog/internal/dto/req"
+	"novablog/internal/dto/res"
+	"novablog/internal/model"
 )
 
 // AnalyticsLogic 工作台统计业务逻辑结构体。

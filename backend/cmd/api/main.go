@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"cus-cms/bootstrap"
-	"cus-cms/internal/model"
-	"cus-cms/internal/router"
-	"cus-cms/internal/storage"
+	"novablog/bootstrap"
+	"novablog/internal/model"
+	"novablog/internal/router"
+	"novablog/internal/storage"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

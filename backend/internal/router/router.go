@@ -5,12 +5,12 @@ import (
 	"context"
 	"net/http"
 
-	"cus-cms/internal/cache"
-	"cus-cms/internal/controller"
-	"cus-cms/internal/logic"
-	"cus-cms/internal/middleware"
-	"cus-cms/internal/model"
-	"cus-cms/internal/storage"
+	"novablog/internal/cache"
+	"novablog/internal/controller"
+	"novablog/internal/logic"
+	"novablog/internal/middleware"
+	"novablog/internal/model"
+	"novablog/internal/storage"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

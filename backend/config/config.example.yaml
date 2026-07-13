@@ -20,7 +20,7 @@ postgres:
   port: 5432
   user: postgres
   password: "<your-postgres-password>"
-  dbname: cus_cms
+  dbname: novablog
   sslmode: disable
   max_open_conns: 100
   max_idle_conns: 10

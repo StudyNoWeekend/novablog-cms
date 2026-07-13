@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"cus-cms/utils/response"
+	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
 )

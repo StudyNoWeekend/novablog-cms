@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cus-cms/internal/model"
-	"cus-cms/utils/crypto"
+	"novablog/internal/model"
+	"novablog/utils/crypto"
 )
 
 // NewProvider 根据 StorageConfig 构建对应 Provider。

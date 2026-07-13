@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"cus-cms/enum"
-	"cus-cms/internal/dto/req"
-	"cus-cms/internal/logic"
-	"cus-cms/internal/storage"
-	"cus-cms/utils/response"
+	"novablog/enum"
+	"novablog/internal/dto/req"
+	"novablog/internal/logic"
+	"novablog/internal/storage"
+	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

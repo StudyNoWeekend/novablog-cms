@@ -1,7 +1,7 @@
 package router
 
 import (
-	"cus-cms/internal/controller"
+	"novablog/internal/controller"
 
 	"github.com/gin-gonic/gin"
 )

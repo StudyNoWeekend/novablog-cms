@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cus-cms/internal/dto/req"
-	"cus-cms/internal/dto/res"
-	"cus-cms/internal/model"
+	"novablog/internal/dto/req"
+	"novablog/internal/dto/res"
+	"novablog/internal/model"
 )
 
 // BloggerLogic 博主业务逻辑结构体。

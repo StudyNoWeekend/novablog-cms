@@ -4,9 +4,9 @@ import (
 	"strings"
 	"time"
 
-	"cus-cms/enum"
-	"cus-cms/internal/cache"
-	"cus-cms/utils/response"
+	"novablog/enum"
+	"novablog/internal/cache"
+	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
 )

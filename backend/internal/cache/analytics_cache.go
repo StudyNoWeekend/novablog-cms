@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"cus-cms/internal/dto/res"
+	"novablog/internal/dto/res"
 
 	"github.com/go-redis/redis/v8"
 )

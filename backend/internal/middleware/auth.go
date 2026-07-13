@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"cus-cms/enum"
-	"cus-cms/internal/cache"
-	"cus-cms/utils/jwt"
-	"cus-cms/utils/response"
+	"novablog/enum"
+	"novablog/internal/cache"
+	"novablog/utils/jwt"
+	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

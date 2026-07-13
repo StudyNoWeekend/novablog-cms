@@ -2,7 +2,7 @@
 
 # 编译
 build:
-	go build -o bin/cus-cms ./cmd/api
+	go build -o bin/novablog ./cmd/api
 
 # 运行
 run:

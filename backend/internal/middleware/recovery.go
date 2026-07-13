@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"cus-cms/enum"
-	"cus-cms/utils/response"
+	"novablog/enum"
+	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

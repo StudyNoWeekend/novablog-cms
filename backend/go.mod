@@ -1,4 +1,4 @@
-module cus-cms
+module novablog
 
 go 1.25.0
 

@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"cus-cms/internal/dto/req"
-	"cus-cms/internal/logic"
-	"cus-cms/utils/response"
+	"novablog/internal/dto/req"
+	"novablog/internal/logic"
+	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
 )

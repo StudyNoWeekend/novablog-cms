@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"cus-cms/internal/model"
+	"novablog/internal/model"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
