@@ -20,17 +20,17 @@ bin/
 *.test
 *.out
 # 敏感配置（含数据库密码等，请勿提交；模板见 config.example.yaml）
-cus-cms/config/config.yaml
+backend/config/config.yaml
 # 本地上传目录（运行时数据）
-cus-cms/uploads/
+backend/uploads/
 
-# ===== 前端 (cus-cms-web) =====
-cus-cms-web/node_modules/
-cus-cms-web/dist/
-cus-cms-web/dist-ssr/
-cus-cms-web/.vite/
-cus-cms-web/stats.html
-cus-cms-web/.vscode
+# ===== 前端 (backend-web) =====
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/stats.html
+frontend/.vscode
 # 通用构建产物
 dist/
 dist-ssr/
