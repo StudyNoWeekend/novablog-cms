@@ -24,6 +24,12 @@ export interface LoginRes {
   expires_in: number
 }
 
+export interface SocialLink {
+  platform: string
+  url: string
+  sort_order: number
+}
+
 export interface UserInfo {
   id: string
   username: string
@@ -35,6 +41,7 @@ export interface UserInfo {
   blog_title: string
   blog_description: string
   email: string
+  social_links?: SocialLink[]
 }
 
 export interface UpdateProfileReq {
@@ -45,6 +52,7 @@ export interface UpdateProfileReq {
   blog_icon?: string
   blog_title?: string
   blog_description?: string
+  social_links?: SocialLink[]
 }
 
 export interface FrameConfig {

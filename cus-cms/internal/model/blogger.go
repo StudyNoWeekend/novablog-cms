@@ -3,6 +3,7 @@ package model
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
@@ -13,21 +14,22 @@ var DB *gorm.DB
 
 // Blogger 博主信息模型，对应 bloggers 数据表。
 type Blogger struct {
-	ID              string         `gorm:"type:uuid;primaryKey"`                  // UUID 主键
-	Username        string         `gorm:"type:varchar(50);uniqueIndex;not null"` // 用户名，唯一
-	PasswordHash    string         `gorm:"type:varchar(255);not null"`            // 密码哈希值
-	Nickname        string         `gorm:"type:varchar(50)"`                      // 昵称
-	Avatar          string         `gorm:"type:varchar(500)"`                     // 头像 URL
-	Bio             string         `gorm:"type:text"`                             // 个人简介
-	Email           string         `gorm:"type:varchar(100)"`                     // 邮箱
-	BlogTitle       string         `gorm:"type:varchar(100)"`                     // 博客标题
-	BlogDescription string         `gorm:"type:text"`                             // 博客描述
-	BlogIcon        string         `gorm:"type:varchar(500)"`                     // 博客 icon 图 URL
-	PageBackground  string         `gorm:"type:varchar(500)"`                     // 页面背景图 URL
-	LastLoginAt     *time.Time     `gorm:"type:timestamptz"`                      // 最后登录时间
-	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间
-	UpdatedAt       time.Time      `gorm:"type:timestamptz;autoUpdateTime"`       // 更新时间
-	DeletedAt       gorm.DeletedAt `gorm:"index"`                                 // 软删除时间
+	ID              string          `gorm:"type:uuid;primaryKey"`                  // UUID 主键
+	Username        string          `gorm:"type:varchar(50);uniqueIndex;not null"` // 用户名，唯一
+	PasswordHash    string          `gorm:"type:varchar(255);not null"`            // 密码哈希值
+	Nickname        string          `gorm:"type:varchar(50)"`                      // 昵称
+	Avatar          string          `gorm:"type:varchar(500)"`                     // 头像 URL
+	Bio             string          `gorm:"type:text"`                             // 个人简介
+	Email           string          `gorm:"type:varchar(100)"`                     // 邮箱
+	BlogTitle       string          `gorm:"type:varchar(100)"`                     // 博客标题
+	BlogDescription string          `gorm:"type:text"`                             // 博客描述
+	BlogIcon        string          `gorm:"type:varchar(500)"`                     // 博客 icon 图 URL
+	PageBackground  string          `gorm:"type:varchar(500)"`                     // 页面背景图 URL
+	SocialLinks     json.RawMessage `gorm:"type:json"`                             // 社交平台链接 JSON 数组
+	LastLoginAt     *time.Time      `gorm:"type:timestamptz"`                      // 最后登录时间
+	CreatedAt       time.Time       `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间
+	UpdatedAt       time.Time       `gorm:"type:timestamptz;autoUpdateTime"`       // 更新时间
+	DeletedAt       gorm.DeletedAt  `gorm:"index"`                                 // 软删除时间
 }
 
 // TableName 指定数据表名称。

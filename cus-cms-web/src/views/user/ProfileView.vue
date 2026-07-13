@@ -86,6 +86,51 @@
         />
       </a-form-item>
 
+      <a-form-item label="社交链接">
+        <div class="social-links-container">
+          <div
+            v-for="(link, index) in socialLinks"
+            :key="index"
+            class="social-link-row"
+          >
+            <a-select
+              v-model:value="link.platform"
+              placeholder="选择平台"
+              style="width: 180px"
+              show-search
+              :filter-option="filterPlatform"
+            >
+              <a-select-option
+                v-for="platform in SOCIAL_PLATFORMS"
+                :key="platform.key"
+                :value="platform.key"
+              >
+                <div class="platform-option">
+                  <span class="platform-option-icon" :style="{ color: platform.color }">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path :d="platform.icon" />
+                    </svg>
+                  </span>
+                  <span>{{ platform.name }}</span>
+                </div>
+              </a-select-option>
+            </a-select>
+            <a-input
+              v-model:value="link.url"
+              placeholder="请输入个人主页 URL"
+              allow-clear
+              style="flex: 1"
+            />
+            <a-button danger @click="removeSocialLink(index)">
+              删除
+            </a-button>
+          </div>
+          <a-button type="dashed" block @click="addSocialLink">
+            + 添加社交链接
+          </a-button>
+        </div>
+      </a-form-item>
+
       <a-form-item>
         <a-button type="primary" :loading="saving" @click="handleSave">保存</a-button>
       </a-form-item>
@@ -97,7 +142,8 @@
 import { reactive, ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { authApi } from '@/api/auth'
-import type { UpdateProfileReq } from '@/types/api'
+import type { UpdateProfileReq, SocialLink } from '@/types/api'
+import { SOCIAL_PLATFORMS } from '@/components/profile/socialPlatforms'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -114,6 +160,21 @@ const form = reactive<UpdateProfileReq>({
   blog_description: '',
 })
 
+const socialLinks = ref<SocialLink[]>([])
+
+function addSocialLink() {
+  socialLinks.value.push({ platform: '', url: '', sort_order: socialLinks.value.length })
+}
+
+function removeSocialLink(index: number) {
+  socialLinks.value.splice(index, 1)
+}
+
+function filterPlatform(input: string, option: { value: string }) {
+  const platform = SOCIAL_PLATFORMS.find((p) => p.key === option.value)
+  return platform ? platform.name.toLowerCase().includes(input.toLowerCase()) : false
+}
+
 async function loadProfile() {
   loading.value = true
   try {
@@ -125,6 +186,7 @@ async function loadProfile() {
     form.blog_icon = data.blog_icon || ''
     form.blog_title = data.blog_title || ''
     form.blog_description = data.blog_description || ''
+    socialLinks.value = data.social_links || []
   } catch {
     message.error('加载个人资料失败')
   } finally {
@@ -135,7 +197,7 @@ async function loadProfile() {
 async function handleSave() {
   saving.value = true
   try {
-    await authApi.updateProfile({ ...form })
+    await authApi.updateProfile({ ...form, social_links: socialLinks.value })
     message.success('保存成功')
   } catch {
     message.error('保存失败')
@@ -223,5 +285,30 @@ onMounted(loadProfile)
 .icon-preview img {
   width: 100%;
   height: 100%;
+}
+
+.social-links-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.social-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.platform-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

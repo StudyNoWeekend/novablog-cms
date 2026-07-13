@@ -48,6 +48,7 @@ var apiDocs = []APIDocItem{
 			{Name: "blog_description", Type: "string", Desc: "博客描述"},
 			{Name: "page_background", Type: "string", Desc: "页面背景图URL"},
 			{Name: "blog_icon", Type: "string", Desc: "博客icon图URL"},
+			{Name: "social_links", Type: "array", Desc: "社交平台链接数组 [{platform, url, sort_order}]"},
 		},
 	},
 

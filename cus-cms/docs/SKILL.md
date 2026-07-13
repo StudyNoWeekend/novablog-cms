@@ -318,6 +318,7 @@ Authorization: Bearer <access_token>
 | blog_description | string | 博客描述 |
 | page_background | string | 页面背景图 URL |
 | blog_icon | string | 博客 icon 图 URL |
+| social_links | array | 社交平台链接数组 [{platform, url, sort_order}] |
 
 **响应示例:**
 
@@ -332,7 +333,10 @@ Authorization: Bearer <access_token>
     "blog_title": "Cus Blog",
     "blog_description": "记录技术与生活",
     "page_background": "https://example.com/bg.jpg",
-    "blog_icon": "https://example.com/icon.png"
+    "blog_icon": "https://example.com/icon.png",
+    "social_links": [
+      {"platform": "github", "url": "https://github.com/xxx", "sort_order": 0}
+    ]
   }
 }
 ```
@@ -2454,6 +2458,7 @@ Authorization: Bearer <access_token>
 | blog_title | string | 博客标题 |
 | blog_description | string | 博客描述 |
 | email | string | 邮箱 |
+| social_links | array | 社交平台链接数组 [{platform, url, sort_order}] |
 
 **响应示例:**
 
@@ -2469,7 +2474,10 @@ Authorization: Bearer <access_token>
     "blog_icon": "https://example.com/icon.png",
     "blog_title": "Cus Blog",
     "blog_description": "记录技术与生活",
-    "email": "cus@example.com"
+    "email": "cus@example.com",
+    "social_links": [
+      {"platform": "github", "url": "https://github.com/xxx", "sort_order": 0}
+    ]
   }
 }
 ```
@@ -2491,6 +2499,7 @@ Authorization: Bearer <access_token>
 | blog_icon | *string | 否 | 博客 icon 图 URL，最多 500 字符 |
 | blog_title | *string | 否 | 博客标题，最多 100 字符 |
 | blog_description | *string | 否 | 博客描述 |
+| social_links | *[]object | 否 | 社交平台链接数组 [{platform, url, sort_order}] |
 
 **请求示例:**
 
@@ -2586,7 +2595,7 @@ Authorization: Bearer <access_token>
 
 | 模块 | 返回字段 | 排除字段 |
 |------|----------|----------|
-| 博主信息 | nickname, avatar, bio, blog_title, blog_description, page_background, blog_icon | password_hash, email, username, last_login_at |
+| 博主信息 | nickname, avatar, bio, blog_title, blog_description, page_background, blog_icon, social_links | password_hash, email, username, last_login_at |
 | 文章 | 全部字段（不含 deleted_at） | - |
 | 评论（公开） | id, target_type, target_id, parent_id, nickname, website, content, is_blogger, created_at | ip_address, blogger_id, updated_at |
 | 评论（管理） | 全部字段（含 ip_address, blogger_id, target_title） | - |
