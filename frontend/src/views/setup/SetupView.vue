@@ -5,13 +5,13 @@
 
     <div class="setup-card">
       <!-- Logo -->
-      <div class="setup-logo">Cus</div>
+      <div class="setup-logo">Novablog</div>
 
       <!-- 标题 -->
-      <h1 class="setup-title">Cus CMS</h1>
+      <h1 class="setup-title">Novablog</h1>
 
       <!-- 欢迎文字 -->
-      <p class="setup-welcome">欢迎使用 Cus CMS</p>
+      <p class="setup-welcome">欢迎使用 Novablog</p>
       <p class="setup-desc">创建您的博主账号以开始使用系统</p>
 
       <!-- 表单 -->

@@ -1,7 +1,7 @@
-const TOKEN_KEY = 'cus_cms_token'
-const REFRESH_TOKEN_KEY = 'cus_cms_refresh_token'
-const USER_KEY = 'cus_cms_user'
-const INITIALIZED_KEY = 'cus_cms_initialized'
+const TOKEN_KEY = 'novablog_token'
+const REFRESH_TOKEN_KEY = 'novablog_refresh_token'
+const USER_KEY = 'novablog_user'
+const INITIALIZED_KEY = 'novablog_initialized'
 
 function createStorage(backend: Storage) {
   return {

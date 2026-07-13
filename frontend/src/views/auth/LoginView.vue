@@ -5,7 +5,7 @@
 
     <div class="login-card">
       <!-- Logo -->
-      <div class="login-logo">Cus</div>
+      <div class="login-logo">Novablog</div>
 
       <!-- 标题 -->
       <h1 class="login-title">创作者后台</h1>

@@ -18,7 +18,7 @@
       </svg>
     </span>
     <transition name="logo-text-fade">
-      <span v-if="!collapsed" class="logo-text">Cus CMS</span>
+      <span v-if="!collapsed" class="logo-text">Novablog</span>
     </transition>
   </router-link>
 </template>
