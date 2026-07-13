@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ai-cus.iml" filepath="$PROJECT_DIR$/.idea/ai-cus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/novablog-admin.iml" filepath="$PROJECT_DIR$/.idea/novablog-admin.iml" />
     </modules>
   </component>
 </project>

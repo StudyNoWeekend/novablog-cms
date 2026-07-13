@@ -25,11 +25,12 @@ cus-cms/config/config.yaml
 cus-cms/uploads/
 
 # ===== 前端 (cus-cms-web) =====
-cus-cms/cus-cms-web/node_modules/
-cus-cms/cus-cms-web/dist/
-cus-cms/cus-cms-web/dist-ssr/
-cus-cms/cus-cms-web/.vite/
-cus-cms/cus-cms-web/stats.html
+cus-cms-web/node_modules/
+cus-cms-web/dist/
+cus-cms-web/dist-ssr/
+cus-cms-web/.vite/
+cus-cms-web/stats.html
+cus-cms-web/.vscode
 # 通用构建产物
 dist/
 dist-ssr/
