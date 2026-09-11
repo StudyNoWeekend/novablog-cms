@@ -45,9 +45,9 @@ func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileH
 	}
 	defer src.Close()
 
-	provider := l.manager.GetProvider()
+	provider := l.manager.GetProviderOrReload(ctx)
 	if provider == nil {
-		return nil, fmt.Errorf("对象存储未配置")
+		return nil, fmt.Errorf("对象存储未配置，请在存储配置页面创建并激活存储配置")
 	}
 
 	// 生成对象 key：images/2006/01/uuid.ext
@@ -170,9 +170,9 @@ func (l *MediaLogic) CreatePreset(ctx context.Context, req *req.CreatePresetReq,
 		return nil, fmt.Errorf("原图不存在: %w", err)
 	}
 
-	provider := l.manager.GetProvider()
+	provider := l.manager.GetProviderOrReload(ctx)
 	if provider == nil {
-		return nil, fmt.Errorf("对象存储未配置")
+		return nil, fmt.Errorf("对象存储未配置，请在存储配置页面创建并激活存储配置")
 	}
 
 	src, err := fileHeader.Open()
@@ -259,9 +259,9 @@ func (l *MediaLogic) UploadWithPreset(ctx context.Context, req *req.UploadWithPr
 		return nil, fmt.Errorf("编码 JPEG 失败: %w", err)
 	}
 
-	provider := l.manager.GetProvider()
+	provider := l.manager.GetProviderOrReload(ctx)
 	if provider == nil {
-		return nil, fmt.Errorf("对象存储未配置")
+		return nil, fmt.Errorf("对象存储未配置，请在存储配置页面创建并激活存储配置")
 	}
 
 	storeFilename := uuid.New().String() + ".jpg"

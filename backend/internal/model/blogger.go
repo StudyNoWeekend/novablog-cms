@@ -11,6 +11,10 @@ import (
 // DB 全局数据库连接实例。
 var DB *gorm.DB
 
+// BaseURL 本地文件访问基础URL，由 bootstrap 阶段注入。
+// AfterFind Hook 使用此变量将相对路径拼接为完整 URL。
+var BaseURL string
+
 // Blogger 博主信息模型，对应 bloggers 数据表。
 type Blogger struct {
 	ID              string         `gorm:"type:uuid;primaryKey"`                  // UUID 主键
@@ -25,6 +29,7 @@ type Blogger struct {
 	BlogIcon        string         `gorm:"type:varchar(500)"`                     // 博客 icon 图 URL
 	PageBackground  string         `gorm:"type:varchar(500)"`                     // 页面背景图 URL
 	SocialLinks     string         `gorm:"type:jsonb"`                            // 社交平台链接 JSON 数组
+	Tags            string         `gorm:"type:jsonb"`                            // 标签 JSON 字符串数组
 	LastLoginAt     *time.Time     `gorm:"type:timestamptz"`                      // 最后登录时间
 	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间
 	UpdatedAt       time.Time      `gorm:"type:timestamptz;autoUpdateTime"`       // 更新时间
@@ -34,6 +39,14 @@ type Blogger struct {
 // TableName 指定数据表名称。
 func (Blogger) TableName() string {
 	return "bloggers"
+}
+
+// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+func (b *Blogger) AfterFind(tx *gorm.DB) error {
+	b.Avatar = resolveURL(b.Avatar)
+	b.BlogIcon = resolveURL(b.BlogIcon)
+	b.PageBackground = resolveURL(b.PageBackground)
+	return nil
 }
 
 // BloggerModel 博主模型操作结构体。

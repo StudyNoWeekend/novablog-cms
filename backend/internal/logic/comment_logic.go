@@ -40,6 +40,9 @@ func (l *CommentLogic) GetList(ctx context.Context, r *req.CommentListReq) (*res
 	}
 
 	// 预加载目标标题缓存，避免重复查询
+	// TODO: 这里存在 N+1 查询问题，每条评论可能触发一次 getTargetTitle。
+	// 当前 per-request titleCache 能避免对同一 (target_type, target_id) 的重复查询，
+	// 覆盖了多数评论指向同一文章的常见场景。如需进一步优化，可改为批量查询所有目标标题。
 	titleCache := make(map[string]string)
 
 	var items []res.CommentRes
@@ -122,7 +125,7 @@ func (l *CommentLogic) getTargetTitle(ctx context.Context, targetType, targetID 
 		if err == nil {
 			title = article.Title
 		}
-	case "travel":
+	case "travel_guide":
 		guide, err := l.travelGuideModel.GetByID(ctx, targetID)
 		if err == nil {
 			title = guide.Title

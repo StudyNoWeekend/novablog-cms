@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,12 +23,12 @@ func NewCategoryController() *CategoryController {
 func (c *CategoryController) Create(ctx *gin.Context) {
 	var r req.CreateCategoryReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Create(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -39,7 +40,7 @@ func (c *CategoryController) GetAll(ctx *gin.Context) {
 	_ = ctx.ShouldBindQuery(&r)
 	result, err := c.logic.GetAll(ctx, r.Type)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -50,7 +51,7 @@ func (c *CategoryController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetByID(ctx, id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -61,12 +62,12 @@ func (c *CategoryController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateCategoryReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Update(ctx, id, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -76,7 +77,7 @@ func (c *CategoryController) Update(ctx *gin.Context) {
 func (c *CategoryController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)

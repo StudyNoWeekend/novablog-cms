@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,12 +23,12 @@ func NewVideoController() *VideoController {
 func (c *VideoController) Create(ctx *gin.Context) {
 	var r req.CreateVideoReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Create(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -37,12 +38,12 @@ func (c *VideoController) Create(ctx *gin.Context) {
 func (c *VideoController) GetList(ctx *gin.Context) {
 	var r req.VideoListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.GetList(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -53,7 +54,7 @@ func (c *VideoController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetByID(ctx, id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -64,12 +65,12 @@ func (c *VideoController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateVideoReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Update(ctx, id, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -79,7 +80,7 @@ func (c *VideoController) Update(ctx *gin.Context) {
 func (c *VideoController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -89,12 +90,12 @@ func (c *VideoController) Delete(ctx *gin.Context) {
 func (c *VideoController) Parse(ctx *gin.Context) {
 	var r req.ParseVideoReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.ParseVideo(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)

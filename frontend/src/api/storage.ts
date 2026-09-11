@@ -44,9 +44,9 @@ export const storageApi = {
   // ===== 素材迁移 =====
   // 分析素材
   analyze(targetProvider: string) {
-    return request.post<MigrationTask>('/storage/migration/analyze', {
+    return request.post<{ task_id: string }>('/storage/migration/analyze', {
       target_provider: targetProvider,
-    } as MigrationStartReq)
+    })
   },
   // 获取分析结果
   getAnalyzeResult(taskId: string) {
@@ -54,11 +54,11 @@ export const storageApi = {
   },
   // 启动迁移
   startMigration(data: MigrationStartReq) {
-    return request.post<MigrationTask>('/storage/migration/start', data)
+    return request.post<{ task_id: string }>('/storage/migration/start', data)
   },
   // 获取迁移状态/进度
   getMigrationStatus(taskId: string) {
-    return request.get<{ task: MigrationTask; items: MigrationItem[] }>(
+    return request.get<{ task: MigrationTask; failed: MigrationItem[] }>(
       `/storage/migration/status/${taskId}`,
     )
   },

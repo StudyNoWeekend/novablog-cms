@@ -147,7 +147,7 @@ async function retry() {
 async function loadCategories() {
   categoriesLoading.value = true
   try {
-    categories.value = await categoryApi.getList('article') as unknown as Category[]
+    categories.value = await categoryApi.getList('article')
   } catch {
     // 错误由拦截器处理
   } finally {

@@ -5,8 +5,8 @@
   <div v-else class="editor-page">
     <!-- 顶部工具栏 -->
     <div class="editor-toolbar">
-      <a-button type="text" @click="router.push('/articles')">
-        <ArrowLeftOutlined /> 返回列表
+      <a-button type="text" @click="isEdit ? router.push('/articles') : router.back()">
+        <ArrowLeftOutlined /> {{ isEdit ? '返回列表' : '返回' }}
       </a-button>
       <a-input
         v-model:value="form.title"
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeftOutlined, SendOutlined, FileMarkdownOutlined, FileTextOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -60,7 +60,15 @@ const router = useRouter()
 const route = useRoute()
 const store = useArticleStore()
 const saving = ref(false)
-const loading = ref(true)
+
+const isEdit = computed(() => !!route.params.id)
+const title = computed(() => (isEdit.value ? '编辑文章' : '新建文章'))
+
+watchEffect(() => {
+  document.title = title.value
+})
+
+const loading = ref(isEdit.value)
 
 const form = reactive({
   title: '',
@@ -69,12 +77,13 @@ const form = reactive({
   cover_image: '',
   category_id: undefined as string | undefined,
   tag_ids: [] as string[],
-  type: 1,
+  type: 1,   // 默认 Markdown
   is_top: false,
   is_comment: true,
 })
 
 onMounted(async () => {
+  if (!isEdit.value) return
   const id = route.params.id as string
   try {
     await store.fetchDetail(id)
@@ -96,22 +105,42 @@ onMounted(async () => {
 })
 
 async function handleSaveDraft() {
-  if (!form.title.trim()) { message.warning('请输入文章标题'); return }
+  if (!form.title.trim()) {
+    message.warning('请输入文章标题')
+    return
+  }
   saving.value = true
   try {
-    await store.update(route.params.id as string, { ...form, status: 1 })
-    message.success('草稿已保存')
-  } finally { saving.value = false }
+    if (isEdit.value) {
+      await store.update(route.params.id as string, { ...form, status: 1 })
+      message.success('草稿已保存')
+    } else {
+      const article = await store.create({ ...form, status: 1 })
+      message.success('草稿已保存')
+      router.replace(`/articles/${article.id}/edit`)
+    }
+  } finally {
+    saving.value = false
+  }
 }
 
 async function handlePublish() {
-  if (!form.title.trim()) { message.warning('请输入文章标题'); return }
+  if (!form.title.trim()) {
+    message.warning('请输入文章标题')
+    return
+  }
   saving.value = true
   try {
-    await store.update(route.params.id as string, { ...form, status: 2 })
+    if (isEdit.value) {
+      await store.update(route.params.id as string, { ...form, status: 2 })
+    } else {
+      await store.create({ ...form, status: 2 })
+    }
     message.success('文章已发布')
     router.push('/articles')
-  } finally { saving.value = false }
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -119,11 +148,12 @@ async function handlePublish() {
 .editor-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px - 48px);
+  height: calc(100vh - 56px - 48px); /* header height + padding */
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
 }
+
 .editor-toolbar {
   display: flex;
   align-items: center;
@@ -132,24 +162,29 @@ async function handlePublish() {
   flex-shrink: 0;
   flex-wrap: wrap;
 }
+
 .title-input {
   flex: 1;
   min-width: 200px;
   max-width: 800px;
 }
+
 .editor-switch {
   flex-shrink: 0;
 }
+
 .toolbar-actions {
   display: flex;
   gap: 8px;
   margin-left: auto;
 }
+
 .meta-bar-wrapper {
   width: 100%;
   padding: 0 0 12px 0;
   flex-shrink: 0;
 }
+
 .editor-body {
   flex: 1;
   overflow: hidden;

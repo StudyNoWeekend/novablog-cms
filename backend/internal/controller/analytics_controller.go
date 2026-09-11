@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,7 +23,7 @@ func NewAnalyticsController() *AnalyticsController {
 func (ctl *AnalyticsController) GetOverview(ctx *gin.Context) {
 	result, err := ctl.logic.GetOverview(ctx.Request.Context())
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -32,12 +33,12 @@ func (ctl *AnalyticsController) GetOverview(ctx *gin.Context) {
 func (ctl *AnalyticsController) GetContentTrend(ctx *gin.Context) {
 	var r req.ContentTrendReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := ctl.logic.GetContentTrend(ctx.Request.Context(), r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -47,12 +48,12 @@ func (ctl *AnalyticsController) GetContentTrend(ctx *gin.Context) {
 func (ctl *AnalyticsController) GetTopContent(ctx *gin.Context) {
 	var r req.TopContentReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := ctl.logic.GetTopContent(ctx.Request.Context(), r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -62,7 +63,7 @@ func (ctl *AnalyticsController) GetTopContent(ctx *gin.Context) {
 func (ctl *AnalyticsController) GetDistribution(ctx *gin.Context) {
 	result, err := ctl.logic.GetDistribution(ctx.Request.Context())
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -72,12 +73,12 @@ func (ctl *AnalyticsController) GetDistribution(ctx *gin.Context) {
 func (ctl *AnalyticsController) GetRecentComments(ctx *gin.Context) {
 	var r req.RecentCommentsReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := ctl.logic.GetRecentComments(ctx.Request.Context(), r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)

@@ -13,8 +13,13 @@ func RegisterSecurityRoutes(r *gin.RouterGroup, securityController *controller.S
 	{
 		security.GET("/config", securityController.GetConfig)
 		security.PUT("/config", securityController.UpdateConfig)
-		security.GET("/blacklist", securityController.GetBlacklist)
-		security.DELETE("/blacklist/:ip", securityController.UnbanIP)
-		security.GET("/stats", securityController.GetStats)
+
+		security.POST("/blacklist", securityController.CreateBlacklist)
+		security.DELETE("/blacklist/:id", securityController.DeleteBlacklist)
+		security.PUT("/blacklist/:id", securityController.UpdateBlacklist)
+		security.GET("/blacklist/:id", securityController.GetBlacklist)
+		security.GET("/blacklists", securityController.ListBlacklists)
+
+		security.GET("/access-stats", securityController.GetAccessStatistics)
 	}
 }

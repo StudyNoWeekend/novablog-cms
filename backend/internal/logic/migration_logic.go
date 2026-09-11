@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // MigrationLogic 素材迁移业务逻辑。
@@ -22,6 +23,7 @@ type MigrationLogic struct {
 	mediaModel     *model.MediaModel
 	configModel    *model.StorageConfigModel
 	migrationModel *model.StorageMigrationModel
+	presetModel    *model.MediaPresetModel
 	manager        *storage.Manager
 	cryptoKey      string
 	uploadDir      string // 本地迁移源目录
@@ -34,6 +36,7 @@ func NewMigrationLogic(manager *storage.Manager, cryptoKey, uploadDir string, lo
 		mediaModel:     model.NewMedia(),
 		configModel:    model.NewStorageConfig(),
 		migrationModel: model.NewStorageMigration(),
+		presetModel:    model.NewMediaPreset(),
 		manager:        manager,
 		cryptoKey:      cryptoKey,
 		uploadDir:      uploadDir,
@@ -42,16 +45,19 @@ func NewMigrationLogic(manager *storage.Manager, cryptoKey, uploadDir string, lo
 }
 
 // Analyze 异步分析目标平台中缺失的素材。
-// 目标平台必须是当前活跃平台，否则报错。
+// 目标平台必须存在配置（不要求是当前活跃平台）。
 func (l *MigrationLogic) Analyze(ctx context.Context, targetProvider string) (string, error) {
-	// 校验目标平台必须是当前活跃平台
-	activeCfg := l.manager.GetActiveConfig()
-	if activeCfg == nil || activeCfg.Provider != targetProvider {
-		return "", fmt.Errorf("目标平台未激活，请先激活再分析")
+	// 校验目标平台配置存在（不要求是当前活跃平台）
+	targetConfig, err := l.configModel.GetByProvider(ctx, targetProvider)
+	if err != nil {
+		return "", fmt.Errorf("目标平台配置不存在，请先添加配置")
 	}
-	if l.manager.GetProvider() == nil {
-		return "", fmt.Errorf("目标平台未激活，请先激活再分析")
+	// 验证配置能构建出可用的 Provider
+	targetProviderInstance, err := storage.NewProvider(targetConfig, l.cryptoKey, l.uploadDir)
+	if err != nil {
+		return "", fmt.Errorf("目标平台配置无效: %w", err)
 	}
+	_ = targetProviderInstance // used in runAnalyze
 
 	// 创建分析任务
 	now := time.Now()
@@ -76,6 +82,7 @@ func (l *MigrationLogic) Analyze(ctx context.Context, targetProvider string) (st
 
 // runAnalyze 异步执行分析逻辑。
 func (l *MigrationLogic) runAnalyze(taskID, targetProvider string) {
+	// TODO: use cancellable context to support graceful shutdown
 	ctx := context.Background()
 
 	defer func() {
@@ -85,9 +92,15 @@ func (l *MigrationLogic) runAnalyze(taskID, targetProvider string) {
 		}
 	}()
 
-	provider := l.manager.GetProvider()
-	if provider == nil {
-		l.updateTaskFailed(ctx, taskID, "目标平台未激活")
+	// Build target provider from config (not necessarily active)
+	targetConfig, err := l.configModel.GetByProvider(ctx, targetProvider)
+	if err != nil {
+		l.updateTaskFailed(ctx, taskID, "目标平台配置不存在")
+		return
+	}
+	provider, err := storage.NewProvider(targetConfig, l.cryptoKey, l.uploadDir)
+	if err != nil {
+		l.updateTaskFailed(ctx, taskID, fmt.Sprintf("构建目标 Provider 失败: %v", err))
 		return
 	}
 
@@ -121,10 +134,11 @@ func (l *MigrationLogic) runAnalyze(taskID, targetProvider string) {
 			}
 
 			allItems = append(allItems, model.StorageMigrationItem{
-				ID:      uuid.New().String(),
-				TaskID:  taskID,
-				MediaID: media.ID,
-				Status:  status,
+				ID:         uuid.New().String(),
+				TaskID:     taskID,
+				MediaID:    media.ID,
+				SourceType: "media",
+				Status:     status,
 			})
 		}
 
@@ -132,6 +146,41 @@ func (l *MigrationLogic) runAnalyze(taskID, targetProvider string) {
 			break
 		}
 		page++
+	}
+
+	// 扫描 media_presets
+	presetPage := 1
+	for {
+		presets, presetTotal, err := l.presetModel.GetAll(ctx, presetPage, pageSize)
+		if err != nil {
+			l.updateTaskFailed(ctx, taskID, fmt.Sprintf("查询预设列表失败: %v", err))
+			return
+		}
+		for _, preset := range presets {
+			status := "exist"
+			// 检查预设的输出文件是否在目标平台存在
+			exists, err := provider.Exists(ctx, preset.OutputStoragePath)
+			if err != nil {
+				l.logger.Error("检查预设文件存在性失败",
+					zap.String("preset_id", preset.ID),
+					zap.String("output_storage_path", preset.OutputStoragePath),
+					zap.Error(err))
+				status = "missing"
+			} else if !exists {
+				status = "missing"
+			}
+			allItems = append(allItems, model.StorageMigrationItem{
+				ID:         uuid.New().String(),
+				TaskID:     taskID,
+				MediaID:    preset.ID, // 用 preset ID
+				SourceType: "preset",
+				Status:     status,
+			})
+		}
+		if presetPage*pageSize >= int(presetTotal) {
+			break
+		}
+		presetPage++
 	}
 
 	// 批量创建 items（每批 100 条）
@@ -174,15 +223,85 @@ func (l *MigrationLogic) GetAnalyzeResult(ctx context.Context, taskID string) (*
 		return nil, fmt.Errorf("查询迁移条目失败: %w", err)
 	}
 
-	result := &res.AnalyzeResultRes{
-		Task: l.toTaskRes(task),
+	// 批量查询 media 和 preset 信息
+	var mediaIDs, presetIDs []string
+	for _, item := range items {
+		if item.SourceType == "preset" {
+			presetIDs = append(presetIDs, item.MediaID)
+		} else {
+			mediaIDs = append(mediaIDs, item.MediaID)
+		}
 	}
+
+	// 查询 media
+	mediaMap := make(map[string]model.Media)
+	if len(mediaIDs) > 0 {
+		mediaList, err := l.mediaModel.GetByIDs(ctx, mediaIDs)
+		if err != nil {
+			l.logger.Error("查询媒体信息失败", zap.Error(err))
+		} else {
+			for _, m := range mediaList {
+				mediaMap[m.ID] = m
+			}
+		}
+	}
+
+	// 查询 presets - batch query by IDs
+	presetMap := make(map[string]model.MediaPreset)
+	if len(presetIDs) > 0 {
+		presets, err := l.presetModel.GetByIDs(ctx, presetIDs)
+		if err != nil {
+			l.logger.Error("查询预设信息失败", zap.Error(err))
+		} else {
+			for _, p := range presets {
+				presetMap[p.ID] = p
+			}
+		}
+	}
+
+	// Also query media for presets' media_ids (to get storage_type)
+	var presetMediaIDs []string
+	for _, p := range presetMap {
+		presetMediaIDs = append(presetMediaIDs, p.MediaID)
+	}
+	if len(presetMediaIDs) > 0 {
+		extraMedia, err := l.mediaModel.GetByIDs(ctx, presetMediaIDs)
+		if err == nil {
+			for _, m := range extraMedia {
+				mediaMap[m.ID] = m
+			}
+		}
+	}
+
+	result := &res.AnalyzeResultRes{
+		Task:     l.toTaskRes(task),
+		Missing:  []res.MigrationItemRes{},
+		Existing: []res.MigrationItemRes{},
+	}
+	// Build result
 	for _, item := range items {
 		itemRes := res.MigrationItemRes{
-			ID:      item.ID,
-			MediaID: item.MediaID,
-			Status:  item.Status,
-			Error:   item.Error,
+			ID:         item.ID,
+			MediaID:    item.MediaID,
+			Status:     item.Status,
+			Error:      item.Error,
+			SourceType: item.SourceType,
+		}
+		if item.SourceType == "preset" {
+			if preset, ok := presetMap[item.MediaID]; ok {
+				itemRes.Filename = preset.Name
+				itemRes.URL = preset.OutputURL
+				// Get storage type from associated media
+				if media, ok := mediaMap[preset.MediaID]; ok {
+					itemRes.StorageType = media.StorageType
+				}
+			}
+		} else {
+			if media, ok := mediaMap[item.MediaID]; ok {
+				itemRes.Filename = media.Filename
+				itemRes.StorageType = media.StorageType
+				itemRes.URL = media.URL
+			}
 		}
 		if item.Status == "missing" {
 			result.Missing = append(result.Missing, itemRes)
@@ -194,16 +313,18 @@ func (l *MigrationLogic) GetAnalyzeResult(ctx context.Context, taskID string) (*
 }
 
 // StartMigration 异步执行素材迁移。
-// 目标平台必须是当前活跃平台，否则报错。
+// 目标平台必须存在配置（不要求是当前活跃平台）。
 func (l *MigrationLogic) StartMigration(ctx context.Context, r *req.MigrationStartReq) (string, error) {
-	// 校验目标平台必须是当前活跃平台
-	activeCfg := l.manager.GetActiveConfig()
-	if activeCfg == nil || activeCfg.Provider != r.TargetProvider {
-		return "", fmt.Errorf("目标平台未激活，请先激活再迁移")
+	// 校验目标平台配置存在（不要求是当前活跃平台）
+	targetConfig, err := l.configModel.GetByProvider(ctx, r.TargetProvider)
+	if err != nil {
+		return "", fmt.Errorf("目标平台配置不存在，请先添加配置")
 	}
-	if l.manager.GetProvider() == nil {
-		return "", fmt.Errorf("目标平台未激活，请先激活再迁移")
+	targetProviderInstance, err := storage.NewProvider(targetConfig, l.cryptoKey, l.uploadDir)
+	if err != nil {
+		return "", fmt.Errorf("目标平台配置无效: %w", err)
 	}
+	_ = targetProviderInstance // used in runMigration
 
 	// 校验参数：必须指定 MediaIDs 或 All
 	if !r.All && len(r.MediaIDs) == 0 {
@@ -298,6 +419,7 @@ func (l *MigrationLogic) StartMigration(ctx context.Context, r *req.MigrationSta
 
 // runMigration 异步执行迁移逻辑。
 func (l *MigrationLogic) runMigration(taskID, targetProvider string) {
+	// TODO: use cancellable context to support graceful shutdown
 	ctx := context.Background()
 
 	defer func() {
@@ -314,9 +436,15 @@ func (l *MigrationLogic) runMigration(taskID, targetProvider string) {
 		return
 	}
 
-	targetProvider_ := l.manager.GetProvider()
-	if targetProvider_ == nil {
-		l.updateTaskFailed(ctx, taskID, "目标平台未激活")
+	// Build target provider from config (not necessarily active)
+	targetConfig, err := l.configModel.GetByProvider(ctx, targetProvider)
+	if err != nil {
+		l.updateTaskFailed(ctx, taskID, "目标平台配置不存在")
+		return
+	}
+	targetProvider_, err := storage.NewProvider(targetConfig, l.cryptoKey, l.uploadDir)
+	if err != nil {
+		l.updateTaskFailed(ctx, taskID, fmt.Sprintf("构建目标 Provider 失败: %v", err))
 		return
 	}
 
@@ -371,6 +499,9 @@ func (l *MigrationLogic) runMigration(taskID, targetProvider string) {
 
 // migrateOne 迁移单个文件：拉源 → 上传目标 → 验证 → 更新 media 记录。
 func (l *MigrationLogic) migrateOne(ctx context.Context, item model.StorageMigrationItem, targetProvider storage.StorageProvider, targetProviderType string) error {
+	if item.SourceType == "preset" {
+		return l.migratePreset(ctx, item, targetProvider, targetProviderType)
+	}
 	media, err := l.mediaModel.GetByID(ctx, item.MediaID)
 	if err != nil {
 		return fmt.Errorf("查询媒体记录失败: %w", err)
@@ -390,7 +521,7 @@ func (l *MigrationLogic) migrateOne(ctx context.Context, item model.StorageMigra
 		if err != nil {
 			return fmt.Errorf("查询源存储配置失败: %w", err)
 		}
-		sourceProvider, err := storage.NewProvider(sourceConfig, l.cryptoKey)
+		sourceProvider, err := storage.NewProvider(sourceConfig, l.cryptoKey, l.uploadDir)
 		if err != nil {
 			return fmt.Errorf("构建源存储 Provider 失败: %w", err)
 		}
@@ -420,6 +551,124 @@ func (l *MigrationLogic) migrateOne(ctx context.Context, item model.StorageMigra
 	// 更新 media 记录
 	if err := l.mediaModel.UpdateStorageInfo(ctx, media.ID, newURL, targetProviderType); err != nil {
 		return fmt.Errorf("更新媒体记录失败: %w", err)
+	}
+
+	// 更新内容管理中的 URL 引用
+	oldURL := media.URL // This is the resolved URL (after AfterFind hook)
+	resolvedNewURL := model.ResolveURL(newURL)
+	if oldURL != "" && resolvedNewURL != "" && oldURL != resolvedNewURL {
+		if err := l.updateContentURLs(ctx, oldURL, resolvedNewURL); err != nil {
+			l.logger.Error("更新内容URL失败", zap.String("old_url", oldURL), zap.String("new_url", resolvedNewURL), zap.Error(err))
+			// Don't fail the migration for this
+		}
+	}
+
+	return nil
+}
+
+// migratePreset 迁移单个预设文件。
+func (l *MigrationLogic) migratePreset(ctx context.Context, item model.StorageMigrationItem, targetProvider storage.StorageProvider, targetProviderType string) error {
+	// 查询预设记录
+	preset, err := l.presetModel.GetByID(ctx, item.MediaID)
+	if err != nil {
+		return fmt.Errorf("查询预设记录失败: %w", err)
+	}
+
+	// 查询关联的 media 以确定源存储平台
+	media, err := l.mediaModel.GetByID(ctx, preset.MediaID)
+	if err != nil {
+		return fmt.Errorf("查询关联媒体记录失败: %w", err)
+	}
+
+	// 拉源文件
+	var reader io.ReadCloser
+	if media.StorageType == "local" {
+		file, err := os.Open(filepath.Join(l.uploadDir, preset.OutputStoragePath))
+		if err != nil {
+			return fmt.Errorf("打开本地预设文件失败: %w", err)
+		}
+		reader = file
+	} else {
+		sourceConfig, err := l.configModel.GetByProvider(ctx, media.StorageType)
+		if err != nil {
+			return fmt.Errorf("查询源存储配置失败: %w", err)
+		}
+		sourceProvider, err := storage.NewProvider(sourceConfig, l.cryptoKey, l.uploadDir)
+		if err != nil {
+			return fmt.Errorf("构建源存储 Provider 失败: %w", err)
+		}
+		rc, err := sourceProvider.Download(ctx, preset.OutputStoragePath)
+		if err != nil {
+			return fmt.Errorf("下载源预设文件失败: %w", err)
+		}
+		reader = rc
+	}
+	defer reader.Close()
+
+	// 上传到目标存储
+	newURL, err := targetProvider.Upload(ctx, preset.OutputStoragePath, reader, preset.OutputSize, preset.MimeType)
+	if err != nil {
+		return fmt.Errorf("上传预设到目标存储失败: %w", err)
+	}
+
+	// 验证上传成功
+	exists, err := targetProvider.Exists(ctx, preset.OutputStoragePath)
+	if err != nil || !exists {
+		return fmt.Errorf("预设上传后验证失败")
+	}
+
+	// 保存旧 URL 用于内容更新
+	oldURL := preset.OutputURL // resolved URL after AfterFind
+
+	// 更新预设记录
+	if err := l.presetModel.UpdateStorageInfo(ctx, preset.ID, newURL); err != nil {
+		return fmt.Errorf("更新预设记录失败: %w", err)
+	}
+
+	// 更新内容管理中的 URL 引用
+	resolvedNewURL := model.ResolveURL(newURL)
+	if oldURL != "" && resolvedNewURL != "" && oldURL != resolvedNewURL {
+		if err := l.updateContentURLs(ctx, oldURL, resolvedNewURL); err != nil {
+			l.logger.Error("更新内容URL失败", zap.Error(err))
+		}
+	}
+
+	return nil
+}
+
+// updateContentURLs 更新内容管理表中的 URL 引用。
+// TODO: 此处直接使用 model.DB 更新多张表，后续应考虑通过各 Model 方法封装。
+func (l *MigrationLogic) updateContentURLs(ctx context.Context, oldURL, newURL string) error {
+	db := model.DB.WithContext(ctx)
+
+	// articles.cover_image (exact match)
+	if err := db.Table("articles").Where("cover_image = ?", oldURL).Update("cover_image", newURL).Error; err != nil {
+		return fmt.Errorf("更新文章封面失败: %w", err)
+	}
+	// articles.content (REPLACE in HTML)
+	if err := db.Table("articles").Where("content LIKE ?", "%"+oldURL+"%").
+		UpdateColumn("content", gorm.Expr("REPLACE(content, ?, ?)", oldURL, newURL)).Error; err != nil {
+		return fmt.Errorf("更新文章内容失败: %w", err)
+	}
+	// travel_guides.cover_image
+	if err := db.Table("travel_guides").Where("cover_image = ?", oldURL).Update("cover_image", newURL).Error; err != nil {
+		return fmt.Errorf("更新攻略封面失败: %w", err)
+	}
+	// video_works.cover_url
+	if err := db.Table("video_works").Where("cover_url = ?", oldURL).Update("cover_url", newURL).Error; err != nil {
+		return fmt.Errorf("更新视频封面失败: %w", err)
+	}
+	// bloggers.avatar
+	if err := db.Table("bloggers").Where("avatar = ?", oldURL).Update("avatar", newURL).Error; err != nil {
+		return fmt.Errorf("更新博主头像失败: %w", err)
+	}
+	// bloggers.blog_icon
+	if err := db.Table("bloggers").Where("blog_icon = ?", oldURL).Update("blog_icon", newURL).Error; err != nil {
+		return fmt.Errorf("更新博客图标失败: %w", err)
+	}
+	// bloggers.page_background
+	if err := db.Table("bloggers").Where("page_background = ?", oldURL).Update("page_background", newURL).Error; err != nil {
+		return fmt.Errorf("更新页面背景失败: %w", err)
 	}
 
 	return nil

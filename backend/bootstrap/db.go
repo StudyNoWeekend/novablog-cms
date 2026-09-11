@@ -82,10 +82,10 @@ func ensureDatabaseExists(cfg *DBConfig) error {
 	}
 	defer db.Close()
 
-	// 检查数据库是否存在
+	// 检查数据库是否存在（使用参数化查询防止 SQL 注入）
 	var exists bool
-	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = '%s')", cfg.DBName)
-	if err := db.QueryRow(query).Scan(&exists); err != nil {
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)", cfg.DBName).Scan(&exists)
+	if err != nil {
 		return fmt.Errorf("查询数据库是否存在失败: %w", err)
 	}
 
@@ -123,5 +123,8 @@ func autoMigrate(db *gorm.DB) error {
 		&model.PortfolioItem{},
 		&model.SecurityConfig{},
 		&model.IPBlacklistRecord{},
+		&model.IPBlacklist{},
+		&model.AccessLog{},
+		&model.ModuleConfig{},
 	)
 }

@@ -170,7 +170,7 @@ func (l *TravelGuideLogic) GetPublicList(ctx context.Context, r *req.TravelGuide
 }
 
 // GetPublicDetail 获取已发布旅行攻略详情，验证 status=2。
-func (l *TravelGuideLogic) GetPublicDetail(ctx context.Context, id string) (*model.TravelGuide, error) {
+func (l *TravelGuideLogic) GetPublicDetail(ctx context.Context, id string) (*res.TravelGuideDetailRes, error) {
 	guide, err := l.model.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("旅行攻略不存在")
@@ -178,12 +178,20 @@ func (l *TravelGuideLogic) GetPublicDetail(ctx context.Context, id string) (*mod
 	if guide.Status != 2 {
 		return nil, fmt.Errorf("旅行攻略不存在")
 	}
-	return guide, nil
+	return l.toGuideDetailRes(guide), nil
 }
 
 // GetHotList 获取热门旅行攻略列表。
-func (l *TravelGuideLogic) GetHotList(ctx context.Context, count int) ([]model.TravelGuide, error) {
-	return l.model.GetHotList(ctx, count)
+func (l *TravelGuideLogic) GetHotList(ctx context.Context, count int) ([]res.TravelGuideRes, error) {
+	guides, err := l.model.GetHotList(ctx, count)
+	if err != nil {
+		return nil, fmt.Errorf("查询热门旅行攻略失败: %w", err)
+	}
+	items := make([]res.TravelGuideRes, 0, len(guides))
+	for i := range guides {
+		items = append(items, l.toGuideRes(&guides[i]))
+	}
+	return items, nil
 }
 
 // IncrementView 增加旅行攻略浏览量。

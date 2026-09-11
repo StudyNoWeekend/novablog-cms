@@ -1,13 +1,468 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <h1 class="page-title">模板风格</h1>
-    </div>
-    <a-card>
-      <p>模板风格页面</p>
-    </a-card>
+    <!-- 官方账号登录遮罩：未登录时盖住整个模板页面，不可绕过 -->
+    <a-modal
+      :open="!store.loggedIn"
+      :closable="false"
+      :mask-closable="false"
+      :keyboard="false"
+      :footer="null"
+      centered
+      width="400px"
+    >
+      <div class="market-login">
+        <div class="market-login__icon"><SkinOutlined /></div>
+        <h2 class="market-login__title">登录 NovaBlog 官方账号</h2>
+        <p class="market-login__desc">连接官方主题市场后，可浏览模板并进行点赞、收藏、评分与下载</p>
+        <a-form :model="loginForm" layout="vertical" autocomplete="off" @finish="handleLogin">
+          <a-form-item label="官方地址" name="baseURL" :rules="baseURLRules">
+            <a-input v-model:value="loginForm.baseURL" placeholder="http://localhost:8081" allow-clear>
+              <template #prefix><LinkOutlined /></template>
+            </a-input>
+          </a-form-item>
+          <a-form-item label="邮箱" name="email" :rules="emailRules">
+            <a-input v-model:value="loginForm.email" placeholder="请输入官方账号邮箱" allow-clear>
+              <template #prefix><UserOutlined /></template>
+            </a-input>
+          </a-form-item>
+          <a-form-item label="密码" name="password" :rules="passwordRules">
+            <a-input-password v-model:value="loginForm.password" placeholder="请输入密码">
+              <template #prefix><LockOutlined /></template>
+            </a-input-password>
+          </a-form-item>
+          <a-button type="primary" html-type="submit" block :loading="loginLoading">登 录</a-button>
+        </a-form>
+      </div>
+    </a-modal>
+
+    <template v-if="store.loggedIn">
+      <div class="page-header">
+        <h1 class="page-title">模板风格</h1>
+        <div class="market-header-actions">
+          <span v-if="store.marketUser" class="market-account">
+            <UserOutlined /> {{ store.marketUser.username }}
+          </span>
+          <a-button @click="handleLogout">
+            <template #icon><LogoutOutlined /></template>
+            退出登录
+          </a-button>
+        </div>
+      </div>
+
+      <!-- 市场统计 -->
+      <div class="market-stats">
+        <div class="market-stat">
+          <span class="market-stat__value">{{ store.stats?.total ?? '—' }}</span>
+          <span class="market-stat__label">主题总数</span>
+        </div>
+        <div class="market-stat">
+          <span class="market-stat__value">{{ store.stats?.authors ?? '—' }}</span>
+          <span class="market-stat__label">作者数</span>
+        </div>
+        <div class="market-stat">
+          <span class="market-stat__value">{{ store.stats?.downloads ?? '—' }}</span>
+          <span class="market-stat__label">安装次数</span>
+        </div>
+      </div>
+
+      <a-tabs v-model:active-key="store.activeTab" @change="handleTabChange">
+        <!-- 模板市场 -->
+        <a-tab-pane key="market" tab="模板市场">
+          <div class="filter-bar">
+            <a-select
+              v-model:value="store.filters.type"
+              placeholder="全部类型"
+              allow-clear
+              style="width: 130px"
+              :options="typeOptions"
+              @change="store.fetchListWithReset()"
+            />
+            <a-select
+              v-model:value="store.filters.styles"
+              mode="multiple"
+              placeholder="风格筛选"
+              allow-clear
+              :max-tag-count="2"
+              style="min-width: 170px"
+              :options="styleOptions"
+              @change="store.fetchListWithReset()"
+            />
+            <a-select
+              v-model:value="store.filters.price"
+              placeholder="免费/付费"
+              allow-clear
+              style="width: 120px"
+              :options="priceOptions"
+              @change="store.fetchListWithReset()"
+            />
+            <a-select
+              v-model:value="store.filters.sort"
+              style="width: 130px"
+              :options="sortOptions"
+              @change="store.fetchListWithReset()"
+            />
+            <a-input-search
+              v-model:value="store.filters.search"
+              placeholder="搜索主题名称或描述..."
+              style="width: 240px"
+              allow-clear
+              :loading="store.loading"
+              @search="store.fetchListWithReset()"
+            />
+          </div>
+
+          <!-- 加载骨架屏 -->
+          <div v-if="store.loading && store.list.length === 0" class="market-grid">
+            <div v-for="i in 6" :key="i" class="skeleton-card">
+              <a-skeleton active :paragraph="{ rows: 3 }" />
+            </div>
+          </div>
+
+          <!-- 错误状态 -->
+          <a-result
+            v-else-if="store.loadError"
+            status="error"
+            title="加载失败"
+            sub-title="获取官方模板市场数据时出错，请重试"
+          >
+            <template #extra>
+              <a-button type="primary" @click="store.fetchList()">重试</a-button>
+            </template>
+          </a-result>
+
+          <!-- 空状态 -->
+          <a-empty v-else-if="store.list.length === 0" description="没有符合条件的主题" />
+
+          <!-- 主题卡片网格 -->
+          <div v-else class="market-grid">
+            <ThemeCard
+              v-for="theme in store.list"
+              :key="theme.id"
+              :theme="theme"
+              :favorited="store.favoriteIds.has(theme.id)"
+              @detail="store.openDetail(theme.id)"
+              @favorite="store.toggleFavorite(theme.id)"
+              @download="store.download(theme.id)"
+            />
+          </div>
+
+          <!-- 分页 -->
+          <div v-if="store.total > store.pagination.pageSize" class="pagination-wrapper">
+            <a-pagination
+              :current="store.pagination.page"
+              :page-size="store.pagination.pageSize"
+              :total="store.total"
+              :page-size-options="['9', '18', '36']"
+              show-size-changer
+              :show-total="(total: number) => `共 ${total} 个主题`"
+              @change="handlePageChange"
+              @show-size-change="handlePageSizeChange"
+            />
+          </div>
+        </a-tab-pane>
+
+        <!-- 我的收藏 -->
+        <a-tab-pane key="favorites" tab="我的收藏">
+          <div v-if="store.favLoading && store.favList.length === 0" class="market-grid">
+            <div v-for="i in 6" :key="i" class="skeleton-card">
+              <a-skeleton active :paragraph="{ rows: 3 }" />
+            </div>
+          </div>
+
+          <a-result
+            v-else-if="store.favLoadError"
+            status="error"
+            title="加载失败"
+            sub-title="获取收藏列表时出错，请重试"
+          >
+            <template #extra>
+              <a-button type="primary" @click="store.fetchFavorites()">重试</a-button>
+            </template>
+          </a-result>
+
+          <a-empty v-else-if="store.favList.length === 0" description="暂无收藏">
+            <a-button type="primary" @click="store.activeTab = 'market'">去模板市场逛逛</a-button>
+          </a-empty>
+
+          <div v-else class="market-grid">
+            <ThemeCard
+              v-for="theme in store.favList"
+              :key="theme.id"
+              :theme="theme"
+              favorited
+              @detail="store.openDetail(theme.id)"
+              @favorite="store.toggleFavorite(theme.id)"
+              @download="store.download(theme.id)"
+            />
+          </div>
+
+          <div v-if="store.favTotal > store.favPagination.pageSize" class="pagination-wrapper">
+            <a-pagination
+              :current="store.favPagination.page"
+              :page-size="store.favPagination.pageSize"
+              :total="store.favTotal"
+              :page-size-options="['9', '18', '36']"
+              show-size-changer
+              :show-total="(total: number) => `共 ${total} 个收藏`"
+              @change="handleFavPageChange"
+              @show-size-change="handleFavPageSizeChange"
+            />
+          </div>
+        </a-tab-pane>
+      </a-tabs>
+
+      <!-- 主题详情抽屉 -->
+      <ThemeDetailDrawer />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, reactive, ref, onMounted, onUnmounted } from 'vue'
+import { Modal, message } from 'ant-design-vue'
+import {
+  LinkOutlined,
+  LockOutlined,
+  LogoutOutlined,
+  SkinOutlined,
+  UserOutlined,
+} from '@ant-design/icons-vue'
+import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/template'
+import { marketStorage } from '@/utils/storage'
+import { THEME_TYPE_LABELS } from '@/utils/themeDisplay'
+import { useThemeMarketStore, DEFAULT_MARKET_BASE_URL } from '@/stores/themeMarket'
+import ThemeCard from '@/components/template/ThemeCard.vue'
+import ThemeDetailDrawer from '@/components/template/ThemeDetailDrawer.vue'
+
+const store = useThemeMarketStore()
+
+// ===== 登录遮罩 =====
+const loginLoading = ref(false)
+const loginForm = reactive({
+  baseURL: marketStorage.getBaseURL() || DEFAULT_MARKET_BASE_URL,
+  email: '',
+  password: '',
+})
+
+const baseURLRules = [
+  { required: true, message: '请输入官方地址', trigger: 'blur' },
+  { pattern: /^https?:\/\//, message: '官方地址需以 http:// 或 https:// 开头', trigger: 'blur' },
+]
+const emailRules = [
+  { required: true, message: '请输入邮箱', trigger: 'blur' },
+  { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '邮箱格式不正确', trigger: 'blur' },
+]
+const passwordRules = [{ required: true, message: '请输入密码', trigger: 'blur' }]
+
+async function handleLogin() {
+  loginLoading.value = true
+  try {
+    await store.login(loginForm.baseURL.trim(), loginForm.email.trim(), loginForm.password)
+    loginForm.password = ''
+    message.success('已连接官方主题市场')
+  } catch {
+    // 登录错误（如邮箱或密码错误）由响应拦截器统一提示
+  } finally {
+    loginLoading.value = false
+  }
+}
+
+function handleLogout() {
+  Modal.confirm({
+    title: '退出官方账号？',
+    content: '退出后需重新登录才能浏览模板市场',
+    okText: '退出',
+    cancelText: '取消',
+    onOk: () => store.logout(),
+  })
+}
+
+// 官方登录失效（Token 刷新失败）时弹回登录遮罩
+function handleAuthExpiredEvent() {
+  store.handleAuthExpired()
+}
+
+// ===== 市场浏览 =====
+const typeOptions = computed(() =>
+  Object.entries(THEME_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+)
+const styleOptions = computed(() =>
+  store.hotTags.map((t) => ({ value: t.name, label: `${t.name} (${t.count})` })),
+)
+const priceOptions = [
+  { value: 'free', label: '免费' },
+  { value: 'paid', label: '付费' },
+]
+const sortOptions = [
+  { value: 'latest', label: '最新上架' },
+  { value: 'downloads', label: '下载最多' },
+  { value: 'rating', label: '评分最高' },
+]
+
+function handleTabChange(key: string | number) {
+  if (key === 'favorites') store.fetchFavorites()
+}
+
+function handlePageChange(page: number) {
+  store.pagination.page = page
+  store.fetchList()
+}
+
+function handlePageSizeChange(_page: number, size: number) {
+  store.pagination.pageSize = size
+  store.pagination.page = 1
+  store.fetchList()
+}
+
+function handleFavPageChange(page: number) {
+  store.favPagination.page = page
+  store.fetchFavorites()
+}
+
+function handleFavPageSizeChange(_page: number, size: number) {
+  store.favPagination.pageSize = size
+  store.favPagination.page = 1
+  store.fetchFavorites()
+}
+
+onMounted(() => {
+  window.addEventListener(MARKET_AUTH_EXPIRED_EVENT, handleAuthExpiredEvent)
+  if (store.loggedIn) {
+    // 页面刷新后恢复数据（登录态持久于 localStorage）
+    if (!store.list.length) store.fetchList()
+    if (!store.stats) store.fetchStats()
+    if (!store.hotTags.length) store.fetchHotTags()
+    if (store.favoriteIds.size === 0) store.fetchFavoriteIds()
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener(MARKET_AUTH_EXPIRED_EVENT, handleAuthExpiredEvent)
+})
 </script>
+
+<style scoped>
+/* ===== 登录遮罩 ===== */
+.market-login {
+  padding: 8px 4px 4px;
+  text-align: center;
+}
+
+.market-login__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  color: #fff;
+  font-size: 26px;
+}
+
+.market-login__title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color, rgba(0, 0, 0, 0.88));
+}
+
+.market-login__desc {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-color-secondary, rgba(0, 0, 0, 0.65));
+}
+
+.market-login :deep(.ant-form) {
+  text-align: left;
+}
+
+/* ===== 页头 ===== */
+.market-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.market-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--bg-layout, rgba(0, 0, 0, 0.04));
+  color: var(--text-color, rgba(0, 0, 0, 0.88));
+  font-size: 13px;
+}
+
+/* ===== 统计条 ===== */
+.market-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.market-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 18px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-color, #f0f0f0);
+  border-radius: var(--border-radius-lg, 12px);
+}
+
+.market-stat__value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-color, rgba(0, 0, 0, 0.88));
+}
+
+.market-stat__label {
+  font-size: 12px;
+  color: var(--text-color-secondary, rgba(0, 0, 0, 0.65));
+}
+
+/* ===== 筛选栏与卡片网格 ===== */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1400px) {
+  .market-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 1100px) {
+  .market-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .market-grid { grid-template-columns: 1fr; }
+  .market-stats { flex-direction: column; }
+}
+
+.skeleton-card {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-color, #f0f0f0);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: 16px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+</style>

@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { articleApi } from '@/api/article'
 import type { Article, ArticleFilters, ArticleCreateReq, ArticleUpdateReq } from '@/types/article'
-import type { PaginatedData } from '@/types/api'
 import { message } from 'ant-design-vue'
 
 export const useArticleStore = defineStore('article', () => {
@@ -27,7 +26,7 @@ export const useArticleStore = defineStore('article', () => {
         page: pagination.page,
         page_size: pagination.pageSize,
         ...filters,
-      }) as unknown as PaginatedData<Article>
+      })
       list.value = res?.list || []
       total.value = res?.total || 0
     } catch {
@@ -42,21 +41,19 @@ export const useArticleStore = defineStore('article', () => {
   async function fetchDetail(id: string) {
     loading.value = true
     try {
-      currentArticle.value = await articleApi.getDetail(id) as unknown as Article
+      currentArticle.value = await articleApi.getDetail(id)
     } finally {
       loading.value = false
     }
   }
 
   async function create(data: ArticleCreateReq) {
-    const res = await articleApi.create(data) as unknown as Article
-    message.success('文章创建成功')
+    const res = await articleApi.create(data)
     return res
   }
 
   async function update(id: string, data: ArticleUpdateReq) {
-    const res = await articleApi.update(id, data) as unknown as Article
-    message.success('文章更新成功')
+    const res = await articleApi.update(id, data)
     return res
   }
 

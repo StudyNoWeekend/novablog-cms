@@ -11,18 +11,23 @@ import (
 // NewProvider 根据 StorageConfig 构建对应 Provider。
 // config.AccessSecret 是加密密文，需用 cryptoKey 解密。
 // config.Extra 是 JSON，需解析出平台特有参数（如 MinIO 的 use_ssl）。
-func NewProvider(config *model.StorageConfig, cryptoKey string) (StorageProvider, error) {
+// local 存储无需密钥，跳过解密直接构建。
+func NewProvider(config *model.StorageConfig, cryptoKey, uploadDir string) (StorageProvider, error) {
+	// local 存储无需密钥，跳过解密
+	if config.Provider == "local" {
+		return buildProvider(config, "", uploadDir)
+	}
 	plainSecret, err := crypto.Decrypt(config.AccessSecret, cryptoKey)
 	if err != nil {
 		return nil, fmt.Errorf("解密 access_secret 失败: %w", err)
 	}
-	return buildProvider(config, plainSecret)
+	return buildProvider(config, plainSecret, uploadDir)
 }
 
 // buildProvider 根据配置和明文密钥构建 Provider。
 // 该函数接收明文密钥，NewProvider 内部解密后调用本函数，
 // TestProvider 直接传入明文密钥调用本函数，跳过解密步骤。
-func buildProvider(config *model.StorageConfig, plainSecret string) (StorageProvider, error) {
+func buildProvider(config *model.StorageConfig, plainSecret, uploadDir string) (StorageProvider, error) {
 	switch config.Provider {
 	case "aliyun":
 		return NewAliyunProvider(
@@ -42,6 +47,8 @@ func buildProvider(config *model.StorageConfig, plainSecret string) (StorageProv
 			config.AccessKey, plainSecret,
 			config.PathPrefix, config.CustomDomain, useSSL,
 		)
+	case "local":
+		return NewLocalProvider(uploadDir, config.PathPrefix, config.CustomDomain)
 	default:
 		return nil, fmt.Errorf("不支持的存储提供商: %s", config.Provider)
 	}

@@ -36,10 +36,14 @@ type MigrationTaskRes struct {
 
 // MigrationItemRes 迁移明细响应
 type MigrationItemRes struct {
-	ID      string `json:"id"`
-	MediaID string `json:"media_id"`
-	Status  string `json:"status"` // for analyze: exist/missing; for migrate: pending/success/failed
-	Error   string `json:"error"`
+	ID          string `json:"id"`
+	MediaID     string `json:"media_id"`
+	Status      string `json:"status"` // for analyze: exist/missing; for migrate: pending/success/failed
+	Error       string `json:"error"`
+	Filename    string `json:"filename"`     // 文件名
+	StorageType string `json:"storage_type"` // 当前存储平台
+	SourceType  string `json:"source_type"`  // media/preset
+	URL         string `json:"url"`          // current URL
 }
 
 // AnalyzeResultRes 分析结果响应

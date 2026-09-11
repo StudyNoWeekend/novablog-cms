@@ -13,7 +13,7 @@
       <!-- ============ Tab 1: 存储配置 ============ -->
       <template v-if="activeTab === 'config'">
         <div class="toolbar">
-          <a-button type="primary" @click="handleAdd">新增配置</a-button>
+          <a-button v-if="!hasPendingConfig" type="primary" @click="handleAdd">切换存储平台</a-button>
         </div>
 
         <a-spin :spinning="configLoading">
@@ -28,8 +28,8 @@
                 {{ providerLabel(record.provider) }}
               </template>
               <template v-if="column.key === 'status'">
-                <a-tag v-if="record.is_active" color="green">当前使用中</a-tag>
-                <a-tag v-else color="default">未激活</a-tag>
+                <a-tag v-if="record.is_active" color="green">使用中</a-tag>
+                <a-tag v-else color="orange">待迁移</a-tag>
               </template>
               <template v-if="column.key === 'updated_at'">
                 {{ formatDateTime(record.updated_at) }}
@@ -45,6 +45,13 @@
                 <a-button
                   v-if="!record.is_active"
                   type="link"
+                  @click="activeTab = 'migration'"
+                >
+                  前往迁移
+                </a-button>
+                <a-button
+                  v-if="record.is_active"
+                  type="link"
                   @click="handleEdit(record)"
                 >
                   编辑
@@ -55,9 +62,9 @@
                   danger
                   @click="handleDelete(record)"
                 >
-                  删除
+                  取消
                 </a-button>
-                <span v-else style="color: #999; font-size: 13px">—</span>
+                <span v-if="record.is_active" style="color: #999; font-size: 13px">-</span>
               </template>
             </template>
           </a-table>
@@ -66,26 +73,32 @@
 
       <!-- ============ Tab 2: 素材迁移 ============ -->
       <template v-if="activeTab === 'migration'">
-        <!-- 活跃平台信息 -->
-        <template v-if="activeConfig">
-          <a-alert
-            type="info"
-            :message="`当前存储平台：${providerLabel(activeConfig.provider)}`"
-            show-icon
-            style="margin-bottom: 16px"
-          />
-        </template>
-        <template v-else>
-          <a-alert
-            type="warning"
-            message="请先在「存储配置」中配置并激活一个存储平台"
-            show-icon
-            style="margin-bottom: 16px"
-          />
-        </template>
+        <!-- 迁移目标平台信息 -->
+        <a-alert
+          v-if="targetConfig"
+          type="info"
+          show-icon
+          style="margin-bottom: 16px"
+        >
+          <template #message>
+            <template v-if="sourcePlatforms.length > 0">
+              将素材从 {{ sourcePlatformLabels }} 迁移至「{{ providerLabel(targetConfig.provider) }}」
+            </template>
+            <template v-else>
+              迁移目标：{{ providerLabel(targetConfig.provider) }}，点击「开始分析」检查需迁移的素材
+            </template>
+          </template>
+        </a-alert>
+        <a-alert
+          v-else
+          type="warning"
+          message="请先在「存储配置」中添加存储平台配置"
+          show-icon
+          style="margin-bottom: 16px"
+        />
 
         <!-- 分析阶段 -->
-        <template v-if="activeConfig && migrationState === 'idle'">
+        <template v-if="targetConfig && migrationState === 'idle'">
           <div v-if="analyzeState === 'idle'">
             <a-button type="primary" @click="handleAnalyze">
               开始分析
@@ -99,7 +112,7 @@
           <div v-if="analyzeState === 'completed' && analyzeResult">
             <a-statistic
               title="分析结果"
-              :value="`共 ${analyzeResult.missing.length + analyzeResult.existing.length} 条素材，${analyzeResult.existing.length} 条已存在，${analyzeResult.missing.length} 条需要迁移`"
+              :value="`共 ${(analyzeResult.missing || []).length + (analyzeResult.existing || []).length} 条素材，${(analyzeResult.existing || []).length} 条已存在，${(analyzeResult.missing || []).length} 条需要迁移`"
               style="margin-bottom: 16px"
             />
             <a-table
@@ -192,13 +205,13 @@
             placeholder="请选择存储平台"
             @change="handleProviderChange"
           >
-            <a-select-option value="aliyun">阿里云 OSS</a-select-option>
-            <a-select-option value="tencent">腾讯云 COS</a-select-option>
-            <a-select-option value="minio">MinIO</a-select-option>
+            <a-select-option v-for="p in availableProviders" :key="p.value" :value="p.value">
+              {{ p.label }}
+            </a-select-option>
           </a-select>
         </a-form-item>
 
-        <a-form-item :label="form.provider === 'tencent' ? 'Bucket URL' : 'Endpoint'" name="endpoint">
+        <a-form-item v-if="form.provider !== 'local'" :label="form.provider === 'tencent' ? 'Bucket URL' : 'Endpoint'" name="endpoint">
           <a-input
             v-model:value="form.endpoint"
             :placeholder="endpointPlaceholder"
@@ -223,7 +236,7 @@
           </template>
         </a-form-item>
 
-        <a-form-item v-if="form.provider !== 'tencent'" label="Bucket" name="bucket">
+        <a-form-item v-if="form.provider !== 'tencent' && form.provider !== 'local'" label="Bucket" name="bucket">
           <a-input
             v-model:value="form.bucket"
             :placeholder="bucketPlaceholder"
@@ -233,11 +246,11 @@
           </template>
         </a-form-item>
 
-        <a-form-item :label="form.provider === 'tencent' ? 'Secret ID' : 'Access Key'" name="access_key">
+        <a-form-item v-if="form.provider !== 'local'" :label="form.provider === 'tencent' ? 'Secret ID' : 'Access Key'" name="access_key">
           <a-input v-model:value="form.access_key" :placeholder="form.provider === 'tencent' ? '请输入 SecretId' : '请输入 Access Key'" />
         </a-form-item>
 
-        <a-form-item :label="form.provider === 'tencent' ? 'Secret Key' : 'Access Secret'" name="access_secret">
+        <a-form-item v-if="form.provider !== 'local'" :label="form.provider === 'tencent' ? 'Secret Key' : 'Access Secret'" name="access_secret">
           <a-input-password
             v-model:value="form.access_secret"
             :placeholder="editingConfig ? '留空不修改' : (form.provider === 'tencent' ? '请输入 SecretKey' : '请输入 Access Secret')"
@@ -296,8 +309,21 @@ const activeTab = ref<'config' | 'migration'>('config')
 const configs = ref<StorageConfig[]>([])
 const configLoading = ref(false)
 
+const hasPendingConfig = computed(() => configs.value.some((c) => !c.is_active))
+
+const availableProviders = computed(() => {
+  const activeProvider = configs.value.find((c) => c.is_active)?.provider
+  return [
+    { value: 'local', label: '本地存储' },
+    { value: 'aliyun', label: '阿里云 OSS' },
+    { value: 'tencent', label: '腾讯云 COS' },
+    { value: 'minio', label: 'MinIO' },
+  ].filter((p) => p.value !== activeProvider)
+})
+
 const providerLabel = (p: string): string => {
   const map: Record<string, string> = {
+    local: '本地存储',
     aliyun: '阿里云 OSS',
     tencent: '腾讯云 COS',
     minio: 'MinIO',
@@ -328,15 +354,15 @@ async function fetchConfigs() {
 
 async function handleActivate(record: StorageConfig) {
   Modal.confirm({
-    title: '确认切换',
-    content: '激活后将切换存储平台，确定继续？',
+    title: '确认激活',
+    content: `激活后存储平台将切换为「${providerLabel(record.provider)}」，旧配置将被删除。请确保已将所有素材迁移到目标平台。确定继续？`,
     onOk: async () => {
       try {
         await storageApi.activateConfig(record.provider)
-        message.success('已激活')
+        message.success('已激活，旧配置已清理')
         await fetchConfigs()
       } catch (e: any) {
-        message.error(e?.message || '当前有迁移任务运行中...')
+        message.error(e?.message || '激活失败，请先完成素材迁移')
       }
     },
   })
@@ -368,6 +394,7 @@ const testResult = ref<{ success: boolean; message: string } | null>(null)
 
 const defaultForm = (): StorageConfigForm => ({
   provider: '',
+  old_provider: '',
   endpoint: '',
   region: '',
   bucket: '',
@@ -393,6 +420,7 @@ function handleEdit(record: StorageConfig) {
   testResult.value = null
   form.value = {
     provider: record.provider,
+    old_provider: record.provider,
     endpoint: record.endpoint,
     region: record.region,
     bucket: record.bucket,
@@ -425,11 +453,21 @@ function closeModal() {
 // 表单校验规则
 const formRules: Record<string, any> = {
   provider: [{ required: true, message: '请选择存储平台', trigger: 'change' }],
-  endpoint: [{ required: true, message: '请输入 Endpoint', trigger: 'blur' }],
+  endpoint: [
+    {
+      validator: (_: any, value: string) => {
+        if (form.value.provider !== 'local' && !value) {
+          return Promise.reject(new Error('请输入 Endpoint'))
+        }
+        return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
   bucket: [
     {
       validator: (_: any, value: string) => {
-        if (form.value.provider !== 'tencent' && !value) {
+        if (form.value.provider !== 'tencent' && form.value.provider !== 'local' && !value) {
           return Promise.reject(new Error('请输入 Bucket'))
         }
         return Promise.resolve()
@@ -437,11 +475,21 @@ const formRules: Record<string, any> = {
       trigger: 'blur',
     },
   ],
-  access_key: [{ required: true, message: '请输入 Access Key', trigger: 'blur' }],
+  access_key: [
+    {
+      validator: (_: any, value: string) => {
+        if (form.value.provider !== 'local' && !value) {
+          return Promise.reject(new Error('请输入 Access Key'))
+        }
+        return Promise.resolve()
+      },
+      trigger: 'blur',
+    },
+  ],
   access_secret: [
     {
       validator: (_: any, value: string) => {
-        if (!editingConfig.value && !value) {
+        if (form.value.provider !== 'local' && !editingConfig.value && !value) {
           return Promise.reject(new Error('请输入 Access Secret'))
         }
         return Promise.resolve()
@@ -517,7 +565,7 @@ async function handleTestConfig() {
   testResult.value = null
   try {
     const data: StorageTestForm = {
-      provider: form.value.provider as 'aliyun' | 'tencent' | 'minio',
+      provider: form.value.provider as 'aliyun' | 'tencent' | 'minio' | 'local',
       endpoint: form.value.endpoint,
       region: form.value.region,
       bucket: form.value.bucket,
@@ -545,6 +593,15 @@ function buildExtra(): string {
 
 // 保存
 async function handleSave() {
+  // 检测平台类型是否被篡改
+  if (editingConfig.value && form.value.provider !== editingConfig.value.provider) {
+    Modal.warning({
+      title: '禁止修改存储平台',
+      content: '检测到存储平台类型发生变化！禁止直接修改存储平台类型。如需切换存储平台，请先在「素材迁移」中将已有素材迁移至目标平台，再激活目标平台配置。',
+    })
+    return
+  }
+
   try {
     await formRef.value?.validate()
   } catch {
@@ -558,9 +615,16 @@ async function handleSave() {
       extra: buildExtra(),
     }
     await storageApi.upsertConfig(payload)
-    message.success(editingConfig.value ? '配置已更新' : '配置已创建')
-    closeModal()
-    await fetchConfigs()
+    if (editingConfig.value) {
+      message.success('配置已更新')
+      closeModal()
+      await fetchConfigs()
+    } else {
+      message.success('配置已创建，请前往「素材迁移」完成迁移后再激活')
+      closeModal()
+      await fetchConfigs()
+      activeTab.value = 'migration'
+    }
   } catch (e: any) {
     message.error(e?.message || '保存失败')
   } finally {
@@ -570,6 +634,23 @@ async function handleSave() {
 
 // ========== Tab 2: 素材迁移 ==========
 const activeConfig = computed(() => configs.value.find((c) => c.is_active) || null)
+// 迁移目标：优先使用待激活的配置，其次使用当前活跃配置
+const targetConfig = computed(() => configs.value.find((c) => !c.is_active) || activeConfig.value || null)
+
+const sourcePlatforms = computed(() => {
+  if (!analyzeResult.value) return []
+  const platforms = new Set<string>()
+  for (const item of (analyzeResult.value.missing || [])) {
+    if (item.storage_type && item.storage_type !== targetConfig.value?.provider) {
+      platforms.add(item.storage_type)
+    }
+  }
+  return Array.from(platforms)
+})
+
+const sourcePlatformLabels = computed(() => {
+  return sourcePlatforms.value.map(p => providerLabel(p)).join('、')
+})
 
 // 分析状态
 const analyzeState = ref<'idle' | 'analyzing' | 'completed' | 'failed'>('idle')
@@ -586,9 +667,10 @@ const selectedRowKeys = ref<string[]>([])
 
 // 分析结果表格列
 const existingColumns: TableColumnsType<MigrationItem> = [
-  { title: 'Media ID', dataIndex: 'media_id', key: 'media_id' },
+  { title: '类型', dataIndex: 'source_type', key: 'source_type', width: 80, customRender: ({ text }: { text: string }) => text === 'preset' ? '预设' : '素材' },
   { title: '文件名', dataIndex: 'filename', key: 'filename', ellipsis: true },
-  { title: '当前平台', dataIndex: 'storage_type', key: 'storage_type' },
+  { title: '当前平台', dataIndex: 'storage_type', key: 'storage_type', customRender: ({ text }: { text: string }) => providerLabel(text) },
+  { title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true },
   {
     title: '状态',
     key: 'status',
@@ -598,8 +680,10 @@ const existingColumns: TableColumnsType<MigrationItem> = [
 ]
 
 const missingColumns: TableColumnsType<MigrationItem> = [
+  { title: '类型', dataIndex: 'source_type', key: 'source_type', width: 80, customRender: ({ text }: { text: string }) => text === 'preset' ? '预设' : '素材' },
   { title: '文件名', dataIndex: 'filename', key: 'filename', ellipsis: true },
-  { title: '当前平台', dataIndex: 'storage_type', key: 'storage_type' },
+  { title: '当前平台', dataIndex: 'storage_type', key: 'storage_type', customRender: ({ text }: { text: string }) => providerLabel(text) },
+  { title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true },
   {
     title: '状态',
     key: 'status',
@@ -643,8 +727,8 @@ const elapsedTime = computed(() => {
 
 // 开始分析
 async function handleAnalyze() {
-  if (!activeConfig.value) {
-    message.warning('请先配置并激活存储平台')
+  if (!targetConfig.value) {
+    message.warning('请先添加存储平台配置')
     return
   }
 
@@ -653,11 +737,11 @@ async function handleAnalyze() {
   selectedRowKeys.value = []
 
   try {
-    const task = await storageApi.analyze(activeConfig.value.provider)
+    const task = await storageApi.analyze(targetConfig.value.provider)
     // 轮询分析结果
     analyzePollTimer = setInterval(async () => {
       try {
-        const result = await storageApi.getAnalyzeResult(task.id)
+        const result = await storageApi.getAnalyzeResult(task.task_id)
         if (result.task.status === 'completed') {
           analyzeState.value = 'completed'
           analyzeResult.value = result
@@ -686,15 +770,15 @@ function stopAnalyzePoll() {
 
 // 一键迁移所有
 async function handleMigrateAll() {
-  if (!activeConfig.value || !analyzeResult.value) return
-  await startMigration({ target_provider: activeConfig.value.provider, all: true })
+  if (!targetConfig.value || !analyzeResult.value) return
+  await startMigration({ target_provider: targetConfig.value.provider, all: true })
 }
 
 // 批量迁移
 async function handleBatchMigrate() {
-  if (!activeConfig.value || !analyzeResult.value || selectedRowKeys.value.length === 0) return
+  if (!targetConfig.value || !analyzeResult.value || selectedRowKeys.value.length === 0) return
   await startMigration({
-    target_provider: activeConfig.value.provider,
+    target_provider: targetConfig.value.provider,
     media_ids: selectedRowKeys.value,
   })
 }
@@ -706,18 +790,35 @@ async function startMigration(params: { target_provider: string; all?: boolean; 
 
   try {
     const task = await storageApi.startMigration(params)
-    migrateTask.value = task
 
     migratePollTimer = setInterval(async () => {
       try {
-        const status = await storageApi.getMigrationStatus(task.id)
+        const status = await storageApi.getMigrationStatus(task.task_id)
         migrateTask.value = status.task
-        migrateItems.value = status.items || []
+        migrateItems.value = status.failed || []
 
         if (status.task.status === 'completed') {
           migrationState.value = 'completed'
           stopMigratePoll()
           message.success('迁移完成')
+          // 提示用户激活新平台
+          const pendingConfig = configs.value.find((c) => !c.is_active)
+          if (pendingConfig) {
+            Modal.confirm({
+              title: '迁移完成',
+              content: `所有素材已迁移完成，是否立即激活「${providerLabel(pendingConfig.provider)}」？激活后旧配置将被删除。`,
+              onOk: async () => {
+                try {
+                  await storageApi.activateConfig(pendingConfig.provider)
+                  message.success('已激活，旧配置已清理')
+                  await fetchConfigs()
+                  activeTab.value = 'config'
+                } catch (e: any) {
+                  message.error(e?.message || '激活失败')
+                }
+              },
+            })
+          }
         } else if (status.task.status === 'failed') {
           migrationState.value = 'failed'
           stopMigratePoll()

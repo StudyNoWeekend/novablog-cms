@@ -44,8 +44,14 @@ var (
 	ErrIPBlocked = NewBizError(403002, "您已被暂时限制访问，请稍后再试", 403)
 	// ErrNotFound 资源不存在
 	ErrNotFound = NewBizError(404001, "资源不存在", 404)
+	// ErrMarketAuthFailed 官方主题市场登录状态已失效（注意：不复用 HTTP 401，避免与后台自身认证刷新流程冲突）
+	ErrMarketAuthFailed = NewBizError(401101, "官方账号登录已失效，请重新登录", 400)
+	// ErrMarketLoginFailed 官方主题市场登录凭据错误
+	ErrMarketLoginFailed = NewBizError(401102, "官方邮箱或密码错误", 400)
+	// ErrMarketBaseURLInvalid 官方主题市场地址不合法
+	ErrMarketBaseURLInvalid = NewBizError(400103, "官方地址不合法，请检查输入", 400)
+	// ErrMarketUpstream 官方主题市场服务不可用
+	ErrMarketUpstream = NewBizError(400102, "官方主题市场服务不可用，请稍后再试", 400)
 	// ErrInternalServer 系统内部错误
 	ErrInternalServer = NewBizError(500001, "系统内部错误", 500)
-	// ErrTooManyRequests 操作过于频繁
-	ErrTooManyRequests = NewBizError(429001, "操作过于频繁，请稍后再试", 429)
 )

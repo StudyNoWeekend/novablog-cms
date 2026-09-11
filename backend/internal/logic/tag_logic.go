@@ -96,5 +96,16 @@ func (l *TagLogic) Update(ctx context.Context, id string, r *req.UpdateTagReq) (
 }
 
 func (l *TagLogic) Delete(ctx context.Context, id string) error {
-	return l.model.Delete(ctx, id)
+	// Check if any articles use this tag
+	count, err := l.model.CountArticlesByTagID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("查询标签关联失败: %w", err)
+	}
+	if count > 0 {
+		return fmt.Errorf("该标签已被 %d 篇文章使用，请先移除关联后再删除", count)
+	}
+	if err := l.model.Delete(ctx, id); err != nil {
+		return fmt.Errorf("删除标签失败: %w", err)
+	}
+	return nil
 }

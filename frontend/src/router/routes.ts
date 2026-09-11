@@ -31,8 +31,8 @@ export default [
       {
         path: 'articles/create',
         name: 'ArticleCreate',
-        meta: { title: '写文章', hidden: true },
-        component: () => import('@/views/article/ArticleCreateView.vue'),
+        meta: { title: '新建文章', hidden: true },
+        component: () => import('@/views/article/ArticleEditView.vue'),
       },
       {
         path: 'articles/:id/edit',
@@ -57,6 +57,12 @@ export default [
         name: 'PortfolioEdit',
         meta: { title: '编辑作品集', hidden: true },
         component: () => import('@/views/portfolio/PortfolioEditView.vue'),
+      },
+      {
+        path: 'equipments',
+        name: 'Equipments',
+        meta: { title: '摄影器材', icon: 'CameraOutlined' },
+        component: () => import('@/views/equipment/EquipmentManageView.vue'),
       },
       {
         path: 'videos',
@@ -109,13 +115,13 @@ export default [
       {
         path: 'security/config',
         name: 'SecurityConfig',
-        meta: { title: '安全配置' },
+        meta: { title: '黑名单管理' },
         component: () => import('@/views/security/SecurityConfigView.vue'),
       },
       {
         path: 'security/monitor',
         name: 'SecurityMonitor',
-        meta: { title: '安全监控' },
+        meta: { title: '访问统计' },
         component: () => import('@/views/security/SecurityMonitorView.vue'),
       },
       {
@@ -135,13 +141,19 @@ export default [
             meta: { title: '个人资料' },
             component: () => import('@/views/user/ProfileView.vue'),
           },
-          {
-            path: 'storage',
-            name: 'StorageConfig',
-            meta: { title: '对象存储' },
-            component: () => import('@/views/storage/StorageConfigView.vue'),
-          },
         ],
+      },
+      {
+        path: 'profile/storage',
+        name: 'StorageConfig',
+        meta: { title: '对象存储' },
+        component: () => import('@/views/storage/StorageConfigView.vue'),
+      },
+      {
+        path: 'module-config',
+        name: 'ModuleConfig',
+        meta: { title: '模块管理', icon: 'SettingOutlined' },
+        component: () => import('@/views/module/ModuleConfigView.vue'),
       },
     ],
   },

@@ -122,7 +122,7 @@ func (l *VideoLogic) GetPublicList(ctx context.Context, r *req.VideoListReq) (*r
 }
 
 // GetPublicDetail 获取已发布视频作品详情（验证 status=1，含平台链接）。
-func (l *VideoLogic) GetPublicDetail(ctx context.Context, id string) (map[string]interface{}, error) {
+func (l *VideoLogic) GetPublicDetail(ctx context.Context, id string) (*res.VideoWorkRes, error) {
 	detail, err := l.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("视频作品不存在")
@@ -130,24 +130,13 @@ func (l *VideoLogic) GetPublicDetail(ctx context.Context, id string) (map[string
 	if detail.Status != 1 {
 		return nil, fmt.Errorf("视频作品不存在")
 	}
-	result := map[string]interface{}{
-		"id":          detail.ID,
-		"title":       detail.Title,
-		"cover_url":   detail.CoverURL,
-		"description": detail.Description,
-		"status":      detail.Status,
-		"sort_order":  detail.SortOrder,
-		"platforms":   detail.Platforms,
-		"created_at":  detail.CreatedAt,
-		"updated_at":  detail.UpdatedAt,
-	}
-	return result, nil
+	return detail, nil
 }
 
 // Update 更新视频作品，若 Platforms 非空则事务内重建平台链接。
 func (l *VideoLogic) Update(ctx context.Context, id string, r *req.UpdateVideoReq) (*res.VideoWorkRes, error) {
-	video, err := l.videoModel.GetByID(ctx, id)
-	if err != nil {
+	video, fetchErr := l.videoModel.GetByID(ctx, id)
+	if fetchErr != nil {
 		return nil, fmt.Errorf("视频作品不存在")
 	}
 
@@ -175,23 +164,24 @@ func (l *VideoLogic) Update(ctx context.Context, id string, r *req.UpdateVideoRe
 			})
 		}
 
-		if err := l.videoModel.Transaction(ctx, func(tx *gorm.DB) error {
-			if err := l.videoModel.Update(ctx, video); err != nil {
-				return fmt.Errorf("更新视频作品失败: %w", err)
+		txErr := l.videoModel.Transaction(ctx, func(tx *gorm.DB) error {
+			if updateErr := l.videoModel.UpdateWithTx(ctx, tx, video); updateErr != nil {
+				return fmt.Errorf("更新视频作品失败: %w", updateErr)
 			}
-			if err := l.platformLinkModel.SoftDeleteByVideoID(ctx, tx, id); err != nil {
-				return fmt.Errorf("软删除旧平台链接失败: %w", err)
+			if delErr := l.platformLinkModel.SoftDeleteByVideoID(ctx, tx, id); delErr != nil {
+				return fmt.Errorf("软删除旧平台链接失败: %w", delErr)
 			}
-			if err := l.platformLinkModel.BatchCreate(ctx, tx, links); err != nil {
-				return fmt.Errorf("创建新平台链接失败: %w", err)
+			if createErr := l.platformLinkModel.BatchCreate(ctx, tx, links); createErr != nil {
+				return fmt.Errorf("创建新平台链接失败: %w", createErr)
 			}
 			return nil
-		}); err != nil {
-			return nil, err
+		})
+		if txErr != nil {
+			return nil, txErr
 		}
 	} else {
-		if err := l.videoModel.Update(ctx, video); err != nil {
-			return nil, fmt.Errorf("更新视频作品失败: %w", err)
+		if updateErr := l.videoModel.Update(ctx, video); updateErr != nil {
+			return nil, fmt.Errorf("更新视频作品失败: %w", updateErr)
 		}
 	}
 

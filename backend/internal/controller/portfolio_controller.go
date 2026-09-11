@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,12 +23,12 @@ func NewPortfolioController() *PortfolioController {
 func (c *PortfolioController) Create(ctx *gin.Context) {
 	var r req.CreatePortfolioReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Create(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -37,12 +38,12 @@ func (c *PortfolioController) Create(ctx *gin.Context) {
 func (c *PortfolioController) GetList(ctx *gin.Context) {
 	var r req.PortfolioListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.GetList(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -53,7 +54,7 @@ func (c *PortfolioController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetByID(ctx, id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -64,12 +65,12 @@ func (c *PortfolioController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdatePortfolioReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Update(ctx, id, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -79,7 +80,7 @@ func (c *PortfolioController) Update(ctx *gin.Context) {
 func (c *PortfolioController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -90,12 +91,12 @@ func (c *PortfolioController) AddItem(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.CreatePortfolioItemReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.AddItem(ctx, id, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -106,11 +107,11 @@ func (c *PortfolioController) SortItems(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.SortPortfolioItemsReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	if err := c.logic.SortItems(ctx, id, &r); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -122,12 +123,12 @@ func (c *PortfolioController) UpdateItem(ctx *gin.Context) {
 	itemID := ctx.Param("itemId")
 	var r req.UpdatePortfolioItemReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.UpdateItem(ctx, id, itemID, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -138,7 +139,7 @@ func (c *PortfolioController) DeleteItem(ctx *gin.Context) {
 	id := ctx.Param("id")
 	itemID := ctx.Param("itemId")
 	if err := c.logic.DeleteItem(ctx, id, itemID); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)

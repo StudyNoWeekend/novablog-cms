@@ -29,6 +29,16 @@ func (Media) TableName() string {
 	return "media"
 }
 
+// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+func (m *Media) AfterFind(tx *gorm.DB) error {
+	m.URL = resolveURL(m.URL)
+	if m.ThumbURL != nil {
+		resolved := resolveURL(*m.ThumbURL)
+		m.ThumbURL = &resolved
+	}
+	return nil
+}
+
 // MediaModel 媒体文件模型操作结构体。
 type MediaModel struct {
 	db *gorm.DB
@@ -115,4 +125,11 @@ func (m *MediaModel) UpdateStorageInfo(ctx context.Context, id, url, storageType
 			"url":          url,
 			"storage_type": storageType,
 		}).Error
+}
+
+// CountNotOnStorage counts media files not on the target storage platform.
+func (m *MediaModel) CountNotOnStorage(ctx context.Context, storageType string) (int64, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&Media{}).Where("storage_type != ?", storageType).Count(&count).Error
+	return count, err
 }

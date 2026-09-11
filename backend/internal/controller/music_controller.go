@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,12 +23,12 @@ func NewMusicController() *MusicController {
 func (c *MusicController) CreateSong(ctx *gin.Context) {
 	var r req.CreateSongReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.CreateSong(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -37,12 +38,12 @@ func (c *MusicController) CreateSong(ctx *gin.Context) {
 func (c *MusicController) BatchCreateSongs(ctx *gin.Context) {
 	var r req.BatchCreateSongReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.BatchCreateSongs(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -52,12 +53,12 @@ func (c *MusicController) BatchCreateSongs(ctx *gin.Context) {
 func (c *MusicController) GetSongList(ctx *gin.Context) {
 	var r req.SongListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.GetSongList(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -68,7 +69,7 @@ func (c *MusicController) GetSongByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetSongByID(ctx, id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -79,12 +80,12 @@ func (c *MusicController) UpdateSong(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateSongReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.UpdateSong(ctx, id, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -94,7 +95,7 @@ func (c *MusicController) UpdateSong(ctx *gin.Context) {
 func (c *MusicController) DeleteSong(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.DeleteSong(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -104,12 +105,12 @@ func (c *MusicController) DeleteSong(ctx *gin.Context) {
 func (c *MusicController) ParseMusic(ctx *gin.Context) {
 	var r req.ParseMusicReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	taskID, err := c.logic.StartParse(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, gin.H{"task_id": taskID})
@@ -120,7 +121,7 @@ func (c *MusicController) GetParseStatus(ctx *gin.Context) {
 	taskID := ctx.Param("task_id")
 	result, err := c.logic.GetParseTask(ctx, taskID)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -132,7 +133,7 @@ func (c *MusicController) GetAudioURL(ctx *gin.Context) {
 
 	url, err := c.logic.GetAudioURL(ctx, songID)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, gin.H{"url": url})

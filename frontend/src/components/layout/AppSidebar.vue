@@ -32,33 +32,106 @@
           </router-link>
         </div>
 
-        <!-- 内容管理（可展开） -->
+        <!-- 通用 -->
         <div class="menu-group">
-          <div
-            class="nav-item submenu-title"
-            :class="{ active: isContentActive }"
-            @click="contentExpanded = !contentExpanded"
+          <div class="menu-group-title">通用</div>
+          <router-link
+            v-for="item in generalMenuItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
           >
-            <span class="nav-icon"><FileTextOutlined /></span>
-            <span class="nav-text">内容管理</span>
-            <span class="submenu-arrow" :class="{ expanded: contentExpanded }">
-              <RightOutlined />
+            <span class="nav-icon">
+              <component :is="item.icon" />
             </span>
-          </div>
-          <div class="submenu" :class="{ expanded: contentExpanded }">
-            <router-link
-              v-for="item in contentMenuItems"
-              :key="item.path"
-              :to="item.path"
-              class="nav-item sub-item"
-              :class="{ active: isActive(item.path) }"
-            >
-              <span class="nav-icon">
-                <component :is="item.icon" />
-              </span>
-              <span class="nav-text">{{ item.label }}</span>
-            </router-link>
-          </div>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
+        </div>
+
+        <!-- 音乐 -->
+        <div class="menu-group">
+          <div class="menu-group-title">音乐</div>
+          <router-link
+            v-for="item in musicMenuItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
+        </div>
+
+        <!-- 视频分享 -->
+        <div class="menu-group">
+          <div class="menu-group-title">视频分享</div>
+          <router-link
+            v-for="item in videoMenuItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
+        </div>
+
+        <!-- 旅行分享 -->
+        <div class="menu-group">
+          <div class="menu-group-title">旅行分享</div>
+          <router-link
+            v-for="item in travelMenuItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
+        </div>
+
+        <!-- 摄影 -->
+        <div class="menu-group">
+          <div class="menu-group-title">摄影</div>
+          <router-link
+            v-for="item in photoMenuItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
+        </div>
+
+        <!-- 安全 -->
+        <div class="menu-group">
+          <div class="menu-group-title">安全</div>
+          <router-link
+            v-for="item in securityMenuItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
         </div>
 
         <!-- 媒体库 -->
@@ -73,81 +146,20 @@
           </router-link>
         </div>
 
-        <!-- 评论管理 -->
-        <div class="menu-group">
-          <router-link
-            to="/comments"
-            class="nav-item"
-            :class="{ active: isActive('/comments') }"
-          >
-            <span class="nav-icon"><MessageOutlined /></span>
-            <span class="nav-text">评论管理</span>
-          </router-link>
-        </div>
-
-        <!-- API 文档 -->
-        <div class="menu-group">
-          <router-link
-            to="/api-doc"
-            class="nav-item"
-            :class="{ active: isActive('/api-doc') }"
-          >
-            <span class="nav-icon"><BookOutlined /></span>
-            <span class="nav-text">API 文档</span>
-          </router-link>
-        </div>
-
-        <!-- 安全中心（可展开） -->
-        <div class="menu-group">
-          <div
-            class="nav-item submenu-title"
-            :class="{ active: isSecurityActive }"
-            @click="securityExpanded = !securityExpanded"
-          >
-            <span class="nav-icon"><SafetyOutlined /></span>
-            <span class="nav-text">安全中心</span>
-            <span class="submenu-arrow" :class="{ expanded: securityExpanded }">
-              <RightOutlined />
-            </span>
-          </div>
-          <div class="submenu" :class="{ expanded: securityExpanded }">
-            <router-link
-              v-for="item in securityMenuItems"
-              :key="item.path"
-              :to="item.path"
-              class="nav-item sub-item"
-              :class="{ active: isActiveExact(item.path) }"
-            >
-              <span class="nav-icon">
-                <component :is="item.icon" />
-              </span>
-              <span class="nav-text">{{ item.label }}</span>
-            </router-link>
-          </div>
-        </div>
-
-        <!-- 模板风格 -->
-        <div class="menu-group">
-          <router-link
-            to="/templates"
-            class="nav-item"
-            :class="{ active: isActive('/templates') }"
-          >
-            <span class="nav-icon"><SkinOutlined /></span>
-            <span class="nav-text">模板风格</span>
-          </router-link>
-        </div>
-
-        <!-- 设置 -->
+        <!-- 系统 -->
         <div class="menu-group">
           <div class="menu-group-title">系统</div>
           <router-link
-            to="/profile/info"
+            v-for="item in systemMenuItems"
+            :key="item.path"
+            :to="item.path"
             class="nav-item"
-            :class="{ active: isActive('/profile') }"
+            :class="{ active: isMenuActive(item.path) }"
           >
-            <span class="nav-icon"><SettingOutlined /></span>
-            <span class="nav-text">设置</span>
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
           </router-link>
           <a class="nav-item" @click.prevent="">
             <span class="nav-icon"><QuestionCircleOutlined /></span>
@@ -160,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import {
@@ -173,50 +185,57 @@ import {
   CustomerServiceOutlined,
   MessageOutlined,
   SkinOutlined,
-  SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   QuestionCircleOutlined,
   CloseOutlined,
-  RightOutlined,
   BookOutlined,
-  SafetyOutlined,
   SafetyCertificateOutlined,
-  EyeOutlined,
-} from '@ant-design/icons-vue'
+	  EyeOutlined,
+	  UserOutlined,
+	  CloudServerOutlined,
+	  SettingOutlined,
+	} from '@ant-design/icons-vue'
 import AppLogo from '@/components/common/AppLogo.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
 const isMobile = ref(false)
-const contentExpanded = ref(true)
-const securityExpanded = ref(false)
 
-const contentMenuItems = [
+const generalMenuItems = [
   { path: '/articles', label: '文章管理', icon: FileTextOutlined },
-  { path: '/portfolios', label: '摄影作品集', icon: CameraOutlined },
-  { path: '/videos', label: '视频作品', icon: PlaySquareOutlined },
-  { path: '/travels', label: '旅行攻略', icon: CompassOutlined },
+  { path: '/comments', label: '评论管理', icon: MessageOutlined },
+  { path: '/profile/info', label: '个人资料', icon: UserOutlined },
+]
+
+const musicMenuItems = [
   { path: '/playlists', label: '音乐播放列表', icon: CustomerServiceOutlined },
 ]
 
-const securityMenuItems = [
-  { path: '/security/config', label: '安全配置', icon: SafetyCertificateOutlined },
-  { path: '/security/monitor', label: '安全监控', icon: EyeOutlined },
+const videoMenuItems = [
+  { path: '/videos', label: '视频作品', icon: PlaySquareOutlined },
 ]
 
-const securityPaths = securityMenuItems.map((item) => item.path)
+const travelMenuItems = [
+  { path: '/travels', label: '旅行攻略', icon: CompassOutlined },
+]
 
-const contentPaths = contentMenuItems.map((item) => item.path)
+const photoMenuItems = [
+  { path: '/portfolios', label: '摄影作品集', icon: CameraOutlined },
+  { path: '/equipments', label: '摄影器材', icon: CameraOutlined },
+]
 
-const isContentActive = computed(() => {
-  const currentRoot = '/' + route.path.split('/')[1]
-  return contentPaths.includes(currentRoot)
-})
+const securityMenuItems = [
+  { path: '/api-doc', label: 'API 文档', icon: BookOutlined },
+  { path: '/security/config', label: '黑名单管理', icon: SafetyCertificateOutlined },
+  { path: '/security/monitor', label: '访问统计', icon: EyeOutlined },
+]
 
-const isSecurityActive = computed(() => {
-  return securityPaths.some((p) => route.path.startsWith(p))
-})
+	const systemMenuItems = [
+	  { path: '/templates', label: '模板风格', icon: SkinOutlined },
+	  { path: '/module-config', label: '模块管理', icon: SettingOutlined },
+	  { path: '/profile/storage', label: '对象存储', icon: CloudServerOutlined },
+	]
 
 function isActive(path: string): boolean {
   const currentRoot = '/' + route.path.split('/')[1]
@@ -224,8 +243,11 @@ function isActive(path: string): boolean {
   return currentRoot === path
 }
 
-function isActiveExact(path: string): boolean {
-  return route.path === path
+function isMenuActive(path: string): boolean {
+  if (path.startsWith('/security/') || path.startsWith('/profile/')) {
+    return route.path === path
+  }
+  return isActive(path)
 }
 
 function handleResize() {
@@ -379,48 +401,6 @@ onUnmounted(() => {
   margin-left: 9px;
 }
 
-/* 子菜单标题 */
-.submenu-title {
-  font-weight: 500;
-}
-
-.submenu-arrow {
-  margin-left: auto;
-  font-size: 10px;
-  color: #94a3b8;
-  transition: transform var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-}
-
-.submenu-arrow.expanded {
-  transform: rotate(90deg);
-}
-
-/* 子菜单容器 */
-.submenu {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height var(--transition-slow);
-}
-
-.submenu.expanded {
-  max-height: 300px;
-}
-
-/* 子菜单项 */
-.sub-item {
-  height: 38px;
-  padding-left: 24px;
-  margin: 1px 12px;
-  font-size: 13px;
-}
-
-.sub-item .nav-icon {
-  font-size: 14px;
-  opacity: 0.7;
-}
-
 .nav-icon {
   display: inline-flex;
   align-items: center;
@@ -456,14 +436,6 @@ onUnmounted(() => {
   margin-left: 8px;
   border-left: none;
   border-radius: 6px;
-}
-
-.collapsed .submenu {
-  max-height: 0 !important;
-}
-
-.collapsed .submenu-arrow {
-  display: none;
 }
 
 .collapsed .sidebar-logo-wrapper {

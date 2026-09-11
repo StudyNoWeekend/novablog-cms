@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/internal/storage"
@@ -23,19 +24,19 @@ func NewMediaController(manager *storage.Manager) *MediaController {
 func (c *MediaController) Upload(ctx *gin.Context) {
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		response.Error(ctx, "请选择上传文件")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	// 限制文件大小 100MB
 	if file.Size > 100*1024*1024 {
-		response.Error(ctx, "文件大小不能超过100MB")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	media, err := c.logic.UploadFile(ctx, file)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, media)
@@ -45,12 +46,12 @@ func (c *MediaController) Upload(ctx *gin.Context) {
 func (c *MediaController) GetList(ctx *gin.Context) {
 	var req req.MediaListReq
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.GetList(ctx, &req)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -60,7 +61,7 @@ func (c *MediaController) GetList(ctx *gin.Context) {
 func (c *MediaController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -70,25 +71,25 @@ func (c *MediaController) Delete(ctx *gin.Context) {
 func (c *MediaController) CreatePreset(ctx *gin.Context) {
 	var req req.CreatePresetReq
 	if err := ctx.ShouldBind(&req); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		response.Error(ctx, "请选择上传文件")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	// 限制文件大小 100MB
 	if file.Size > 100*1024*1024 {
-		response.Error(ctx, "文件大小不能超过100MB")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	preset, err := c.logic.CreatePreset(ctx, &req, file)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, preset)
@@ -98,25 +99,25 @@ func (c *MediaController) CreatePreset(ctx *gin.Context) {
 func (c *MediaController) UploadWithPreset(ctx *gin.Context) {
 	var req req.UploadWithPresetReq
 	if err := ctx.ShouldBind(&req); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		response.Error(ctx, "请选择上传文件")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	// 限制文件大小 100MB
 	if file.Size > 100*1024*1024 {
-		response.Error(ctx, "文件大小不能超过100MB")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 
 	result, err := c.logic.UploadWithPreset(ctx, &req, file)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -127,7 +128,7 @@ func (c *MediaController) GetPresets(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetPresetsByMediaID(ctx, id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -137,7 +138,7 @@ func (c *MediaController) GetPresets(ctx *gin.Context) {
 func (c *MediaController) DeletePreset(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.DeletePreset(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)

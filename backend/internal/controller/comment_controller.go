@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,12 +23,12 @@ func NewCommentController() *CommentController {
 func (c *CommentController) GetList(ctx *gin.Context) {
 	var r req.CommentListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.GetList(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -39,12 +40,12 @@ func (c *CommentController) Reply(ctx *gin.Context) {
 	bloggerID := ctx.GetString("user_id")
 	var r req.ReplyCommentReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Reply(ctx, bloggerID, commentID, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -54,7 +55,7 @@ func (c *CommentController) Reply(ctx *gin.Context) {
 func (c *CommentController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)

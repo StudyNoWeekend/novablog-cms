@@ -37,6 +37,12 @@ func (TravelGuide) TableName() string {
 	return "travel_guides"
 }
 
+// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+func (t *TravelGuide) AfterFind(tx *gorm.DB) error {
+	t.CoverImage = resolveURL(t.CoverImage)
+	return nil
+}
+
 // TravelGuideModel 旅行攻略模型操作结构体。
 type TravelGuideModel struct {
 	db *gorm.DB

@@ -32,4 +32,16 @@ export const authApi = {
       },
     })
   },
+  uploadAvatar(file: File, onProgress?: (percent: number) => void) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post<{ url: string }>('/profile/upload-avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (e) => {
+        if (e.total && onProgress) {
+          onProgress(Math.round((e.loaded * 100) / e.total))
+        }
+      },
+    })
+  },
 }

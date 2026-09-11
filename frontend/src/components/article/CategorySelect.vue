@@ -38,7 +38,7 @@ watch(() => props.modelValue, (val) => { selectedValue.value = val })
 
 onMounted(async () => {
   loading.value = true
-  try { categories.value = await categoryApi.getList(props.type) as unknown as Category[] }
+  try { categories.value = await categoryApi.getList(props.type) }
   catch {}
   finally { loading.value = false }
 })

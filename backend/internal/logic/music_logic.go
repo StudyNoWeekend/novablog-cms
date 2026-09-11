@@ -3,25 +3,40 @@ package logic
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"novablog/internal/cache"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
+	"novablog/pkg/bilibili"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
+// MusicLogic 歌曲业务逻辑结构体。
+//
+// 依赖：
+//   - songModel：歌曲数据访问
+//   - musicCache：音频 URL 缓存（B 站 CDN 链接 120 分钟过期，缓存 TTL 与 B 站 URL 中 expire 字段对齐）
+//   - logger：业务日志
 type MusicLogic struct {
-	songModel *model.SongModel
+	songModel  *model.SongModel
+	musicCache *cache.MusicCache
+	logger     *zap.Logger
 }
 
+// NewMusicLogic 创建 MusicLogic 实例。
 func NewMusicLogic() *MusicLogic {
 	return &MusicLogic{
-		songModel: model.NewSong(),
+		songModel:  model.NewSong(),
+		musicCache: cache.NewMusicCache(),
+		logger:     MusicLogger,
 	}
 }
 
-// CreateSong 创建歌曲
+// CreateSong 创建歌曲。
 func (l *MusicLogic) CreateSong(ctx context.Context, r *req.CreateSongReq) (*res.SongRes, error) {
 	sourceType := r.SourceType
 	if sourceType == "" {
@@ -49,7 +64,7 @@ func (l *MusicLogic) CreateSong(ctx context.Context, r *req.CreateSongReq) (*res
 	return l.toSongRes(song), nil
 }
 
-// GetSongList 分页获取歌曲列表
+// GetSongList 分页获取歌曲列表（管理端）。
 func (l *MusicLogic) GetSongList(ctx context.Context, r *req.SongListReq) (*res.PageRes[res.SongRes], error) {
 	page := r.GetPage()
 	pageSize := r.GetPageSize()
@@ -61,10 +76,10 @@ func (l *MusicLogic) GetSongList(ctx context.Context, r *req.SongListReq) (*res.
 
 	songs, total, err := l.songModel.GetList(ctx, categoryID, page, pageSize)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("查询歌曲列表失败: %w", err)
 	}
 
-	var items []res.SongRes
+	items := make([]res.SongRes, 0, len(songs))
 	for i := range songs {
 		items = append(items, *l.toSongRes(&songs[i]))
 	}
@@ -72,7 +87,7 @@ func (l *MusicLogic) GetSongList(ctx context.Context, r *req.SongListReq) (*res.
 	return res.NewPageRes(items, total, page, pageSize), nil
 }
 
-// GetSongByID 根据 ID 获取歌曲
+// GetSongByID 根据 ID 获取歌曲（管理端）。
 func (l *MusicLogic) GetSongByID(ctx context.Context, id string) (*res.SongRes, error) {
 	song, err := l.songModel.GetByID(ctx, id)
 	if err != nil {
@@ -81,7 +96,9 @@ func (l *MusicLogic) GetSongByID(ctx context.Context, id string) (*res.SongRes, 
 	return l.toSongRes(song), nil
 }
 
-// UpdateSong 更新歌曲
+// UpdateSong 更新歌曲。
+//
+// 副作用：更新成功后使对应的音频 URL 缓存失效，避免 B 站新链接与旧缓存不一致。
 func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSongReq) (*res.SongRes, error) {
 	song, err := l.songModel.GetByID(ctx, id)
 	if err != nil {
@@ -111,28 +128,37 @@ func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSon
 		return nil, fmt.Errorf("更新歌曲失败: %w", err)
 	}
 
+	// 失效音频 URL 缓存（BVID/CID 可能已变更）。
+	if err := l.musicCache.InvalidateAudioURL(ctx, id); err != nil {
+		l.logger.Warn("失效音频 URL 缓存失败", zap.String("song_id", id), zap.Error(err))
+	}
+
 	return l.toSongRes(song), nil
 }
 
-// DeleteSong 删除歌曲
+// DeleteSong 删除歌曲。
+//
+// 副作用：删除成功后使对应的音频 URL 缓存失效。
 func (l *MusicLogic) DeleteSong(ctx context.Context, id string) error {
 	_, err := l.songModel.GetByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("歌曲不存在")
 	}
-	return l.songModel.Delete(ctx, id)
-}
-
-// StartParse 启动 B 站链接解析任务
-func (l *MusicLogic) StartParse(ctx context.Context, r *req.ParseMusicReq) (string, error) {
-	taskID, err := StartParseTask(r.URL)
-	if err != nil {
-		return "", err
+	if err := l.songModel.Delete(ctx, id); err != nil {
+		return err
 	}
-	return taskID, nil
+	if err := l.musicCache.InvalidateAudioURL(ctx, id); err != nil {
+		l.logger.Warn("失效音频 URL 缓存失败", zap.String("song_id", id), zap.Error(err))
+	}
+	return nil
 }
 
-// GetParseTask 获取解析任务状态
+// StartParse 启动 B 站链接解析任务。
+func (l *MusicLogic) StartParse(ctx context.Context, r *req.ParseMusicReq) (string, error) {
+	return StartParseTask(r.URL)
+}
+
+// GetParseTask 获取解析任务状态。
 func (l *MusicLogic) GetParseTask(ctx context.Context, taskID string) (*res.ParseTaskRes, error) {
 	task, ok := GetParseTask(taskID)
 	if !ok {
@@ -162,9 +188,9 @@ func (l *MusicLogic) GetParseTask(ctx context.Context, taskID string) (*res.Pars
 	return taskRes, nil
 }
 
-// BatchCreateSongs 批量创建歌曲
+// BatchCreateSongs 批量创建歌曲。
 func (l *MusicLogic) BatchCreateSongs(ctx context.Context, r *req.BatchCreateSongReq) ([]res.SongRes, error) {
-	var results []res.SongRes
+	results := make([]res.SongRes, 0, len(r.Songs))
 	for _, songReq := range r.Songs {
 		sourceType := songReq.SourceType
 		if sourceType == "" {
@@ -188,25 +214,16 @@ func (l *MusicLogic) BatchCreateSongs(ctx context.Context, r *req.BatchCreateSon
 		}
 		results = append(results, *l.toSongRes(song))
 	}
-	if results == nil {
-		results = []res.SongRes{}
-	}
 	return results, nil
 }
 
-// GetAudioURL 获取歌曲的音频播放地址（B站CDN直链，不经过后端转发）
+// GetAudioURL 获取歌曲的音频播放地址（管理端接口）。
+//
+// 缓存策略：
+//  1. 先查 Redis（key=music:audio:<song_id>）；
+//  2. 命中直接返回；未命中调用 B 站 /x/player/playurl 拉取，并按 URL 中 expire 字段设 TTL。
 func (l *MusicLogic) GetAudioURL(ctx context.Context, songID string) (string, error) {
-	song, err := l.songModel.GetByID(ctx, songID)
-	if err != nil {
-		return "", fmt.Errorf("歌曲不存在")
-	}
-
-	audioURL, err := FetchAudioURL(ctx, song.BVID, song.CID)
-	if err != nil {
-		return "", fmt.Errorf("获取音频地址失败: %w", err)
-	}
-
-	return audioURL, nil
+	return l.fetchAudioURL(ctx, songID)
 }
 
 // GetPublicSongList 获取公开歌曲列表（无需状态过滤）。
@@ -214,17 +231,69 @@ func (l *MusicLogic) GetPublicSongList(ctx context.Context, r *req.SongListReq) 
 	return l.GetSongList(ctx, r)
 }
 
-// GetPublicSongByID 根据 ID 获取歌曲。
-func (l *MusicLogic) GetPublicSongByID(ctx context.Context, id string) (*model.Song, error) {
-	return l.songModel.GetByID(ctx, id)
+// GetPublicSongByID 根据 ID 获取公开歌曲。
+func (l *MusicLogic) GetPublicSongByID(ctx context.Context, id string) (*res.SongRes, error) {
+	return l.GetSongByID(ctx, id)
 }
 
-// GetPublicAudioURL 获取歌曲的音频播放地址（复用已有 GetAudioURL 逻辑）。
+// GetPublicAudioURL 获取歌曲的公开音频播放地址。
 func (l *MusicLogic) GetPublicAudioURL(ctx context.Context, songID string) (string, error) {
-	return l.GetAudioURL(ctx, songID)
+	return l.fetchAudioURL(ctx, songID)
 }
 
-// toSongRes 转换为歌曲响应
+// fetchAudioURL 统一从缓存 / B 站获取音频 URL。
+func (l *MusicLogic) fetchAudioURL(ctx context.Context, songID string) (string, error) {
+	// 1) 缓存命中。
+	if cached, err := l.musicCache.GetAudioURL(ctx, songID); err != nil {
+		l.logger.Warn("读取音频 URL 缓存失败，将直连 B 站", zap.String("song_id", songID), zap.Error(err))
+	} else if cached != nil {
+		return cached.URL, nil
+	}
+
+	// 2) 查 song。
+	song, err := l.songModel.GetByID(ctx, songID)
+	if err != nil {
+		return "", fmt.Errorf("歌曲不存在")
+	}
+
+	// 3) 调 B 站。
+	start := time.Now()
+	entries, err := bilibili.FetchAudioEntries(ctx, song.BVID, song.CID)
+	if err != nil {
+		return "", fmt.Errorf("获取音频地址失败: %w", err)
+	}
+	audioURL := pickBestAudioURL(entries)
+	if audioURL == "" {
+		return "", fmt.Errorf("未找到可用的音频流")
+	}
+	l.logger.Info("获取音频地址成功",
+		zap.String("song_id", songID),
+		zap.String("bvid", song.BVID),
+		zap.Int64("cid", song.CID),
+		zap.Duration("cost_ms", time.Since(start)),
+	)
+
+	// 4) 写缓存（TTL 与 B 站 URL 中 expire 对齐）。
+	if err := l.musicCache.SetAudioURL(ctx, songID, audioURL); err != nil {
+		l.logger.Warn("写入音频 URL 缓存失败", zap.String("song_id", songID), zap.Error(err))
+	}
+	return audioURL, nil
+}
+
+// pickBestAudioURL 选取 bandwidth 最大的音频流。
+func pickBestAudioURL(entries []bilibili.AudioEntry) string {
+	var bestURL string
+	var bestBandwidth int
+	for _, a := range entries {
+		if a.Bandwidth > bestBandwidth {
+			bestBandwidth = a.Bandwidth
+			bestURL = a.BaseURL
+		}
+	}
+	return bestURL
+}
+
+// toSongRes 转换为歌曲响应。
 func (l *MusicLogic) toSongRes(s *model.Song) *res.SongRes {
 	return &res.SongRes{
 		ID:         s.ID,

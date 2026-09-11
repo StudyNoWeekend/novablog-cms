@@ -6,6 +6,7 @@ import (
 
 	"novablog/internal/logic"
 	"novablog/internal/middleware"
+	"novablog/utils/response"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
@@ -74,8 +75,11 @@ func NewApp(cfgPath string) (*App, error) {
 	logic.RefreshExpire = cfg.GetDuration("jwt.refresh_expire")
 	logic.AuthLogger = logger
 	logic.SetupLogger = logger
+	logic.MusicLogger = logger
 
 	middleware.AuthLogger = logger
+	middleware.Logger = logger
+	response.ErrorLogger = logger
 
 	app := &App{
 		Config: cfg,

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 
@@ -25,14 +27,16 @@ type Manager struct {
 	mu          sync.Mutex                   // 序列化重建
 	configModel *model.StorageConfigModel
 	cryptoKey   string
+	uploadDir   string
 	logger      *zap.Logger
 }
 
 // NewManager 创建存储管理器实例。
-func NewManager(configModel *model.StorageConfigModel, cryptoKey string, logger *zap.Logger) *Manager {
+func NewManager(configModel *model.StorageConfigModel, cryptoKey, uploadDir string, logger *zap.Logger) *Manager {
 	return &Manager{
 		configModel: configModel,
 		cryptoKey:   cryptoKey,
+		uploadDir:   uploadDir,
 		logger:      logger,
 	}
 }
@@ -45,6 +49,20 @@ func (m *Manager) GetProvider() StorageProvider {
 		return nil
 	}
 	return bundle.provider
+}
+
+// GetProviderOrReload 返回当前活跃的 Provider，若内存中为 nil 则尝试从 DB 重新加载。
+// 适用于上传等关键路径：避免因启动时 Reload 失败或 DB 直接入库导致全程不可用。
+func (m *Manager) GetProviderOrReload(ctx context.Context) StorageProvider {
+	provider := m.GetProvider()
+	if provider != nil {
+		return provider
+	}
+	// 内存中无 Provider，尝试从 DB 重新加载
+	if err := m.Reload(ctx); err != nil {
+		m.logger.Warn("懒加载存储 Provider 失败", zap.Error(err))
+	}
+	return m.GetProvider()
 }
 
 // GetActiveConfig 返回当前活跃配置快照（已脱敏，access_secret 为空）。
@@ -74,7 +92,7 @@ func (m *Manager) Reload(ctx context.Context) error {
 		return fmt.Errorf("查询活跃存储配置失败: %w", err)
 	}
 
-	provider, err := NewProvider(config, m.cryptoKey)
+	provider, err := NewProvider(config, m.cryptoKey, m.uploadDir)
 	if err != nil {
 		return fmt.Errorf("构建存储 Provider 失败: %w", err)
 	}
@@ -98,9 +116,23 @@ func (m *Manager) Reload(ctx context.Context) error {
 // config.AccessSecret 为明文（用户刚输入未加密）。
 func (m *Manager) TestProvider(ctx context.Context, config *model.StorageConfig) error {
 	// config.AccessSecret 是明文，直接构建（跳过解密步骤）
-	provider, err := buildProvider(config, config.AccessSecret)
+	provider, err := buildProvider(config, config.AccessSecret, m.uploadDir)
 	if err != nil {
 		return fmt.Errorf("构建存储 Provider 失败: %w", err)
+	}
+
+	// local 存储特殊处理：检查上传目录是否存在且可写
+	if config.Provider == "local" {
+		if err := os.MkdirAll(m.uploadDir, 0755); err != nil {
+			return fmt.Errorf("创建上传目录失败: %w", err)
+		}
+		// 尝试创建临时文件验证可写性
+		tmpPath := filepath.Join(m.uploadDir, ".storage_test")
+		if err := os.WriteFile(tmpPath, []byte("test"), 0644); err != nil {
+			return fmt.Errorf("上传目录不可写: %w", err)
+		}
+		os.Remove(tmpPath)
+		return nil
 	}
 
 	// 校验连通性：检查一个不存在的 key，返回 false 且无错误表示连通正常

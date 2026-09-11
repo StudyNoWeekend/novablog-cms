@@ -1,7 +1,7 @@
 // 存储配置（对应后端 StorageConfigRes）
 export interface StorageConfig {
   id: string
-  provider: 'aliyun' | 'tencent' | 'minio'
+  provider: 'aliyun' | 'tencent' | 'minio' | 'local'
   endpoint: string
   region: string
   bucket: string
@@ -17,7 +17,8 @@ export interface StorageConfig {
 
 // 存储配置表单（用于新增/编辑）
 export interface StorageConfigForm {
-  provider: 'aliyun' | 'tencent' | 'minio' | ''
+  provider: 'aliyun' | 'tencent' | 'minio' | 'local' | ''
+  old_provider: string  // 编辑时传入原 provider
   endpoint: string
   region: string
   bucket: string
@@ -31,7 +32,7 @@ export interface StorageConfigForm {
 
 // 存储配置测试请求
 export interface StorageTestForm {
-  provider: 'aliyun' | 'tencent' | 'minio'
+  provider: 'aliyun' | 'tencent' | 'minio' | 'local'
   endpoint: string
   region: string
   bucket: string
@@ -66,6 +67,8 @@ export interface MigrationItem {
   // 分析场景额外字段（由后端 analyze result 返回）
   filename?: string
   storage_type?: string
+  source_type?: string  // media/preset
+  url?: string          // 当前 URL
 }
 
 // 分析请求

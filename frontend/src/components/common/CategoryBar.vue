@@ -103,7 +103,7 @@ onMounted(() => {
 async function loadCategories() {
   loading.value = true
   try {
-    categories.value = await categoryApi.getList(props.type) as unknown as Category[]
+    categories.value = await categoryApi.getList(props.type)
   } catch {
     // error handled by interceptor
   } finally {

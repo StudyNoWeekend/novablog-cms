@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"regexp"
 	"time"
+
+	"novablog/pkg/bilibili"
 )
 
 // ParsedVideoMeta 解析到的视频元信息
@@ -37,11 +39,11 @@ func ParseVideoMeta(ctx context.Context, platform, url string) (*ParsedVideoMeta
 
 // parseBilibili 解析 B 站视频元信息
 func parseBilibili(ctx context.Context, url string) (*ParsedVideoMeta, error) {
-	bvid, err := ExtractBVID(url)
+	bvid, err := bilibili.ExtractBVID(url)
 	if err != nil {
 		return nil, err
 	}
-	info, err := FetchVideoInfo(ctx, bvid)
+	info, err := bilibili.FetchVideoInfo(ctx, bvid)
 	if err != nil {
 		return nil, err
 	}

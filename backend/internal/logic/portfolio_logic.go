@@ -133,7 +133,7 @@ func (l *PortfolioLogic) GetPublicList(ctx context.Context, r *req.PortfolioList
 }
 
 // GetPublicDetail 获取已发布作品集详情（验证 status=1，含作品项列表）。
-func (l *PortfolioLogic) GetPublicDetail(ctx context.Context, id string) (map[string]interface{}, error) {
+func (l *PortfolioLogic) GetPublicDetail(ctx context.Context, id string) (*res.PortfolioDetailRes, error) {
 	detail, err := l.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("作品集不存在")
@@ -141,23 +141,7 @@ func (l *PortfolioLogic) GetPublicDetail(ctx context.Context, id string) (map[st
 	if detail.Status != 1 {
 		return nil, fmt.Errorf("作品集不存在")
 	}
-	result := map[string]interface{}{
-		"id":              detail.ID,
-		"name":            detail.Name,
-		"description":     detail.Description,
-		"cover_mode":      detail.CoverMode,
-		"cover_preset_id": detail.CoverPresetID,
-		"cover_url":       detail.CoverURL,
-		"status":          detail.Status,
-		"sort_order":      detail.SortOrder,
-		"category_id":     detail.CategoryID,
-		"category_name":   detail.CategoryName,
-		"item_count":      detail.ItemCount,
-		"items":           detail.Items,
-		"created_at":      detail.CreatedAt,
-		"updated_at":      detail.UpdatedAt,
-	}
-	return result, nil
+	return detail, nil
 }
 
 // Update 更新作品集。
@@ -235,12 +219,12 @@ func (l *PortfolioLogic) Delete(ctx context.Context, id string) error {
 // AddItem 添加作品项，校验作品集与预设存在，sort_order 自增。
 func (l *PortfolioLogic) AddItem(ctx context.Context, portfolioID string, r *req.CreatePortfolioItemReq) (*res.PortfolioItemRes, error) {
 	// 校验作品集存在
-	if _, err := l.portfolioModel.GetByID(ctx, portfolioID); err != nil {
+	if _, fetchErr := l.portfolioModel.GetByID(ctx, portfolioID); fetchErr != nil {
 		return nil, fmt.Errorf("作品集不存在")
 	}
 	// 校验预设存在
-	preset, err := l.presetModel.GetByID(ctx, r.PresetID)
-	if err != nil {
+	preset, presetErr := l.presetModel.GetByID(ctx, r.PresetID)
+	if presetErr != nil {
 		return nil, fmt.Errorf("预设不存在")
 	}
 

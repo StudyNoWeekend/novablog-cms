@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // JWTClaims 自定义 JWT 声明，包含用户信息。
@@ -22,7 +23,7 @@ func GenerateAccessToken(userID, username, secret string, expire time.Duration) 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expire)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ID:        userID + "_" + time.Now().Format("20060102150405"),
+			ID:        uuid.New().String(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -37,7 +38,7 @@ func GenerateRefreshToken(userID, username, secret string, expire time.Duration)
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expire)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ID:        userID + "_" + time.Now().Format("20060102150405") + "_refresh",
+			ID:        uuid.New().String(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

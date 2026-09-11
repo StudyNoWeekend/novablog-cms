@@ -8,10 +8,11 @@ import (
 
 // RegisterPublicRoutes 注册公开路由（无需认证）。
 func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
-	setup := r.Group("/setup")
+	// 首次安装引导接口（公开，避免与"管理后台设置"语义混淆）
+	install := r.Group("/install")
 	{
-		setup.GET("/status", pc.GetStatus)
-		setup.POST("/init", pc.Init)
+		install.GET("/status", pc.GetStatus)
+		install.POST("/init", pc.Init)
 	}
 
 	public := r.Group("")
@@ -49,9 +50,16 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 		public.GET("/videos", pc.GetVideos)
 		public.GET("/videos/:id", pc.GetVideoDetail)
 
+		// 摄影器材
+		public.GET("/equipments", pc.GetEquipments)
+		public.GET("/equipments/:id", pc.GetEquipmentDetail)
+
 		// 音乐
 		public.GET("/music/songs", pc.GetSongs)
 		public.GET("/music/songs/:id", pc.GetSongDetail)
 		public.GET("/music/audio-url/:song_id", pc.GetAudioURL)
+
+		// 模块开关配置
+		public.GET("/module-config", pc.GetModuleConfig)
 	}
 }

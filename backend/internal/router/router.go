@@ -23,13 +23,14 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	r.Use(middleware.TraceMiddleware())
 	r.Use(middleware.LoggerMiddleware(logger))
 	r.Use(middleware.RecoveryMiddleware(logger))
+	r.Use(middleware.AccessLogMiddleware())
 	r.Use(middleware.CORSMiddleware())
 
 	// 健康检查路由
 	RegisterHealthRouter(r)
 
-	// API 路由组
-	api := r.Group("/api/v1")
+	// 文件服务路由（公开访问，无需认证）
+	r.Static("/files", uploadDir)
 
 	// 初始化依赖
 	authController := controller.NewAuthController()
@@ -40,6 +41,7 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	articleController := controller.NewArticleController()
 	portfolioController := controller.NewPortfolioController()
 	videoController := controller.NewVideoController()
+	equipmentController := controller.NewEquipmentController()
 	travelController := controller.NewTravelGuideController()
 	musicController := controller.NewMusicController()
 	commentController := controller.NewCommentController()
@@ -47,14 +49,19 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	securityController := controller.NewSecurityController()
 	apiDocController := controller.NewAPIDocController()
 	profileController := controller.NewProfileController(storageMgr)
+	moduleConfigController := controller.NewModuleConfigController()
 	authMiddleware := middleware.AuthMiddleware(accessSecret)
 
-	// 安全缓存与中间件
+	// 安全缓存与 IP 黑名单中间件
 	securityCache := cache.NewSecurityCache()
-	ipBlacklistMiddleware := middleware.IPBlacklistMiddleware(securityCache)
-	rateLimitMiddleware := middleware.RateLimitMiddleware(securityCache)
+	securityModel := model.NewSecurity()
+	ipBlacklistMiddleware := middleware.IPBlacklistMiddleware(securityCache, securityModel)
 
-	// 启动时预加载安全配置到缓存，确保限流中间件立即生效
+	// API 路由组（统一应用 IP 黑名单中间件）
+	api := r.Group("/api/v1")
+	api.Use(ipBlacklistMiddleware)
+
+	// 启动时预加载安全配置到缓存
 	securityLogic := logic.NewSecurityLogic()
 	if err := securityLogic.InitCache(context.Background()); err != nil {
 		logger.Warn("预加载安全配置缓存失败", zap.Error(err))
@@ -68,10 +75,8 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	migrationLogic := logic.NewMigrationLogic(storageMgr, cryptoKey, uploadDir, logger)
 	migrationController := controller.NewMigrationController(migrationLogic)
 
-	// 注册公开路由（无需认证，应用 IP 黑名单与限流中间件）
+	// 注册公开路由（无需认证）
 	public := api.Group("/public")
-	public.Use(ipBlacklistMiddleware)
-	public.Use(rateLimitMiddleware)
 	RegisterPublicRoutes(public, publicController)
 
 	// 注册认证路由
@@ -95,6 +100,9 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	// 注册视频作品管理路由
 	RegisterVideoRoutes(api, videoController, authMiddleware)
 
+	// 注册摄影器材管理路由
+	RegisterEquipmentRoutes(api, equipmentController, authMiddleware)
+
 	// 注册旅行攻略管理路由
 	RegisterTravelRoutes(api, travelController, authMiddleware)
 
@@ -113,8 +121,15 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	// 注册 API 文档路由
 	RegisterAPIDocRoutes(api, apiDocController, authMiddleware)
 
+	// 注册官方主题市场代理路由
+	themeMarketController := controller.NewThemeMarketController()
+	RegisterThemeMarketRoutes(api, themeMarketController, authMiddleware)
+
 	// 注册个人资料管理路由
 	RegisterProfileRoutes(api, profileController, authMiddleware)
+
+	// 注册模块开关配置管理路由
+	RegisterModuleConfigRoutes(api, moduleConfigController, authMiddleware)
 }
 
 // RegisterHealthRouter 注册健康检查路由。

@@ -2,12 +2,13 @@ package req
 
 // StorageConfigReq 存储配置创建/更新请求
 type StorageConfigReq struct {
-	Provider     string `json:"provider" binding:"required,oneof=aliyun tencent minio"`
-	Endpoint     string `json:"endpoint" binding:"required"`
+	Provider     string `json:"provider" binding:"required,oneof=aliyun tencent minio local"`
+	OldProvider  string `json:"old_provider"` // 编辑时传入原 provider，若与 provider 不同则表示平台类型变更
+	Endpoint     string `json:"endpoint"`
 	Region       string `json:"region"`
 	Bucket       string `json:"bucket"`
-	AccessKey    string `json:"access_key" binding:"required"`
-	AccessSecret string `json:"access_secret" binding:"required"`
+	AccessKey    string `json:"access_key"`
+	AccessSecret string `json:"access_secret"`
 	PathPrefix   string `json:"path_prefix"`
 	CustomDomain string `json:"custom_domain"`
 	Extra        string `json:"extra"` // JSON字符串，如 {"use_ssl":true}
@@ -15,12 +16,12 @@ type StorageConfigReq struct {
 
 // StorageTestReq 存储连通性测试请求（不落库）
 type StorageTestReq struct {
-	Provider     string `json:"provider" binding:"required,oneof=aliyun tencent minio"`
-	Endpoint     string `json:"endpoint" binding:"required"`
+	Provider     string `json:"provider" binding:"required,oneof=aliyun tencent minio local"`
+	Endpoint     string `json:"endpoint"`
 	Region       string `json:"region"`
 	Bucket       string `json:"bucket"`
-	AccessKey    string `json:"access_key" binding:"required"`
-	AccessSecret string `json:"access_secret" binding:"required"`
+	AccessKey    string `json:"access_key"`
+	AccessSecret string `json:"access_secret"`
 	PathPrefix   string `json:"path_prefix"`
 	CustomDomain string `json:"custom_domain"`
 	Extra        string `json:"extra"`

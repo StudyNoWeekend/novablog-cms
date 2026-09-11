@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,7 +23,7 @@ func NewArticleController() *ArticleController {
 func (c *ArticleController) Create(ctx *gin.Context) {
 	var r req.CreateArticleReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	if r.Status == 0 {
@@ -30,7 +31,7 @@ func (c *ArticleController) Create(ctx *gin.Context) {
 	}
 	result, err := c.logic.Create(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -40,12 +41,12 @@ func (c *ArticleController) Create(ctx *gin.Context) {
 func (c *ArticleController) GetList(ctx *gin.Context) {
 	var r req.ArticleListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.GetList(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -56,7 +57,7 @@ func (c *ArticleController) GetDetail(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetDetail(ctx, id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -67,12 +68,12 @@ func (c *ArticleController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateArticleReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Update(ctx, id, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -83,11 +84,11 @@ func (c *ArticleController) UpdateStatus(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateStatusReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: status 必须为 1/2/3")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	if err := c.logic.UpdateStatus(ctx, id, &r); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -97,7 +98,7 @@ func (c *ArticleController) UpdateStatus(ctx *gin.Context) {
 func (c *ArticleController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)

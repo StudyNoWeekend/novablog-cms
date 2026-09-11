@@ -9,20 +9,20 @@ import (
 
 // Comment 评论模型，对应 comments 数据表。
 type Comment struct {
-	ID         string         `gorm:"type:uuid;primaryKey"`                         // UUID 主键
-	TargetType string         `gorm:"type:varchar(20);not null;column:target_type"` // 目标类型 article/travel_guide
-	TargetID   string         `gorm:"type:uuid;not null;column:target_id"`          // 目标 ID
-	ParentID   *string        `gorm:"type:uuid;column:parent_id"`                   // 父评论 ID，顶级评论为 nil
-	BloggerID  *string        `gorm:"type:uuid;column:blogger_id"`                  // 博主 ID（博主回复时填充）
-	Nickname   string         `gorm:"type:varchar(50);not null"`                    // 评论者名称
-	Website    string         `gorm:"type:varchar(500)"`                            // 评论者博客地址
-	Content    string         `gorm:"type:text;not null"`                           // 评论内容
-	IsBlogger  bool           `gorm:"type:boolean;default:false;column:is_blogger"` // 是否为博主回复
-	Status     int16          `gorm:"type:smallint;default:2"`                      // 默认已通过，无需审核
-	IPAddress  string         `gorm:"type:varchar(50);column:ip_address"`           // 评论者 IP 地址
-	CreatedAt  time.Time      `gorm:"type:timestamptz;autoCreateTime"`              // 创建时间
-	UpdatedAt  time.Time      `gorm:"type:timestamptz;autoUpdateTime"`              // 更新时间
-	DeletedAt  gorm.DeletedAt `gorm:"index"`                                        // 软删除时间
+	ID         string         `gorm:"type:uuid;primaryKey"`                                                              // UUID 主键
+	TargetType string         `gorm:"column:target_type;type:varchar(20);not null;index:idx_comments_target,priority:1"` // 目标类型 article/travel_guide
+	TargetID   string         `gorm:"column:target_id;type:uuid;not null;index:idx_comments_target,priority:2"`          // 目标 ID
+	ParentID   *string        `gorm:"column:parent_id;type:uuid;index:idx_comments_parent_id"`                           // 父评论 ID，顶级评论为 nil
+	BloggerID  *string        `gorm:"type:uuid;column:blogger_id"`                                                       // 博主 ID（博主回复时填充）
+	Nickname   string         `gorm:"type:varchar(50);not null"`                                                         // 评论者名称
+	Website    string         `gorm:"type:varchar(500)"`                                                                 // 评论者博客地址
+	Content    string         `gorm:"type:text;not null"`                                                                // 评论内容
+	IsBlogger  bool           `gorm:"type:boolean;default:false;column:is_blogger"`                                      // 是否为博主回复
+	Status     int16          `gorm:"type:smallint;default:2"`                                                           // 默认已通过，无需审核
+	IPAddress  string         `gorm:"type:varchar(50);column:ip_address"`                                                // 评论者 IP 地址
+	CreatedAt  time.Time      `gorm:"type:timestamptz;autoCreateTime"`                                                   // 创建时间
+	UpdatedAt  time.Time      `gorm:"type:timestamptz;autoUpdateTime"`                                                   // 更新时间
+	DeletedAt  gorm.DeletedAt `gorm:"index"`                                                                             // 软删除时间
 }
 
 // TableName 指定数据表名称。

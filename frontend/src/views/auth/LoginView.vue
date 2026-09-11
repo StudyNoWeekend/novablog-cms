@@ -107,7 +107,7 @@ async function handleLogin() {
   try {
     await authStore.login(form, rememberMe.value)
   } catch {
-    message.error('用户名或密码错误')
+    // Error message already shown by response interceptor
   } finally {
     loading.value = false
   }

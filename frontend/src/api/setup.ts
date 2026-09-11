@@ -17,9 +17,9 @@ export interface InitRes {
 
 export const setupApi = {
   getStatus(): Promise<StatusRes> {
-    return request.get('/public/setup/status') as Promise<StatusRes>
+    return request.get('/public/install/status') as Promise<StatusRes>
   },
   init(data: InitReq): Promise<InitRes> {
-    return request.post('/public/setup/init', data) as Promise<InitRes>
+    return request.post('/public/install/init', data) as Promise<InitRes>
   },
 }

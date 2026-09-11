@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,12 +23,12 @@ func NewMigrationController(logic *logic.MigrationLogic) *MigrationController {
 func (c *MigrationController) Analyze(ctx *gin.Context) {
 	var r req.MigrationAnalyzeReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "请求参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	taskID, err := c.logic.Analyze(ctx.Request.Context(), r.TargetProvider)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, gin.H{"task_id": taskID})
@@ -38,7 +39,7 @@ func (c *MigrationController) GetAnalyzeResult(ctx *gin.Context) {
 	taskID := ctx.Param("taskId")
 	result, err := c.logic.GetAnalyzeResult(ctx.Request.Context(), taskID)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -48,12 +49,12 @@ func (c *MigrationController) GetAnalyzeResult(ctx *gin.Context) {
 func (c *MigrationController) StartMigration(ctx *gin.Context) {
 	var r req.MigrationStartReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "请求参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	taskID, err := c.logic.StartMigration(ctx.Request.Context(), &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, gin.H{"task_id": taskID})
@@ -64,7 +65,7 @@ func (c *MigrationController) GetMigrationStatus(ctx *gin.Context) {
 	taskID := ctx.Param("taskId")
 	taskRes, failedItems, err := c.logic.GetMigrationStatus(ctx.Request.Context(), taskID)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, gin.H{

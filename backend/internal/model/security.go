@@ -11,16 +11,9 @@ import (
 // SecurityConfig 安全配置模型，对应 security_configs 数据表。
 type SecurityConfig struct {
 	ID                  string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"` // UUID 主键
-	GetMaxTokens        int       `gorm:"not null;default:20"`                            // GET 请求最大令牌数
-	GetWindowSeconds    int       `gorm:"not null;default:60"`                            // GET 请求时间窗口（秒）
-	PostMaxTokens       int       `gorm:"not null;default:5"`                             // POST 请求最大令牌数
-	PostWindowSeconds   int       `gorm:"not null;default:60"`                            // POST 请求时间窗口（秒）
-	ViewMaxTokens       int       `gorm:"not null;default:10"`                            // 浏览相关接口最大令牌数
-	ViewWindowSeconds   int       `gorm:"not null;default:60"`                            // 浏览相关接口时间窗口（秒）
-	LikeMaxTokens       int       `gorm:"not null;default:10"`                            // 点赞相关接口最大令牌数
-	LikeWindowSeconds   int       `gorm:"not null;default:60"`                            // 点赞相关接口时间窗口（秒）
-	BlacklistThreshold  int       `gorm:"not null;default:5"`                             // 触发黑名单的违规次数阈值
+	SecurityEnabled     bool      `gorm:"not null;default:true"`                          // 是否开启安全防护
 	BlacklistTTLMinutes int       `gorm:"not null;default:60"`                            // 黑名单封禁时长（分钟）
+	LogRetentionDays    int       `gorm:"not null;default:7"`                             // IP 访问日志保留天数
 	CreatedAt           time.Time `gorm:"type:timestamptz;autoCreateTime"`                // 创建时间
 	UpdatedAt           time.Time `gorm:"type:timestamptz;autoUpdateTime"`                // 更新时间
 }
@@ -53,16 +46,9 @@ func (m *SecurityConfigModel) GetConfig(ctx context.Context) (*SecurityConfig, e
 	// 不存在则创建默认配置
 	config = SecurityConfig{
 		ID:                  uuid.New().String(),
-		GetMaxTokens:        20,
-		GetWindowSeconds:    60,
-		PostMaxTokens:       5,
-		PostWindowSeconds:   60,
-		ViewMaxTokens:       10,
-		ViewWindowSeconds:   60,
-		LikeMaxTokens:       10,
-		LikeWindowSeconds:   60,
-		BlacklistThreshold:  5,
+		SecurityEnabled:     true,
 		BlacklistTTLMinutes: 60,
+		LogRetentionDays:    7,
 	}
 	if createErr := m.db.WithContext(ctx).Create(&config).Error; createErr != nil {
 		return nil, createErr
@@ -156,4 +142,82 @@ func (m *IPBlacklistRecordModel) GetActiveCount(ctx context.Context) (int64, err
 		return 0, err
 	}
 	return count, nil
+}
+
+// IPBlacklist 管理员手动维护的 IP 黑名单，对应 ip_blacklists 数据表。
+type IPBlacklist struct {
+	ID        uint           `gorm:"primaryKey;autoIncrement"`              // 自增主键
+	IP        string         `gorm:"type:varchar(50);uniqueIndex;not null"` // IP 地址
+	Reason    string         `gorm:"type:varchar(255)"`                     // 封禁原因/备注
+	CreatedAt time.Time      `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间
+	UpdatedAt time.Time      `gorm:"type:timestamptz;autoUpdateTime"`       // 更新时间
+	DeletedAt gorm.DeletedAt `gorm:"type:timestamptz;index"`                // 软删除时间
+}
+
+// TableName 指定数据表名称。
+func (IPBlacklist) TableName() string {
+	return "ip_blacklists"
+}
+
+// SecurityModel 安全相关模型操作结构体。
+type SecurityModel struct {
+	db *gorm.DB
+}
+
+// NewSecurity 创建 SecurityModel 实例。
+func NewSecurity() *SecurityModel {
+	return &SecurityModel{db: DB}
+}
+
+// CreateBlacklist 创建黑名单记录。
+func (m *SecurityModel) CreateBlacklist(ctx context.Context, b *IPBlacklist) error {
+	return m.db.WithContext(ctx).Create(b).Error
+}
+
+// DeleteBlacklist 根据 ID 软删除黑名单记录。
+func (m *SecurityModel) DeleteBlacklist(ctx context.Context, id uint) error {
+	return m.db.WithContext(ctx).Delete(&IPBlacklist{}, id).Error
+}
+
+// UpdateBlacklist 更新黑名单记录。
+func (m *SecurityModel) UpdateBlacklist(ctx context.Context, b *IPBlacklist) error {
+	return m.db.WithContext(ctx).Save(b).Error
+}
+
+// GetBlacklistByID 根据 ID 查询黑名单记录。
+func (m *SecurityModel) GetBlacklistByID(ctx context.Context, id uint) (*IPBlacklist, error) {
+	var b IPBlacklist
+	if err := m.db.WithContext(ctx).First(&b, id).Error; err != nil {
+		return nil, err
+	}
+	return &b, nil
+}
+
+// ListBlacklists 分页查询黑名单记录，支持按 IP 或原因关键字搜索。
+func (m *SecurityModel) ListBlacklists(ctx context.Context, keyword string, page, pageSize int) ([]*IPBlacklist, int64, error) {
+	var list []*IPBlacklist
+	var total int64
+
+	db := m.db.WithContext(ctx).Model(&IPBlacklist{})
+	if keyword != "" {
+		db = db.Where("ip ILIKE ? OR reason ILIKE ?", "%"+keyword+"%", "%"+keyword+"%")
+	}
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	if err := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
+		return nil, 0, err
+	}
+	return list, total, nil
+}
+
+// GetBlacklistByIP 根据 IP 查询黑名单记录（未软删除）。
+func (m *SecurityModel) GetBlacklistByIP(ctx context.Context, ip string) (*IPBlacklist, error) {
+	var b IPBlacklist
+	if err := m.db.WithContext(ctx).Where("ip = ?", ip).First(&b).Error; err != nil {
+		return nil, err
+	}
+	return &b, nil
 }

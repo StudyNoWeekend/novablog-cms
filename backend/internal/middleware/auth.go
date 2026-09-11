@@ -62,6 +62,10 @@ func AuthMiddleware(accessSecret string) gin.HandlerFunc {
 		blacklisted, err := tokenCache.IsBlacklisted(c.Request.Context(), claims.ID)
 		if err != nil {
 			AuthLogger.Error("检查令牌黑名单失败", zap.Error(err))
+			// Fail-close: 黑名单检查失败时拒绝请求，避免已注销的令牌被复用
+			response.Fail(c, enum.ErrTokenInvalid.Code, enum.ErrTokenInvalid.Msg, enum.ErrTokenInvalid.HttpCode)
+			c.Abort()
+			return
 		}
 		if blacklisted {
 			AuthLogger.Warn("Token 已在黑名单中", zap.String("jti", claims.ID))

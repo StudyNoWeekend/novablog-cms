@@ -103,8 +103,18 @@ func (ctrl *ProfileController) UploadBackground(c *gin.Context) {
 	response.Success(c, gin.H{"url": url})
 }
 
+// UploadAvatar 上传头像 POST /api/v1/profile/upload-avatar
+func (ctrl *ProfileController) UploadAvatar(c *gin.Context) {
+	url, err := ctrl.uploadImage(c, "avatar")
+	if err != nil {
+		response.Error(c, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"url": url})
+}
+
 // uploadImage 上传图片到对象存储的通用方法。
-// subdir 为子目录（icon 或 background）。
+// subdir 为子目录（icon、background 或 avatar）。
 func (ctrl *ProfileController) uploadImage(c *gin.Context, subdir string) (string, error) {
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -122,9 +132,9 @@ func (ctrl *ProfileController) uploadImage(c *gin.Context, subdir string) (strin
 		return "", fmt.Errorf("不支持的文件格式，仅支持 .jpg/.jpeg/.png/.gif/.webp/.svg/.ico")
 	}
 
-	provider := ctrl.manager.GetProvider()
+	provider := ctrl.manager.GetProviderOrReload(c.Request.Context())
 	if provider == nil {
-		return "", fmt.Errorf("对象存储未配置")
+		return "", fmt.Errorf("对象存储未配置，请在存储配置页面创建并激活存储配置")
 	}
 
 	src, err := file.Open()

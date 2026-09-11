@@ -2,13 +2,17 @@ package logic
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"novablog/enum"
 	"novablog/internal/cache"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
+
+	"gorm.io/gorm"
 )
 
 // securityConfigCacheTTL 安全配置缓存过期时间。
@@ -17,7 +21,8 @@ const securityConfigCacheTTL = 10 * time.Minute
 // SecurityLogic 安全管理业务逻辑结构体。
 type SecurityLogic struct {
 	configModel    *model.SecurityConfigModel
-	blacklistModel *model.IPBlacklistRecordModel
+	securityModel  *model.SecurityModel
+	accessLogModel *model.AccessLogModel
 	securityCache  *cache.SecurityCache
 }
 
@@ -25,7 +30,8 @@ type SecurityLogic struct {
 func NewSecurityLogic() *SecurityLogic {
 	return &SecurityLogic{
 		configModel:    model.NewSecurityConfig(),
-		blacklistModel: model.NewIPBlacklistRecord(),
+		securityModel:  model.NewSecurity(),
+		accessLogModel: model.NewAccessLog(),
 		securityCache:  cache.NewSecurityCache(),
 	}
 }
@@ -90,35 +96,14 @@ func (l *SecurityLogic) UpdateConfig(ctx context.Context, r *req.UpdateSecurityC
 	}
 
 	// 仅更新提供的字段
-	if r.GetMaxTokens != nil {
-		config.GetMaxTokens = *r.GetMaxTokens
-	}
-	if r.GetWindowSeconds != nil {
-		config.GetWindowSeconds = *r.GetWindowSeconds
-	}
-	if r.PostMaxTokens != nil {
-		config.PostMaxTokens = *r.PostMaxTokens
-	}
-	if r.PostWindowSeconds != nil {
-		config.PostWindowSeconds = *r.PostWindowSeconds
-	}
-	if r.ViewMaxTokens != nil {
-		config.ViewMaxTokens = *r.ViewMaxTokens
-	}
-	if r.ViewWindowSeconds != nil {
-		config.ViewWindowSeconds = *r.ViewWindowSeconds
-	}
-	if r.LikeMaxTokens != nil {
-		config.LikeMaxTokens = *r.LikeMaxTokens
-	}
-	if r.LikeWindowSeconds != nil {
-		config.LikeWindowSeconds = *r.LikeWindowSeconds
-	}
-	if r.BlacklistThreshold != nil {
-		config.BlacklistThreshold = *r.BlacklistThreshold
+	if r.SecurityEnabled != nil {
+		config.SecurityEnabled = *r.SecurityEnabled
 	}
 	if r.BlacklistTTLMinutes != nil {
 		config.BlacklistTTLMinutes = *r.BlacklistTTLMinutes
+	}
+	if r.LogRetentionDays != nil {
+		config.LogRetentionDays = *r.LogRetentionDays
 	}
 
 	// 更新数据库
@@ -133,125 +118,190 @@ func (l *SecurityLogic) UpdateConfig(ctx context.Context, r *req.UpdateSecurityC
 	return nil
 }
 
-// GetBlacklist 获取 IP 黑名单列表（分页）。
-func (l *SecurityLogic) GetBlacklist(ctx context.Context, page, pageSize int) (*res.PageRes[res.BlacklistItemRes], error) {
-	records, total, err := l.blacklistModel.GetList(ctx, page, pageSize)
-	if err != nil {
-		return nil, fmt.Errorf("查询黑名单列表失败: %w", err)
+// CreateBlacklist 创建黑名单记录并同步到缓存（永久封禁，需手动解封）。
+func (l *SecurityLogic) CreateBlacklist(ctx context.Context, r *req.BlacklistReq) error {
+	exists, err := l.securityModel.GetBlacklistByIP(ctx, r.IP)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("查询黑名单失败: %w", err)
+	}
+	if exists != nil {
+		return fmt.Errorf("IP %s 已存在黑名单中", r.IP)
 	}
 
-	items := make([]res.BlacklistItemRes, 0, len(records))
-	for _, record := range records {
-		items = append(items, res.BlacklistItemRes{
-			ID:        record.ID,
-			IPAddress: record.IPAddress,
-			Reason:    record.Reason,
-			BannedAt:  record.BannedAt,
-			ExpiresAt: record.ExpiresAt,
-			IsActive:  record.IsActive,
-		})
+	record := &model.IPBlacklist{
+		IP:     r.IP,
+		Reason: r.Reason,
+	}
+	if err := l.securityModel.CreateBlacklist(ctx, record); err != nil {
+		return fmt.Errorf("创建黑名单失败: %w", err)
 	}
 
-	return res.NewPageRes(items, total, page, pageSize), nil
-}
-
-// UnbanIP 解封 IP，同时从数据库和缓存中移除。
-func (l *SecurityLogic) UnbanIP(ctx context.Context, ip string) error {
-	// 从数据库中删除（停用）
-	if err := l.blacklistModel.Delete(ctx, ip); err != nil {
-		return fmt.Errorf("解封 IP 失败: %w", err)
-	}
-
-	// 从缓存中移除
-	_ = l.securityCache.RemoveFromBlacklist(ctx, ip)
+	cacheCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	_ = l.securityCache.AddToBlacklist(cacheCtx, record.IP, 0)
 
 	return nil
 }
 
-// GetStats 获取安全统计数据。
-func (l *SecurityLogic) GetStats(ctx context.Context) (*res.SecurityStatsRes, error) {
-	// 获取当前封禁 IP 数量
-	blockedCount, err := l.securityCache.GetBlacklistCount(ctx)
+// DeleteBlacklist 根据 ID 删除黑名单记录并从缓存移除。
+func (l *SecurityLogic) DeleteBlacklist(ctx context.Context, id uint) error {
+	record, err := l.securityModel.GetBlacklistByID(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("获取封禁 IP 数量失败: %w", err)
-	}
-
-	// 获取今日限流次数
-	today := time.Now().Format("2006-01-02")
-	todayCount, err := l.securityCache.GetDailyRateLimitCount(ctx, today)
-	if err != nil {
-		return nil, fmt.Errorf("获取今日限流次数失败: %w", err)
-	}
-
-	// 获取最近 7 天的限流趋势
-	dailyTrend := make([]res.DailyCountRes, 0, 7)
-	for i := 6; i >= 0; i-- {
-		date := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
-		count, err := l.securityCache.GetDailyRateLimitCount(ctx, date)
-		if err != nil {
-			return nil, fmt.Errorf("获取每日限流次数失败: %w", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return enum.ErrNotFound
 		}
-		dailyTrend = append(dailyTrend, res.DailyCountRes{
-			Date:  date,
-			Count: count,
+		return fmt.Errorf("查询黑名单失败: %w", err)
+	}
+
+	if err := l.securityModel.DeleteBlacklist(ctx, id); err != nil {
+		return fmt.Errorf("删除黑名单失败: %w", err)
+	}
+
+	cacheCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	_ = l.securityCache.RemoveFromBlacklist(cacheCtx, record.IP)
+
+	return nil
+}
+
+// UpdateBlacklist 更新黑名单记录并刷新缓存。
+func (l *SecurityLogic) UpdateBlacklist(ctx context.Context, id uint, r *req.BlacklistReq) error {
+	record, err := l.securityModel.GetBlacklistByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return enum.ErrNotFound
+		}
+		return fmt.Errorf("查询黑名单失败: %w", err)
+	}
+
+	oldIP := record.IP
+	record.IP = r.IP
+	record.Reason = r.Reason
+	if err := l.securityModel.UpdateBlacklist(ctx, record); err != nil {
+		return fmt.Errorf("更新黑名单失败: %w", err)
+	}
+
+	cacheCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if oldIP != record.IP {
+		_ = l.securityCache.RemoveFromBlacklist(cacheCtx, oldIP)
+	}
+	_ = l.securityCache.AddToBlacklist(cacheCtx, record.IP, 0)
+
+	return nil
+}
+
+// GetBlacklist 根据 ID 获取黑名单记录。
+func (l *SecurityLogic) GetBlacklist(ctx context.Context, id uint) (*res.BlacklistRes, error) {
+	record, err := l.securityModel.GetBlacklistByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, enum.ErrNotFound
+		}
+		return nil, fmt.Errorf("查询黑名单失败: %w", err)
+	}
+
+	return &res.BlacklistRes{
+		ID:        record.ID,
+		IP:        record.IP,
+		Reason:    record.Reason,
+		CreatedAt: record.CreatedAt,
+	}, nil
+}
+
+// ListBlacklists 分页获取黑名单列表。
+func (l *SecurityLogic) ListBlacklists(ctx context.Context, r *req.ListBlacklistReq) (*res.ListBlacklistRes, error) {
+	page, pageSize := r.GetPage(), r.GetPageSize()
+	records, total, err := l.securityModel.ListBlacklists(ctx, r.Keyword, page, pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("查询黑名单列表失败: %w", err)
+	}
+
+	list := make([]*res.BlacklistRes, 0, len(records))
+	for _, record := range records {
+		list = append(list, &res.BlacklistRes{
+			ID:        record.ID,
+			IP:        record.IP,
+			Reason:    record.Reason,
+			CreatedAt: record.CreatedAt,
 		})
 	}
 
-	// TopViolations 暂时返回空数组
-	topViolations := []res.TopIPRes{}
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+	if list == nil {
+		list = []*res.BlacklistRes{}
+	}
 
-	return &res.SecurityStatsRes{
-		BlockedIPCount:      blockedCount,
-		TodayRateLimitCount: todayCount,
-		DailyTrend:          dailyTrend,
-		TopViolations:       topViolations,
+	return &res.ListBlacklistRes{
+		List:       list,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
+}
+
+// GetAccessStatistics 获取按 IP 聚合的访问统计。
+func (l *SecurityLogic) GetAccessStatistics(ctx context.Context, r *req.ListAccessLogReq) (*res.ListIPAccessStatsRes, error) {
+	page, pageSize := r.GetPage(), r.GetPageSize()
+	records, total, err := l.accessLogModel.GetIPAccessStatistics(ctx, r.IP, page, pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("查询 IP 访问统计失败: %w", err)
+	}
+
+	list := make([]*res.IPAccessStatsRes, 0, len(records))
+	for _, record := range records {
+		list = append(list, &res.IPAccessStatsRes{
+			IP:           record.IP,
+			TotalCount:   record.TotalCount,
+			ErrorCount:   record.ErrorCount,
+			LastAccessAt: record.LastAccessAt,
+		})
+	}
+
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+	if list == nil {
+		list = []*res.IPAccessStatsRes{}
+	}
+
+	return &res.ListIPAccessStatsRes{
+		List:       list,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 
 // securityConfigToRes 将数据库模型转换为响应结构体。
 func securityConfigToRes(config *model.SecurityConfig) *res.SecurityConfigRes {
 	return &res.SecurityConfigRes{
-		GetMaxTokens:        config.GetMaxTokens,
-		GetWindowSeconds:    config.GetWindowSeconds,
-		PostMaxTokens:       config.PostMaxTokens,
-		PostWindowSeconds:   config.PostWindowSeconds,
-		ViewMaxTokens:       config.ViewMaxTokens,
-		ViewWindowSeconds:   config.ViewWindowSeconds,
-		LikeMaxTokens:       config.LikeMaxTokens,
-		LikeWindowSeconds:   config.LikeWindowSeconds,
-		BlacklistThreshold:  config.BlacklistThreshold,
+		SecurityEnabled:     config.SecurityEnabled,
 		BlacklistTTLMinutes: config.BlacklistTTLMinutes,
+		LogRetentionDays:    config.LogRetentionDays,
 	}
 }
 
 // securityConfigCacheToRes 将缓存结构体转换为响应结构体。
 func securityConfigCacheToRes(cached *cache.SecurityConfigCache) *res.SecurityConfigRes {
 	return &res.SecurityConfigRes{
-		GetMaxTokens:        cached.GetMaxTokens,
-		GetWindowSeconds:    cached.GetWindowSeconds,
-		PostMaxTokens:       cached.PostMaxTokens,
-		PostWindowSeconds:   cached.PostWindowSeconds,
-		ViewMaxTokens:       cached.ViewMaxTokens,
-		ViewWindowSeconds:   cached.ViewWindowSeconds,
-		LikeMaxTokens:       cached.LikeMaxTokens,
-		LikeWindowSeconds:   cached.LikeWindowSeconds,
-		BlacklistThreshold:  cached.BlacklistThreshold,
+		SecurityEnabled:     cached.SecurityEnabled,
 		BlacklistTTLMinutes: cached.BlacklistTTLMinutes,
+		LogRetentionDays:    cached.LogRetentionDays,
 	}
 }
 
 // securityConfigToCache 将数据库模型转换为缓存结构体。
 func securityConfigToCache(config *model.SecurityConfig) *cache.SecurityConfigCache {
 	return &cache.SecurityConfigCache{
-		GetMaxTokens:        config.GetMaxTokens,
-		GetWindowSeconds:    config.GetWindowSeconds,
-		PostMaxTokens:       config.PostMaxTokens,
-		PostWindowSeconds:   config.PostWindowSeconds,
-		ViewMaxTokens:       config.ViewMaxTokens,
-		ViewWindowSeconds:   config.ViewWindowSeconds,
-		LikeMaxTokens:       config.LikeMaxTokens,
-		LikeWindowSeconds:   config.LikeWindowSeconds,
-		BlacklistThreshold:  config.BlacklistThreshold,
+		SecurityEnabled:     config.SecurityEnabled,
 		BlacklistTTLMinutes: config.BlacklistTTLMinutes,
+		LogRetentionDays:    config.LogRetentionDays,
 	}
 }

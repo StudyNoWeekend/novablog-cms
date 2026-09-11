@@ -206,7 +206,7 @@ const categoriesLoading = ref(false)
 onMounted(async () => {
   categoriesLoading.value = true
   try {
-    categories.value = await categoryApi.getList('travel') as unknown as Category[]
+    categories.value = await categoryApi.getList('travel')
   } catch {}
   finally { categoriesLoading.value = false }
 })

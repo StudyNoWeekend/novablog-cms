@@ -1,257 +1,179 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">安全监控</h1>
-      <a-button type="primary" :loading="refreshing" @click="refreshAll">
+      <h1 class="page-title">访问统计</h1>
+      <a-button type="primary" :loading="loading" @click="fetchAccessStats">
+        <template #icon><ReloadOutlined /></template>
         刷新
       </a-button>
     </div>
 
-    <!-- 统计卡片 -->
-    <a-row :gutter="16" class="stats-row">
-      <a-col :xs="24" :sm="12">
-        <a-card class="stat-card">
-          <a-statistic
-            title="当前被封 IP 数"
-            :value="stats?.blocked_ip_count ?? 0"
-            :value-style="{ color: '#ef4444' }"
-          />
-        </a-card>
-      </a-col>
-      <a-col :xs="24" :sm="12">
-        <a-card class="stat-card">
-          <a-statistic
-            title="今日限流触发次数"
-            :value="stats?.today_rate_limit_count ?? 0"
-            :value-style="{ color: '#f59e0b' }"
-          />
-        </a-card>
-      </a-col>
-    </a-row>
+    <a-card class="table-card">
+      <div class="toolbar">
+        <a-input-search
+          v-model:value="searchIP"
+          placeholder="搜索 IP 地址"
+          allow-clear
+          enter-button
+          style="max-width: 320px"
+          @search="handleSearch"
+        />
+      </div>
 
-    <!-- 限流趋势图表 -->
-    <a-card title="近 7 天限流趋势" class="chart-card">
-      <a-spin :spinning="statsLoading">
-        <div v-if="stats && stats.daily_trend.length > 0" class="chart-wrap">
-          <v-chart class="trend-chart" :option="trendOption" autoresize />
-        </div>
-        <a-empty v-else-if="!statsLoading" description="暂无趋势数据" />
-      </a-spin>
-    </a-card>
-
-    <!-- Top 违规 IP -->
-    <a-card v-if="stats && stats.top_violations.length > 0" title="违规 IP 排行" class="top-card">
       <a-table
-        :columns="topColumns"
-        :data-source="stats.top_violations"
-        :pagination="false"
-        row-key="ip_address"
-        size="small"
-      />
-    </a-card>
-
-    <!-- 黑名单列表 -->
-    <a-card title="IP 黑名单" class="blacklist-card">
-      <a-table
-        :columns="blacklistColumns"
-        :data-source="blacklist"
-        :loading="blacklistLoading"
-        :pagination="blacklistPagination"
-        row-key="id"
-        :scroll="{ x: 800 }"
+        :columns="columns"
+        :data-source="accessStats"
+        :loading="loading"
+        :pagination="pagination"
+        row-key="ip"
+        :scroll="{ x: 700 }"
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'banned_at'">
-            {{ formatDate(record.banned_at) }}
+          <template v-if="column.key === 'total_count'">
+            <a-tag color="blue">{{ record.total_count }}</a-tag>
           </template>
-          <template v-if="column.key === 'expires_at'">
-            {{ formatDate(record.expires_at) }}
-          </template>
-          <template v-if="column.key === 'is_active'">
-            <a-tag :color="record.is_active ? 'red' : 'default'">
-              {{ record.is_active ? '封禁中' : '已解封' }}
+          <template v-if="column.key === 'error_count'">
+            <a-tag :color="record.error_count > 0 ? 'error' : 'success'">
+              {{ record.error_count }}
             </a-tag>
           </template>
+          <template v-if="column.key === 'last_access_at'">
+            {{ formatDateTime(record.last_access_at) }}
+          </template>
           <template v-if="column.key === 'action'">
-            <a-popconfirm
-              v-if="record.is_active"
-              title="确定要解封该 IP 吗？"
-              ok-text="确定"
-              cancel-text="取消"
-              @confirm="handleUnban(record.ip_address)"
-            >
-              <a-button type="link" size="small" danger>解封</a-button>
-            </a-popconfirm>
-            <span v-else style="color: #cbd5e1">-</span>
+            <a-button type="link" danger size="small" @click="openBlockModal(record.ip)">
+              封禁
+            </a-button>
           </template>
         </template>
       </a-table>
     </a-card>
+
+    <a-modal
+      v-model:open="blockModalOpen"
+      title="封禁 IP"
+      :confirm-loading="blockSubmitting"
+      ok-text="确认封禁"
+      cancel-text="取消"
+      @ok="handleBlockSubmit"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="IP 地址">
+          <a-input v-model:value="blockForm.ip" disabled />
+        </a-form-item>
+        <a-form-item label="封禁原因">
+          <a-textarea
+            v-model:value="blockForm.reason"
+            placeholder="请输入封禁原因"
+            :rows="3"
+            :maxlength="255"
+            show-count
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { message, type TableColumnsType } from 'ant-design-vue'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
-import {
-  GridComponent,
-  TooltipComponent,
-} from 'echarts/components'
-import VChart from 'vue-echarts'
-import { getSecurityStatsAPI, getBlacklistAPI, unbanIPAPI } from '@/api/security'
-import type { SecurityStats, BlacklistItem, TopIP } from '@/types/security'
+import { ReloadOutlined } from '@ant-design/icons-vue'
+import { getAccessStatsAPI, createBlacklistAPI } from '@/api/security'
+import type { IPAccessStats } from '@/types/security'
 
-use([
-  CanvasRenderer,
-  LineChart,
-  GridComponent,
-  TooltipComponent,
-])
+const loading = ref(false)
+const accessStats = ref<IPAccessStats[]>([])
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const searchIP = ref('')
 
-// 统计数据
-const statsLoading = ref(false)
-const refreshing = ref(false)
-const stats = ref<SecurityStats | null>(null)
-
-// 黑名单数据
-const blacklistLoading = ref(false)
-const blacklist = ref<BlacklistItem[]>([])
-const blacklistPage = ref(1)
-const blacklistPageSize = ref(10)
-const blacklistTotal = ref(0)
-
-const blacklistPagination = computed(() => ({
-  current: blacklistPage.value,
-  pageSize: blacklistPageSize.value,
-  total: blacklistTotal.value,
-  showTotal: (total: number) => `共 ${total} 条`,
+const pagination = computed(() => ({
+  current: page.value,
+  pageSize: pageSize.value,
+  total: total.value,
+  showTotal: (t: number) => `共 ${t} 条`,
+  showSizeChanger: true,
 }))
 
-const topColumns: TableColumnsType<TopIP> = [
-  { title: 'IP 地址', dataIndex: 'ip_address', key: 'ip_address' },
-  { title: '违规次数', dataIndex: 'count', key: 'count', width: 150 },
-]
-
-const blacklistColumns: TableColumnsType<BlacklistItem> = [
-  { title: 'IP 地址', dataIndex: 'ip_address', key: 'ip_address', width: 160 },
-  { title: '封禁原因', dataIndex: 'reason', key: 'reason', ellipsis: true },
-  { title: '封禁时间', key: 'banned_at', width: 180 },
-  { title: '预计解封时间', key: 'expires_at', width: 180 },
-  { title: '状态', key: 'is_active', width: 110 },
+const columns: TableColumnsType<IPAccessStats> = [
+  { title: 'IP 地址', dataIndex: 'ip', key: 'ip', width: 180 },
+  { title: '总请求数', dataIndex: 'total_count', key: 'total_count', width: 140, align: 'center' },
+  { title: '错误次数', dataIndex: 'error_count', key: 'error_count', width: 140, align: 'center' },
+  { title: '最近访问时间', dataIndex: 'last_access_at', key: 'last_access_at', width: 200 },
   { title: '操作', key: 'action', width: 100, fixed: 'right' },
 ]
 
-const trendOption = computed(() => {
-  if (!stats.value) return {}
-  const items = stats.value.daily_trend
-  return {
-    grid: { left: 8, right: 8, top: 20, bottom: 8, containLabel: true },
-    tooltip: { trigger: 'axis' },
-    xAxis: {
-      type: 'category',
-      data: items.map((i) => i.date.slice(5)),
-      axisLine: { lineStyle: { color: '#e2e8f0' } },
-      axisTick: { show: false },
-      axisLabel: { color: '#94a3b8', fontSize: 12 },
-    },
-    yAxis: {
-      type: 'value',
-      splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } },
-      axisLabel: { color: '#94a3b8' },
-    },
-    series: [
-      {
-        name: '限流次数',
-        type: 'line',
-        data: items.map((i) => i.count),
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        itemStyle: { color: '#4a6cf7' },
-        lineStyle: { width: 2, color: '#4a6cf7' },
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(74, 108, 247, 0.15)' },
-              { offset: 1, color: 'rgba(74, 108, 247, 0)' },
-            ],
-          },
-        },
-      },
-    ],
-  }
-})
-
-async function fetchStats() {
-  statsLoading.value = true
+async function fetchAccessStats() {
+  loading.value = true
   try {
-    stats.value = await getSecurityStatsAPI()
-  } catch {
-    // 错误由请求拦截器处理
-  } finally {
-    statsLoading.value = false
-  }
-}
-
-async function fetchBlacklist() {
-  blacklistLoading.value = true
-  try {
-    const data = await getBlacklistAPI({
-      page: blacklistPage.value,
-      page_size: blacklistPageSize.value,
+    const data = await getAccessStatsAPI({
+      page: page.value,
+      page_size: pageSize.value,
+      ip: searchIP.value,
     })
-    blacklist.value = data.list
-    blacklistTotal.value = data.total
+    accessStats.value = data.list
+    total.value = data.total
   } catch {
-    blacklist.value = []
-    blacklistTotal.value = 0
+    accessStats.value = []
+    total.value = 0
   } finally {
-    blacklistLoading.value = false
+    loading.value = false
   }
 }
 
-function handleTableChange(pagination: { current?: number; pageSize?: number }) {
-  blacklistPage.value = pagination.current ?? 1
-  blacklistPageSize.value = pagination.pageSize ?? 10
-  fetchBlacklist()
+function handleSearch() {
+  page.value = 1
+  fetchAccessStats()
 }
 
-async function handleUnban(ip: string) {
+function handleTableChange(paginationState: { current?: number; pageSize?: number }) {
+  page.value = paginationState.current ?? 1
+  pageSize.value = paginationState.pageSize ?? 10
+  fetchAccessStats()
+}
+
+const blockModalOpen = ref(false)
+const blockSubmitting = ref(false)
+const blockForm = ref({ ip: '', reason: '' })
+
+function openBlockModal(ip: string) {
+  blockForm.value = { ip, reason: '' }
+  blockModalOpen.value = true
+}
+
+async function handleBlockSubmit() {
+  if (!blockForm.value.reason.trim()) {
+    message.warning('请输入封禁原因')
+    return
+  }
+  blockSubmitting.value = true
   try {
-    await unbanIPAPI(ip)
-    message.success('解封成功')
-    await Promise.all([fetchBlacklist(), fetchStats()])
+    await createBlacklistAPI({
+      ip: blockForm.value.ip,
+      reason: blockForm.value.reason.trim(),
+    })
+    message.success('IP 封禁成功')
+    blockModalOpen.value = false
   } catch {
     // 错误由请求拦截器处理
+  } finally {
+    blockSubmitting.value = false
   }
 }
 
-async function refreshAll() {
-  refreshing.value = true
-  await Promise.all([fetchStats(), fetchBlacklist()])
-  refreshing.value = false
-}
-
-function formatDate(dateStr: string): string {
+function formatDateTime(dateStr: string): string {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return dateStr
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 onMounted(() => {
-  fetchStats()
-  fetchBlacklist()
+  fetchAccessStats()
 })
 </script>
 
@@ -274,35 +196,14 @@ onMounted(() => {
   margin: 0;
 }
 
-.stats-row {
+.table-card {
+  border-radius: var(--border-radius-lg, 12px);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
   margin-bottom: 16px;
-}
-
-.stat-card {
-  border-radius: var(--border-radius-lg, 12px);
-}
-
-.chart-card {
-  border-radius: var(--border-radius-lg, 12px);
-  margin-bottom: 16px;
-}
-
-.chart-wrap {
-  height: 300px;
-}
-
-.trend-chart {
-  width: 100%;
-  height: 100%;
-}
-
-.top-card {
-  border-radius: var(--border-radius-lg, 12px);
-  margin-bottom: 16px;
-}
-
-.blacklist-card {
-  border-radius: var(--border-radius-lg, 12px);
 }
 
 :deep(.ant-btn-primary) {
@@ -318,6 +219,10 @@ onMounted(() => {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
+  }
+
+  .toolbar {
+    justify-content: flex-start;
   }
 }
 </style>

@@ -48,8 +48,8 @@ export const useAuthStore = defineStore('auth', () => {
       const redirect = router.currentRoute.value.query.redirect as string
       router.push(redirect || '/dashboard')
       message.success('登录成功')
-    } catch {
-      throw new Error('登录失败')
+    } catch (e) {
+      throw e  // re-throw original error, interceptor already showed message
     }
   }
 

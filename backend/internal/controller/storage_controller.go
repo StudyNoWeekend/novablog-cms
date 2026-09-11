@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,7 +23,7 @@ func NewStorageController(logic *logic.StorageLogic) *StorageController {
 func (c *StorageController) GetConfigs(ctx *gin.Context) {
 	configs, err := c.logic.GetAllConfigs(ctx.Request.Context())
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, configs)
@@ -32,11 +33,11 @@ func (c *StorageController) GetConfigs(ctx *gin.Context) {
 func (c *StorageController) UpsertConfig(ctx *gin.Context) {
 	var r req.StorageConfigReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "请求参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	if err := c.logic.UpsertConfig(ctx.Request.Context(), &r); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -46,7 +47,7 @@ func (c *StorageController) UpsertConfig(ctx *gin.Context) {
 func (c *StorageController) DeleteConfig(ctx *gin.Context) {
 	provider := ctx.Param("provider")
 	if err := c.logic.DeleteConfig(ctx.Request.Context(), provider); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -56,7 +57,7 @@ func (c *StorageController) DeleteConfig(ctx *gin.Context) {
 func (c *StorageController) ActivateConfig(ctx *gin.Context) {
 	provider := ctx.Param("provider")
 	if err := c.logic.ActivateConfig(ctx.Request.Context(), provider); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -66,11 +67,11 @@ func (c *StorageController) ActivateConfig(ctx *gin.Context) {
 func (c *StorageController) TestConfig(ctx *gin.Context) {
 	var r req.StorageTestReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "请求参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	if err := c.logic.TestConfig(ctx.Request.Context(), &r); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)

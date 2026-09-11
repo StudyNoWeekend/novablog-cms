@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/utils/response"
@@ -22,7 +23,7 @@ func NewTravelGuideController() *TravelGuideController {
 func (c *TravelGuideController) Create(ctx *gin.Context) {
 	var r req.CreateTravelGuideReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	if r.Status == 0 {
@@ -30,7 +31,7 @@ func (c *TravelGuideController) Create(ctx *gin.Context) {
 	}
 	result, err := c.logic.Create(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -40,12 +41,12 @@ func (c *TravelGuideController) Create(ctx *gin.Context) {
 func (c *TravelGuideController) GetList(ctx *gin.Context) {
 	var r req.TravelGuideListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.GetList(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -56,7 +57,7 @@ func (c *TravelGuideController) GetDetail(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetDetail(ctx, id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -67,12 +68,12 @@ func (c *TravelGuideController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateTravelGuideReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: "+err.Error())
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := c.logic.Update(ctx, id, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -82,7 +83,7 @@ func (c *TravelGuideController) Update(ctx *gin.Context) {
 func (c *TravelGuideController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -93,11 +94,11 @@ func (c *TravelGuideController) UpdateStatus(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateTravelGuideStatusReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误: status 必须为 1/2/3")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	if err := c.logic.UpdateStatus(ctx, id, &r); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)

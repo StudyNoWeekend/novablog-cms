@@ -74,6 +74,13 @@ func (m *TagModel) Delete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&Tag{}).Error
 }
 
+// CountArticlesByTagID counts articles associated with a tag.
+func (m *TagModel) CountArticlesByTagID(ctx context.Context, tagID string) (int64, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&ArticleTag{}).Where("tag_id = ?", tagID).Count(&count).Error
+	return count, err
+}
+
 // ArticleTag 文章标签关联表模型，对应 article_tags 数据表。
 type ArticleTag struct {
 	ArticleID string `gorm:"type:uuid;column:article_id;primaryKey"`

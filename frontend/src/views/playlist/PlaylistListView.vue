@@ -145,7 +145,7 @@ watch(selectedCategory, () => {
 
 async function loadCategories() {
   try {
-    categories.value = (await categoryApi.getList('music')) as unknown as Category[]
+    categories.value = await categoryApi.getList('music')
   } catch {
     // 错误由拦截器处理
   }
@@ -162,7 +162,7 @@ async function loadSongs() {
     if (selectedCategory.value) {
       params.category_id = selectedCategory.value
     }
-    const res = (await musicApi.getSongs(params)) as unknown as { list: Song[]; total: number }
+    const res = await musicApi.getSongs(params)
     songs.value = res.list || []
     total.value = res.total || 0
   } catch {

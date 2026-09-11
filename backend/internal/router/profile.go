@@ -15,5 +15,6 @@ func RegisterProfileRoutes(r *gin.RouterGroup, profileController *controller.Pro
 		profile.PUT("", profileController.UpdateProfile)
 		profile.POST("/upload-icon", profileController.UploadIcon)
 		profile.POST("/upload-background", profileController.UploadBackground)
+		profile.POST("/upload-avatar", profileController.UploadAvatar)
 	}
 }

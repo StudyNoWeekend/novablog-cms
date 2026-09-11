@@ -197,7 +197,7 @@ func (m *PortfolioModel) ResolveCoverURLs(ctx context.Context, portfolios []Port
 // PortfolioItem 作品项模型，对应 portfolio_items 数据表。
 type PortfolioItem struct {
 	ID          string         `gorm:"type:uuid;primaryKey"`
-	PortfolioID string         `gorm:"column:portfolio_id;type:uuid;not null"`
+	PortfolioID string         `gorm:"column:portfolio_id;type:uuid;not null;index:idx_portfolio_items_portfolio_id"`
 	PresetID    string         `gorm:"column:preset_id;type:uuid;not null"`
 	Title       string         `gorm:"type:varchar(255);not null"`
 	Description string         `gorm:"type:text"`

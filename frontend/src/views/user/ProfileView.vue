@@ -48,6 +48,13 @@
             placeholder="请输入头像 URL"
             allow-clear
           />
+          <a-upload
+            :show-upload-list="false"
+            :before-upload="(file: File) => handleUpload(file, 'avatar')"
+            accept="image/*"
+          >
+            <a-button :loading="uploadingAvatar">上传</a-button>
+          </a-upload>
           <div v-if="form.avatar" class="image-preview avatar-preview">
             <img :src="form.avatar" alt="头像预览" @error="onImgError" />
           </div>
@@ -84,6 +91,31 @@
           placeholder="请输入博客描述"
           :rows="3"
         />
+      </a-form-item>
+
+      <a-form-item label="标签">
+        <div class="tags-container">
+          <a-tag
+            v-for="(tag, index) in tags"
+            :key="index"
+            closable
+            @close="removeTag(index)"
+          >
+            {{ tag }}
+          </a-tag>
+          <a-input
+            v-if="inputVisible"
+            ref="inputRef"
+            v-model:value="inputValue"
+            size="small"
+            style="width: 120px"
+            @keyup.enter="handleInputConfirm"
+            @blur="handleInputConfirm"
+          />
+          <a-tag v-else style="background: #fafafa; border: 1px dashed #d9d9d9; cursor: pointer" @click="showInput">
+            + 添加标签
+          </a-tag>
+        </div>
       </a-form-item>
 
       <a-form-item label="社交链接">
@@ -139,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import { authApi } from '@/api/auth'
 import type { UpdateProfileReq, SocialLink } from '@/types/api'
@@ -149,6 +181,7 @@ const loading = ref(false)
 const saving = ref(false)
 const uploadingIcon = ref(false)
 const uploadingBackground = ref(false)
+const uploadingAvatar = ref(false)
 
 const form = reactive<UpdateProfileReq>({
   nickname: '',
@@ -161,6 +194,10 @@ const form = reactive<UpdateProfileReq>({
 })
 
 const socialLinks = ref<SocialLink[]>([])
+const tags = ref<string[]>([])
+const inputVisible = ref(false)
+const inputValue = ref('')
+const inputRef = ref()
 
 function addSocialLink() {
   socialLinks.value.push({ platform: '', url: '', sort_order: socialLinks.value.length })
@@ -168,6 +205,26 @@ function addSocialLink() {
 
 function removeSocialLink(index: number) {
   socialLinks.value.splice(index, 1)
+}
+
+function removeTag(index: number) {
+  tags.value.splice(index, 1)
+}
+
+function showInput() {
+  inputVisible.value = true
+  nextTick(() => {
+    inputRef.value?.focus()
+  })
+}
+
+function handleInputConfirm() {
+  const val = inputValue.value.trim()
+  if (val && !tags.value.includes(val)) {
+    tags.value.push(val)
+  }
+  inputVisible.value = false
+  inputValue.value = ''
 }
 
 function filterPlatform(input: string, option: { value: string }) {
@@ -187,6 +244,7 @@ async function loadProfile() {
     form.blog_title = data.blog_title || ''
     form.blog_description = data.blog_description || ''
     socialLinks.value = data.social_links || []
+    tags.value = data.tags || []
   } catch {
     message.error('加载个人资料失败')
   } finally {
@@ -197,7 +255,7 @@ async function loadProfile() {
 async function handleSave() {
   saving.value = true
   try {
-    await authApi.updateProfile({ ...form, social_links: socialLinks.value })
+    await authApi.updateProfile({ ...form, social_links: socialLinks.value, tags: tags.value })
     message.success('保存成功')
   } catch {
     message.error('保存失败')
@@ -206,17 +264,21 @@ async function handleSave() {
   }
 }
 
-async function handleUpload(file: File, type: 'icon' | 'background') {
-  const uploading = type === 'icon' ? uploadingIcon : uploadingBackground
+async function handleUpload(file: File, type: 'icon' | 'background' | 'avatar') {
+  const uploading = type === 'icon' ? uploadingIcon : type === 'background' ? uploadingBackground : uploadingAvatar
   uploading.value = true
   try {
     const res = type === 'icon'
       ? await authApi.uploadIcon(file)
-      : await authApi.uploadBackground(file)
+      : type === 'background'
+        ? await authApi.uploadBackground(file)
+        : await authApi.uploadAvatar(file)
     if (type === 'icon') {
       form.blog_icon = res.url
-    } else {
+    } else if (type === 'background') {
       form.page_background = res.url
+    } else {
+      form.avatar = res.url
     }
     message.success('上传成功')
   } catch {
@@ -310,5 +372,12 @@ onMounted(loadProfile)
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 </style>

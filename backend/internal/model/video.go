@@ -25,6 +25,12 @@ func (VideoWork) TableName() string {
 	return "video_works"
 }
 
+// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+func (v *VideoWork) AfterFind(tx *gorm.DB) error {
+	v.CoverURL = resolveURL(v.CoverURL)
+	return nil
+}
+
 // VideoWorkModel 视频作品模型操作结构体。
 type VideoWorkModel struct {
 	db *gorm.DB
@@ -84,6 +90,11 @@ func (m *VideoWorkModel) Update(ctx context.Context, video *VideoWork) error {
 	return m.db.WithContext(ctx).Save(video).Error
 }
 
+// UpdateWithTx updates a video work within a transaction.
+func (m *VideoWorkModel) UpdateWithTx(ctx context.Context, tx *gorm.DB, video *VideoWork) error {
+	return tx.WithContext(ctx).Save(video).Error
+}
+
 // SoftDelete 软删除视频作品。
 func (m *VideoWorkModel) SoftDelete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&VideoWork{}).Error
@@ -97,7 +108,7 @@ func (m *VideoWorkModel) Transaction(ctx context.Context, fn func(tx *gorm.DB) e
 // VideoPlatformLink 视频平台链接模型，对应 video_platform_links 数据表。
 type VideoPlatformLink struct {
 	ID        string         `gorm:"type:uuid;primaryKey"`
-	VideoID   string         `gorm:"column:video_id;type:uuid;not null"`
+	VideoID   string         `gorm:"column:video_id;type:uuid;not null;index:idx_video_platform_links_video_id"`
 	Platform  string         `gorm:"type:varchar(50);not null"`
 	URL       string         `gorm:"column:url;type:varchar(1024);not null"`
 	CreatedAt time.Time      `gorm:"type:timestamptz;autoCreateTime"`

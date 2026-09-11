@@ -42,6 +42,7 @@ export interface UserInfo {
   blog_description: string
   email: string
   social_links?: SocialLink[]
+  tags?: string[]
 }
 
 export interface UpdateProfileReq {
@@ -53,6 +54,7 @@ export interface UpdateProfileReq {
   blog_title?: string
   blog_description?: string
   social_links?: SocialLink[]
+  tags?: string[]
 }
 
 export interface FrameConfig {

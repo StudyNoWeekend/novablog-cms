@@ -15,31 +15,35 @@ import (
 
 // PublicController 公开接口控制器结构体。
 type PublicController struct {
-	setupLogic     *logic.SetupLogic
-	articleLogic   *logic.ArticleLogic
-	categoryLogic  *logic.CategoryLogic
-	tagLogic       *logic.TagLogic
-	bloggerLogic   *logic.BloggerLogic
-	commentLogic   *logic.CommentLogic
-	travelLogic    *logic.TravelGuideLogic
-	portfolioLogic *logic.PortfolioLogic
-	videoLogic     *logic.VideoLogic
-	musicLogic     *logic.MusicLogic
+	setupLogic        *logic.SetupLogic
+	articleLogic      *logic.ArticleLogic
+	categoryLogic     *logic.CategoryLogic
+	tagLogic          *logic.TagLogic
+	bloggerLogic      *logic.BloggerLogic
+	commentLogic      *logic.CommentLogic
+	travelLogic       *logic.TravelGuideLogic
+	portfolioLogic    *logic.PortfolioLogic
+	videoLogic        *logic.VideoLogic
+	musicLogic        *logic.MusicLogic
+	equipmentLogic    *logic.EquipmentLogic
+	moduleConfigLogic *logic.ModuleConfigLogic
 }
 
 // NewPublicController 创建 PublicController 实例。
 func NewPublicController() *PublicController {
 	return &PublicController{
-		setupLogic:     logic.NewSetupLogic(),
-		articleLogic:   logic.NewArticleLogic(),
-		categoryLogic:  logic.NewCategoryLogic(),
-		tagLogic:       logic.NewTagLogic(),
-		bloggerLogic:   logic.NewBloggerLogic(),
-		commentLogic:   logic.NewCommentLogic(),
-		travelLogic:    logic.NewTravelGuideLogic(),
-		portfolioLogic: logic.NewPortfolioLogic(),
-		videoLogic:     logic.NewVideoLogic(),
-		musicLogic:     logic.NewMusicLogic(),
+		setupLogic:        logic.NewSetupLogic(),
+		articleLogic:      logic.NewArticleLogic(),
+		categoryLogic:     logic.NewCategoryLogic(),
+		tagLogic:          logic.NewTagLogic(),
+		bloggerLogic:      logic.NewBloggerLogic(),
+		commentLogic:      logic.NewCommentLogic(),
+		travelLogic:       logic.NewTravelGuideLogic(),
+		portfolioLogic:    logic.NewPortfolioLogic(),
+		videoLogic:        logic.NewVideoLogic(),
+		musicLogic:        logic.NewMusicLogic(),
+		equipmentLogic:    logic.NewEquipmentLogic(),
+		moduleConfigLogic: logic.NewModuleConfigLogic(),
 	}
 }
 
@@ -86,7 +90,7 @@ func (ctrl *PublicController) Init(c *gin.Context) {
 func (ctrl *PublicController) GetArticles(ctx *gin.Context) {
 	var r req.ArticleListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	// 公开接口只返回已发布文章
@@ -94,7 +98,7 @@ func (ctrl *PublicController) GetArticles(ctx *gin.Context) {
 	r.Status = &published
 	result, err := ctrl.articleLogic.GetList(ctx, &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -105,12 +109,12 @@ func (ctrl *PublicController) GetArticleBySlug(ctx *gin.Context) {
 	slug := ctx.Param("slug")
 	result, err := ctrl.articleLogic.GetBySlug(ctx, slug)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	// 公开接口只返回已发布文章
 	if result.Status != 2 {
-		response.Error(ctx, "文章不存在")
+		response.Fail(ctx, enum.ErrNotFound.Code, enum.ErrNotFound.Msg, enum.ErrNotFound.HttpCode)
 		return
 	}
 	response.Success(ctx, result)
@@ -120,7 +124,7 @@ func (ctrl *PublicController) GetArticleBySlug(ctx *gin.Context) {
 func (ctrl *PublicController) GetCategories(ctx *gin.Context) {
 	result, err := ctrl.categoryLogic.GetAll(ctx, "article")
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -130,7 +134,7 @@ func (ctrl *PublicController) GetCategories(ctx *gin.Context) {
 func (ctrl *PublicController) GetTags(ctx *gin.Context) {
 	result, err := ctrl.tagLogic.GetAll(ctx)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -140,7 +144,7 @@ func (ctrl *PublicController) GetTags(ctx *gin.Context) {
 func (ctrl *PublicController) GetBlogger(ctx *gin.Context) {
 	result, err := ctrl.bloggerLogic.GetPublicInfo(ctx.Request.Context())
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -150,7 +154,7 @@ func (ctrl *PublicController) GetBlogger(ctx *gin.Context) {
 func (ctrl *PublicController) GetHotArticles(ctx *gin.Context) {
 	var r req.HotArticleReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	count := r.Count
@@ -159,7 +163,7 @@ func (ctrl *PublicController) GetHotArticles(ctx *gin.Context) {
 	}
 	result, err := ctrl.articleLogic.GetHotList(ctx.Request.Context(), count)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -169,7 +173,7 @@ func (ctrl *PublicController) GetHotArticles(ctx *gin.Context) {
 func (ctrl *PublicController) GetRandomArticles(ctx *gin.Context) {
 	var r req.RandomArticleReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	count := r.Count
@@ -178,7 +182,7 @@ func (ctrl *PublicController) GetRandomArticles(ctx *gin.Context) {
 	}
 	result, err := ctrl.articleLogic.GetRandomList(ctx.Request.Context(), count)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -188,7 +192,7 @@ func (ctrl *PublicController) GetRandomArticles(ctx *gin.Context) {
 func (ctrl *PublicController) IncrementArticleView(ctx *gin.Context) {
 	slug := ctx.Param("slug")
 	if err := ctrl.articleLogic.IncrementView(ctx.Request.Context(), slug); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -198,7 +202,7 @@ func (ctrl *PublicController) IncrementArticleView(ctx *gin.Context) {
 func (ctrl *PublicController) GetComments(ctx *gin.Context) {
 	var r req.CommentListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	targetType := ""
@@ -211,7 +215,7 @@ func (ctrl *PublicController) GetComments(ctx *gin.Context) {
 	}
 	result, err := ctrl.commentLogic.GetPublicList(ctx.Request.Context(), targetType, targetID, r.GetPage(), r.GetPageSize())
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -221,13 +225,13 @@ func (ctrl *PublicController) GetComments(ctx *gin.Context) {
 func (ctrl *PublicController) CreateComment(ctx *gin.Context) {
 	var r req.CreatePublicCommentReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	ip := ctx.ClientIP()
 	result, err := ctrl.commentLogic.CreatePublic(ctx.Request.Context(), &r, ip)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -237,12 +241,12 @@ func (ctrl *PublicController) CreateComment(ctx *gin.Context) {
 func (ctrl *PublicController) GetTravels(ctx *gin.Context) {
 	var r req.TravelGuideListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := ctrl.travelLogic.GetPublicList(ctx.Request.Context(), &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -258,7 +262,7 @@ func (ctrl *PublicController) GetHotTravels(ctx *gin.Context) {
 	}
 	result, err := ctrl.travelLogic.GetHotList(ctx.Request.Context(), count)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -269,7 +273,7 @@ func (ctrl *PublicController) GetTravelDetail(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := ctrl.travelLogic.GetPublicDetail(ctx.Request.Context(), id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -279,7 +283,7 @@ func (ctrl *PublicController) GetTravelDetail(ctx *gin.Context) {
 func (ctrl *PublicController) IncrementTravelView(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := ctrl.travelLogic.IncrementView(ctx.Request.Context(), id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -289,7 +293,7 @@ func (ctrl *PublicController) IncrementTravelView(ctx *gin.Context) {
 func (ctrl *PublicController) LikeTravel(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := ctrl.travelLogic.IncrementLike(ctx.Request.Context(), id); err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
@@ -299,12 +303,12 @@ func (ctrl *PublicController) LikeTravel(ctx *gin.Context) {
 func (ctrl *PublicController) GetPortfolios(ctx *gin.Context) {
 	var r req.PortfolioListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := ctrl.portfolioLogic.GetPublicList(ctx.Request.Context(), &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -315,7 +319,7 @@ func (ctrl *PublicController) GetPortfolioDetail(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := ctrl.portfolioLogic.GetPublicDetail(ctx.Request.Context(), id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -325,12 +329,12 @@ func (ctrl *PublicController) GetPortfolioDetail(ctx *gin.Context) {
 func (ctrl *PublicController) GetVideos(ctx *gin.Context) {
 	var r req.VideoListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := ctrl.videoLogic.GetPublicList(ctx.Request.Context(), &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -341,7 +345,7 @@ func (ctrl *PublicController) GetVideoDetail(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := ctrl.videoLogic.GetPublicDetail(ctx.Request.Context(), id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -351,12 +355,12 @@ func (ctrl *PublicController) GetVideoDetail(ctx *gin.Context) {
 func (ctrl *PublicController) GetSongs(ctx *gin.Context) {
 	var r req.SongListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
-		response.Error(ctx, "参数错误")
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
 		return
 	}
 	result, err := ctrl.musicLogic.GetPublicSongList(ctx.Request.Context(), &r)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -367,7 +371,7 @@ func (ctrl *PublicController) GetSongDetail(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := ctrl.musicLogic.GetPublicSongByID(ctx.Request.Context(), id)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, result)
@@ -378,8 +382,44 @@ func (ctrl *PublicController) GetAudioURL(ctx *gin.Context) {
 	songID := ctx.Param("song_id")
 	url, err := ctrl.musicLogic.GetPublicAudioURL(ctx.Request.Context(), songID)
 	if err != nil {
-		response.Error(ctx, err.Error())
+		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, gin.H{"url": url})
+}
+
+// GetEquipments 获取摄影器材列表 GET /api/v1/public/equipments
+func (ctrl *PublicController) GetEquipments(ctx *gin.Context) {
+	var r req.EquipmentListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.equipmentLogic.GetList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetEquipmentDetail 获取摄影器材详情 GET /api/v1/public/equipments/:id
+func (ctrl *PublicController) GetEquipmentDetail(ctx *gin.Context) {
+	id := ctx.Param("id")
+	result, err := ctrl.equipmentLogic.GetByID(ctx.Request.Context(), id)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetModuleConfig 获取模块开关配置 GET /api/v1/public/module-config
+func (ctrl *PublicController) GetModuleConfig(ctx *gin.Context) {
+	config, err := ctrl.moduleConfigLogic.GetConfig(ctx.Request.Context())
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, config)
 }

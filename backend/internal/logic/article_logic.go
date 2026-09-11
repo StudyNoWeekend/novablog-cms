@@ -11,6 +11,7 @@ import (
 	"novablog/internal/model"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type ArticleLogic struct {
@@ -78,15 +79,16 @@ func (l *ArticleLogic) Create(ctx context.Context, r *req.CreateArticleReq) (*re
 		article.PublishedAt = &now
 	}
 
-	if err := l.model.Create(ctx, article); err != nil {
-		return nil, fmt.Errorf("创建文章失败: %w", err)
-	}
-
-	// 处理标签关联
-	if len(r.TagIDs) > 0 {
-		if err := l.articleTagModel.ReplaceTags(ctx, articleID, r.TagIDs); err != nil {
-			return nil, fmt.Errorf("关联标签失败: %w", err)
+	if err := l.model.Transaction(ctx, func(tx *gorm.DB) error {
+		if err := l.model.CreateWithTx(ctx, tx, article); err != nil {
+			return fmt.Errorf("创建文章失败: %w", err)
 		}
+		if err := l.model.ReplaceTagsWithTx(ctx, tx, articleID, r.TagIDs); err != nil {
+			return fmt.Errorf("关联标签失败: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	// 重新查询完整信息
@@ -142,15 +144,18 @@ func (l *ArticleLogic) Update(ctx context.Context, id string, r *req.UpdateArtic
 		}
 	}
 
-	if err := l.model.Update(ctx, article); err != nil {
-		return nil, fmt.Errorf("更新文章失败: %w", err)
-	}
-
-	// 更新标签关联
-	if r.TagIDs != nil {
-		if err := l.articleTagModel.ReplaceTags(ctx, id, r.TagIDs); err != nil {
-			return nil, fmt.Errorf("更新标签关联失败: %w", err)
+	if err := l.model.Transaction(ctx, func(tx *gorm.DB) error {
+		if err := l.model.UpdateWithTx(ctx, tx, article); err != nil {
+			return fmt.Errorf("更新文章失败: %w", err)
 		}
+		if r.TagIDs != nil {
+			if err := l.model.ReplaceTagsWithTx(ctx, tx, id, r.TagIDs); err != nil {
+				return fmt.Errorf("更新标签关联失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return l.GetDetail(ctx, id)

@@ -16,8 +16,42 @@ import (
 	"novablog/internal/storage"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
+
+// startAccessLogCleanup 启动访问日志清理定时任务。
+// 每隔一小时删除超过 log_retention_days 天（默认 7 天）的访问日志。
+func startAccessLogCleanup(cfg *viper.Viper, logger *zap.Logger) {
+	days := cfg.GetInt("security.log_retention_days")
+	if days <= 0 {
+		days = 7
+	}
+
+	accessLogModel := model.NewAccessLog()
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
+
+	// 启动时立即执行一次清理
+	cleanupAccessLogs(accessLogModel, days, logger)
+
+	for range ticker.C {
+		cleanupAccessLogs(accessLogModel, days, logger)
+	}
+}
+
+// cleanupAccessLogs 删除指定保留天数之前的访问日志。
+func cleanupAccessLogs(accessLogModel *model.AccessLogModel, days int, logger *zap.Logger) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	before := time.Now().AddDate(0, 0, -days)
+	if err := accessLogModel.CleanBefore(ctx, before); err != nil {
+		logger.Error("清理访问日志失败", zap.Error(err), zap.Int("retention_days", days))
+	} else {
+		logger.Info("访问日志清理完成", zap.Time("before", before), zap.Int("retention_days", days))
+	}
+}
 
 func main() {
 	// 确定配置文件路径
@@ -47,10 +81,12 @@ func main() {
 	// 构建存储管理器
 	configModel := model.NewStorageConfig()
 	cryptoKey := app.Config.GetString("crypto.secret_key")
-	storageMgr := storage.NewManager(configModel, cryptoKey, app.Logger)
+	storageMgr := storage.NewManager(configModel, cryptoKey, app.Config.GetString("upload.dir"), app.Logger)
 	if err := storageMgr.Reload(context.Background()); err != nil {
 		app.Logger.Warn("存储管理器初始化失败", zap.Error(err))
 	}
+
+	model.BaseURL = app.Config.GetString("upload.base_url")
 
 	// 注册路由
 	router.RegisterRoutes(
@@ -76,6 +112,9 @@ func main() {
 			app.Logger.Fatal("服务器启动失败", zap.Error(err))
 		}
 	}()
+
+	// 启动访问日志清理定时任务
+	go startAccessLogCleanup(app.Config, app.Logger)
 
 	// 等待中断信号
 	quit := make(chan os.Signal, 1)

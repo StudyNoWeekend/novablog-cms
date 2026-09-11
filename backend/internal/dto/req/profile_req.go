@@ -17,4 +17,5 @@ type UpdateProfileReq struct {
 	BlogTitle       *string          `json:"blog_title" binding:"omitempty,max=100"`      // 博客标题
 	BlogDescription *string          `json:"blog_description" binding:"omitempty"`        // 博客描述
 	SocialLinks     *[]SocialLinkReq `json:"social_links" binding:"omitempty"`            // 社交平台链接数组
+	Tags            *[]string        `json:"tags" binding:"omitempty,max=20,dive,max=30"` // 标签数组
 }

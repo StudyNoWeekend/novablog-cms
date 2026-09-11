@@ -119,6 +119,20 @@ func (m *StorageConfigModel) Upsert(ctx context.Context, config *StorageConfig) 
 		Updates(updates).Error
 }
 
+// DeactivateAll 将所有存储配置的 is_active 置为 false。
+func (m *StorageConfigModel) DeactivateAll(ctx context.Context) error {
+	return m.db.WithContext(ctx).Model(&StorageConfig{}).Where("is_active = ?", true).
+		Update("is_active", false).Error
+}
+
+// Create 创建新的存储配置。
+func (m *StorageConfigModel) Create(ctx context.Context, config *StorageConfig) error {
+	if config.ID == "" {
+		config.ID = uuid.New().String()
+	}
+	return m.db.WithContext(ctx).Create(config).Error
+}
+
 // Delete 删除指定 provider 的存储配置，不能删除激活中的配置。
 func (m *StorageConfigModel) Delete(ctx context.Context, provider string) error {
 	var config StorageConfig
@@ -147,4 +161,9 @@ func (m *StorageConfigModel) SetActive(ctx context.Context, provider string) err
 		}
 		return nil
 	})
+}
+
+// DeleteNonActive deletes all non-active storage configs.
+func (m *StorageConfigModel) DeleteNonActive(ctx context.Context) error {
+	return m.db.WithContext(ctx).Where("is_active = ?", false).Delete(&StorageConfig{}).Error
 }

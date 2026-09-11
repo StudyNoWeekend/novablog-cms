@@ -15,16 +15,16 @@ type Article struct {
 	Summary      string         `gorm:"type:varchar(500)"`
 	Content      string         `gorm:"type:text;not null"`
 	CoverImage   string         `gorm:"type:varchar(500);column:cover_image"`
-	CategoryID   *string        `gorm:"type:uuid;column:category_id"`
+	CategoryID   *string        `gorm:"column:category_id;type:uuid;index:idx_articles_category_id"`
 	Category     *Category      `gorm:"foreignKey:CategoryID"`
-	Status       int16          `gorm:"type:smallint;default:1"`
+	Status       int16          `gorm:"column:status;type:smallint;not null;default:1;index:idx_articles_status"`
 	Type         int16          `gorm:"type:smallint;default:1"`
 	Extra        map[string]any `gorm:"type:jsonb;serializer:json"`
 	ViewCount    int            `gorm:"type:int;default:0;column:view_count"`
 	CommentCount int            `gorm:"type:int;default:0;column:comment_count"`
 	IsTop        bool           `gorm:"type:boolean;default:false;column:is_top"`
 	IsComment    bool           `gorm:"type:boolean;default:true;column:is_comment"`
-	PublishedAt  *time.Time     `gorm:"type:timestamptz;column:published_at"`
+	PublishedAt  *time.Time     `gorm:"column:published_at;type:timestamptz;index:idx_articles_published_at"`
 	CreatedAt    time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt    time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
@@ -34,6 +34,12 @@ type Article struct {
 // TableName 指定数据表名称。
 func (Article) TableName() string {
 	return "articles"
+}
+
+// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+func (a *Article) AfterFind(tx *gorm.DB) error {
+	a.CoverImage = resolveURL(a.CoverImage)
+	return nil
 }
 
 // ArticleModel 文章模型操作结构体。
@@ -115,6 +121,41 @@ func (m *ArticleModel) Update(ctx context.Context, article *Article) error {
 	return m.db.WithContext(ctx).Save(article).Error
 }
 
+// CreateWithTx creates an article within a transaction.
+func (m *ArticleModel) CreateWithTx(ctx context.Context, tx *gorm.DB, article *Article) error {
+	return tx.WithContext(ctx).Create(article).Error
+}
+
+// UpdateWithTx updates an article within a transaction.
+func (m *ArticleModel) UpdateWithTx(ctx context.Context, tx *gorm.DB, article *Article) error {
+	return tx.WithContext(ctx).Save(article).Error
+}
+
+// ReplaceTagsWithTx replaces tags within a transaction.
+func (m *ArticleModel) ReplaceTagsWithTx(ctx context.Context, tx *gorm.DB, articleID string, tagIDs []string) error {
+	// Delete existing associations
+	if err := tx.WithContext(ctx).Where("article_id = ?", articleID).Delete(&ArticleTag{}).Error; err != nil {
+		return err
+	}
+	// Create new associations
+	if len(tagIDs) == 0 {
+		return nil
+	}
+	associations := make([]ArticleTag, 0, len(tagIDs))
+	for _, tagID := range tagIDs {
+		associations = append(associations, ArticleTag{
+			ArticleID: articleID,
+			TagID:     tagID,
+		})
+	}
+	return tx.WithContext(ctx).Create(&associations).Error
+}
+
+// Transaction wraps a function in a DB transaction.
+func (m *ArticleModel) Transaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return m.db.WithContext(ctx).Transaction(fn)
+}
+
 // UpdateStatus 更新文章状态，如果 status=2 则设置 published_at。
 func (m *ArticleModel) UpdateStatus(ctx context.Context, id string, status int16) error {
 	updates := map[string]interface{}{
@@ -163,6 +204,8 @@ func (m *ArticleModel) GetHotList(ctx context.Context, count int) ([]Article, er
 }
 
 // GetRandomList 随机查询已发布文章列表，取指定数量。
+// 使用 ORDER BY RANDOM() 配合 LIMIT，适用于中小规模数据集。
+// 对于大数据集，可考虑 TABLESAMPLE BERNOULLI(percentage) LIMIT ? 等更高效方案。
 func (m *ArticleModel) GetRandomList(ctx context.Context, count int) ([]Article, error) {
 	var articles []Article
 	err := m.db.WithContext(ctx).

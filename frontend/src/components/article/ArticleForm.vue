@@ -137,13 +137,13 @@ onMounted(async () => {
 
 async function loadCategories() {
   categoriesLoading.value = true
-  try { categories.value = await categoryApi.getList('article') as unknown as Category[] } catch {}
+  try { categories.value = await categoryApi.getList('article') } catch {}
   finally { categoriesLoading.value = false }
 }
 
 async function loadTags() {
   tagsLoading.value = true
-  try { tags.value = await tagApi.getList() as unknown as Tag[] } catch {}
+  try { tags.value = await tagApi.getList() } catch {}
   finally { tagsLoading.value = false }
 }
 

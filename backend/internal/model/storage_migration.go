@@ -30,12 +30,13 @@ func (StorageMigrationTask) TableName() string {
 
 // StorageMigrationItem 存储迁移条目模型，对应 storage_migration_items 数据表。
 type StorageMigrationItem struct {
-	ID        string    `gorm:"type:uuid;primaryKey"`
-	TaskID    string    `gorm:"column:task_id;type:uuid;not null;index"`
-	MediaID   string    `gorm:"column:media_id;type:uuid;not null"`
-	Status    string    `gorm:"type:varchar(20);not null;default:pending"` // pending/success/failed
-	Error     string    `gorm:"type:text"`
-	CreatedAt time.Time `gorm:"type:timestamptz;autoCreateTime"`
+	ID         string    `gorm:"type:uuid;primaryKey"`
+	TaskID     string    `gorm:"column:task_id;type:uuid;not null;index"`
+	MediaID    string    `gorm:"column:media_id;type:uuid;not null"`
+	SourceType string    `gorm:"column:source_type;type:varchar(20);not null;default:media"` // media/preset
+	Status     string    `gorm:"type:varchar(20);not null;default:pending"`                  // pending/success/failed
+	Error      string    `gorm:"type:text"`
+	CreatedAt  time.Time `gorm:"type:timestamptz;autoCreateTime"`
 }
 
 // TableName 指定数据表名称。

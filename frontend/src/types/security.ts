@@ -1,73 +1,47 @@
 export interface SecurityConfig {
-  get_max_tokens: number
-  get_window_seconds: number
-  post_max_tokens: number
-  post_window_seconds: number
-  view_max_tokens: number
-  view_window_seconds: number
-  like_max_tokens: number
-  like_window_seconds: number
-  blacklist_threshold: number
+  security_enabled: boolean
   blacklist_ttl_minutes: number
+  log_retention_days: number
 }
 
 export interface UpdateSecurityConfigReq {
-  get_max_tokens?: number
-  get_window_seconds?: number
-  post_max_tokens?: number
-  post_window_seconds?: number
-  view_max_tokens?: number
-  view_window_seconds?: number
-  like_max_tokens?: number
-  like_window_seconds?: number
-  blacklist_threshold?: number
+  security_enabled?: boolean
   blacklist_ttl_minutes?: number
+  log_retention_days?: number
 }
 
 export interface BlacklistItem {
   id: string
-  ip_address: string
+  ip: string
   reason: string
-  banned_at: string
-  expires_at: string
-  is_active: boolean
+  created_at: string
 }
 
-export interface DailyCount {
-  date: string
-  count: number
+export interface CreateBlacklistReq {
+  ip: string
+  reason: string
 }
 
-export interface TopIP {
-  ip_address: string
-  count: number
+export interface UpdateBlacklistReq {
+  ip?: string
+  reason?: string
 }
 
-export interface SecurityStats {
-  blocked_ip_count: number
-  today_rate_limit_count: number
-  daily_trend: DailyCount[]
-  top_violations: TopIP[]
+export interface BlacklistQuery {
+  page?: number
+  page_size?: number
+  keyword?: string
 }
 
-export interface APIDocParam {
-  name: string
-  type: string
-  required: boolean
-  desc: string
+export interface IPAccessStats {
+  ip: string
+  total_count: number
+  error_count: number
+  last_access_at: string
 }
 
-export interface APIDocField {
-  name: string
-  type: string
-  desc: string
-}
-
-export interface APIDocItem {
-  module: string
-  method: string
-  path: string
-  description: string
-  params: APIDocParam[]
-  response: APIDocField[]
+export interface AccessStatsQuery {
+  page?: number
+  page_size?: number
+  ip?: string
 }
