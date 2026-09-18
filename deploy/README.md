@@ -65,10 +65,8 @@ cd deploy
 | `--admin-port <端口>` | `8080` | CMS 后台端口（宿主） |
 | `--public-url <地址>` | `http://localhost:<博客端口>` | 博客对外访问地址，写入 `upload.base_url`（媒体文件 URL 前缀） |
 | `--domain` / `--admin-domain` | `_` | 两个入口的 server_name |
-| `--db local\|external` | `local` | PostgreSQL 部署方式 |
-| `--db-host/--db-port/--db-user/--db-password/--db-name/--db-sslmode` | — | 外部 PostgreSQL 连接信息 |
-| `--redis local\|external` | `local` | Redis 部署方式 |
-| `--redis-host/--redis-port/--redis-password/--redis-db` | — | 外部 Redis 连接信息 |
+	| `--db-host/--db-port/--db-user/--db-password/--db-name/--db-sslmode` | — | PostgreSQL 地址等信息；主机留空或 localhost/127.0.0.1 时自动部署内置容器 |
+| `--redis-host/--redis-port/--redis-password/--redis-db` | — | Redis 地址等信息；主机留空或 localhost/127.0.0.1 时自动部署内置容器 |
 | `--config-dir <目录>` | `./config` | config.yaml 存放目录 |
 | `--uploads-dir <目录>` | `./data/uploads` | 媒体上传目录 |
 | `--themes-dir <目录>` | `./data/themes` | 主题制品目录 |

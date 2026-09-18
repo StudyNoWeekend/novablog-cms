@@ -72,19 +72,17 @@ NovaBlog 部署脚本
   --admin-domain <域名>  后台入口 server_name（默认 _）
 
 数据库（PostgreSQL）
-  --db local|external    部署方式：local=内置容器（默认），external=使用你自己的实例
-  --db-host <主机>       external 时的主机（容器内访问宿主机可用 host.docker.internal）
+  --db-host <主机>     PostgreSQL 地址；留空或 localhost/127.0.0.1 时自动部署内置容器
   --db-port <端口>       默认 5432
   --db-user <用户>       默认 postgres
-  --db-password <密码>   external 时必填
+  --db-password <密码>   必填（内置模式下自动生成）
   --db-name <库名>       默认 novablog
-  --db-sslmode <模式>    默认 disable（require/prefer 视你的实例而定）
+  --db-sslmode <模式>    默认 disable
 
 缓存（Redis）
-  --redis local|external 部署方式：local=内置容器（默认），external=使用你自己的实例
-  --redis-host <主机>    默认 redis（local）/ 需指定（external）
+  --redis-host <主机>    Redis 地址；留空或 localhost/127.0.0.1 时自动部署内置容器
   --redis-port <端口>    默认 6379
-  --redis-password <密码> external 时可留空
+  --redis-password <密码> 无密码可留空（内置模式下自动生成）
   --redis-db <编号>      默认 3
 
 挂载目录（相对路径以 deploy/ 为基准，建议用绝对路径）
@@ -325,37 +323,35 @@ ADMIN_DOMAIN="$(ask '后台入口域名（任意域名/IP 填 _）' "${ADMIN_DOM
 
 echo
 c_info "===== PostgreSQL ====="
-DB_MODE="$(ask_choice 'PostgreSQL 部署方式（local=内置容器，external=使用你自己的实例）' 'local|external' "${DB_MODE:-local}")"
-if [ "$DB_MODE" = "external" ]; then
-  DB_HOST="$(ask 'PostgreSQL 主机（容器内访问宿主机可填 host.docker.internal）' "${DB_HOST:-}")"
-  [ -n "$DB_HOST" ] || die "external 模式必须提供 PostgreSQL 主机（--db-host）"
-  DB_PORT="$(ask 'PostgreSQL 端口' "${DB_PORT:-5432}")"
-  DB_USER="$(ask 'PostgreSQL 用户' "${DB_USER:-postgres}")"
-  DB_PASSWORD="$(ask_secret 'PostgreSQL 密码' "${DB_PASSWORD:-}")"
-  [ -n "$DB_PASSWORD" ] || die "external 模式必须提供 PostgreSQL 密码（--db-password）"
-  DB_NAME="$(ask 'PostgreSQL 库名' "${DB_NAME:-novablog}")"
-  DB_SSLMODE="$(ask 'PostgreSQL sslmode' "${DB_SSLMODE:-disable}")"
+c_info "（直接填写外部地址；留空或填 localhost / 127.0.0.1 则自动部署内置 PostgreSQL）"
+DB_HOST="$(ask 'PostgreSQL 地址（主机名或 IP）' "${DB_HOST:-}")"
+DB_PORT="$(ask 'PostgreSQL 端口' "${DB_PORT:-5432}")"
+DB_USER="$(ask 'PostgreSQL 用户' "${DB_USER:-postgres}")"
+DB_PASSWORD="$(ask_secret 'PostgreSQL 密码' "${DB_PASSWORD:-}")"
+[ -n "$DB_PASSWORD" ] || DB_PASSWORD="$(gen_secret 16)"
+DB_NAME="$(ask 'PostgreSQL 库名' "${DB_NAME:-novablog}")"
+DB_SSLMODE="$(ask 'PostgreSQL sslmode' "${DB_SSLMODE:-disable}")"
+# 判断是否为内置模式
+if [ -z "$DB_HOST" ] || [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ]; then
+  DB_MODE="local"
+  DB_HOST="postgres"
 else
-  DB_HOST="postgres"; DB_PORT="5432"
-  DB_USER="$(ask '内置 PostgreSQL 用户' "${DB_USER:-postgres}")"
-  DB_NAME="$(ask '内置 PostgreSQL 库名' "${DB_NAME:-novablog}")"
-  [ -n "$DB_PASSWORD" ] || DB_PASSWORD="$(gen_secret 16)"
-  DB_SSLMODE="disable"
+  DB_MODE="external"
 fi
 
 echo
 c_info "===== Redis ====="
-REDIS_MODE="$(ask_choice 'Redis 部署方式（local=内置容器，external=使用你自己的实例）' 'local|external' "${REDIS_MODE:-local}")"
-if [ "$REDIS_MODE" = "external" ]; then
-  REDIS_HOST="$(ask 'Redis 主机（容器内访问宿主机可填 host.docker.internal）' "${REDIS_HOST:-}")"
-  [ -n "$REDIS_HOST" ] || die "external 模式必须提供 Redis 主机（--redis-host）"
-  REDIS_PORT="$(ask 'Redis 端口' "${REDIS_PORT:-6379}")"
-  REDIS_PASSWORD="$(ask_secret 'Redis 密码（无密码直接回车）' "${REDIS_PASSWORD:-}")"
-  REDIS_DB="$(ask 'Redis 库编号' "${REDIS_DB:-3}")"
+c_info "（直接填写外部地址；留空或填 localhost / 127.0.0.1 则自动部署内置 Redis）"
+REDIS_HOST="$(ask 'Redis 地址（主机名或 IP）' "${REDIS_HOST:-}")"
+REDIS_PORT="$(ask 'Redis 端口' "${REDIS_PORT:-6379}")"
+REDIS_PASSWORD="$(ask_secret 'Redis 密码（无密码直接回车）' "${REDIS_PASSWORD:-}")"
+REDIS_DB="$(ask 'Redis 库编号' "${REDIS_DB:-3}")"
+# 判断是否为内置模式
+if [ -z "$REDIS_HOST" ] || [ "$REDIS_HOST" = "localhost" ] || [ "$REDIS_HOST" = "127.0.0.1" ]; then
+  REDIS_MODE="local"
+  REDIS_HOST="redis"
 else
-  REDIS_HOST="redis"; REDIS_PORT="6379"
-  [ -n "$REDIS_PASSWORD" ] || REDIS_PASSWORD="$(gen_secret 16)"
-  REDIS_DB="$(ask 'Redis 库编号' "${REDIS_DB:-3}")"
+  REDIS_MODE="external"
 fi
 
 echo
