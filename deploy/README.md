@@ -153,6 +153,7 @@ blog-frontend/
 ```
 
 - 该目录优先于后台安装的主题；目录为空或缺少 `dist/index.html` 时自动回退到已安装主题（日志中会给出提示）；
+- 取消挂载：`./deploy.sh --frontend-dir -`（或在交互问答中对该项输入 `-`），即改回使用后台安装的主题；
 - 托管语义与已安装主题完全一致：精确文件 → `{path}.html` → `{path}/index.html` → fallback 壳页面 → `404.html`；`theme.json` 与 dotfile 不对外；`_next/`、`static/` 资源下发一年强缓存；
 - 由于与 API 同源（同一入口），无需注入 `theme-config.js` 即可相对路径取数。
 

@@ -92,7 +92,8 @@ NovaBlog 部署脚本
   --uploads-dir <目录>   媒体上传目录（默认 ./data/uploads）
   --themes-dir <目录>    主题制品目录（默认 ./data/themes）
   --logs-dir <目录>      日志目录（默认 ./data/logs）
-  --frontend-dir <目录>  自备博客前端目录（含 theme.json 与 dist/），不指定则使用后台安装的主题
+  --frontend-dir <目录>  自备博客前端目录（含 theme.json 与 dist/），不指定则使用后台安装的主题；
+                         传 - 可清除已配置的挂载前端
   --pgdata-dir <目录>    内置 PostgreSQL 数据目录（默认 ./data/pg）
   --redisdata-dir <目录> 内置 Redis 数据目录（默认 ./data/redis）
 
@@ -215,6 +216,23 @@ abs_dir() {
   esac
   mkdir -p "$p" || die "无法创建目录：$p"
   (cd "$p" && pwd)
+}
+
+# compose_up_failed 启动失败时的排查提示
+compose_up_failed() {
+  c_err "容器启动失败。"
+  cat <<EOF
+
+常见原因：
+  1) 端口被占用 —— 检查博客端口 ${BLOG_PORT} 与后台端口 ${ADMIN_PORT} 是否已被占用：
+       lsof -i :${BLOG_PORT} ; lsof -i :${ADMIN_PORT}
+     被占用时可改端口重试：./deploy.sh --blog-port 8080 --admin-port 8081
+  2) 挂载目录不可读写 —— 确认 ${CONFIG_DIR} / ${UPLOADS_DIR} / ${THEMES_DIR} 权限正常
+  3) 配置有误 —— 检查 ${CONFIG_FILE}
+
+查看详细日志：./deploy.sh --logs
+EOF
+  exit 1
 }
 
 # ============================== 前置检查 ==============================
@@ -347,7 +365,11 @@ CONFIG_DIR="$(abs_dir "$(ask 'config.yaml 存放目录' "${CONFIG_DIR:-./config}
 UPLOADS_DIR="$(abs_dir "$(ask '媒体上传目录 uploads_data' "${UPLOADS_DIR:-./data/uploads}")")"
 THEMES_DIR="$(abs_dir "$(ask '主题制品目录 themes_data' "${THEMES_DIR:-./data/themes}")")"
 LOGS_DIR="$(abs_dir "$(ask '日志目录' "${LOGS_DIR:-./data/logs}")")"
-FRONTEND_DIR_INPUT="$(ask '自备博客前端目录（含 theme.json 与 dist/，留空=使用后台安装的主题）' "${FRONTEND_DIR:-}")"
+FRONTEND_DIR_INPUT="$(ask '自备博客前端目录（含 theme.json 与 dist/；回车沿用当前值，输入 - 清除）' "${FRONTEND_DIR:-}")"
+# 输入 - / none / off 表示清除已配置的挂载前端，回退到后台安装的主题
+case "$FRONTEND_DIR_INPUT" in
+  -|none|off|no|NONE) FRONTEND_DIR_INPUT="" ;;
+esac
 if [ -n "$FRONTEND_DIR_INPUT" ]; then
   FRONTEND_DIR="$(abs_dir "$FRONTEND_DIR_INPUT")"
 else
@@ -539,10 +561,10 @@ fi
 # ============================== 启动 ==============================
 c_info "启动容器（镜像 ${IMAGE_REPO}:${VERSION}）..."
 if [ "$BUILD" = 1 ]; then
-  run_compose up -d --build
+  run_compose up -d --build || compose_up_failed
 else
   run_compose pull --quiet || c_warn "镜像拉取失败（将使用本地已有镜像继续）"
-  run_compose up -d
+  run_compose up -d || compose_up_failed
 fi
 
 # 等待健康检查
