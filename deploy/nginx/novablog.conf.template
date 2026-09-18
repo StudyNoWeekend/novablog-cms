@@ -1,11 +1,11 @@
 # NovaBlog 统一入口（envsubst 模板：仅替换 ${VAR} 形式的环境变量，$uri 等 nginx 变量不受影响；
-# 默认值由镜像 ENV 提供——envsubst 不支持 ${VAR:-default} 语法，改默认值请改 nginx.Dockerfile ENV
-# 或在 compose environment 中覆盖）
+# 默认值由镜像 ENV 提供——envsubst 不支持 ${VAR:-default} 语法，改默认值请改 deploy/Dockerfile ENV
+# 或在 compose environment / docker run -e 中覆盖）
 #
-# 双入口拓扑（博客页面与管理后台独立端口，适配官方代托管场景）：
+# 单镜像拓扑（nginx 与 Go 后端同容器，后端监听 127.0.0.1:8111）：
 #
 #   博客入口 :80
-#     /             → 反代 Go（激活主题静态托管，访客博客页面）
+#     /             → 反代 Go（挂载的自备前端 或 激活主题静态托管，访客博客页面）
 #     /preview/*    → 反代 Go（主题预览）
 #     /api/v1 /files→ 反代 Go（主题页面同源取数，无需 CORS/apiBase 注入）
 #
@@ -21,7 +21,7 @@
 #   auth_basic_user_file /etc/nginx/htpasswd;
 
 upstream novablog_backend {
-    server backend:8111;
+    server ${NOVABLOG_BACKEND_ADDR};
     keepalive 32;
 }
 
@@ -78,7 +78,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
-    # 博客页面（激活主题静态托管，Go 兜底路由）
+    # 博客页面（自备前端挂载目录 或 激活主题静态托管，Go 兜底路由）
     location / {
         proxy_pass http://novablog_backend;
         proxy_http_version 1.1;

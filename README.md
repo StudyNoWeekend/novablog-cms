@@ -274,20 +274,19 @@ pnpm dev
 
 浏览器访问 `http://localhost:5173`，系统会自动跳转到 `/setup` 安装向导，按三步完成初始化即可进入后台。
 
-### 方式二：Docker Compose 一键部署
+### 方式二：Docker 一键部署（单镜像）
 
 ```bash
 cd deploy
 
-# 复制环境变量模板
-cp .env.example .env
+# 交互式问答：端口、PG/Redis、挂载目录
+./deploy.sh
 
-# 编辑 .env：修改数据库密码、Redis 密码、域名与端口
-# NOVABLOG_DOMAIN / NOVABLOG_HTTP_PORT / NOVABLOG_ADMIN_HTTP_PORT
-# POSTGRES_PASSWORD / REDIS_PASSWORD
+# 或全部使用默认值（内置 PG/Redis，端口 80/8080，镜像版本 latest）
+./deploy.sh --yes
 
-# 一键构建并启动
-docker compose up -d --build
+# 指定镜像版本与外部数据库
+./deploy.sh --version v1.0.0 --db external --db-host 10.0.0.5 --db-password '***'
 ```
 
 启动后：
@@ -295,7 +294,7 @@ docker compose up -d --build
 - 博客入口：`http://<域名>:80`
 - 后台入口：`http://<域名>:8080/admin/`
 
-详细部署说明（入口分离、访问控制、证书配置、裸机复用 nginx）请参阅 [deploy/README.md](deploy/README.md)。
+详细部署说明（镜像版本、挂载目录、外部数据库、入口分离、访问控制、旧版迁移）请参阅 [deploy/README.md](deploy/README.md)。
 
 ---
 
@@ -313,8 +312,7 @@ novablog-admin/
 │   │   ├── api/main.go               # HTTP 服务主入口（含优雅关闭）
 │   │   └── seed/main.go              # 数据库种子工具
 │   ├── config/                       # YAML 配置
-│   │   ├── config.example.yaml       # 配置模板
-│   │   └── config.docker.yaml        # Docker 环境配置
+│   │   └── config.example.yaml       # 配置模板（含 themes.frontend_dir 等全部字段）
 │   ├── enum/                         # 业务错误码定义
 │   ├── internal/
 │   │   ├── cache/                    # Redis 缓存层
@@ -402,9 +400,14 @@ novablog-admin/
 │   └── package.json
 │
 ├── deploy/                           # Docker 部署配置
-│   ├── docker-compose.yml            # 四容器编排
-│   ├── Dockerfile                    # 后端多阶段构建
-│   ├── nginx.Dockerfile              # 前端构建 + Nginx 镜像
+│   ├── Dockerfile                    # 单镜像多阶段构建（管理后台 + 后端 + nginx）
+│   ├── docker-compose.yml            # 应用服务编排
+│   ├── docker-compose.local-pg.yml   # 可选：内置 PostgreSQL
+│   ├── docker-compose.local-redis.yml# 可选：内置 Redis
+│   ├── docker-compose.build.yml      # 可选：本地构建镜像
+│   ├── deploy.sh                     # 部署脚本（参数 + 交互问答）
+│   ├── entrypoint.sh                 # 镜像入口（渲染 nginx 模板）
+│   ├── supervisord.conf              # 容器内进程管理
 │   ├── nginx/novablog.conf.template  # Nginx 双入口配置模板
 │   ├── .env.example                  # 环境变量模板
 │   └── README.md                     # 部署指南
@@ -497,15 +500,23 @@ cors:
 
 ### Docker 部署环境变量
 
-`deploy/.env` 中的关键变量：
+`deploy/.env` 由 `./deploy.sh` 生成（也可从 `.env.example` 复制手改）：
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `NOVABLOG_DOMAIN` | `localhost` | 对外域名 |
+| `NOVABLOG_IMAGE_REPO` | `ghcr.io/studynoweekend/novablog-cms` | 镜像仓库 |
+| `NOVABLOG_VERSION` | `latest` | 镜像版本号（不指定即 latest） |
+| `NOVABLOG_DOMAIN` | `_` | 博客入口 server_name（任意域名/IP 用 `_`） |
 | `NOVABLOG_HTTP_PORT` | `80` | 博客入口端口 |
+| `NOVABLOG_ADMIN_DOMAIN` | `_` | 后台入口 server_name |
 | `NOVABLOG_ADMIN_HTTP_PORT` | `8080` | 后台入口端口 |
-| `POSTGRES_PASSWORD` | — | 数据库密码（必改） |
-| `REDIS_PASSWORD` | — | Redis 密码（必改） |
+| `NOVABLOG_CONFIG_DIR` | `./config` | config.yaml 所在目录 |
+| `NOVABLOG_UPLOADS_DIR` | `./data/uploads` | 媒体文件目录 |
+| `NOVABLOG_THEMES_DIR` | `./data/themes` | 主题制品目录 |
+| `NOVABLOG_LOGS_DIR` | `./data/logs` | 日志目录 |
+| `NOVABLOG_BLOG_FRONTEND_DIR` | `./data/blog-frontend` | 自备博客前端目录（空目录=使用后台安装的主题） |
+| `POSTGRES_PASSWORD` | — | 内置数据库密码（使用外部数据库时不生效） |
+| `REDIS_PASSWORD` | — | 内置 Redis 密码（使用外部实例时不生效） |
 
 ---
 
@@ -656,40 +667,80 @@ SHA256 校验
 
 ## 🐳 部署
 
-### Docker Compose（推荐）
+### 单镜像 + 部署脚本（推荐）
 
-项目提供开箱即用的四容器编排方案：
+nginx 入口、Go 后端与管理后台前端已合并在**一个镜像**内，镜像地址 `ghcr.io/studynoweekend/novablog-cms`（支持 `linux/amd64` / `linux/arm64`）：
 
 ```bash
 cd deploy
-cp .env.example .env
-# 编辑 .env，修改密码与域名
-docker compose up -d --build
+./deploy.sh                 # 交互式问答：端口、PG/Redis、挂载目录
+./deploy.sh --yes           # 全部默认：内置 PG/Redis，端口 80 / 8080，版本 latest
+./deploy.sh --version v1.0.0 --db external --db-host 10.0.0.5 --db-password '***'
 ```
 
-| 容器 | 镜像 | 职责 |
-|------|------|------|
-| `backend` | 自构建（多阶段） | Go API 服务 + 主题静态托管 + 首装流程 |
-| `nginx` | 自构建（含前端 dist） | 双端口入口反向代理 |
-| `postgres` | `postgres:15-alpine` | 主数据库 |
-| `redis` | `redis:7-alpine` | 缓存与令牌黑名单 |
+脚本会生成 `deploy/.env` 与 `config.yaml`，按选择拼接 compose 文件并启动容器。
 
-**数据卷**：`pg_data`（数据库）、`redis_data`（缓存）、`themes_data`（主题制品，切换/回滚状态）、`uploads_data`（媒体文件）。
+| 入口 | 默认端口 | 内容 |
+|------|----------|------|
+| 博客入口 | `NOVABLOG_HTTP_PORT`（80） | 自备前端挂载目录 或 激活主题页面 · `/preview` · `/api/v1` · `/files` |
+| 后台入口 | `NOVABLOG_ADMIN_HTTP_PORT`（8080） | `/admin/` 管理后台 · `/api/v1` · `/files` 管理接口 |
 
-### 日常运维
+- **版本号**：`--version v1.0.0` 指定镜像版本，不指定则使用 `latest`；升级重跑 `./deploy.sh --version v1.0.1` 即可，挂载目录数据保留；
+- **数据库**：`--db local|external` 与 `--redis local|external` 可分别选择内置容器或你自己的实例；
+- **挂载目录**：`--config-dir`（config.yaml）、`--uploads-dir`、`--themes-dir`、`--logs-dir`、`--pgdata-dir`、`--redisdata-dir`；
+- **自备博客前端**：`--frontend-dir` 指定含 `theme.json` 与 `dist/` 的目录（与主题制品包同构），未指定则使用后台安装的主题。
 
 ```bash
-docker compose ps                 # 查看状态
-docker compose logs -f backend    # 查看后端日志
-docker compose down               # 停止（保留数据卷）
-docker compose down -v            # 停止并清空数据（谨慎）
+./deploy.sh --status   # 查看状态
+./deploy.sh --logs     # 查看日志
+./deploy.sh --down     # 停止容器（挂载目录数据保留）
+./deploy.sh --help     # 查看全部参数
+```
+
+### 手动 Compose
+
+```bash
+cd deploy
+cp .env.example .env    # 编辑端口、挂载目录、数据库密码
+docker compose up -d                                                              # 使用外部 PG/Redis
+docker compose -f docker-compose.yml -f docker-compose.local-pg.yml up -d          # 附带内置 PostgreSQL
+docker compose -f docker-compose.yml -f docker-compose.local-redis.yml up -d       # 附带内置 Redis
+```
+
+| 服务 | 镜像 | 职责 |
+|------|------|------|
+| `novablog` | `ghcr.io/studynoweekend/novablog-cms:<版本>` | nginx 双端口入口 + Go API + 主题托管 + 管理后台静态资源 |
+| `postgres` | `postgres:15-alpine` | 可选：内置主数据库 |
+| `redis` | `redis:7-alpine` | 可选：内置缓存与令牌黑名单 |
+
+数据默认落在 `deploy/data/` 下（`uploads` / `themes` / `logs` / `pg` / `redis`），可在 `.env` 中改为任意目录。
+
+### 从旧版（backend + nginx 双镜像）迁移
+
+旧部署的数据在命名卷 `novablog_pg_data` / `novablog_uploads_data` / `novablog_themes_data` 中，按以下步骤迁移到新的挂载目录：
+
+```bash
+# 1) 导出数据（旧容器仍在运行时）
+docker exec novablog-postgres-1 pg_dump -U postgres novablog > novablog.sql
+docker run --rm -v novablog_uploads_data:/from -v /srv/novablog/uploads:/to alpine sh -c 'cp -a /from/. /to/'
+docker run --rm -v novablog_themes_data:/from  -v /srv/novablog/themes:/to  alpine sh -c 'cp -a /from/. /to/'
+
+# 2) 停掉并移除旧容器（数据卷保留，确认无误后再删）
+docker stop novablog-backend-1 novablog-nginx-1 novablog-postgres-1 novablog-redis-1
+docker rm   novablog-backend-1 novablog-nginx-1 novablog-postgres-1 novablog-redis-1
+
+# 3) 用新方式部署，指向刚备份的目录
+./deploy.sh --uploads-dir /srv/novablog/uploads --themes-dir /srv/novablog/themes
+
+# 4) 导入旧数据
+docker exec -i novablog-postgres-1 psql -U postgres -d novablog < novablog.sql
 ```
 
 ### 入口分离与访问控制
 
 博客入口（:80）与后台入口（:8080）默认独立：
 
-- **访问控制**：在 `deploy/nginx/novablog.conf.template` 的后台 server 块中叠加 `allow/deny`（IP 白名单）或 `auth_basic`；
+- **访问控制**：在 `deploy/nginx/novablog.conf.template` 的后台 server 块中叠加 `allow/deny`（IP 白名单）或 `auth_basic`（模板顶部有示例）；
 - **独立证书**：为博客域名与后台域名分别配置 443 server 块；
 - **内网后台**：后台端口可只对内网映射，或改用 SSH 隧道访问。
 
@@ -697,10 +748,12 @@ docker compose down -v            # 停止并清空数据（谨慎）
 
 `deploy/nginx/novablog.conf.template` 是标准 nginx 配置模板，可直接用于已有 nginx 环境：
 
-1. 替换 `${NOVABLOG_DOMAIN}` 为实际域名，拷贝到 `/etc/nginx/conf.d/novablog.conf`；
-2. 将 upstream 中的 `backend:8111` 改为 `127.0.0.1:8111`；
+1. 替换 `${NOVABLOG_DOMAIN}` / `${NOVABLOG_ADMIN_PORT}` 等占位符后拷贝到 `/etc/nginx/conf.d/novablog.conf`；
+2. upstream 使用 `127.0.0.1:8111`（模板默认值，即后端 `http.port`）；
 3. `/admin` 静态目录指向本地构建的 `frontend/dist`；
 4. `nginx -t && systemctl reload nginx`。
+
+> 提示：镜像内 nginx 固定反代 `127.0.0.1:8111`，因此 `config.yaml` 的 `http.port` 需保持 `8111`；如需改动，请同时设置环境变量 `NOVABLOG_BACKEND_ADDR`。
 
 更多细节请参阅 [deploy/README.md](deploy/README.md)。
 
@@ -720,8 +773,8 @@ make fmt            # 格式化代码
 make vet            # 静态检查
 make lint           # golangci-lint 代码规范检查
 make clean          # 清理编译产物
-make docker-build   # 构建后端与 nginx 镜像
-make docker-up      # 启动容器编排
+make docker-build   # 构建单镜像（nginx + 后端 + 管理后台前端）
+make docker-up      # 本地构建并启动容器编排
 make docker-down    # 停止容器编排
 ```
 
@@ -741,6 +794,7 @@ pnpm lint           # 代码检查
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `VITE_BASE_PATH` | `/admin/` | 管理后台前端 base 路径（须与 nginx 的 `NOVABLOG_ADMIN_BASE` 一致） |
+| `VERSION` | `dev` | 注入二进制的版本号，启动日志与 `GET /health` 可见 |
 
 ### 数据库迁移
 

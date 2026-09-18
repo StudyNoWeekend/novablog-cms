@@ -29,14 +29,13 @@ clean:
 	rm -rf bin/
 	rm -f coverage.out
 
-# 构建容器镜像（后端 + nginx 入口）
+# 构建容器镜像（单镜像：nginx + 后端 + 管理后台前端）
 docker-build:
-	docker build -f ../deploy/Dockerfile -t novablog-backend:latest ..
-	docker build -f ../deploy/nginx.Dockerfile -t novablog-nginx:latest ..
+	docker build -f ../deploy/Dockerfile --build-arg VERSION=dev -t novablog:latest ..
 
-# 容器部署（首次使用：cd ../deploy && cp .env.example .env 并修改密码/域名）
+# 容器部署（推荐改用部署脚本，可指定端口/数据库/挂载目录：cd ../deploy && ./deploy.sh --help）
 docker-up:
-	cd ../deploy && docker compose up -d --build
+	cd ../deploy && ./deploy.sh --build --yes
 
 docker-down:
-	cd ../deploy && docker compose down
+	cd ../deploy && ./deploy.sh --down

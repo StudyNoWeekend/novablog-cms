@@ -1,0 +1,34 @@
+# 构建上下文为仓库根目录，排除与镜像无关的内容（减小上下文体积、避免误入镜像）
+
+# ===== 版本控制 / 编辑器 / 系统 =====
+.git
+.gitignore
+.github
+.idea
+.vscode
+.trae
+.zcode
+.DS_Store
+*.swp
+
+# ===== 文档 =====
+*.md
+
+# ===== 后端 =====
+backend/bin
+backend/logs
+backend/uploads
+backend/data
+backend/coverage.out
+backend/config/config.yaml
+
+# ===== 前端 =====
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+frontend/.vite
+
+# ===== 部署运行时数据 =====
+deploy/.env
+deploy/data
+deploy/config

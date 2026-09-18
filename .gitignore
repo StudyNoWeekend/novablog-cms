@@ -51,5 +51,8 @@ dist-ssr/
 
 # ===== 部署 =====
 deploy/.env
+# 部署脚本生成（含数据库密码/JWT 密钥与运行时数据）
+deploy/config/
+deploy/data/
 # 主题制品与运行时数据（themes.data_dir）
 backend/data/

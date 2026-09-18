@@ -20,6 +20,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// version 应用版本号，构建期通过 -ldflags "-X main.version=..." 注入。
+var version = "dev"
+
 // startAccessLogCleanup 启动访问日志清理定时任务。
 // 每隔一小时删除超过 log_retention_days 天（默认 7 天）的访问日志。
 func startAccessLogCleanup(cfg *viper.Viper, logger *zap.Logger) {
@@ -74,6 +77,12 @@ func main() {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
+	router.Version = version
+	app.Logger.Info("NovaBlog 后端启动",
+		zap.String("version", version),
+		zap.String("config", cfgPath),
+	)
 
 	// 创建 Gin 引擎
 	r := gin.New()

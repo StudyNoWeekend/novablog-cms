@@ -1,0 +1,28 @@
+# 可选覆盖：内置 PostgreSQL（数据持久化到宿主机目录）
+# 用法：docker compose -f docker-compose.yml -f docker-compose.local-pg.yml up -d
+#
+# 使用外部 PostgreSQL 时不要带上本文件；连接信息写在 config.yaml 的 postgres 段。
+
+services:
+  novablog:
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 deploy/.env 中设置 POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-novablog}
+    volumes:
+      # 数据目录需为本地文件系统路径（勿用 NFS/网络盘）
+      - ${NOVABLOG_PGDATA_DIR:-./data/pg}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-novablog}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    networks:
+      - novablog

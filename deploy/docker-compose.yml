@@ -1,78 +1,46 @@
+# NovaBlog 应用服务（单镜像：nginx 统一入口 + Go 后端 + 管理后台前端）
+#
+# 常用组合（推荐直接用部署脚本 ./deploy.sh，它会自动拼好下列参数并生成 .env / config.yaml）：
+#   外部 PG/Redis：  docker compose up -d
+#   内置 PG：        docker compose -f docker-compose.yml -f docker-compose.local-pg.yml up -d
+#   内置 Redis：     docker compose -f docker-compose.yml -f docker-compose.local-redis.yml up -d
+#   本地构建镜像：    docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# 变量取自 .env（cp .env.example .env 后修改），未设置时使用下方默认值。
+
 name: novablog
 
 services:
-  # Go 后端：业务 API + 博客主题静态托管（激活主题）+ 首装初始化
-  backend:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    image: novablog-backend:latest
+  novablog:
+    image: ${NOVABLOG_IMAGE_REPO:-ghcr.io/studynoweekend/novablog-cms}:${NOVABLOG_VERSION:-latest}
     restart: unless-stopped
     environment:
-      TZ: Asia/Shanghai
-    volumes:
-      # 本地部署配置：postgres/redis 主机已改为服务名
-      - ./config.yaml:/app/config/config.yaml:ro
-      - themes_data:/app/data/themes
-      - uploads_data:/app/uploads
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    networks:
-      - novablog
-
-  # nginx 统一入口（双端口）：:80 博客页面；:8080 管理后台（可独立做访问控制/不映射）
-  nginx:
-    build:
-      context: ..
-      dockerfile: deploy/nginx.Dockerfile
-    image: novablog-nginx:latest
-    restart: unless-stopped
-    ports:
-      - "${NOVABLOG_HTTP_PORT:-80}:80"
-      - "${NOVABLOG_ADMIN_HTTP_PORT:-8080}:8080"
-    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      # 入口 server_name（本地/IP 访问用 _）
       NOVABLOG_DOMAIN: ${NOVABLOG_DOMAIN:-_}
       NOVABLOG_ADMIN_DOMAIN: ${NOVABLOG_ADMIN_DOMAIN:-_}
-    depends_on:
-      - backend
-    networks:
-      - novablog
-
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 deploy/.env 中设置 POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-novablog}
+      # 容器内监听端口/路径（改动时需同步修改端口映射右侧）
+      NOVABLOG_ADMIN_PORT: ${NOVABLOG_ADMIN_CONTAINER_PORT:-8080}
+      NOVABLOG_ADMIN_BASE: ${NOVABLOG_ADMIN_BASE:-/admin/}
+    ports:
+      # 博客前端端口 → 容器 :80
+      - "${NOVABLOG_HTTP_PORT:-80}:80"
+      # CMS 后台端口 → 容器 :8080
+      - "${NOVABLOG_ADMIN_HTTP_PORT:-8080}:${NOVABLOG_ADMIN_CONTAINER_PORT:-8080}"
     volumes:
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-novablog}"]
-      interval: 5s
-      timeout: 3s
-      retries: 12
+      # 后端配置（./deploy.sh 生成；字段说明见 backend/config/config.example.yaml）
+      - ${NOVABLOG_CONFIG_DIR:-./config}/config.yaml:/app/config/config.yaml:ro
+      # 媒体上传目录
+      - ${NOVABLOG_UPLOADS_DIR:-./data/uploads}:/app/uploads
+      # 主题制品目录（后台安装/切换的主题）
+      - ${NOVABLOG_THEMES_DIR:-./data/themes}:/app/data/themes
+      # 日志目录
+      - ${NOVABLOG_LOGS_DIR:-./data/logs}:/app/logs
+      # 自备博客前端目录（含 theme.json 与 dist/，与主题制品包同构）
+      # 目录为空时后端自动回退到后台安装的主题，见 config.yaml 的 themes.frontend_dir
+      - ${NOVABLOG_BLOG_FRONTEND_DIR:-./data/blog-frontend}:/app/blog-frontend:ro
     networks:
       - novablog
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?请在 deploy/.env 中设置 REDIS_PASSWORD}"]
-    volumes:
-      - redis_data:/data
-    networks:
-      - novablog
-
-volumes:
-  pg_data:
-  redis_data:
-  # 主题制品解压目录（安装/切换状态持久化；内置兜底主题在镜像内 /app/data/themes-builtin）
-  themes_data:
-  uploads_data:
 
 networks:
   novablog:

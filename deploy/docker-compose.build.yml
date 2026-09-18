@@ -1,0 +1,13 @@
+# 可选覆盖：本地构建镜像（不用 registry 镜像）
+# 用法：docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# 镜像标签仍为 ${NOVABLOG_IMAGE_REPO}:${NOVABLOG_VERSION}；
+# NOVABLOG_BUILD_VERSION 用于注入二进制版本号（/health 与启动日志可见）。
+
+services:
+  novablog:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        VERSION: ${NOVABLOG_BUILD_VERSION:-dev}

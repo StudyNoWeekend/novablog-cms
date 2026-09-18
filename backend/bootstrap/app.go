@@ -81,6 +81,7 @@ func NewApp(cfgPath string) (*App, error) {
 	// 注入主题模块配置
 	logic.SetThemeSettings(&logic.ThemeSettings{
 		DataDir:       cfg.GetString("themes.data_dir"),
+		FrontendDir:   cfg.GetString("themes.frontend_dir"),
 		MarketBaseURL: cfg.GetString("themes.market_base_url"),
 		GithubToken:   cfg.GetString("themes.github_token"),
 		PublicAPIBase: cfg.GetString("themes.public_api_base"),

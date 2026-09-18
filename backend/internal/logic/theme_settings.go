@@ -5,6 +5,7 @@ import "go.uber.org/zap"
 // ThemeSettings 主题模块配置，由 bootstrap 阶段从 config.yaml 注入。
 type ThemeSettings struct {
 	DataDir       string // 主题制品解压根目录
+	FrontendDir   string // 自备博客前端目录（含 theme.json 与 dist/）；非空时优先于已安装主题
 	MarketBaseURL string // 官方主题市场地址（服务端直连；空=禁用首装拉取）
 	GithubToken   string // 可选 GitHub PAT（提升 Release 查询限流额度）
 	PublicAPIBase string // 跨域部署时注入 theme-config.js 的 apiBase；空=同域相对路径

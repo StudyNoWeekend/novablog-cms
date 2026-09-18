@@ -17,6 +17,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// Version 应用版本号，由 cmd/api 在启动时注入（构建期 -ldflags 决定）。
+var Version = "dev"
+
 // RegisterRoutes 注册所有 API 路由。
 func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret string, storageMgr *storage.Manager, cryptoKey, uploadDir string) {
 	// 全局中间件
@@ -157,7 +160,8 @@ func RegisterHealthRouter(r *gin.Engine) {
 	// /health 返回 200
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
+			"status":  "ok",
+			"version": Version,
 		})
 	})
 

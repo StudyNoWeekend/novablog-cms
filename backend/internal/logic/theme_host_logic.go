@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -14,7 +15,11 @@ import (
 	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
+
+// mountedFrontendKey 自备博客前端在托管缓存中的保留键（与安装实例 ID 不冲突）。
+const mountedFrontendKey = "@mounted-frontend"
 
 // hostedTheme 已解析的托管主题（制品目录 + 清单）。
 type hostedTheme struct {
@@ -54,6 +59,15 @@ func (h *ThemeHostLogic) Handler(themeLogic *ThemeLogic) gin.HandlerFunc {
 			strings.HasPrefix(reqPath, "/preview/") || reqPath == "/health" || reqPath == "/ready" {
 			response.Fail(c, enum.ErrNotFound.Code, "接口不存在", http.StatusNotFound)
 			return
+		}
+
+		// 自备博客前端优先（config: themes.frontend_dir，挂载目录与主题制品包同构）
+		if dir := getThemeSettings().FrontendDir; dir != "" {
+			if ht, err := h.resolveMounted(dir); err == nil && ht != nil {
+				h.serveTheme(c, ht, reqPath)
+				return
+			}
+			// 不可用时静默回退到已安装主题流程（首次失败已记录日志）
 		}
 
 		theme, err := themeLogic.GetActiveTheme(c.Request.Context())
@@ -122,6 +136,50 @@ func (h *ThemeHostLogic) resolve(ctx context.Context, instanceID string) (*hoste
 	h.cache[instanceID] = ht
 	h.mu.Unlock()
 	return ht, nil
+}
+
+// resolveMounted 解析自备博客前端（带缓存；失败结果同样缓存，避免每次请求重复解析与刷日志）。
+func (h *ThemeHostLogic) resolveMounted(dir string) (*hostedTheme, error) {
+	h.mu.RLock()
+	ht, ok := h.cache[mountedFrontendKey]
+	h.mu.RUnlock()
+	if ok {
+		return ht, nil
+	}
+
+	var err error
+	ht, err = loadMountedFrontend(dir)
+	if err != nil {
+		themeLog().Warn("自备博客前端不可用，回退到已安装主题", zap.String("dir", dir), zap.Error(err))
+		ht = nil
+	} else {
+		themeLog().Info("已启用自备博客前端",
+			zap.String("dir", dir),
+			zap.String("name", ht.manifest.Name),
+			zap.String("version", ht.manifest.Version),
+		)
+	}
+
+	h.mu.Lock()
+	h.cache[mountedFrontendKey] = ht
+	h.mu.Unlock()
+	return ht, err
+}
+
+// loadMountedFrontend 解析自备博客前端目录：制品根含 theme.json，网页根为其 dist/。
+// 清单缺失或非法时按空清单托管（无 fallback 壳页面），保证纯静态站点仍可访问。
+func loadMountedFrontend(dir string) (*hostedTheme, error) {
+	root := filepath.Join(dir, "dist")
+	if !isRegularFile(filepath.Join(root, "index.html")) {
+		return nil, fmt.Errorf("挂载目录缺少 dist/index.html")
+	}
+
+	manifest, err := NewThemeArtifactLogic().LoadManifest(dir)
+	if err != nil {
+		themeLog().Warn("自备博客前端清单不可用，按无壳页面模式托管", zap.String("dir", dir), zap.Error(err))
+		manifest = &ThemeManifest{}
+	}
+	return &hostedTheme{root: root, manifest: manifest}, nil
 }
 
 // serveTheme 按托管解析顺序响应：
