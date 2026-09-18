@@ -13,6 +13,11 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 	{
 		install.GET("/status", pc.GetStatus)
 		install.POST("/init", pc.Init)
+		// 首装初始化对象存储配置（可选，本地存储可跳过）
+		install.POST("/storage", pc.SetupStorage)
+		// 首装初始化博客外观：拉取官方默认主题（失败回退内置兜底）并激活
+		install.POST("/theme", pc.InitTheme)
+		install.GET("/theme/status", pc.GetThemeInstallStatus)
 	}
 
 	public := r.Group("")
@@ -58,8 +63,12 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 		public.GET("/music/songs", pc.GetSongs)
 		public.GET("/music/songs/:id", pc.GetSongDetail)
 		public.GET("/music/audio-url/:song_id", pc.GetAudioURL)
+		public.GET("/music/playlists", pc.GetPlaylists)
 
 		// 模块开关配置
 		public.GET("/module-config", pc.GetModuleConfig)
+
+		// 第三方歌单
+		public.GET("/playlists", pc.GetPlaylists)
 	}
 }

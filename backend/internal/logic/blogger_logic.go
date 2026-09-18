@@ -83,6 +83,8 @@ func (l *BloggerLogic) GetPublicInfo(ctx context.Context) (*res.BloggerPublicRes
 		Nickname:        blogger.Nickname,
 		Avatar:          blogger.Avatar,
 		Bio:             blogger.Bio,
+		Email:           blogger.Email,
+		City:            blogger.City,
 		BlogTitle:       blogger.BlogTitle,
 		BlogDescription: blogger.BlogDescription,
 		PageBackground:  blogger.PageBackground,
@@ -108,6 +110,7 @@ func (l *BloggerLogic) GetProfile(ctx context.Context, userID string) (*res.Blog
 		BlogTitle:       blogger.BlogTitle,
 		BlogDescription: blogger.BlogDescription,
 		Email:           blogger.Email,
+		City:            blogger.City,
 		SocialLinks:     parseSocialLinks(blogger.SocialLinks),
 		Tags:            parseTags(blogger.Tags),
 	}, nil
@@ -128,6 +131,12 @@ func (l *BloggerLogic) UpdateProfile(ctx context.Context, userID string, r *req.
 	}
 	if r.Bio != nil {
 		blogger.Bio = *r.Bio
+	}
+	if r.Email != nil {
+		blogger.Email = *r.Email
+	}
+	if r.City != nil {
+		blogger.City = *r.City
 	}
 	if r.PageBackground != nil {
 		blogger.PageBackground = *r.PageBackground
@@ -169,6 +178,7 @@ func (l *BloggerLogic) UpdateProfile(ctx context.Context, userID string, r *req.
 		BlogTitle:       blogger.BlogTitle,
 		BlogDescription: blogger.BlogDescription,
 		Email:           blogger.Email,
+		City:            blogger.City,
 		SocialLinks:     parseSocialLinks(blogger.SocialLinks),
 		Tags:            parseTags(blogger.Tags),
 	}, nil

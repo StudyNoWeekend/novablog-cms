@@ -1,0 +1,57 @@
+app:
+  name: backend
+  env: production
+  debug: false
+
+http:
+  port: 8111
+  read_timeout: 30s
+  write_timeout: 30s
+
+log:
+  level: info
+  file_path: logs/app.log
+  max_size: 100
+  max_backups: 10
+  max_age: 30
+
+postgres:
+  host: postgres
+  port: 5432
+  user: postgres
+  password: "novablog-pg-dev-password"
+  dbname: novablog
+  sslmode: disable
+  max_open_conns: 100
+  max_idle_conns: 10
+
+redis:
+  host: redis
+  port: 6379
+  password: "novablog-redis-dev-password"
+  db: 3
+
+upload:
+  dir: ./uploads
+  base_url: http://localhost:8080
+
+jwt:
+  access_secret: "local-docker-access-secret-2024"
+  refresh_secret: "local-docker-refresh-secret-2024"
+  access_expire: 2h
+  refresh_expire: 168h
+
+crypto:
+  secret_key: "local-docker-crypto-32-chars!!"
+
+security:
+  enabled: true
+  blacklist_ttl_minutes: 60
+  log_retention_days: 7
+
+themes:
+  data_dir: ./data/themes
+  market_base_url: ""
+  github_token: ""
+  public_api_base: ""
+  max_artifact_mb: 100

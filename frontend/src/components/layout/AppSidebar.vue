@@ -231,11 +231,12 @@ const securityMenuItems = [
   { path: '/security/monitor', label: '访问统计', icon: EyeOutlined },
 ]
 
-	const systemMenuItems = [
-	  { path: '/templates', label: '模板风格', icon: SkinOutlined },
-	  { path: '/module-config', label: '模块管理', icon: SettingOutlined },
-	  { path: '/profile/storage', label: '对象存储', icon: CloudServerOutlined },
-	]
+		const systemMenuItems = [
+		  { path: '/templates', label: '模板风格', icon: SkinOutlined },
+		  { path: '/module-config', label: '模块管理', icon: SettingOutlined },
+		  { path: '/profile/storage', label: '对象存储', icon: CloudServerOutlined },
+		  { path: '/profile/cors', label: '跨域配置', icon: SettingOutlined },
+		]
 
 function isActive(path: string): boolean {
   const currentRoot = '/' + route.path.split('/')[1]

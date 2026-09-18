@@ -24,7 +24,10 @@ export function setupGuards(router: Router) {
 
     // For other pages, use cached status or fetch if never cached
     let initialized = storage.getInitialized()
-    if (initialized === null) {
+    // 缓存为空、或目标是登录页时实时查询后端：
+    // 防止「浏览器缓存 initialized=true 但后端数据库已重置」的错位场景
+    // （如容器重新部署/清库后，老浏览器仍被放行到登录页而非首装向导）
+    if (initialized === null || to.path.startsWith('/auth')) {
       try {
         const res = await setupApi.getStatus()
         initialized = res.initialized

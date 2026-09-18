@@ -1,14 +1,19 @@
 package logic
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"time"
 
 	"novablog/internal/cache"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
+	"novablog/internal/storage"
 	"novablog/pkg/bilibili"
 
 	"github.com/google/uuid"
@@ -20,18 +25,21 @@ import (
 // 依赖：
 //   - songModel：歌曲数据访问
 //   - musicCache：音频 URL 缓存（B 站 CDN 链接 120 分钟过期，缓存 TTL 与 B 站 URL 中 expire 字段对齐）
+//   - manager：存储管理器，用于自动保存封面到对象存储
 //   - logger：业务日志
 type MusicLogic struct {
 	songModel  *model.SongModel
 	musicCache *cache.MusicCache
+	manager    *storage.Manager
 	logger     *zap.Logger
 }
 
 // NewMusicLogic 创建 MusicLogic 实例。
-func NewMusicLogic() *MusicLogic {
+func NewMusicLogic(manager *storage.Manager) *MusicLogic {
 	return &MusicLogic{
 		songModel:  model.NewSong(),
 		musicCache: cache.NewMusicCache(),
+		manager:    manager,
 		logger:     MusicLogger,
 	}
 }
@@ -47,7 +55,7 @@ func (l *MusicLogic) CreateSong(ctx context.Context, r *req.CreateSongReq) (*res
 		ID:         uuid.New().String(),
 		Title:      r.Title,
 		Artist:     r.Artist,
-		CoverURL:   r.CoverURL,
+		CoverURL:   l.saveCoverToStorage(ctx, r.CoverURL),
 		BVID:       r.BVID,
 		CID:        r.CID,
 		SourceURL:  r.SourceURL,
@@ -112,7 +120,7 @@ func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSon
 		song.Artist = *r.Artist
 	}
 	if r.CoverURL != nil {
-		song.CoverURL = *r.CoverURL
+		song.CoverURL = l.saveCoverToStorage(ctx, *r.CoverURL)
 	}
 	if r.CategoryID != nil {
 		song.CategoryID = r.CategoryID
@@ -200,7 +208,7 @@ func (l *MusicLogic) BatchCreateSongs(ctx context.Context, r *req.BatchCreateSon
 			ID:         uuid.New().String(),
 			Title:      songReq.Title,
 			Artist:     songReq.Artist,
-			CoverURL:   songReq.CoverURL,
+			CoverURL:   l.saveCoverToStorage(ctx, songReq.CoverURL),
 			BVID:       songReq.BVID,
 			CID:        songReq.CID,
 			SourceURL:  songReq.SourceURL,
@@ -291,6 +299,90 @@ func pickBestAudioURL(entries []bilibili.AudioEntry) string {
 		}
 	}
 	return bestURL
+}
+
+// saveCoverToStorage 将外部封面 URL 下载并保存到已配置的对象存储中。
+// 路径格式：music/cover/{uuid}.{ext}（前置 PathPrefix）。
+// 若存储未配置或保存失败，降级使用原始 URL，仅记录警告。
+func (l *MusicLogic) saveCoverToStorage(ctx context.Context, coverURL string) string {
+	if coverURL == "" {
+		return coverURL
+	}
+	// 仅处理外部 HTTP(S) URL（Bilibili CDN 等），已保存的本地路径跳过
+	if !strings.HasPrefix(coverURL, "http://") && !strings.HasPrefix(coverURL, "https://") {
+		return coverURL
+	}
+
+	provider := l.manager.GetProviderOrReload(ctx)
+	if provider == nil {
+		l.logger.Warn("存储未配置，跳过封面保存", zap.String("cover_url", coverURL))
+		return coverURL
+	}
+
+	// HTTP GET 下载封面（超时 30s）
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Get(coverURL)
+	if err != nil {
+		l.logger.Warn("下载封面失败", zap.String("cover_url", coverURL), zap.Error(err))
+		return coverURL
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		l.logger.Warn("下载封面返回非 200", zap.String("cover_url", coverURL), zap.Int("status", resp.StatusCode))
+		return coverURL
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		l.logger.Warn("读取封面数据失败", zap.Error(err))
+		return coverURL
+	}
+	if len(data) == 0 {
+		return coverURL
+	}
+
+	// 根据 Content-Type 确定扩展名
+	contentType := resp.Header.Get("Content-Type")
+	ext := extFromContentType(contentType)
+	if ext == "" {
+		ext = ".jpg"
+	}
+
+	// 生成对象 key：music/cover/{uuid}.{ext}
+	storeFilename := uuid.New().String() + ext
+	key := fmt.Sprintf("music/cover/%s", storeFilename)
+	if activeCfg := l.manager.GetActiveConfig(); activeCfg != nil && activeCfg.PathPrefix != "" {
+		key = fmt.Sprintf("%s/%s", strings.Trim(activeCfg.PathPrefix, "/"), key)
+	}
+
+	newURL, err := provider.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), contentType)
+	if err != nil {
+		l.logger.Warn("上传封面到存储失败", zap.Error(err))
+		return coverURL
+	}
+
+	l.logger.Info("封面已自动保存到存储",
+		zap.String("source", coverURL),
+		zap.String("saved", newURL),
+	)
+	return newURL
+}
+
+// extFromContentType 根据 Content-Type 返回文件扩展名。
+func extFromContentType(contentType string) string {
+	switch {
+	case strings.Contains(contentType, "jpeg"), strings.Contains(contentType, "jpg"):
+		return ".jpg"
+	case strings.Contains(contentType, "png"):
+		return ".png"
+	case strings.Contains(contentType, "webp"):
+		return ".webp"
+	case strings.Contains(contentType, "gif"):
+		return ".gif"
+	default:
+		return ".jpg"
+	}
 }
 
 // toSongRes 转换为歌曲响应。

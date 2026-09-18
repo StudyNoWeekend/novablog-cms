@@ -22,6 +22,8 @@ type BloggerPublicRes struct {
 	Nickname        string                `json:"nickname"`         // 昵称
 	Avatar          string                `json:"avatar"`           // 头像 URL
 	Bio             string                `json:"bio"`              // 个人简介
+	Email           string                `json:"email"`            // 邮箱
+	City            string                `json:"city"`             // 所在城市
 	BlogTitle       string                `json:"blog_title"`       // 博客标题
 	BlogDescription string                `json:"blog_description"` // 博客描述
 	PageBackground  string                `json:"page_background"`  // 页面背景图 URL
@@ -40,6 +42,7 @@ type BloggerProfileRes struct {
 	BlogTitle       string          `json:"blog_title"`       // 博客标题
 	BlogDescription string          `json:"blog_description"` // 博客描述
 	Email           string          `json:"email"`            // 邮箱
+	City            string          `json:"city"`             // 所在城市
 	SocialLinks     []SocialLinkRes `json:"social_links"`     // 社交平台链接数组
 	Tags            []string        `json:"tags"`             // 标签数组
 }

@@ -131,6 +131,12 @@ export default [
         component: () => import('@/views/template/TemplateView.vue'),
       },
       {
+        path: 'templates/market/:id',
+        name: 'ThemeDetail',
+        meta: { title: '主题详情', hidden: true },
+        component: () => import('@/views/template/ThemeDetailView.vue'),
+      },
+      {
         path: 'profile',
         redirect: '/profile/info',
         component: () => import('@/components/layout/SettingsLayout.vue'),
@@ -140,6 +146,12 @@ export default [
             name: 'Profile',
             meta: { title: '个人资料' },
             component: () => import('@/views/user/ProfileView.vue'),
+          },
+          {
+            path: 'cors',
+            name: 'CorsConfig',
+            meta: { title: '跨域配置' },
+            component: () => import('@/views/user/CorsConfigView.vue'),
           },
         ],
       },

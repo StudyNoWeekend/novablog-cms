@@ -45,3 +45,26 @@ export interface AccessStatsQuery {
   page_size?: number
   ip?: string
 }
+
+// API 文档相关类型
+export interface APIDocParam {
+  name: string
+  type: string
+  required: boolean
+  desc: string
+}
+
+export interface APIDocField {
+  name: string
+  type: string
+  desc: string
+}
+
+export interface APIDocItem {
+  module: string
+  method: string
+  path: string
+  description: string
+  params: APIDocParam[]
+  response: APIDocField[]
+}

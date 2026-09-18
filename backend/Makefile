@@ -1,4 +1,4 @@
-.PHONY: build run fmt vet lint test clean
+.PHONY: build run fmt vet lint test clean docker-build docker-up docker-down
 
 # 编译
 build:
@@ -28,3 +28,15 @@ test:
 clean:
 	rm -rf bin/
 	rm -f coverage.out
+
+# 构建容器镜像（后端 + nginx 入口）
+docker-build:
+	docker build -f ../deploy/Dockerfile -t novablog-backend:latest ..
+	docker build -f ../deploy/nginx.Dockerfile -t novablog-nginx:latest ..
+
+# 容器部署（首次使用：cd ../deploy && cp .env.example .env 并修改密码/域名）
+docker-up:
+	cd ../deploy && docker compose up -d --build
+
+docker-down:
+	cd ../deploy && docker compose down

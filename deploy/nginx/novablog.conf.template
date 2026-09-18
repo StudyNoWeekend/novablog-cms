@@ -1,0 +1,149 @@
+# NovaBlog 统一入口（envsubst 模板：仅替换 ${VAR} 形式的环境变量，$uri 等 nginx 变量不受影响；
+# 默认值由镜像 ENV 提供——envsubst 不支持 ${VAR:-default} 语法，改默认值请改 nginx.Dockerfile ENV
+# 或在 compose environment 中覆盖）
+#
+# 双入口拓扑（博客页面与管理后台独立端口，适配官方代托管场景）：
+#
+#   博客入口 :80
+#     /             → 反代 Go（激活主题静态托管，访客博客页面）
+#     /preview/*    → 反代 Go（主题预览）
+#     /api/v1 /files→ 反代 Go（主题页面同源取数，无需 CORS/apiBase 注入）
+#
+#   后台入口 :${NOVABLOG_ADMIN_PORT}
+#     /             → 302 跳转 ${NOVABLOG_ADMIN_BASE}
+#     ${NOVABLOG_ADMIN_BASE} → 管理后台静态文件（镜像内置 dist）
+#     /api/v1 /files→ 反代 Go（后台同源取数）
+#
+# 代托管时可在后台入口独立叠加访问控制，示例（按需加到后台 server 块）：
+#   allow 10.0.0.0/8;                               # IP 白名单
+#   deny all;
+#   auth_basic "Admin";                             # Basic Auth
+#   auth_basic_user_file /etc/nginx/htpasswd;
+
+upstream novablog_backend {
+    server backend:8111;
+    keepalive 32;
+}
+
+# ================= 博客入口（访客） =================
+server {
+    listen 80;
+    server_name ${NOVABLOG_DOMAIN};
+
+    # 主题制品/媒体上传体积上限
+    client_max_body_size 200m;
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 1k;
+    gzip_vary on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml application/xml;
+
+    # API（公开接口：主题/文章/评论等）
+    location /api/ {
+        proxy_pass http://novablog_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    # 媒体文件
+    location /files/ {
+        proxy_pass http://novablog_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+
+    # 健康检查
+    location = /health {
+        proxy_pass http://novablog_backend;
+        access_log off;
+    }
+    location = /ready {
+        proxy_pass http://novablog_backend;
+        access_log off;
+    }
+
+    # 主题预览
+    location /preview/ {
+        proxy_pass http://novablog_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # 博客页面（激活主题静态托管，Go 兜底路由）
+    location / {
+        proxy_pass http://novablog_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# ================= 管理后台入口（独立端口） =================
+server {
+    listen ${NOVABLOG_ADMIN_PORT};
+    server_name ${NOVABLOG_ADMIN_DOMAIN};
+
+    client_max_body_size 200m;
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 1k;
+    gzip_vary on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml application/xml;
+
+    # 后台 API（管理接口走后台入口，与博客入口隔离）
+    location /api/ {
+        proxy_pass http://novablog_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    # 后台媒体库
+    location /files/ {
+        proxy_pass http://novablog_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+
+    location = /health {
+        proxy_pass http://novablog_backend;
+        access_log off;
+    }
+
+    # 管理后台静态文件（镜像内置 dist；base 路径须与构建期 VITE_BASE_PATH 一致，默认 /admin/）
+    location ${NOVABLOG_ADMIN_BASE} {
+        alias /usr/share/nginx/html/admin/;
+        try_files $uri $uri/ ${NOVABLOG_ADMIN_BASE}index.html;
+    }
+
+    # 根路径跳转后台（使用 $http_host 保持用户请求的端口，避免端口错乱）
+    # 注意：若重建后台镜像时改用 VITE_BASE_PATH=/ 并将 NOVABLOG_ADMIN_BASE=/，
+    #       请删除下面这行跳转（location = / 会与 location / 冲突）
+    location = / {
+        return 302 $scheme://$http_host${NOVABLOG_ADMIN_BASE};
+    }
+
+    # 常见后台 SPA 路由不带 /admin/ 前缀时的兜底跳转
+    # 用户习惯直接输入 /setup、/login 等，nginx 会返回 404，这里统一重定向到正确前缀
+    location ~ ^/(setup|auth|login|register|dashboard|templates) {
+        return 302 $scheme://$http_host${NOVABLOG_ADMIN_BASE}$1/;
+    }
+}

@@ -122,11 +122,10 @@ func call(ctx context.Context, baseURL, method, path, token string, body, out an
 	}
 }
 
-// TokenPair 官方双 Token。
+// TokenPair 官方 Token。
 type TokenPair struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int64  `json:"expires_in"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int64  `json:"expires_in"`
 }
 
 // UserInfo 官方用户信息（登录接口返回）。
@@ -198,6 +197,14 @@ type ThemeDetail struct {
 	UserRating  float64 `json:"user_rating"`
 }
 
+// ThemeReleaseItem 主题版本历史条目（官方自 GitHub Release 同步的版本与更新日志）。
+type ThemeReleaseItem struct {
+	Version     string `json:"version"`
+	Tag         string `json:"tag"`
+	Notes       string `json:"notes"`
+	PublishedAt string `json:"published_at"`
+}
+
 // ThemeStats 市场统计。
 type ThemeStats struct {
 	Total     int64 `json:"total"`
@@ -231,7 +238,14 @@ type DownloadResult struct {
 	DownloadURL string `json:"download_url"`
 }
 
-// Login 官方账号登录，返回双 Token 与用户信息。
+// DefaultTheme 官方默认主题（GET /themes/default 返回，含制品下载地址）。
+type DefaultTheme struct {
+	ThemeItem
+	IsDefault   bool   `json:"is_default"`
+	DownloadURL string `json:"download_url"`
+}
+
+// Login 官方账号登录，返回 Token 与用户信息。
 func Login(ctx context.Context, baseURL, email, password string) (TokenPair, UserInfo, error) {
 	var data loginResp
 	body := map[string]string{"email": email, "password": password}
@@ -239,16 +253,6 @@ func Login(ctx context.Context, baseURL, email, password string) (TokenPair, Use
 		return TokenPair{}, UserInfo{}, err
 	}
 	return data.Token, data.User, nil
-}
-
-// RefreshToken 用 refresh_token 换新 Token（官方轮换式，旧 refresh_token 同时作废）。
-func RefreshToken(ctx context.Context, baseURL, refreshToken string) (TokenPair, error) {
-	var data TokenPair
-	body := map[string]string{"refresh_token": refreshToken}
-	if err := call(ctx, baseURL, http.MethodPost, "/auth/refresh", "", body, &data); err != nil {
-		return TokenPair{}, err
-	}
-	return data, nil
 }
 
 // Logout 登出官方账号并拉黑当前 Token。
@@ -293,6 +297,15 @@ func GetTheme(ctx context.Context, baseURL, id, token string) (ThemeDetail, erro
 	var data ThemeDetail
 	if err := call(ctx, baseURL, http.MethodGet, "/themes/"+id, token, nil, &data); err != nil {
 		return ThemeDetail{}, err
+	}
+	return data, nil
+}
+
+// GetThemeReleases 查询主题版本历史与更新日志（按发布时间倒序，无记录返回空切片）。
+func GetThemeReleases(ctx context.Context, baseURL, id, token string) ([]ThemeReleaseItem, error) {
+	var data []ThemeReleaseItem
+	if err := call(ctx, baseURL, http.MethodGet, "/themes/"+id+"/releases", token, nil, &data); err != nil {
+		return nil, err
 	}
 	return data, nil
 }
@@ -371,6 +384,15 @@ func ListFavoriteIDs(ctx context.Context, baseURL, token string) ([]int64, error
 	var data []int64
 	if err := call(ctx, baseURL, http.MethodGet, "/themes/favorites/ids", token, nil, &data); err != nil {
 		return nil, err
+	}
+	return data, nil
+}
+
+// GetDefaultTheme 查询官方默认主题（部署首装直接拉取；未设置或已下架时官方返回 404）。
+func GetDefaultTheme(ctx context.Context, baseURL string) (DefaultTheme, error) {
+	var data DefaultTheme
+	if err := call(ctx, baseURL, http.MethodGet, "/themes/default", "", nil, &data); err != nil {
+		return DefaultTheme{}, err
 	}
 	return data, nil
 }

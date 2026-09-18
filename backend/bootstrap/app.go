@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -76,6 +77,29 @@ func NewApp(cfgPath string) (*App, error) {
 	logic.AuthLogger = logger
 	logic.SetupLogger = logger
 	logic.MusicLogger = logger
+
+	// 注入主题模块配置
+	logic.SetThemeSettings(&logic.ThemeSettings{
+		DataDir:       cfg.GetString("themes.data_dir"),
+		MarketBaseURL: cfg.GetString("themes.market_base_url"),
+		GithubToken:   cfg.GetString("themes.github_token"),
+		PublicAPIBase: cfg.GetString("themes.public_api_base"),
+		MaxArtifactMB: cfg.GetInt("themes.max_artifact_mb"),
+	})
+	logic.ThemeLogger = logger
+
+	// 注入跨域配置：优先级 config.yaml → DB 持久化值 → env 变量（中间件内处理）
+	corsLogic := logic.NewCorsConfigLogic()
+	// 1. 从 config.yaml 读取作为初始值
+	cfgCorsOrigin := cfg.GetString("cors.allowed_origins")
+	if cfgCorsOrigin != "" {
+		middleware.SetAllowedOrigins(cfgCorsOrigin)
+	}
+	// 2. 尝试从 DB 读取持久化配置——仅当 DB 值不是默认值时覆盖（用户已在后台页面自定义）
+	if corsConfig, err := corsLogic.GetConfig(context.Background()); err == nil && corsConfig.AllowedOrigins != "http://localhost:5173,http://localhost:5174" {
+		middleware.SetAllowedOrigins(corsConfig.AllowedOrigins)
+	}
+	// 3. 环境变量 CORS_ALLOWED_ORIGINS 优先级最高，已在中间件内部处理
 
 	middleware.AuthLogger = logger
 	middleware.Logger = logger

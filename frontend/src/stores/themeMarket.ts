@@ -10,6 +10,7 @@ import type {
   ThemeDetail,
   ThemeItem,
   ThemeMarketFilters,
+  ThemeReleaseItem,
   ThemeStats,
 } from '@/types/template'
 
@@ -50,11 +51,13 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
   const favLoadError = ref(false)
   const favPagination = reactive({ page: 1, pageSize: 9 })
 
-  // ===== 详情抽屉 =====
-  const detailVisible = ref(false)
+  // ===== 主题详情页 =====
   const detailLoading = ref(false)
   const detailError = ref(false)
   const currentDetail = ref<ThemeDetail | null>(null)
+  const releases = ref<ThemeReleaseItem[]>([])
+  const releasesLoading = ref(false)
+  const releasesError = ref(false)
 
   function buildListParams() {
     return {
@@ -146,7 +149,6 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     const res = await themeMarketApi.login(baseURL, { email, password })
     marketStorage.setBaseURL(baseURL)
     marketStorage.setToken(res.access_token)
-    marketStorage.setRefreshToken(res.refresh_token)
     marketStorage.setUser(res.user)
     marketBaseURL.value = baseURL
     marketUser.value = res.user
@@ -247,23 +249,28 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     }
   }
 
-  function openDetail(id: number) {
-    detailVisible.value = true
-    fetchDetail(id)
-  }
-
-  function closeDetail() {
-    detailVisible.value = false
+  /** 拉取主题版本历史与更新日志（按发布时间倒序） */
+  async function fetchReleases(id: number) {
+    releasesLoading.value = true
+    releasesError.value = false
+    releases.value = []
+    try {
+      releases.value = await themeMarketApi.getReleases(id)
+    } catch {
+      releasesError.value = true
+    } finally {
+      releasesLoading.value = false
+    }
   }
 
   return {
     loggedIn, marketUser, marketBaseURL, activeTab,
     list, total, loading, loadError, stats, hotTags, favoriteIds, filters, pagination,
     favList, favTotal, favLoading, favLoadError, favPagination,
-    detailVisible, detailLoading, detailError, currentDetail,
+    detailLoading, detailError, currentDetail, releases, releasesLoading, releasesError,
     fetchList, fetchListWithReset, fetchStats, fetchHotTags, fetchFavoriteIds, fetchFavorites,
     initMarketData, login, handleAuthExpired, logout,
     toggleFavorite, toggleLike, rate, download,
-    fetchDetail, openDetail, closeDetail,
+    fetchDetail, fetchReleases,
   }
 })

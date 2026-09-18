@@ -12,6 +12,8 @@ type UpdateProfileReq struct {
 	Nickname        *string          `json:"nickname" binding:"omitempty,max=50"`         // 昵称
 	Avatar          *string          `json:"avatar" binding:"omitempty,max=500"`          // 头像 URL
 	Bio             *string          `json:"bio" binding:"omitempty"`                     // 个人简介
+	Email           *string          `json:"email" binding:"omitempty,max=100"`           // 邮箱
+	City            *string          `json:"city" binding:"omitempty,max=100"`            // 所在城市
 	PageBackground  *string          `json:"page_background" binding:"omitempty,max=500"` // 页面背景图 URL
 	BlogIcon        *string          `json:"blog_icon" binding:"omitempty,max=500"`       // 博客 icon 图 URL
 	BlogTitle       *string          `json:"blog_title" binding:"omitempty,max=100"`      // 博客标题

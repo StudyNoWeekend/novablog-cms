@@ -97,13 +97,16 @@ const searchKeyword = ref('')
 
 const moduleTabs = [
   { label: '全部', value: 'all' },
+  { label: '安装引导', value: '安装引导' },
   { label: '博主信息', value: '博主信息' },
   { label: '文章', value: '文章' },
   { label: '评论', value: '评论' },
   { label: '旅行攻略', value: '旅行攻略' },
   { label: '摄影作品集', value: '摄影作品集' },
+  { label: '摄影器材', value: '摄影器材' },
   { label: '视频作品', value: '视频作品' },
   { label: '音乐', value: '音乐' },
+  { label: '系统', value: '系统' },
 ]
 
 const paramColumns: TableColumnsType<APIDocParam> = [

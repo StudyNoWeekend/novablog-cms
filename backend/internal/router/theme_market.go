@@ -13,14 +13,15 @@ func RegisterThemeMarketRoutes(r *gin.RouterGroup, themeMarketController *contro
 	{
 		// 官方账号登录态
 		market.POST("/auth/login", themeMarketController.MarketLogin)
-		market.POST("/auth/refresh", themeMarketController.MarketRefresh)
 		market.POST("/auth/logout", themeMarketController.MarketLogout)
 
 		// 市场浏览（公开数据）
 		market.GET("", themeMarketController.GetList)
 		market.GET("/stats", themeMarketController.GetStats)
 		market.GET("/hot-tags", themeMarketController.GetHotTags)
+		market.GET("/default", themeMarketController.GetDefault)
 		market.GET("/detail/:id", themeMarketController.GetDetail)
+		market.GET("/:id/releases", themeMarketController.GetReleases)
 
 		// 我的收藏
 		market.GET("/favorites", themeMarketController.GetFavorites)

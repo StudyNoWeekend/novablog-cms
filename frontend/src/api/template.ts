@@ -1,18 +1,15 @@
-import axios from 'axios'
-import type { AxiosError } from 'axios'
-import { message } from 'ant-design-vue'
-
 import request from './request'
 import { marketStorage } from '@/utils/storage'
 import { MARKET_AUTH_EXPIRED_CODE } from '@/types/template'
-import type { ApiResponse, PaginatedData } from '@/types/api'
+import type { ApiResponse } from '@/types/api'
+import type { PaginatedData } from '@/types/api'
 import type {
   HotTag,
   MarketLoginRes,
-  MarketTokenPair,
   ThemeDetail,
   ThemeItem,
   ThemeMarketListParams,
+  ThemeReleaseItem,
   ThemeStats,
 } from '@/types/template'
 
@@ -29,74 +26,23 @@ function buildMarketHeaders(baseURL?: string): Record<string, string> {
   return headers
 }
 
-// isMarketAuthExpired 判断错误是否为官方登录失效（业务码 401101）。
-function isMarketAuthExpired(err: unknown): boolean {
-  return (err as AxiosError<ApiResponse>)?.response?.data?.code === MARKET_AUTH_EXPIRED_CODE
-}
-
-let refreshing = false
-let pendingQueue: Array<{ resolve: (ok: boolean) => void; reject: (err: unknown) => void }> = []
-
 // clearMarketAuth 清空官方凭据并广播登录失效事件，由页面弹回登录遮罩。
 function clearMarketAuth() {
   marketStorage.clear()
-  const queue = pendingQueue
-  pendingQueue = []
-  queue.forEach((p) => p.resolve(false))
   window.dispatchEvent(new CustomEvent(MARKET_AUTH_EXPIRED_EVENT))
 }
 
-// refreshOfficialToken 用官方 refresh_token 换新 Token（官方轮换式，需保存新双 Token）。
-// 失败时清空官方凭据并触发登录遮罩。并发调用会挂起等待同一次刷新结果。
-async function refreshOfficialToken(): Promise<boolean> {
-  if (refreshing) {
-    return new Promise((resolve, reject) => pendingQueue.push({ resolve, reject }))
-  }
-  refreshing = true
-  try {
-    const baseURL = marketStorage.getBaseURL()
-    const refreshToken = marketStorage.getRefreshToken()
-    if (!baseURL || !refreshToken) {
-      clearMarketAuth()
-      return false
-    }
-
-    const resp = await axios.post<ApiResponse<MarketTokenPair>>(
-      `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/themes/market/auth/refresh`,
-      { refresh_token: refreshToken },
-      { headers: { 'X-Market-Base-URL': baseURL } },
-    )
-    const body = resp.data
-    if (body.code === 0 && body.data?.access_token) {
-      marketStorage.setToken(body.data.access_token)
-      marketStorage.setRefreshToken(body.data.refresh_token)
-      const queue = pendingQueue
-      pendingQueue = []
-      queue.forEach((p) => p.resolve(true))
-      return true
-    }
-
-    clearMarketAuth()
-    message.error('官方登录已失效，请重新登录')
-    return false
-  } catch {
-    clearMarketAuth()
-    message.error('官方登录已失效，请重新登录')
-    return false
-  } finally {
-    refreshing = false
-  }
-}
-
-// withMarketAuth 统一携带官方请求头执行请求；官方登录失效时自动刷新并重试一次。
+// withMarketAuth 统一携带官方请求头执行请求；遇官方登录失效时广播事件并 reject。
 async function withMarketAuth<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn()
   } catch (err) {
-    if (!isMarketAuthExpired(err)) throw err
-    const ok = await refreshOfficialToken()
-    if (!ok) throw err
-    return fn()
+    const code = (err as { response?: { data?: ApiResponse } })?.response?.data?.code
+    if (code === MARKET_AUTH_EXPIRED_CODE) {
+      clearMarketAuth()
+      throw err
+    }
+    throw err
   }
 }
 
@@ -131,6 +77,13 @@ export const themeMarketApi = {
   getDetail(id: number) {
     return withMarketAuth(() =>
       request.get<ThemeDetail>(`/themes/market/detail/${id}`, { headers: buildMarketHeaders() }),
+    )
+  },
+
+  /** 主题版本历史与更新日志（按发布时间倒序，无记录返回空数组） */
+  getReleases(id: number) {
+    return withMarketAuth(() =>
+      request.get<ThemeReleaseItem[]>(`/themes/market/${id}/releases`, { headers: buildMarketHeaders() }),
     )
   },
 

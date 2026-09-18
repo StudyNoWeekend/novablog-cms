@@ -47,3 +47,9 @@ dist-ssr/
 *.sln
 *.sw?
 .trae/*
+.zcode/*
+
+# ===== 部署 =====
+deploy/.env
+# 主题制品与运行时数据（themes.data_dir）
+backend/data/

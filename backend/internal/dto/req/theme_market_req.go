@@ -6,11 +6,6 @@ type MarketLoginReq struct {
 	Password string `json:"password" binding:"required"`
 }
 
-// MarketRefreshReq 刷新官方主题市场 Token 请求参数。
-type MarketRefreshReq struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
-}
-
 // ThemeMarketListReq 官方主题市场列表查询参数。
 type ThemeMarketListReq struct {
 	PageReq

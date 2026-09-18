@@ -15,6 +15,17 @@
           style="width: 240px"
           allow-clear
         />
+        <a-select
+          v-model:value="statusFilter"
+          style="width: 120px"
+          placeholder="状态"
+          allow-clear
+          @change="reset(); fetchList()"
+        >
+          <a-select-option value="">全部</a-select-option>
+          <a-select-option :value="1">已发布</a-select-option>
+          <a-select-option :value="0">草稿</a-select-option>
+        </a-select>
       </div>
 
       <a-spin :spinning="loading">
@@ -35,6 +46,16 @@
               <div v-else class="cover-placeholder">
                 <PlaySquareOutlined />
               </div>
+              <a-tag
+                v-if="item.status === 1"
+                color="green"
+                class="status-tag"
+              >已发布</a-tag>
+              <a-tag
+                v-else
+                color="orange"
+                class="status-tag"
+              >草稿</a-tag>
             </div>
             <div class="video-info">
               <div class="video-title" :title="item.title">{{ item.title }}</div>
@@ -164,6 +185,16 @@
             </div>
           </div>
         </a-form-item>
+        <a-form-item label="状态">
+          <a-switch
+            v-model:checked="form.published"
+            checked-children="发布"
+            un-checked-children="草稿"
+          />
+          <span style="margin-left: 8px; color: var(--text-secondary, #8c8c8c); font-size: 13px;">
+            {{ form.published ? '发布后将在博客前台公开显示' : '仅后台可见，博客前台不显示' }}
+          </span>
+        </a-form-item>
       </a-form>
     </a-modal>
   </div>
@@ -188,6 +219,7 @@ import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
 const keyword = ref('')
+const statusFilter = ref<number | undefined>(undefined)
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const list = ref<VideoWork[]>([])
@@ -204,6 +236,7 @@ const form = reactive({
   title: '',
   cover_url: '',
   description: '',
+  published: true,
 })
 
 const selectedPlatforms = reactive<Record<string, string>>({})
@@ -234,6 +267,7 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
+      status: statusFilter.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -254,6 +288,7 @@ function resetForm() {
   form.title = ''
   form.cover_url = ''
   form.description = ''
+  form.published = true
   Object.keys(selectedPlatforms).forEach((key) => delete selectedPlatforms[key])
 }
 
@@ -271,6 +306,7 @@ function handleEdit(item: VideoWork) {
   form.title = item.title
   form.cover_url = item.cover_url || ''
   form.description = item.description || ''
+  form.published = item.status === 1
   if (item.platforms && item.platforms.length) {
     item.platforms.forEach((link) => {
       selectedPlatforms[link.platform] = link.url
@@ -339,21 +375,18 @@ async function handleSubmit() {
   }
   modalLoading.value = true
   try {
+    const payload = {
+      title: form.title.trim(),
+      cover_url: form.cover_url.trim() || undefined,
+      description: form.description.trim() || undefined,
+      status: form.published ? 1 : 0,
+      platforms,
+    }
     if (modalMode.value === 'create') {
-      await videoApi.create({
-        title: form.title.trim(),
-        cover_url: form.cover_url.trim() || undefined,
-        description: form.description.trim() || undefined,
-        platforms,
-      })
+      await videoApi.create(payload)
       message.success('创建成功')
     } else {
-      await videoApi.update(editingId.value, {
-        title: form.title.trim(),
-        cover_url: form.cover_url.trim() || undefined,
-        description: form.description.trim() || undefined,
-        platforms,
-      })
+      await videoApi.update(editingId.value, payload)
       message.success('更新成功')
     }
     modalVisible.value = false
@@ -452,6 +485,13 @@ function formatDateTime(time?: string): string {
   justify-content: center;
   font-size: 48px;
   color: var(--text-secondary, #bfbfbf);
+}
+
+.status-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  pointer-events: none;
 }
 
 .video-info {

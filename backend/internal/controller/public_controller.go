@@ -7,6 +7,7 @@ import (
 	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
+	"novablog/internal/storage"
 	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
@@ -27,12 +28,13 @@ type PublicController struct {
 	musicLogic        *logic.MusicLogic
 	equipmentLogic    *logic.EquipmentLogic
 	moduleConfigLogic *logic.ModuleConfigLogic
+	playlistLogic     *logic.ThirdPartyPlaylistLogic
 }
 
 // NewPublicController 创建 PublicController 实例。
-func NewPublicController() *PublicController {
+func NewPublicController(manager *storage.Manager, cryptoKey string) *PublicController {
 	return &PublicController{
-		setupLogic:        logic.NewSetupLogic(),
+		setupLogic:        logic.NewSetupLogic(manager, cryptoKey),
 		articleLogic:      logic.NewArticleLogic(),
 		categoryLogic:     logic.NewCategoryLogic(),
 		tagLogic:          logic.NewTagLogic(),
@@ -41,9 +43,10 @@ func NewPublicController() *PublicController {
 		travelLogic:       logic.NewTravelGuideLogic(),
 		portfolioLogic:    logic.NewPortfolioLogic(),
 		videoLogic:        logic.NewVideoLogic(),
-		musicLogic:        logic.NewMusicLogic(),
+		musicLogic:        logic.NewMusicLogic(manager),
 		equipmentLogic:    logic.NewEquipmentLogic(),
 		moduleConfigLogic: logic.NewModuleConfigLogic(),
+		playlistLogic:     logic.NewThirdPartyPlaylistLogic(),
 	}
 }
 
@@ -84,6 +87,67 @@ func (ctrl *PublicController) Init(c *gin.Context) {
 	}
 
 	response.Success(c, initRes)
+}
+
+// InitThemeReq 首装主题安装请求。
+type InitThemeReq struct {
+	MarketBaseURL string `json:"market_base_url" binding:"omitempty"` // 官方市场地址（向导输入覆盖 config）
+}
+
+// InitTheme 首装初始化博客外观：拉取官方默认主题并激活 POST /api/v1/public/install/theme
+func (ctrl *PublicController) InitTheme(c *gin.Context) {
+	var r InitThemeReq
+	_ = c.ShouldBindJSON(&r)
+	result, err := ctrl.setupLogic.StartThemeInstall(c.Request.Context(), r.MarketBaseURL)
+	if err != nil {
+		var bizErr *enum.BizError
+		if errors.As(err, &bizErr) {
+			response.Fail(c, bizErr.Code, bizErr.Msg, bizErr.HttpCode)
+			return
+		}
+		response.Fail(c, enum.ErrInternalServer.Code, enum.ErrInternalServer.Msg, enum.ErrInternalServer.HttpCode)
+		return
+	}
+	response.Success(c, result)
+}
+
+// GetThemeInstallStatus 查询主题安装任务状态 GET /api/v1/public/install/theme/status
+func (ctrl *PublicController) GetThemeInstallStatus(c *gin.Context) {
+	result, err := ctrl.setupLogic.GetThemeInstallStatus(c.Request.Context())
+	if err != nil {
+		var bizErr *enum.BizError
+		if errors.As(err, &bizErr) {
+			response.Fail(c, bizErr.Code, bizErr.Msg, bizErr.HttpCode)
+			return
+		}
+		response.Fail(c, enum.ErrInternalServer.Code, enum.ErrInternalServer.Msg, enum.ErrInternalServer.HttpCode)
+		return
+	}
+	response.Success(c, result)
+}
+
+// SetupStorage 首装向导存储配置 POST /api/v1/public/install/storage
+// provider 为空或 "local" 表示使用本地存储，非空时创建云存储配置并激活。
+func (ctrl *PublicController) SetupStorage(c *gin.Context) {
+	var r req.SetupStorageReq
+	if err := c.ShouldBindJSON(&r); err != nil {
+		logic.SetupLogger.Warn("存储配置请求参数错误", zap.Error(err))
+		response.Fail(c, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+
+	result, err := ctrl.setupLogic.SetupStorage(c.Request.Context(), &r)
+	if err != nil {
+		var bizErr *enum.BizError
+		if errors.As(err, &bizErr) {
+			response.Fail(c, bizErr.Code, bizErr.Msg, bizErr.HttpCode)
+			return
+		}
+		response.Fail(c, enum.ErrInternalServer.Code, enum.ErrInternalServer.Msg, enum.ErrInternalServer.HttpCode)
+		return
+	}
+
+	response.Success(c, result)
 }
 
 // GetArticles 公开文章列表 GET /api/v1/public/articles
@@ -422,4 +486,14 @@ func (ctrl *PublicController) GetModuleConfig(ctx *gin.Context) {
 		return
 	}
 	response.Success(ctx, config)
+}
+
+// GetPlaylists 获取前台展示的第三方歌单列表 GET /api/v1/public/playlists
+func (ctrl *PublicController) GetPlaylists(ctx *gin.Context) {
+	result, err := ctrl.playlistLogic.GetPublicList(ctx.Request.Context())
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
 }

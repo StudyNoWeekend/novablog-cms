@@ -41,6 +41,7 @@ export interface UserInfo {
   blog_title: string
   blog_description: string
   email: string
+  city: string
   social_links?: SocialLink[]
   tags?: string[]
 }
@@ -49,12 +50,25 @@ export interface UpdateProfileReq {
   nickname?: string
   avatar?: string
   bio?: string
+  email?: string
+  city?: string
   page_background?: string
   blog_icon?: string
   blog_title?: string
   blog_description?: string
   social_links?: SocialLink[]
   tags?: string[]
+}
+
+// ---- 跨域配置 ----
+
+export interface CorsConfigRes {
+  allowed_origins: string
+  updated_at: string
+}
+
+export interface UpdateCorsConfigReq {
+  allowed_origins?: string
 }
 
 export interface FrameConfig {

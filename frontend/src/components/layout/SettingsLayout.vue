@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">个人资料</h1>
+      <h1 class="page-title">{{ routeTitle }}</h1>
     </div>
     <div class="settings-content">
       <router-view />
@@ -10,7 +10,14 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const routeTitle = computed(() => {
+  return (route.meta?.title as string) || '个人资料'
+})
 </script>
 
 <style scoped>

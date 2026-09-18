@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -23,7 +24,7 @@ const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
 const referer = "https://www.bilibili.com"
 
 // bvidRegex 校验 BV 号格式：BV 前缀 + 10 位字母数字。
-var bvidRegex = regexp.MustCompile(`^BV[a-zA-Z0-9]{10}$`)
+var bvidRegex = regexp.MustCompile(`BV[a-zA-Z0-9]{10}`)
 
 // VideoPage 视频分P信息。
 type VideoPage struct {
@@ -95,6 +96,15 @@ type biliVideoInfoResp struct {
 	} `json:"data"`
 }
 
+// upgradePicURL 将 B 站返回的 http 封面 URL 升级为 https，
+// 避免在 HTTPS 站点中出现混合内容（Mixed Content）被浏览器拦截。
+func upgradePicURL(pic string) string {
+	if strings.HasPrefix(pic, "http://") {
+		return "https://" + pic[len("http://"):]
+	}
+	return pic
+}
+
 // FetchVideoInfo 调用 B 站 /x/web-interface/view 拉取视频元信息。
 // 官方文档: https://socialsisteryi.github.io/bilibili-API-collect/docs/video/info.html
 func FetchVideoInfo(ctx context.Context, bvid string) (*VideoInfo, error) {
@@ -120,7 +130,7 @@ func FetchVideoInfo(ctx context.Context, bvid string) (*VideoInfo, error) {
 
 	info := &VideoInfo{
 		Title:     body.Data.Title,
-		Pic:       body.Data.Pic,
+		Pic:       upgradePicURL(body.Data.Pic),
 		Desc:      body.Data.Desc,
 		OwnerName: body.Data.Owner.Name,
 		CID:       body.Data.CID,

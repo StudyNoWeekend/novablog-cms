@@ -31,6 +31,14 @@ export interface ThemeDetail extends ThemeItem {
   user_rating: number
 }
 
+/** 主题版本历史条目（官方自 GitHub Release 同步的更新日志） */
+export interface ThemeReleaseItem {
+  version: string
+  tag: string
+  notes: string
+  published_at: string
+}
+
 export interface ThemeStats {
   total: number
   authors: number
@@ -65,13 +73,49 @@ export interface MarketUser {
 
 export interface MarketLoginRes {
   access_token: string
-  refresh_token: string
   expires_in: number
   user: MarketUser
 }
 
 export interface MarketTokenPair {
   access_token: string
-  refresh_token: string
   expires_in: number
+}
+
+/** 已安装主题实例（后台 themes 表） */
+export interface InstalledTheme {
+  id: string
+  theme_id: string
+  name: string
+  version: string
+  engine: string
+  api_compat: string
+  author: string
+  description: string
+  source: 'official' | 'builtin'
+  screenshots: string[]
+  fallbacks: Record<string, string>
+  market_id: number
+  market_slug: string
+  artifact_path: string
+  checksum: string
+  active: boolean
+  created_at: string
+}
+
+/** 首装主题安装任务状态 */
+export interface ThemeInstallStatus {
+  status: 'not_started' | 'running' | 'success' | 'failed'
+  stage: 'fetching' | 'installing' | 'activating' | 'done' | ''
+  message: string
+  theme_id: string
+  theme_name: string
+  theme_version: string
+  started_at?: string | null
+  finished_at?: string | null
+}
+
+/** 主题预览地址（新窗口打开） */
+export function themePreviewURL(themeId: string): string {
+  return `/preview/${themeId}/`
 }

@@ -34,7 +34,7 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 初始化依赖
 	authController := controller.NewAuthController()
-	publicController := controller.NewPublicController()
+	publicController := controller.NewPublicController(storageMgr, cryptoKey)
 	mediaController := controller.NewMediaController(storageMgr)
 	categoryController := controller.NewCategoryController()
 	tagController := controller.NewTagController()
@@ -43,7 +43,7 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	videoController := controller.NewVideoController()
 	equipmentController := controller.NewEquipmentController()
 	travelController := controller.NewTravelGuideController()
-	musicController := controller.NewMusicController()
+	musicController := controller.NewMusicController(storageMgr)
 	commentController := controller.NewCommentController()
 	analyticsController := controller.NewAnalyticsController()
 	securityController := controller.NewSecurityController()
@@ -125,11 +125,31 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	themeMarketController := controller.NewThemeMarketController()
 	RegisterThemeMarketRoutes(api, themeMarketController, authMiddleware)
 
+	// 注册已安装主题管理路由
+	themeController := controller.NewThemeController()
+	RegisterThemeRoutes(api, themeController, authMiddleware)
+
 	// 注册个人资料管理路由
 	RegisterProfileRoutes(api, profileController, authMiddleware)
 
 	// 注册模块开关配置管理路由
 	RegisterModuleConfigRoutes(api, moduleConfigController, authMiddleware)
+
+	// 注册跨域配置管理路由
+	corsConfigController := controller.NewCorsConfigController()
+	RegisterCorsConfigRoutes(api, corsConfigController, authMiddleware)
+
+	// 注册第三方歌单管理路由
+	playlistController := controller.NewPlaylistController()
+	RegisterPlaylistRoutes(api, playlistController, authMiddleware)
+
+	// 博客主题预览路由（以指定主题响应托管逻辑，激活前即可预览真实效果）
+	themeLogic := logic.NewThemeLogic()
+	r.GET("/preview/:theme_id", logic.ThemeHost.PreviewHandler())
+	r.GET("/preview/:theme_id/*path", logic.ThemeHost.PreviewHandler())
+
+	// 博客主题静态托管兜底路由（激活主题；注册于所有业务路由之后）
+	r.NoRoute(logic.ThemeHost.Handler(themeLogic))
 }
 
 // RegisterHealthRouter 注册健康检查路由。

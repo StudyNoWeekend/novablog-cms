@@ -53,6 +53,56 @@ var apiDocs = []APIDocItem{
 		},
 	},
 
+	// 安装引导模块
+	{
+		Module:      "安装引导",
+		Method:      "GET",
+		Path:        "/install/status",
+		Description: "获取系统初始化状态（判断是否首次安装）",
+		Params:      []APIDocParam{},
+		Response: []APIDocField{
+			{Name: "initialized", Type: "bool", Desc: "是否已初始化"},
+		},
+	},
+	{
+		Module:      "安装引导",
+		Method:      "POST",
+		Path:        "/install/init",
+		Description: "首次安装初始化博主账号",
+		Params: []APIDocParam{
+			{Name: "username", Type: "string", Required: true, Desc: "管理员用户名"},
+			{Name: "password", Type: "string", Required: true, Desc: "管理员密码"},
+			{Name: "nickname", Type: "string", Required: true, Desc: "博主昵称"},
+		},
+		Response: []APIDocField{
+			{Name: "token", Type: "string", Desc: "认证令牌"},
+		},
+	},
+	{
+		Module:      "安装引导",
+		Method:      "POST",
+		Path:        "/install/theme",
+		Description: "首装初始化博客外观：拉取官方默认主题并激活",
+		Params: []APIDocParam{
+			{Name: "market_base_url", Type: "string", Required: false, Desc: "官方市场地址（可选，覆盖配置）"},
+		},
+		Response: []APIDocField{
+			{Name: "task_id", Type: "string", Desc: "安装任务ID"},
+			{Name: "status", Type: "string", Desc: "任务状态"},
+		},
+	},
+	{
+		Module:      "安装引导",
+		Method:      "GET",
+		Path:        "/install/theme/status",
+		Description: "查询主题安装任务状态",
+		Params:      []APIDocParam{},
+		Response: []APIDocField{
+			{Name: "status", Type: "string", Desc: "任务状态"},
+			{Name: "progress", Type: "string", Desc: "进度描述"},
+		},
+	},
+
 	// 文章模块
 	{
 		Module:      "文章",
@@ -330,6 +380,44 @@ var apiDocs = []APIDocItem{
 		},
 	},
 
+	// 摄影器材模块
+	{
+		Module:      "摄影器材",
+		Method:      "GET",
+		Path:        "/equipments",
+		Description: "获取已发布摄影器材列表",
+		Params: []APIDocParam{
+			{Name: "page", Type: "int", Required: false, Desc: "页码"},
+			{Name: "page_size", Type: "int", Required: false, Desc: "每页条数"},
+			{Name: "keyword", Type: "string", Required: false, Desc: "名称关键词"},
+		},
+		Response: []APIDocField{
+			{Name: "list", Type: "array", Desc: "器材列表"},
+			{Name: "total", Type: "int", Desc: "总数"},
+			{Name: "page", Type: "int", Desc: "当前页"},
+			{Name: "page_size", Type: "int", Desc: "每页条数"},
+			{Name: "total_pages", Type: "int", Desc: "总页数"},
+		},
+	},
+	{
+		Module:      "摄影器材",
+		Method:      "GET",
+		Path:        "/equipments/:id",
+		Description: "获取摄影器材详情",
+		Params: []APIDocParam{
+			{Name: "id", Type: "string", Required: true, Desc: "器材ID"},
+		},
+		Response: []APIDocField{
+			{Name: "id", Type: "string", Desc: "器材ID"},
+			{Name: "name", Type: "string", Desc: "名称"},
+			{Name: "brand", Type: "string", Desc: "品牌"},
+			{Name: "model", Type: "string", Desc: "型号"},
+			{Name: "description", Type: "string", Desc: "描述"},
+			{Name: "cover_url", Type: "string", Desc: "封面URL"},
+			{Name: "purchase_date", Type: "string", Desc: "购买日期"},
+		},
+	},
+
 	// 视频作品模块
 	{
 		Module:      "视频作品",
@@ -411,6 +499,47 @@ var apiDocs = []APIDocItem{
 		},
 		Response: []APIDocField{
 			{Name: "url", Type: "string", Desc: "音频播放地址"},
+		},
+	},
+	{
+		Module:      "音乐",
+		Method:      "GET",
+		Path:        "/music/playlists",
+		Description: "获取前台展示的歌单列表",
+		Params:      []APIDocParam{},
+		Response: []APIDocField{
+			{Name: "id", Type: "string", Desc: "歌单ID"},
+			{Name: "name", Type: "string", Desc: "歌单名称"},
+			{Name: "cover_url", Type: "string", Desc: "封面URL"},
+			{Name: "song_count", Type: "int", Desc: "歌曲数量"},
+		},
+	},
+
+	// 系统模块
+	{
+		Module:      "系统",
+		Method:      "GET",
+		Path:        "/module-config",
+		Description: "获取模块开关配置",
+		Params:      []APIDocParam{},
+		Response: []APIDocField{
+			{Name: "modules", Type: "object", Desc: "各模块启用状态"},
+		},
+	},
+	{
+		Module:      "系统",
+		Method:      "GET",
+		Path:        "/playlists",
+		Description: "获取前台展示的第三方歌单列表",
+		Params:      []APIDocParam{},
+		Response: []APIDocField{
+			{Name: "id", Type: "string", Desc: "歌单ID"},
+			{Name: "platform", Type: "string", Desc: "平台类型"},
+			{Name: "playlist_id", Type: "string", Desc: "第三方歌单ID"},
+			{Name: "title", Type: "string", Desc: "标题"},
+			{Name: "description", Type: "string", Desc: "描述"},
+			{Name: "cover_url", Type: "string", Desc: "封面URL"},
+			{Name: "song_count", Type: "int", Desc: "歌曲数量"},
 		},
 	},
 }

@@ -140,9 +140,10 @@
               :key="theme.id"
               :theme="theme"
               :favorited="store.favoriteIds.has(theme.id)"
-              @detail="store.openDetail(theme.id)"
+              :installing="installingId === theme.id"
+              @detail="goDetail(theme)"
               @favorite="store.toggleFavorite(theme.id)"
-              @download="store.download(theme.id)"
+              @install="handleInstall(theme)"
             />
           </div>
 
@@ -190,9 +191,10 @@
               :key="theme.id"
               :theme="theme"
               favorited
-              @detail="store.openDetail(theme.id)"
+              :installing="installingId === theme.id"
+              @detail="goDetail(theme)"
               @favorite="store.toggleFavorite(theme.id)"
-              @download="store.download(theme.id)"
+              @install="handleInstall(theme)"
             />
           </div>
 
@@ -209,18 +211,60 @@
             />
           </div>
         </a-tab-pane>
-      </a-tabs>
 
-      <!-- 主题详情抽屉 -->
-      <ThemeDetailDrawer />
+        <!-- 已安装模板 -->
+        <a-tab-pane key="installed" tab="已安装模板">
+          <div v-if="installedLoading && installedList.length === 0" class="market-grid">
+            <div v-for="i in 6" :key="i" class="skeleton-card">
+              <a-skeleton active :paragraph="{ rows: 3 }" />
+            </div>
+          </div>
+
+          <a-result
+            v-else-if="installedError"
+            status="error"
+            title="加载失败"
+            sub-title="获取已安装模板时出错，请重试"
+          >
+            <template #extra>
+              <a-button type="primary" @click="fetchInstalled()">重试</a-button>
+            </template>
+          </a-result>
+
+          <a-empty v-else-if="installedList.length === 0" description="尚未安装任何模板">
+            <a-button type="primary" @click="store.activeTab = 'market'">去模板市场安装</a-button>
+          </a-empty>
+
+          <div v-else class="market-grid">
+            <InstalledThemeCard
+              v-for="theme in installedList"
+              :key="theme.id"
+              :theme="theme"
+              :activating="activatingId === theme.id"
+              :updating="updatingId === theme.id"
+              @activate="handleActivate(theme)"
+              @preview="handlePreview(theme)"
+              @update="handleUpdate(theme)"
+              @uninstall="handleUninstall(theme)"
+            />
+          </div>
+
+          <p class="installed-tip">
+            <GlobalOutlined />
+            启用后访客侧立即生效；「预览」在新窗口打开主题预览页，激活前即可对比真实效果
+          </p>
+        </a-tab-pane>
+      </a-tabs>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, reactive, ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Modal, message } from 'ant-design-vue'
 import {
+  GlobalOutlined,
   LinkOutlined,
   LockOutlined,
   LogoutOutlined,
@@ -228,13 +272,128 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/template'
+import { themeApi } from '@/api/theme'
 import { marketStorage } from '@/utils/storage'
 import { THEME_TYPE_LABELS } from '@/utils/themeDisplay'
+import type { InstalledTheme, ThemeItem } from '@/types/template'
 import { useThemeMarketStore, DEFAULT_MARKET_BASE_URL } from '@/stores/themeMarket'
 import ThemeCard from '@/components/template/ThemeCard.vue'
-import ThemeDetailDrawer from '@/components/template/ThemeDetailDrawer.vue'
+import InstalledThemeCard from '@/components/template/InstalledThemeCard.vue'
 
+const router = useRouter()
 const store = useThemeMarketStore()
+
+/** 跳转主题详情页（含版本历史） */
+function goDetail(theme: ThemeItem) {
+  router.push(`/templates/market/${theme.id}`)
+}
+
+// ===== 已安装模板 =====
+const installedList = ref<InstalledTheme[]>([])
+const installedLoading = ref(false)
+const installedError = ref(false)
+const installingId = ref<number | null>(null)
+const activatingId = ref<string | null>(null)
+const updatingId = ref<string | null>(null)
+// 博客前台独立域名时经 VITE_BLOG_BASE_URL 指定（同域部署留空）
+const blogBase = import.meta.env.VITE_BLOG_BASE_URL || ''
+
+async function fetchInstalled() {
+  installedLoading.value = true
+  installedError.value = false
+  try {
+    installedList.value = await themeApi.getList()
+  } catch {
+    installedError.value = true
+  } finally {
+    installedLoading.value = false
+  }
+}
+
+/** 从官方市场安装主题（长任务：下载/校验/解压/落库） */
+function handleInstall(theme: ThemeItem) {
+  Modal.confirm({
+    title: `安装「${theme.title}」？`,
+    content: '将从官方市场下载预构建制品并安装，完成后可在「已安装模板」中启用',
+    okText: '安装',
+    cancelText: '取消',
+    onOk: async () => {
+      installingId.value = theme.id
+      try {
+        await themeApi.install({ theme_id: theme.id })
+        message.success(`「${theme.title}」安装成功，可在「已安装模板」中启用`)
+        fetchInstalled()
+      } catch {
+        // 失败原因（制品缺失/引擎不支持等）由拦截器统一提示
+      } finally {
+        installingId.value = null
+      }
+    },
+  })
+}
+
+/** 启用主题（切换后访客侧立即生效） */
+function handleActivate(theme: InstalledTheme) {
+  Modal.confirm({
+    title: `启用「${theme.name} v${theme.version}」？`,
+    content: '切换后博客前台将立即更新外观，确认切换？',
+    okText: '启用',
+    cancelText: '取消',
+    onOk: async () => {
+      activatingId.value = theme.id
+      try {
+        await themeApi.activate(theme.id)
+        message.success(`已启用「${theme.name}」，访客侧已生效`)
+        fetchInstalled()
+      } catch {
+        // 错误由拦截器统一提示
+      } finally {
+        activatingId.value = null
+      }
+    },
+  })
+}
+
+/** 预览主题（新窗口打开预览路由） */
+function handlePreview(theme: InstalledTheme) {
+  window.open(`${blogBase}/preview/${theme.theme_id}/`, '_blank', 'noopener')
+}
+
+/** 卸载主题（使用中的主题由后端拒绝并在卡片上禁用） */
+function handleUninstall(theme: InstalledTheme) {
+  installingId.value = null
+  themeApi
+    .uninstall(theme.id)
+    .then(() => {
+      message.success(`已卸载「${theme.name} v${theme.version}」`)
+      fetchInstalled()
+    })
+    .catch(() => {
+      // 错误由拦截器统一提示
+    })
+}
+
+/** 从官方市场更新主题到最新版本 */
+async function handleUpdate(theme: InstalledTheme) {
+  Modal.confirm({
+    title: `更新「${theme.name}」？`,
+    content: '将从官方市场拉取最新版本并重新部署，如果正在使用中将自动切换激活。',
+    okText: '更新',
+    cancelText: '取消',
+    onOk: async () => {
+      updatingId.value = theme.id
+      try {
+        await themeApi.updateTheme(theme.id)
+        message.success(`「${theme.name}」已更新`)
+        fetchInstalled()
+      } catch (e: any) {
+        // "已是最新版本"等错误由拦截器统一提示
+      } finally {
+        updatingId.value = null
+      }
+    },
+  })
+}
 
 // ===== 登录遮罩 =====
 const loginLoading = ref(false)
@@ -301,6 +460,7 @@ const sortOptions = [
 
 function handleTabChange(key: string | number) {
   if (key === 'favorites') store.fetchFavorites()
+  if (key === 'installed') fetchInstalled()
 }
 
 function handlePageChange(page: number) {
@@ -464,5 +624,14 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 32px;
+}
+
+.installed-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--text-color-tertiary, rgba(0, 0, 0, 0.45));
 }
 </style>

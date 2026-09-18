@@ -4,6 +4,7 @@ import (
 	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
+	"novablog/internal/storage"
 	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
@@ -15,8 +16,8 @@ type MusicController struct {
 }
 
 // NewMusicController 创建 MusicController 实例。
-func NewMusicController() *MusicController {
-	return &MusicController{logic: logic.NewMusicLogic()}
+func NewMusicController(manager *storage.Manager) *MusicController {
+	return &MusicController{logic: logic.NewMusicLogic(manager)}
 }
 
 // CreateSong 创建歌曲 POST /api/v1/music/songs

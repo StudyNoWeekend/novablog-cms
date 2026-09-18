@@ -52,21 +52,6 @@ func (c *ThemeMarketController) MarketLogin(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// MarketRefresh 刷新官方 Token POST /api/v1/themes/market/auth/refresh
-func (c *ThemeMarketController) MarketRefresh(ctx *gin.Context) {
-	var r req.MarketRefreshReq
-	if err := ctx.ShouldBindJSON(&r); err != nil {
-		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
-		return
-	}
-	result, err := c.logic.MarketRefresh(ctx.Request.Context(), c.marketBaseURL(ctx), &r)
-	if err != nil {
-		response.HandleError(ctx, err)
-		return
-	}
-	response.Success(ctx, result)
-}
-
 // MarketLogout 登出官方账号 POST /api/v1/themes/market/auth/logout
 func (c *ThemeMarketController) MarketLogout(ctx *gin.Context) {
 	if err := c.logic.MarketLogout(ctx.Request.Context(), c.marketBaseURL(ctx), c.marketToken(ctx)); err != nil {
@@ -102,6 +87,17 @@ func (c *ThemeMarketController) GetDetail(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
+// GetReleases 官方主题版本历史与更新日志 GET /api/v1/themes/market/:id/releases
+func (c *ThemeMarketController) GetReleases(ctx *gin.Context) {
+	id := ctx.Param("id")
+	result, err := c.logic.GetReleases(ctx.Request.Context(), c.marketBaseURL(ctx), c.marketToken(ctx), id)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
 // GetStats 官方市场统计 GET /api/v1/themes/market/stats
 func (c *ThemeMarketController) GetStats(ctx *gin.Context) {
 	result, err := c.logic.GetStats(ctx.Request.Context(), c.marketBaseURL(ctx))
@@ -115,6 +111,16 @@ func (c *ThemeMarketController) GetStats(ctx *gin.Context) {
 // GetHotTags 官方热门风格标签 GET /api/v1/themes/market/hot-tags
 func (c *ThemeMarketController) GetHotTags(ctx *gin.Context) {
 	result, err := c.logic.GetHotTags(ctx.Request.Context(), c.marketBaseURL(ctx))
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetDefault 官方默认主题 GET /api/v1/themes/market/default
+func (c *ThemeMarketController) GetDefault(ctx *gin.Context) {
+	result, err := c.logic.GetDefault(ctx.Request.Context(), c.marketBaseURL(ctx))
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

@@ -11,17 +11,9 @@ type MarketUserRes struct {
 
 // MarketLoginRes 登录官方主题市场响应。
 type MarketLoginRes struct {
-	AccessToken  string        `json:"access_token"`
-	RefreshToken string        `json:"refresh_token"`
-	ExpiresIn    int64         `json:"expires_in"`
-	User         MarketUserRes `json:"user"`
-}
-
-// MarketRefreshRes 刷新官方 Token 响应（官方轮换式，refresh_token 为新值）。
-type MarketRefreshRes struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int64  `json:"expires_in"`
+	AccessToken string        `json:"access_token"`
+	ExpiresIn   int64         `json:"expires_in"`
+	User        MarketUserRes `json:"user"`
 }
 
 // ThemeMarketItemRes 官方主题市场条目（字段与官方 ThemeItem 一致）。
@@ -54,6 +46,14 @@ type ThemeMarketDetailRes struct {
 	UserRating  float64 `json:"user_rating"`
 }
 
+// ThemeMarketReleaseRes 主题版本历史条目（自 GitHub Release 同步的更新日志）。
+type ThemeMarketReleaseRes struct {
+	Version     string `json:"version"`
+	Tag         string `json:"tag"`
+	Notes       string `json:"notes"`
+	PublishedAt string `json:"published_at"`
+}
+
 // ThemeMarketStatsRes 官方主题市场统计。
 type ThemeMarketStatsRes struct {
 	Total     int64 `json:"total"`
@@ -84,5 +84,12 @@ type ThemeMarketRatingRes struct {
 
 // ThemeMarketDownloadRes 下载/安装结果。
 type ThemeMarketDownloadRes struct {
+	DownloadURL string `json:"download_url"`
+}
+
+// ThemeMarketDefaultRes 官方默认主题（部署首装直接拉取）。
+type ThemeMarketDefaultRes struct {
+	ThemeMarketItemRes
+	IsDefault   bool   `json:"is_default"`
 	DownloadURL string `json:"download_url"`
 }

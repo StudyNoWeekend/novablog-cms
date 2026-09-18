@@ -104,9 +104,8 @@ func (l *ThemeMarketLogic) MarketLogin(ctx context.Context, baseURL string, r *r
 	}
 
 	return &res.MarketLoginRes{
-		AccessToken:  pair.AccessToken,
-		RefreshToken: pair.RefreshToken,
-		ExpiresIn:    pair.ExpiresIn,
+		AccessToken: pair.AccessToken,
+		ExpiresIn:   pair.ExpiresIn,
 		User: res.MarketUserRes{
 			ID:       user.ID,
 			Username: user.Username,
@@ -114,25 +113,6 @@ func (l *ThemeMarketLogic) MarketLogin(ctx context.Context, baseURL string, r *r
 			Avatar:   user.Avatar,
 			Role:     user.Role,
 		},
-	}, nil
-}
-
-// MarketRefresh 刷新官方 Token（官方轮换式，返回新双 Token）。
-func (l *ThemeMarketLogic) MarketRefresh(ctx context.Context, baseURL string, r *req.MarketRefreshReq) (*res.MarketRefreshRes, error) {
-	base, err := normalizeBaseURL(baseURL)
-	if err != nil {
-		return nil, err
-	}
-
-	pair, err := novablogapi.RefreshToken(ctx, base, r.RefreshToken)
-	if err != nil {
-		return nil, mapUpstreamError(err)
-	}
-
-	return &res.MarketRefreshRes{
-		AccessToken:  pair.AccessToken,
-		RefreshToken: pair.RefreshToken,
-		ExpiresIn:    pair.ExpiresIn,
 	}, nil
 }
 
@@ -194,6 +174,30 @@ func (l *ThemeMarketLogic) GetDetail(ctx context.Context, baseURL, token, id str
 		Liked:              detail.Liked,
 		UserRating:         detail.UserRating,
 	}, nil
+}
+
+// GetReleases 查询主题版本历史与更新日志（按发布时间倒序，无记录返回空数组）。
+func (l *ThemeMarketLogic) GetReleases(ctx context.Context, baseURL, token, id string) ([]res.ThemeMarketReleaseRes, error) {
+	base, err := normalizeBaseURL(baseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	items, err := novablogapi.GetThemeReleases(ctx, base, id, token)
+	if err != nil {
+		return nil, mapUpstreamError(err)
+	}
+
+	result := make([]res.ThemeMarketReleaseRes, 0, len(items))
+	for _, it := range items {
+		result = append(result, res.ThemeMarketReleaseRes{
+			Version:     it.Version,
+			Tag:         it.Tag,
+			Notes:       it.Notes,
+			PublishedAt: it.PublishedAt,
+		})
+	}
+	return result, nil
 }
 
 // GetStats 查询市场统计。
@@ -319,4 +323,22 @@ func (l *ThemeMarketLogic) GetFavoriteIds(ctx context.Context, baseURL, token st
 		ids = []int64{}
 	}
 	return ids, nil
+}
+
+// GetDefault 查询官方默认主题（部署首装直接拉取；未设置或已下架时官方返回 404）。
+func (l *ThemeMarketLogic) GetDefault(ctx context.Context, baseURL string) (*res.ThemeMarketDefaultRes, error) {
+	base, err := normalizeBaseURL(baseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	dt, err := novablogapi.GetDefaultTheme(ctx, base)
+	if err != nil {
+		return nil, mapUpstreamError(err)
+	}
+	return &res.ThemeMarketDefaultRes{
+		ThemeMarketItemRes: mapThemeItem(dt.ThemeItem),
+		IsDefault:          dt.IsDefault,
+		DownloadURL:        dt.DownloadURL,
+	}, nil
 }

@@ -24,12 +24,14 @@ type Blogger struct {
 	Avatar          string         `gorm:"type:varchar(500)"`                     // 头像 URL
 	Bio             string         `gorm:"type:text"`                             // 个人简介
 	Email           string         `gorm:"type:varchar(100)"`                     // 邮箱
+	City            string         `gorm:"type:varchar(100)"`                     // 所在城市（省/市）
 	BlogTitle       string         `gorm:"type:varchar(100)"`                     // 博客标题
 	BlogDescription string         `gorm:"type:text"`                             // 博客描述
 	BlogIcon        string         `gorm:"type:varchar(500)"`                     // 博客 icon 图 URL
 	PageBackground  string         `gorm:"type:varchar(500)"`                     // 页面背景图 URL
 	SocialLinks     string         `gorm:"type:jsonb"`                            // 社交平台链接 JSON 数组
 	Tags            string         `gorm:"type:jsonb"`                            // 标签 JSON 字符串数组
+	ActiveThemeID   *string        `gorm:"type:uuid;index"`                       // 激活主题实例 ID（themes.id，nil=未激活）
 	LastLoginAt     *time.Time     `gorm:"type:timestamptz"`                      // 最后登录时间
 	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间
 	UpdatedAt       time.Time      `gorm:"type:timestamptz;autoUpdateTime"`       // 更新时间
@@ -39,6 +41,17 @@ type Blogger struct {
 // TableName 指定数据表名称。
 func (Blogger) TableName() string {
 	return "bloggers"
+}
+
+// BeforeCreate GORM 创建前钩子：确保 JSONB 字段为合法 JSON，避免空字符串触发 PostgreSQL 22P02。
+func (b *Blogger) BeforeCreate(tx *gorm.DB) error {
+	if b.SocialLinks == "" {
+		b.SocialLinks = "[]"
+	}
+	if b.Tags == "" {
+		b.Tags = "[]"
+	}
+	return nil
 }
 
 // AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
@@ -113,4 +126,13 @@ func (m *BloggerModel) GetFirst(ctx context.Context) (*Blogger, error) {
 		return nil, err
 	}
 	return &blogger, nil
+}
+
+// UpdateActiveTheme 更新激活主题指针（themeID 传空串表示取消激活）。
+func (m *BloggerModel) UpdateActiveTheme(ctx context.Context, id, themeID string) error {
+	var ptr *string
+	if themeID != "" {
+		ptr = &themeID
+	}
+	return m.db.WithContext(ctx).Model(&Blogger{}).Where("id = ?", id).Update("active_theme_id", ptr).Error
 }

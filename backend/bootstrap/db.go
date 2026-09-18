@@ -126,5 +126,9 @@ func autoMigrate(db *gorm.DB) error {
 		&model.IPBlacklist{},
 		&model.AccessLog{},
 		&model.ModuleConfig{},
+		&model.Theme{},
+		&model.PhotoEquipment{},
+		&model.CorsConfig{},
+		&model.ThirdPartyPlaylist{},
 	)
 }

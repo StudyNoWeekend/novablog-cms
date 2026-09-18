@@ -42,9 +42,9 @@
         <template #icon><StarFilled v-if="favorited" /><StarOutlined v-else /></template>
         {{ favorited ? '已收藏' : '收藏' }}
       </a-button>
-      <a-button size="small" type="primary" @click="emit('download')">
-        <template #icon><DownloadOutlined /></template>
-        下载
+      <a-button size="small" type="primary" :loading="installing" @click="emit('install')">
+        <template #icon><CloudDownloadOutlined /></template>
+        安装
       </a-button>
     </div>
   </div>
@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import {
+  CloudDownloadOutlined,
   DownloadOutlined,
   HeartOutlined,
   StarFilled,
@@ -65,12 +66,13 @@ import { isPreviewURL, themeGradient, themeStatusText, THEME_TYPE_LABELS } from 
 const props = defineProps<{
   theme: ThemeItem
   favorited?: boolean
+  installing?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'detail'): void
   (e: 'favorite'): void
-  (e: 'download'): void
+  (e: 'install'): void
 }>()
 
 const coverFailed = ref(false)

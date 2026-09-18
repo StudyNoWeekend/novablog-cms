@@ -69,6 +69,26 @@
         />
       </a-form-item>
 
+      <a-form-item label="邮箱">
+        <a-input
+          v-model:value="form.email"
+          type="email"
+          placeholder="请输入邮箱"
+          :maxlength="100"
+        />
+      </a-form-item>
+
+      <a-form-item label="所在城市">
+        <a-cascader
+          v-model:value="cityValue"
+          :options="CHINA_REGIONS"
+          placeholder="请选择省/市"
+          :allow-clear="true"
+          :show-search="{ filter }"
+          style="width: 100%"
+        />
+      </a-form-item>
+
       <a-form-item label="介绍">
         <a-textarea
           v-model:value="form.bio"
@@ -171,11 +191,13 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, nextTick } from 'vue'
+import { reactive, ref, onMounted, nextTick, watch } from 'vue'
 import { message } from 'ant-design-vue'
 import { authApi } from '@/api/auth'
 import type { UpdateProfileReq, SocialLink } from '@/types/api'
 import { SOCIAL_PLATFORMS } from '@/components/profile/socialPlatforms'
+import { CHINA_REGIONS } from '@/assets/data/china-regions'
+import type { CascaderOption } from 'ant-design-vue/es/cascader'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -187,17 +209,31 @@ const form = reactive<UpdateProfileReq>({
   nickname: '',
   avatar: '',
   bio: '',
+  email: '',
   page_background: '',
   blog_icon: '',
   blog_title: '',
   blog_description: '',
 })
 
+// 城市级联选择器值：['广东省', '广州市']
+const cityValue = ref<string[]>([])
+
 const socialLinks = ref<SocialLink[]>([])
 const tags = ref<string[]>([])
 const inputVisible = ref(false)
 const inputValue = ref('')
 const inputRef = ref()
+
+// 城市值变化时同步到 form.city
+watch(cityValue, (val) => {
+  form.city = val.length > 0 ? val.join('/') : ''
+})
+
+// 级联选择器搜索
+function filter(inputValue: string, path: CascaderOption[]): boolean {
+  return path.some((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()))
+}
 
 function addSocialLink() {
   socialLinks.value.push({ platform: '', url: '', sort_order: socialLinks.value.length })
@@ -239,10 +275,13 @@ async function loadProfile() {
     form.nickname = data.nickname || ''
     form.avatar = data.avatar || ''
     form.bio = data.bio || ''
+    form.email = data.email || ''
     form.page_background = data.page_background || ''
     form.blog_icon = data.blog_icon || ''
     form.blog_title = data.blog_title || ''
     form.blog_description = data.blog_description || ''
+    // 城市：拆分 "广东省/广州市" → ['广东省', '广州市']
+    cityValue.value = data.city ? data.city.split('/') : []
     socialLinks.value = data.social_links || []
     tags.value = data.tags || []
   } catch {
