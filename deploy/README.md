@@ -95,6 +95,25 @@ cd deploy
 
 > 外部数据库在容器内访问宿主机时，主机名可用 `host.docker.internal`（Linux 下需 `--add-host=host.docker.internal:host-gateway`，compose 已默认处理该场景的解析）。
 
+## 单独脚本部署（免克隆仓库）
+
+`deploy.sh` 支持脱离仓库单独运行：只把脚本拷到服务器任意目录（或用一行命令下载），执行时会**自动检测并在线拉取缺失的 compose 文件**（`docker-compose.yml`、内置 PG/Redis 的 overlay 等）。已存在的文件不会被覆盖。
+
+```bash
+mkdir -p /srv/novablog && cd /srv/novablog
+curl -fsSL https://raw.githubusercontent.com/StudyNoWeekend/novablog-cms/main/deploy/deploy.sh -o deploy.sh
+chmod +x deploy.sh
+
+./deploy.sh --version v1.0.1        # 首次运行自动补齐 compose 文件并部署
+./deploy.sh --status | --logs | --down
+```
+
+说明：
+
+- **拉取源**：默认依次尝试 `raw.githubusercontent.com` 与 `cdn.jsdelivr.net`（国内网络友好）；指定 `--version vX.Y.Z` 时按同名 tag 拉取，保证 compose 与镜像版本一致。
+- **镜像源覆盖**：内网/自建源可导出环境变量 `NOVABLOG_RAW_BASE`（URL 前缀，不含文件名，如 `https://mirror.example.com/novablog/main/deploy`），设置后仅使用该源。
+- **`--build` 例外**：本地构建镜像需要完整仓库（`frontend/`、`backend/` 等），脚本会检测并在缺失时明确提示，请 `git clone` 后在仓库 `deploy/` 目录内运行。
+
 ## 镜像版本号与升级
 
 - 镜像：`ghcr.io/studynoweekend/novablog-cms:<tag>`，同时提供 `linux/amd64` 与 `linux/arm64`；

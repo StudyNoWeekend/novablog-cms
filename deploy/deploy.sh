@@ -238,6 +238,59 @@ command -v docker >/dev/null 2>&1 || die "未找到 docker，请先安装 Docker
 docker info >/dev/null 2>&1 || die "无法连接 Docker 守护进程，请确认 Docker 已启动"
 docker compose version >/dev/null 2>&1 || die "未找到 docker compose（需 Compose V2）"
 
+# ============================== 依赖文件在线自举 ==============================
+# 脚本支持脱离仓库单独运行：compose 依赖文件缺失时自动从 GitHub 在线拉取。
+# 已存在的文件绝不覆盖（仓库克隆场景行为不变）。
+# 国内网络可导出 NOVABLOG_RAW_BASE 指向自建/镜像源（URL 前缀，不含文件名）。
+RAW_REF="main"
+case "$VERSION" in v[0-9]*) RAW_REF="$VERSION" ;; esac
+
+fetch_url() { # $1=url $2=目标文件
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$1" -o "$2"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$2" "$1"
+  else
+    return 127
+  fi
+}
+
+fetch_missing_file() { # $1=文件名（相对 deploy/ 目录）
+  local f="$1" dest="$SCRIPT_DIR/$1" url src
+  [ -f "$dest" ] && return 0
+  local sources=()
+  if [ -n "${NOVABLOG_RAW_BASE:-}" ]; then
+    sources=("$NOVABLOG_RAW_BASE")
+  else
+    sources=(
+      "https://raw.githubusercontent.com/StudyNoWeekend/novablog-cms/${RAW_REF}/deploy"
+      "https://cdn.jsdelivr.net/gh/StudyNoWeekend/novablog-cms@${RAW_REF}/deploy"
+    )
+  fi
+  for src in "${sources[@]}"; do
+    url="${src%/}/$f"
+    c_info "缺失 ${f}，尝试在线拉取：${url}"
+    if fetch_url "$url" "$dest" && [ -s "$dest" ] && grep -q '^services:' "$dest" 2>/dev/null; then
+      c_info "已下载 $f"
+      return 0
+    fi
+    rm -f "$dest"
+  done
+  c_err "在线拉取 $f 失败。请检查网络后重试，或手动下载放到 $dest"
+  c_err "  curl -fsSL ${sources[0]%/}/$f -o $dest"
+  return 1
+}
+
+# ensure_compose_files 预检 docker compose 参数中的 -f 文件，缺失则在线拉取
+ensure_compose_files() {
+  local arg
+  for arg in "$@"; do
+    [ "$arg" = "-f" ] && continue
+    case "$arg" in -*) continue ;; esac
+    fetch_missing_file "$arg" || exit 1
+  done
+}
+
 compose_files() {
   local files=(-f docker-compose.yml)
   [ "$DB_MODE" = "local" ] && files+=(-f docker-compose.local-pg.yml)
@@ -260,6 +313,7 @@ run_compose() {
   local f
   local args=()
   while IFS= read -r f; do [ -n "$f" ] && args+=("$f"); done < <(compose_files)
+  ensure_compose_files "${args[@]}"
   docker compose "${args[@]}" "$@"
 }
 
@@ -267,6 +321,7 @@ run_compose_from_env() {
   local f
   local args=()
   while IFS= read -r f; do [ -n "$f" ] && args+=("$f"); done < <(compose_files_from_env)
+  ensure_compose_files "${args[@]}"
   docker compose "${args[@]}" "$@"
 }
 
@@ -289,6 +344,11 @@ case "$ACTION" in
     exit 0
     ;;
 esac
+
+# --build 需要完整仓库作为构建上下文（frontend/ backend/ 等），缺失时早失败（仅部署路径）
+if [ "$BUILD" = 1 ] && { [ ! -f "$SCRIPT_DIR/Dockerfile" ] || [ ! -d "$SCRIPT_DIR/../backend" ]; }; then
+  die "--build 需要完整仓库（构建上下文为仓库根，需 frontend/ 与 backend/）。请 git clone 仓库后在 deploy/ 目录内运行，或去掉 --build 直接使用线上镜像。"
+fi
 
 # ============================== 收集配置 ==============================
 if [ -f "$ENV_FILE" ]; then
