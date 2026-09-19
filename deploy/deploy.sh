@@ -317,9 +317,9 @@ echo
 c_info "===== 入口端口 ====="
 BLOG_PORT="$(ask '博客前端端口' "${BLOG_PORT:-80}")"
 ADMIN_PORT="$(ask 'CMS 后台端口' "${ADMIN_PORT:-8080}")"
-PUBLIC_URL="$(ask '博客对外访问地址（用于媒体文件 URL）' "${PUBLIC_URL:-http://localhost:$BLOG_PORT}")"
-DOMAIN="$(ask '博客入口域名（任意域名/IP 填 _）' "${DOMAIN:-_}")"
-ADMIN_DOMAIN="$(ask '后台入口域名（任意域名/IP 填 _）' "${ADMIN_DOMAIN:-_}")"
+PUBLIC_URL="$(ask '博客对外访问地址（用于媒体文件 URL，填访客实际访问地址，带反代时不带端口）' "${PUBLIC_URL:-http://localhost:$BLOG_PORT}")"
+DOMAIN="$(ask '博客入口域名（裸域名如 blog.example.com，不带 http://；任意域名/IP 填 _）' "${DOMAIN:-_}")"
+ADMIN_DOMAIN="$(ask '后台入口域名（裸域名，不带 http://；任意域名/IP 填 _）' "${ADMIN_DOMAIN:-_}")"
 
 echo
 c_info "===== PostgreSQL ====="

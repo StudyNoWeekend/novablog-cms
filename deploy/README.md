@@ -104,6 +104,65 @@ cd deploy
 - 回退：`./deploy.sh --version v1.0.0`；
 - 确认运行版本：`curl http://<主机>:<博客端口>/health` 返回 `{"status":"ok","version":"v1.0.1"}`。
 
+## 外层 nginx 反代部署（免端口访问）
+
+镜像**自带容器内 nginx**（统一入口 + 静态托管），宿主机无需为 NovaBlog 额外安装 nginx。若宿主机已有 nginx（如承载主域名），可将二级域名反代到映射端口，实现 80/443 免端口访问。
+
+**① deploy.sh 填法（反代场景）**
+
+```
+博客前端端口: 9001
+CMS 后台端口: 9002
+博客对外访问地址: http://blog.example.com   ← 访客实际访问地址，走反代时不带端口！
+博客入口域名: blog.example.com              ← 裸域名，不带 http://
+后台入口域名: cms.example.com               ← 裸域名，不带 http://
+```
+
+> 「博客对外访问地址」写入 `upload.base_url`，决定媒体文件 URL 形态：直接带端口访问时须填 `http://域名:端口`；走反代时填反代后的对外地址。域名值渲染进 nginx `server_name`，必须为裸域名，带 `http://` 会使域名匹配失效。
+
+**② 宿主机 nginx 反代配置**
+
+完整示例见 [`nginx/host-proxy.example.conf`](nginx/host-proxy.example.conf)，核心两块：
+
+```nginx
+server {
+    listen 80;
+    server_name blog.example.com;
+    client_max_body_size 200m;        # 必设！默认 1m 会导致媒体上传/主题安装 413
+    location / {
+        proxy_pass http://127.0.0.1:9001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name cms.example.com;
+    client_max_body_size 200m;
+    location / {
+        proxy_pass http://127.0.0.1:9002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+修改后 `nginx -t && nginx -s reload` 生效。
+
+**③ DNS 与安全组**
+
+- 两个子域名 A 记录解析到本机 IP；
+- 映射端口（9001/9002）无需对公网开放——反代仅走本机回环，安全组只保留 80/443。
+
+**④ 后续启用 HTTPS**
+
+证书配在宿主机 nginx 的 443 server 块（反代写法同上），生效后重跑 `./deploy.sh --version <tag>`，将「博客对外访问地址」改为 `https://blog.example.com`（媒体 URL 随协议切换，已有数据不受影响）。
+
 ## 手动 Compose（不使用脚本）
 
 ```bash
