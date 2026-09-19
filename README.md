@@ -286,7 +286,7 @@ cd deploy
 ./deploy.sh --yes
 
 # 指定镜像版本与外部数据库
-./deploy.sh --version v1.0.0 --db external --db-host 10.0.0.5 --db-password '***'
+./deploy.sh --version v1.0.1 --db external --db-host 10.0.0.5 --db-password '***'
 ```
 
 启动后：
@@ -675,7 +675,7 @@ nginx 入口、Go 后端与管理后台前端已合并在**一个镜像**内，�
 cd deploy
 ./deploy.sh                 # 交互式问答：端口、PG/Redis、挂载目录
 ./deploy.sh --yes           # 全部默认：内置 PG/Redis，端口 80 / 8080，版本 latest
-./deploy.sh --version v1.0.0 --db external --db-host 10.0.0.5 --db-password '***'
+./deploy.sh --version v1.0.1 --db external --db-host 10.0.0.5 --db-password '***'
 ```
 
 脚本会生成 `deploy/.env` 与 `config.yaml`，按选择拼接 compose 文件并启动容器。

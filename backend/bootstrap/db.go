@@ -130,5 +130,6 @@ func autoMigrate(db *gorm.DB) error {
 		&model.PhotoEquipment{},
 		&model.CorsConfig{},
 		&model.ThirdPartyPlaylist{},
+		&model.ThemeMarketConfig{},
 	)
 }

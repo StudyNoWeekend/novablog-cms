@@ -16,7 +16,7 @@
         <p class="market-login__desc">连接官方主题市场后，可浏览模板并进行点赞、收藏、评分与下载</p>
         <a-form :model="loginForm" layout="vertical" autocomplete="off" @finish="handleLogin">
           <a-form-item label="官方地址" name="baseURL" :rules="baseURLRules">
-            <a-input v-model:value="loginForm.baseURL" placeholder="http://localhost:8081" allow-clear>
+            <a-input v-model:value="loginForm.baseURL" :placeholder="store.defaultBaseURL || '请输入官方市场地址'" allow-clear>
               <template #prefix><LinkOutlined /></template>
             </a-input>
           </a-form-item>
@@ -35,6 +35,25 @@
       </div>
     </a-modal>
 
+    <!-- 官方地址设置弹窗 -->
+    <a-modal
+      v-model:open="marketConfigOpen"
+      title="官方市场地址"
+      :confirm-loading="marketConfigSaving"
+      ok-text="保存"
+      cancel-text="取消"
+      @ok="handleSaveMarketConfig"
+    >
+      <a-form layout="vertical" autocomplete="off">
+        <a-form-item label="官方地址" :validate-status="marketConfigError ? 'error' : ''" :help="marketConfigError">
+          <a-input v-model:value="marketConfigURL" :placeholder="store.defaultBaseURL || '请输入官方市场地址'" allow-clear>
+            <template #prefix><LinkOutlined /></template>
+          </a-input>
+        </a-form-item>
+        <p class="market-config-tip">保存后持久化到服务端并立即生效，将作为所有端的全局默认官方地址</p>
+      </a-form>
+    </a-modal>
+
     <template v-if="store.loggedIn">
       <div class="page-header">
         <h1 class="page-title">模板风格</h1>
@@ -42,6 +61,10 @@
           <span v-if="store.marketUser" class="market-account">
             <UserOutlined /> {{ store.marketUser.username }}
           </span>
+          <a-button @click="openMarketConfig">
+            <template #icon><SettingOutlined /></template>
+            官方地址
+          </a-button>
           <a-button @click="handleLogout">
             <template #icon><LogoutOutlined /></template>
             退出登录
@@ -268,15 +291,17 @@ import {
   LinkOutlined,
   LockOutlined,
   LogoutOutlined,
+  SettingOutlined,
   SkinOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/template'
+import { configApi } from '@/api/config'
 import { themeApi } from '@/api/theme'
 import { marketStorage } from '@/utils/storage'
 import { THEME_TYPE_LABELS } from '@/utils/themeDisplay'
 import type { InstalledTheme, ThemeItem } from '@/types/template'
-import { useThemeMarketStore, DEFAULT_MARKET_BASE_URL } from '@/stores/themeMarket'
+import { useThemeMarketStore } from '@/stores/themeMarket'
 import ThemeCard from '@/components/template/ThemeCard.vue'
 import InstalledThemeCard from '@/components/template/InstalledThemeCard.vue'
 
@@ -398,7 +423,7 @@ async function handleUpdate(theme: InstalledTheme) {
 // ===== 登录遮罩 =====
 const loginLoading = ref(false)
 const loginForm = reactive({
-  baseURL: marketStorage.getBaseURL() || DEFAULT_MARKET_BASE_URL,
+  baseURL: marketStorage.getBaseURL() || '',
   email: '',
   password: '',
 })
@@ -434,6 +459,40 @@ function handleLogout() {
     cancelText: '取消',
     onOk: () => store.logout(),
   })
+}
+
+// ===== 官方地址设置 =====
+const marketConfigOpen = ref(false)
+const marketConfigURL = ref('')
+const marketConfigSaving = ref(false)
+const marketConfigError = ref('')
+
+function openMarketConfig() {
+  marketConfigURL.value = store.defaultBaseURL
+  marketConfigError.value = ''
+  marketConfigOpen.value = true
+}
+
+async function handleSaveMarketConfig() {
+  const url = marketConfigURL.value.trim()
+  if (!/^https?:\/\//.test(url)) {
+    marketConfigError.value = '官方地址需以 http:// 或 https:// 开头'
+    return
+  }
+  marketConfigSaving.value = true
+  try {
+    await configApi.updateThemeMarketConfig({ market_base_url: url })
+    store.defaultBaseURL = url
+    store.marketBaseURL = url
+    // 本浏览器后续安装/更新请求头同步使用新地址
+    marketStorage.setBaseURL(url)
+    marketConfigOpen.value = false
+    message.success('官方地址已保存并全局生效')
+  } catch {
+    // 错误由拦截器统一提示
+  } finally {
+    marketConfigSaving.value = false
+  }
 }
 
 // 官方登录失效（Token 刷新失败）时弹回登录遮罩
@@ -485,8 +544,11 @@ function handleFavPageSizeChange(_page: number, size: number) {
   store.fetchFavorites()
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener(MARKET_AUTH_EXPIRED_EVENT, handleAuthExpiredEvent)
+  // 官方地址默认值由后端下发，登录弹窗预填
+  await store.fetchDefaultBaseURL()
+  if (!loginForm.baseURL && store.defaultBaseURL) loginForm.baseURL = store.defaultBaseURL
   if (store.loggedIn) {
     // 页面刷新后恢复数据（登录态持久于 localStorage）
     if (!store.list.length) store.fetchList()
@@ -537,6 +599,14 @@ onUnmounted(() => {
 
 .market-login :deep(.ant-form) {
   text-align: left;
+}
+
+/* ===== 官方地址设置 ===== */
+.market-config-tip {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-color-secondary, rgba(0, 0, 0, 0.45));
 }
 
 /* ===== 页头 ===== */

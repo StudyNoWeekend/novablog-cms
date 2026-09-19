@@ -71,6 +71,23 @@ export interface UpdateCorsConfigReq {
   allowed_origins?: string
 }
 
+// ---- 官方主题市场配置 ----
+
+/** 官方市场配置（管理端） */
+export interface ThemeMarketConfigRes {
+  market_base_url: string
+  updated_at: string
+}
+
+export interface UpdateThemeMarketConfigReq {
+  market_base_url: string
+}
+
+/** 公共配置下发（免鉴权，默认值由后端控制） */
+export interface PublicConfigRes {
+  market_base_url: string
+}
+
 export interface FrameConfig {
   template: 'gallery' | 'movie' | 'floating'
   fontScale: number

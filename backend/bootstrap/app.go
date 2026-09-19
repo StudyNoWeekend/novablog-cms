@@ -89,6 +89,13 @@ func NewApp(cfgPath string) (*App, error) {
 	})
 	logic.ThemeLogger = logger
 
+	// 官方市场地址：DB 持久化值（首装向导/市场登录/后台修改）优先于 config.yaml 出厂值
+	if marketConfig, err := logic.NewThemeMarketConfigLogic().GetConfig(context.Background()); err == nil {
+		logic.SetThemeMarketBaseURL(marketConfig.MarketBaseURL)
+	} else {
+		logger.Warn("读取官方市场配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
+	}
+
 	// 注入跨域配置：优先级 config.yaml → DB 持久化值 → env 变量（中间件内处理）
 	corsLogic := logic.NewCorsConfigLogic()
 	// 1. 从 config.yaml 读取作为初始值

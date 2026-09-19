@@ -80,7 +80,7 @@ cd deploy
 
 ```bash
 # 指定版本 + 外部 PostgreSQL/Redis + 自定义挂载目录
-./deploy.sh --version v1.0.0 \
+./deploy.sh --version v1.0.1 \
   --db external --db-host 10.0.0.5 --db-user novablog --db-password '***' --db-name novablog \
   --redis external --redis-host 10.0.0.6 --redis-password '***' \
   --blog-port 80 --admin-port 8080 \
@@ -102,7 +102,7 @@ cd deploy
 - 不指定 `--version` 时使用 `latest`；
 - 升级：`./deploy.sh --version v1.0.1`（自动拉取新镜像并重建容器，挂载目录中的数据保留）；
 - 回退：`./deploy.sh --version v1.0.0`；
-- 确认运行版本：`curl http://<主机>:<博客端口>/health` 返回 `{"status":"ok","version":"v1.0.0"}`。
+- 确认运行版本：`curl http://<主机>:<博客端口>/health` 返回 `{"status":"ok","version":"v1.0.1"}`。
 
 ## 手动 Compose（不使用脚本）
 

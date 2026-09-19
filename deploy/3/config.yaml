@@ -53,7 +53,7 @@ security:
 themes:
   data_dir: /app/data/themes
   frontend_dir: "/app/blog-frontend"
-  market_base_url: ""
+  market_base_url: "http://novablogapi.ditancafebar.cn"
   github_token: ""
   public_api_base: ""
   max_artifact_mb: 100

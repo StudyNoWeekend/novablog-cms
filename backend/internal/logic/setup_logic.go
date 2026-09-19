@@ -213,10 +213,11 @@ func (l *SetupLogic) StartThemeInstall(ctx context.Context, marketBaseURL string
 		return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "请先完成博主账号初始化", enum.ErrInvalidParam.HttpCode)
 	}
 
-	// 用向导传入的地址覆盖配置（如非空）
+	// 用向导传入的地址覆盖配置并持久化（如非空），重启后依然生效
 	if marketBaseURL != "" {
-		ts := getThemeSettings()
-		ts.MarketBaseURL = marketBaseURL
+		if err := NewThemeMarketConfigLogic().SyncMarketBaseURL(ctx, marketBaseURL); err != nil {
+			return nil, err
+		}
 	}
 
 	themeLogic := NewThemeLogic()

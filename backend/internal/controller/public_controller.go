@@ -16,37 +16,39 @@ import (
 
 // PublicController 公开接口控制器结构体。
 type PublicController struct {
-	setupLogic        *logic.SetupLogic
-	articleLogic      *logic.ArticleLogic
-	categoryLogic     *logic.CategoryLogic
-	tagLogic          *logic.TagLogic
-	bloggerLogic      *logic.BloggerLogic
-	commentLogic      *logic.CommentLogic
-	travelLogic       *logic.TravelGuideLogic
-	portfolioLogic    *logic.PortfolioLogic
-	videoLogic        *logic.VideoLogic
-	musicLogic        *logic.MusicLogic
-	equipmentLogic    *logic.EquipmentLogic
-	moduleConfigLogic *logic.ModuleConfigLogic
-	playlistLogic     *logic.ThirdPartyPlaylistLogic
+	setupLogic             *logic.SetupLogic
+	articleLogic           *logic.ArticleLogic
+	categoryLogic          *logic.CategoryLogic
+	tagLogic               *logic.TagLogic
+	bloggerLogic           *logic.BloggerLogic
+	commentLogic           *logic.CommentLogic
+	travelLogic            *logic.TravelGuideLogic
+	portfolioLogic         *logic.PortfolioLogic
+	videoLogic             *logic.VideoLogic
+	musicLogic             *logic.MusicLogic
+	equipmentLogic         *logic.EquipmentLogic
+	moduleConfigLogic      *logic.ModuleConfigLogic
+	playlistLogic          *logic.ThirdPartyPlaylistLogic
+	themeMarketConfigLogic *logic.ThemeMarketConfigLogic
 }
 
 // NewPublicController 创建 PublicController 实例。
 func NewPublicController(manager *storage.Manager, cryptoKey string) *PublicController {
 	return &PublicController{
-		setupLogic:        logic.NewSetupLogic(manager, cryptoKey),
-		articleLogic:      logic.NewArticleLogic(),
-		categoryLogic:     logic.NewCategoryLogic(),
-		tagLogic:          logic.NewTagLogic(),
-		bloggerLogic:      logic.NewBloggerLogic(),
-		commentLogic:      logic.NewCommentLogic(),
-		travelLogic:       logic.NewTravelGuideLogic(),
-		portfolioLogic:    logic.NewPortfolioLogic(),
-		videoLogic:        logic.NewVideoLogic(),
-		musicLogic:        logic.NewMusicLogic(manager),
-		equipmentLogic:    logic.NewEquipmentLogic(),
-		moduleConfigLogic: logic.NewModuleConfigLogic(),
-		playlistLogic:     logic.NewThirdPartyPlaylistLogic(),
+		setupLogic:             logic.NewSetupLogic(manager, cryptoKey),
+		articleLogic:           logic.NewArticleLogic(),
+		categoryLogic:          logic.NewCategoryLogic(),
+		tagLogic:               logic.NewTagLogic(),
+		bloggerLogic:           logic.NewBloggerLogic(),
+		commentLogic:           logic.NewCommentLogic(),
+		travelLogic:            logic.NewTravelGuideLogic(),
+		portfolioLogic:         logic.NewPortfolioLogic(),
+		videoLogic:             logic.NewVideoLogic(),
+		musicLogic:             logic.NewMusicLogic(manager),
+		equipmentLogic:         logic.NewEquipmentLogic(),
+		moduleConfigLogic:      logic.NewModuleConfigLogic(),
+		playlistLogic:          logic.NewThirdPartyPlaylistLogic(),
+		themeMarketConfigLogic: logic.NewThemeMarketConfigLogic(),
 	}
 }
 
@@ -64,6 +66,16 @@ func (ctrl *PublicController) GetStatus(c *gin.Context) {
 	}
 
 	response.Success(c, statusRes)
+}
+
+// GetPublicConfig 公共配置下发（免鉴权）：官方市场地址默认值由后端控制。
+func (ctrl *PublicController) GetPublicConfig(c *gin.Context) {
+	config, err := ctrl.themeMarketConfigLogic.GetPublicConfig(c.Request.Context())
+	if err != nil {
+		response.Fail(c, enum.ErrInternalServer.Code, enum.ErrInternalServer.Msg, enum.ErrInternalServer.HttpCode)
+		return
+	}
+	response.Success(c, config)
 }
 
 // Init 初始化博主账号。

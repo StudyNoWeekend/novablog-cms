@@ -1,6 +1,6 @@
 // Package novablogapi 提供 NovaBlog 官方主题市场 API 的 HTTP 客户端。
 //
-// 官方接口契约见 novablog 仓库 docs/NovaBlog接口文档.md（Base URL 形如 http://localhost:8081/api/v1）。
+// 官方接口契约见 novablog 仓库 docs/NovaBlog接口文档.md（Base URL 形如 http://novablogapi.ditancafebar.cn/api/v1）。
 // 所有方法均为无状态纯转发：官方地址与 Token 由调用方显式传入，
 // 本包不缓存任何凭据，登录态管理由前端负责、错误映射由 logic 层编排。
 package novablogapi
@@ -43,7 +43,7 @@ type APIError struct {
 func (e *APIError) Error() string { return e.Message }
 
 // NormalizeBaseURL 归一化官方地址：去尾部斜杠，未携带 /api/v1 前缀时自动补全。
-// 允许输入 http://localhost:8081 或 http://localhost:8081/api/v1 两种形式。
+// 允许输入 http://novablogapi.ditancafebar.cn 或 http://novablogapi.ditancafebar.cn/api/v1 两种形式。
 func NormalizeBaseURL(raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {

@@ -22,6 +22,9 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 
 	public := r.Group("")
 	{
+		// 公共配置下发（免鉴权）：官方市场地址默认值等由后端控制
+		public.GET("/config", pc.GetPublicConfig)
+
 		// 博主信息
 		public.GET("/blogger", pc.GetBlogger)
 

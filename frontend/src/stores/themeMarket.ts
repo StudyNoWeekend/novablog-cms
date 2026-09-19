@@ -3,6 +3,7 @@ import { ref, reactive } from 'vue'
 import { message } from 'ant-design-vue'
 
 import { themeMarketApi } from '@/api/template'
+import { configApi } from '@/api/config'
 import { marketStorage } from '@/utils/storage'
 import type {
   HotTag,
@@ -14,8 +15,9 @@ import type {
   ThemeStats,
 } from '@/types/template'
 
-// DEFAULT_MARKET_BASE_URL 官方服务地址默认值（登录弹窗展示，可修改）
-export const DEFAULT_MARKET_BASE_URL = 'http://localhost:8081'
+// 官方服务地址默认值由后端下发（GET /public/config），前端不硬编码；
+// defaultBaseURL 保存后端当前生效值，marketBaseURL 为本浏览器实际使用的地址（登录弹窗可改）
+export const defaultBaseURL = ref('')
 
 export type MarketTabKey = 'market' | 'favorites'
 
@@ -23,7 +25,7 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
   // ===== 官方账号登录态 =====
   const loggedIn = ref(!!(marketStorage.getBaseURL() && marketStorage.getToken()))
   const marketUser = ref<MarketUser | null>(marketStorage.getUser())
-  const marketBaseURL = ref(marketStorage.getBaseURL() || DEFAULT_MARKET_BASE_URL)
+  const marketBaseURL = ref(marketStorage.getBaseURL() || '')
   const activeTab = ref<MarketTabKey>('market')
 
   // ===== 市场数据 =====
@@ -136,6 +138,19 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     }
   }
 
+  /** 拉取后端下发的官方地址默认值；本地无使用值时以之为准 */
+  async function fetchDefaultBaseURL() {
+    try {
+      const config = await configApi.getPublicConfig()
+      defaultBaseURL.value = config.market_base_url || ''
+      if (!marketBaseURL.value && defaultBaseURL.value) {
+        marketBaseURL.value = defaultBaseURL.value
+      }
+    } catch {
+      // 下发失败时保持为空，登录弹窗允许手动输入
+    }
+  }
+
   /** 登录成功后拉取市场全量数据 */
   async function initMarketData() {
     pagination.page = 1
@@ -151,6 +166,8 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     marketStorage.setToken(res.access_token)
     marketStorage.setUser(res.user)
     marketBaseURL.value = baseURL
+    // 后端已在登录成功时持久化该地址为全局默认
+    defaultBaseURL.value = baseURL
     marketUser.value = res.user
     loggedIn.value = true
     await initMarketData()
@@ -172,6 +189,8 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     marketUser.value = null
     loggedIn.value = false
     activeTab.value = 'market'
+    // 退出后回到后端下发的默认地址
+    marketBaseURL.value = defaultBaseURL.value
   }
 
   // ===== 浏览与互动 =====
@@ -264,12 +283,12 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
   }
 
   return {
-    loggedIn, marketUser, marketBaseURL, activeTab,
+    loggedIn, marketUser, marketBaseURL, defaultBaseURL, activeTab,
     list, total, loading, loadError, stats, hotTags, favoriteIds, filters, pagination,
     favList, favTotal, favLoading, favLoadError, favPagination,
     detailLoading, detailError, currentDetail, releases, releasesLoading, releasesError,
     fetchList, fetchListWithReset, fetchStats, fetchHotTags, fetchFavoriteIds, fetchFavorites,
-    initMarketData, login, handleAuthExpired, logout,
+    initMarketData, login, handleAuthExpired, logout, fetchDefaultBaseURL,
     toggleFavorite, toggleLike, rate, download,
     fetchDetail, fetchReleases,
   }

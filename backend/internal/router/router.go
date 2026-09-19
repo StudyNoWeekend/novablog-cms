@@ -142,6 +142,10 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	corsConfigController := controller.NewCorsConfigController()
 	RegisterCorsConfigRoutes(api, corsConfigController, authMiddleware)
 
+	// 注册官方主题市场配置管理路由
+	themeMarketConfigController := controller.NewThemeMarketConfigController()
+	RegisterThemeMarketConfigRoutes(api, themeMarketConfigController, authMiddleware)
+
 	// 注册第三方歌单管理路由
 	playlistController := controller.NewPlaylistController()
 	RegisterPlaylistRoutes(api, playlistController, authMiddleware)

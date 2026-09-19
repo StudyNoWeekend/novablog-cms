@@ -53,7 +53,7 @@ security:
 themes:
   data_dir: ./data/themes            # 主题制品解压根目录
   frontend_dir: ""                   # 自备博客前端目录（含 theme.json 与 dist/，与主题制品包同构）；非空时优先于已安装主题，空=使用后台安装的主题
-  market_base_url: ""                # 官方主题市场地址（如 http://localhost:8081，服务端直连；空=禁用首装拉取）
+  market_base_url: "http://novablogapi.ditancafebar.cn" # 官方主题市场地址（出厂默认值；首装向导/市场登录/后台修改后会持久化到 DB 并覆盖此值，服务端直连）
   github_token: ""                   # 可选 GitHub PAT（提升 Release 查询限流额度）
   public_api_base: ""                # 跨域部署时注入 theme-config.js 的 apiBase；空=同域相对路径
   max_artifact_mb: 100               # 制品下载上限（MB）

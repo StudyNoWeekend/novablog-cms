@@ -22,6 +22,13 @@ func SetThemeSettings(s *ThemeSettings) {
 	}
 }
 
+// SetThemeMarketBaseURL 运行时覆盖官方市场地址（DB 持久化值启动注入 / 修改后热更新）。
+func SetThemeMarketBaseURL(base string) {
+	if base != "" {
+		themeSettings.MarketBaseURL = base
+	}
+}
+
 // getThemeSettings 读取主题模块配置。
 func getThemeSettings() *ThemeSettings {
 	return themeSettings

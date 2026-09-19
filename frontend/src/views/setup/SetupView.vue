@@ -197,7 +197,7 @@
 
         <a-form ref="marketFormRef" layout="vertical" class="setup-form" autocomplete="off">
           <a-form-item label="官方市场地址" name="marketBaseURL" :rules="marketURLRules">
-            <a-input v-model:value="marketBaseURL" placeholder="http://localhost:8081" allow-clear size="large">
+            <a-input v-model:value="marketBaseURL" :placeholder="defaultMarketURL || '请输入官方市场地址'" allow-clear size="large">
               <template #prefix><LinkOutlined /></template>
             </a-input>
           </a-form-item>
@@ -251,7 +251,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
@@ -268,6 +268,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { setupApi } from '@/api/setup'
+import { configApi } from '@/api/config'
 import { storageApi } from '@/api/storage'
 import { marketStorage } from '@/utils/storage'
 import { storage } from '@/utils/storage'
@@ -305,8 +306,21 @@ const storageTesting = ref(false)
 // 云存储必填校验规则
 const cloudRequiredRules = [{ required: true, message: '此项为必填', trigger: 'blur' }]
 
-// 官方市场地址（向导输入）
-const marketBaseURL = ref(marketStorage.getBaseURL() || 'http://localhost:8081')
+// 官方市场地址（向导输入）；默认值由后端下发，本地缓存（上次向导输入）优先
+const marketBaseURL = ref(marketStorage.getBaseURL() || '')
+const defaultMarketURL = ref('')
+
+onMounted(async () => {
+  try {
+    const config = await configApi.getPublicConfig()
+    defaultMarketURL.value = config.market_base_url || ''
+    if (!marketBaseURL.value && defaultMarketURL.value) {
+      marketBaseURL.value = defaultMarketURL.value
+    }
+  } catch {
+    // 下发失败保持为空，允许手动输入
+  }
+})
 
 const marketURLRules = [
   { pattern: /^https?:\/\//, message: '官方地址需以 http:// 或 https:// 开头', trigger: 'blur' },
