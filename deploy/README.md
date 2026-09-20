@@ -33,64 +33,65 @@
 
 ```bash
 cd deploy
-./deploy.sh            # 交互式问答（端口、PG/Redis、挂载目录）
-./deploy.sh --yes      # 全部默认：内置 PG/Redis，端口 80/8080，镜像版本 latest
+./deploy.sh --name myblog            # 交互式问答（博客名称必填，端口、PG/Redis 等）
+./deploy.sh --name myblog --yes      # 全部默认：内置 PG/Redis，端口 80/8080，镜像版本 latest
 ```
 
 部署完成后：
 
-- 博客入口：`http://<域名>:80/`
-- 后台入口：`http://<域名>:8080/admin/`
-- 首装向导：`http://<域名>:8080/admin/setup`
+- 博客入口：`http://<博客入口域名>/`（未配域名时 `http://<主机>:80/`）
+- 后台入口：`http://<后台入口域名>/admin/`
+- 首装向导：`http://<后台入口域名>/admin/setup`
 
 ## 部署脚本
 
-脚本会生成 `deploy/.env` 与 `<config-dir>/config.yaml`，再按选择拼接 compose 文件启动容器；可重复执行（幂等更新/升级）。
+脚本按**博客名称**隔离部署：生成 `<名称>/.env` 与 `<名称>/config/config.yaml`，全部挂载数据默认收拢在脚本同级 `<名称>/` 目录下，再按选择拼接 compose 文件启动容器（容器前缀 `<名称>-`）。可重复执行（幂等更新/升级）。
 
 ```bash
-./deploy.sh --help      # 查看全部参数
-./deploy.sh --status    # 容器状态
-./deploy.sh --logs      # 跟踪应用日志
-./deploy.sh --down      # 停止并移除容器（挂载目录数据保留）
+./deploy.sh --name llcms --help      # 查看全部参数
+./deploy.sh --name llcms --status    # 容器状态（仅一个博客时可省略 --name）
+./deploy.sh --name llcms --logs      # 跟踪应用日志
+./deploy.sh --name llcms --down      # 停止并移除容器（挂载目录数据保留）
 ```
 
 常用参数：
 
 | 参数 | 默认 | 说明 |
 |---|---|---|
+| `--name <名称>` | **必填** | 博客名称 = 隔离键：数据目录 `<名称>/`、容器前缀 `<名称>-`、网络 `<名称>_novablog`；小写字母/数字/`-`/`_` |
 | `--version <tag>` | `latest` | 镜像版本号；不指定即 latest |
 | `--image <repo>` | `ghcr.io/studynoweekend/novablog-cms` | 镜像仓库 |
 | `--build` | 关 | 本地构建镜像而非拉取 |
-| `--blog-port <端口>` | `80` | 博客前端端口（宿主） |
+| `--blog-port <端口>` | `80` | 博客前端端口（宿主）；多博客同机时各用不同端口 |
 | `--admin-port <端口>` | `8080` | CMS 后台端口（宿主） |
-| `--public-url <地址>` | `http://localhost:<博客端口>` | 博客对外访问地址，写入 `upload.base_url`（媒体文件 URL 前缀） |
+| `--public-url <地址>` | `http://<博客入口域名>`（未配域名时 `http://localhost:<博客端口>`） | 博客对外访问地址，写入 `upload.base_url`（媒体文件 URL 前缀） |
 | `--domain` / `--admin-domain` | `_` | 两个入口的 server_name |
-	| `--db-host/--db-port/--db-user/--db-password/--db-name/--db-sslmode` | — | PostgreSQL 地址等信息；主机留空或 localhost/127.0.0.1 时自动部署内置容器 |
+| `--db-host/--db-port/--db-user/--db-password/--db-name/--db-sslmode` | — | PostgreSQL 地址等信息；主机留空或 localhost/127.0.0.1 时自动部署内置容器；用户/库名/sslmode 默认 `postgres`/`<博客名>`/`disable` |
 | `--redis-host/--redis-port/--redis-password/--redis-db` | — | Redis 地址等信息；主机留空或 localhost/127.0.0.1 时自动部署内置容器 |
-| `--config-dir <目录>` | `./config` | config.yaml 存放目录 |
-| `--uploads-dir <目录>` | `./data/uploads` | 媒体上传目录 |
-| `--themes-dir <目录>` | `./data/themes` | 主题制品目录 |
-| `--logs-dir <目录>` | `./data/logs` | 日志目录 |
-| `--frontend-dir <目录>` | 无 | 自备博客前端目录（含 `theme.json` 与 `dist/`） |
-| `--pgdata-dir` / `--redisdata-dir` | `./data/pg`、`./data/redis` | 内置数据库数据目录 |
+| `--config-dir <目录>` | `./<名称>/config` | config.yaml 存放目录 |
+| `--uploads-dir <目录>` | `./<名称>/data/uploads` | 媒体上传目录 |
+| `--themes-dir <目录>` | `./<名称>/data/themes` | 主题制品目录 |
+| `--logs-dir <目录>` | `./<名称>/data/logs` | 日志目录 |
+| `--frontend-dir <目录>` | 无 | 自备博客前端目录（含 `theme.json` 与 `dist/`），传 `-` 清除 |
+| `--pgdata-dir` / `--redisdata-dir` | `./<名称>/data/pg`、`./<名称>/data/redis` | 内置数据库数据目录 |
 | `--market-url <地址>` | 无 | 官方主题市场地址（首装拉取默认主题用） |
 | `-y, --yes` | 关 | 全部使用默认值/已有配置，不进入问答 |
 
 示例：
 
 ```bash
-# 指定版本 + 外部 PostgreSQL/Redis + 自定义挂载目录
-./deploy.sh --version v1.0.1 \
-  --db external --db-host 10.0.0.5 --db-user novablog --db-password '***' --db-name novablog \
-  --redis external --redis-host 10.0.0.6 --redis-password '***' \
-  --blog-port 80 --admin-port 8080 \
-  --config-dir /srv/novablog/config --uploads-dir /srv/novablog/uploads --themes-dir /srv/novablog/themes
+# 指定版本 + 外部 PostgreSQL/Redis（库名默认与博客名称相同）
+./deploy.sh --name llcms --version v1.0.1 \
+  --db-host 10.0.0.5 --db-password '***' \
+  --redis-host 10.0.0.6 --redis-password '***' --redis-db 4 \
+  --blog-port 9001 --admin-port 9002 \
+  --domain blog.example.com --admin-domain cms.example.com
 
 # 使用挂载的自备博客前端（目录内需有 theme.json 与 dist/）
-./deploy.sh --frontend-dir /srv/novablog/blog-frontend
+./deploy.sh --name llcms --frontend-dir /srv/novablog/blog-frontend
 
 # 本地构建镜像（不打 tag 发布）
-./deploy.sh --build
+./deploy.sh --name llcms --build
 ```
 
 > 外部数据库在容器内访问宿主机时，主机名可用 `host.docker.internal`（Linux 下需 `--add-host=host.docker.internal:host-gateway`，compose 已默认处理该场景的解析）。
@@ -104,8 +105,8 @@ mkdir -p /srv/novablog && cd /srv/novablog
 curl -fsSL https://raw.githubusercontent.com/StudyNoWeekend/novablog-cms/main/deploy/deploy.sh -o deploy.sh
 chmod +x deploy.sh
 
-./deploy.sh --version v1.0.1        # 首次运行自动补齐 compose 文件并部署
-./deploy.sh --status | --logs | --down
+./deploy.sh --name llcms --version v1.0.1   # 首次运行自动补齐 compose 文件并部署
+./deploy.sh --name llcms --status | --logs | --down
 ```
 
 说明：
@@ -210,6 +211,46 @@ server {
 3. **验证**：浏览器访问 `http://api.example.com/api/v1/public/config` 应返回配置 JSON；查看主题目录 `data/themes/<主题>/dist/theme-config.js` 内容为注入后的 apiBase。
 4. **CORS**：博客页面跨域调用 API 域名，需博客域名在后端白名单内——deploy.sh 生成的 `cors.allowed_origins` 已包含「博客对外访问地址」，通常无需额外操作；特殊拓扑可在后台「跨域配置」页自行调整。
 
+## 多博客同机部署（按名称隔离）
+
+同一台机器部署多个互相独立的博客：`--name` 是隔离键，每个博客一个专属目录、一组专属容器，互不影响。
+
+```bash
+# 第一个博客
+./deploy.sh --name llcms --blog-port 9001 --admin-port 9002 \
+  --domain ll.example.com --admin-domain llcms.example.com
+
+# 第二个博客（换名称、换端口即可；PG/Redis 可共用，库名默认=博客名称、Redis 库编号错开）
+./deploy.sh --name zhang3 --blog-port 9003 --admin-port 9004 \
+  --domain z3.example.com --admin-domain z3cms.example.com
+```
+
+目录布局（全部默认收拢在 `<名称>/` 下，无需逐项指定）：
+
+```
+deploy.sh 所在目录/
+├── deploy.sh                  # 共享脚本
+├── docker-compose*.yml        # 共享模板（运行时 -p 隔离，升级只改一份）
+├── llcms/                     # 博客 llcms 的专属目录
+│   ├── .env
+│   ├── config/config.yaml
+│   └── data/{uploads,themes,logs,blog-frontend,pg,redis}
+└── zhang3/                    # 博客 zhang3 的专属目录（结构同上）
+```
+
+隔离机制一览：
+
+| 维度 | 隔离方式 |
+|---|---|
+| 数据 | 各博客独立目录 `<名称>/`（bind mount 互不可见） |
+| 容器/网络 | compose 项目名 `-p <名称>`：容器 `<名称>-novablog-1`、网络 `<名称>_novablog` |
+| 端口 | 部署前预检宿主端口占用，冲突时点名占用容器并拒绝部署（保护在运行的博客） |
+| PostgreSQL | 共用同一实例时默认按博客名称分库（`--db-name` 可覆盖） |
+| Redis | 共用同一实例时请为每个博客分配不同库编号（`--redis-db`） |
+| 域名/对外地址 | 各博客独立填写，反代场景各配一个 server 块（见「外层 nginx 反代部署」） |
+
+日常运维均带 `--name` 定位博客：`--status` / `--logs` / `--down` / `--version <tag>`；仅存在一个博客部署时可省略 `--name`，存在多个时脚本会列出候选。
+
 ## 手动 Compose（不使用脚本）
 
 ```bash
@@ -230,14 +271,16 @@ docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 
 ## 挂载目录
 
+默认全部收拢在博客目录 `<名称>/` 下（可用 `--config-dir` 等 flag 覆盖）：
+
 | 宿主目录（默认） | 容器路径 | 用途 |
 |---|---|---|
-| `./config/config.yaml` | `/app/config/config.yaml` | 后端配置（只读挂载） |
-| `./data/uploads` | `/app/uploads` | 媒体文件（`upload.dir`） |
-| `./data/themes` | `/app/data/themes` | 主题制品（`themes.data_dir`） |
-| `./data/logs` | `/app/logs` | 应用日志（`log.file_path`） |
-| `./data/blog-frontend` | `/app/blog-frontend` | 自备博客前端（只读，`themes.frontend_dir`） |
-| `./data/pg`、`./data/redis` | — | 内置数据库数据目录（需本地文件系统，勿用 NFS） |
+| `./<名称>/config/config.yaml` | `/app/config/config.yaml` | 后端配置（只读挂载） |
+| `./<名称>/data/uploads` | `/app/uploads` | 媒体文件（`upload.dir`） |
+| `./<名称>/data/themes` | `/app/data/themes` | 主题制品（`themes.data_dir`） |
+| `./<名称>/data/logs` | `/app/logs` | 应用日志（`log.file_path`） |
+| `./<名称>/data/blog-frontend` | `/app/blog-frontend` | 自备博客前端（只读，`themes.frontend_dir`） |
+| `./<名称>/data/pg`、`./<名称>/data/redis` | — | 内置数据库数据目录（需本地文件系统，勿用 NFS） |
 
 ## 挂载自备博客前端
 
@@ -264,10 +307,10 @@ blog-frontend/
 ## 日常运维
 
 ```bash
-./deploy.sh --status                      # 状态
-./deploy.sh --logs                        # 日志（Ctrl+C 退出）
-docker stats novablog-novablog-1          # 资源占用
-./deploy.sh --down                        # 停止（数据保留）
+./deploy.sh --name llcms --status         # 状态（仅一个博客时可省略 --name）
+./deploy.sh --name llcms --logs           # 日志（Ctrl+C 退出）
+docker stats llcms-novablog-1             # 资源占用（容器前缀 = 博客名称）
+./deploy.sh --name llcms --down           # 停止（数据保留）
 ```
 
 ## 从旧版（backend + nginx 双镜像）迁移
