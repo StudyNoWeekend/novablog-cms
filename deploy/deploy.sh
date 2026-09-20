@@ -602,7 +602,8 @@ app:
 http:
   port: 8111
   read_timeout: 30s
-  write_timeout: 30s
+  # 写超时放宽到 10 分钟：主题安装/更新需从 GitHub 下载制品，同步接口可能耗时较长
+  write_timeout: 600s
 
 log:
   level: info

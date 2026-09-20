@@ -10,6 +10,10 @@ function buildThemeMarketHeaders(): Record<string, string> {
   return headers
 }
 
+// 长任务超时：安装/更新需要下载制品（GitHub 直连可能较慢），
+// 放宽到 10 分钟与后端下载客户端超时一致，避免默认 15s 超时中断任务。
+const LONG_TASK_TIMEOUT = 10 * 60 * 1000
+
 // themeApi 已安装主题管理接口封装（后台 JWT 鉴权）。
 export const themeApi = {
   /** 已安装主题列表（含激活标记） */
@@ -21,6 +25,7 @@ export const themeApi = {
   install(data: { theme_id: number; version?: string; force?: boolean }) {
     return request.post<InstalledTheme>('/themes/install', data, {
       headers: buildThemeMarketHeaders(),
+      timeout: LONG_TASK_TIMEOUT,
     }) as Promise<InstalledTheme>
   },
 
@@ -38,6 +43,7 @@ export const themeApi = {
   updateTheme(id: string) {
     return request.post<InstalledTheme>(`/themes/${id}/update`, undefined, {
       headers: buildThemeMarketHeaders(),
+      timeout: LONG_TASK_TIMEOUT,
     }) as Promise<InstalledTheme>
   },
 }
