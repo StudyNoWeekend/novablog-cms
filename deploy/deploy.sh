@@ -25,6 +25,15 @@ c_info() { printf '\033[32m[信息]\033[0m %s\n' "$*"; }
 c_warn() { printf '\033[33m[提示]\033[0m %s\n' "$*"; }
 c_err()  { printf '\033[31m[错误]\033[0m %s\n' "$*" >&2; }
 die()    { c_err "$*"; exit 1; }
+# TCP 连通性探测：错误地址（如 IP 手误）可能长时间挂起，优先用 timeout 限时
+tcp_reachable() {
+  local host="$1" port="$2"
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 3 bash -c "exec 3<>/dev/tcp/$host/$port" 2>/dev/null
+  else
+    bash -c "exec 3<>/dev/tcp/$host/$port" 2>/dev/null
+  fi
+}
 
 # ============================== 默认值 ==============================
 IMAGE_REPO="ghcr.io/studynoweekend/novablog-cms"
@@ -378,8 +387,17 @@ c_info "===== 入口端口 ====="
 BLOG_PORT="$(ask '博客前端端口' "${BLOG_PORT:-80}")"
 ADMIN_PORT="$(ask 'CMS 后台端口' "${ADMIN_PORT:-8080}")"
 PUBLIC_URL="$(ask '博客对外访问地址（用于媒体文件 URL，填访客实际访问地址，带反代时不带端口）' "${PUBLIC_URL:-http://localhost:$BLOG_PORT}")"
+# 未带协议时自动补 http://，否则媒体 URL 与 CORS 白名单会生成非法值
+case "$PUBLIC_URL" in
+  http://*|https://*) ;;
+  *) PUBLIC_URL="http://$PUBLIC_URL"; c_info "博客对外访问地址已自动补全为：$PUBLIC_URL" ;;
+esac
 DOMAIN="$(ask '博客入口域名（裸域名如 blog.example.com，不带 http://；任意域名/IP 填 _）' "${DOMAIN:-_}")"
 ADMIN_DOMAIN="$(ask '后台入口域名（裸域名，不带 http://；任意域名/IP 填 _）' "${ADMIN_DOMAIN:-_}")"
+# 误带协议或结尾斜杠时自动清洗，否则会渲染进 nginx server_name 导致域名匹配失效
+strip_url_prefix() { local v="$1"; v="${v#http://}"; v="${v#https://}"; v="${v%/}"; printf '%s' "$v"; }
+DOMAIN="$(strip_url_prefix "$DOMAIN")"
+ADMIN_DOMAIN="$(strip_url_prefix "$ADMIN_DOMAIN")"
 
 echo
 c_info "===== PostgreSQL ====="
@@ -412,6 +430,24 @@ if [ -z "$REDIS_HOST" ] || [ "$REDIS_HOST" = "localhost" ] || [ "$REDIS_HOST" = 
   REDIS_HOST="redis"
 else
   REDIS_MODE="external"
+fi
+
+# 外部服务连通性预检：地址填错若等到容器启动后才暴露，后端会反复崩溃重启且现象只有 502
+echo
+c_info "===== 外部服务连通性预检 ====="
+if [ "$DB_MODE" = "external" ]; then
+  if tcp_reachable "$DB_HOST" "$DB_PORT"; then
+    c_info "PostgreSQL $DB_HOST:$DB_PORT 可达"
+  else
+    die "无法连接 PostgreSQL $DB_HOST:$DB_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
+  fi
+fi
+if [ "$REDIS_MODE" = "external" ]; then
+  if tcp_reachable "$REDIS_HOST" "$REDIS_PORT"; then
+    c_info "Redis $REDIS_HOST:$REDIS_PORT 可达"
+  else
+    die "无法连接 Redis $REDIS_HOST:$REDIS_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
+  fi
 fi
 
 echo
@@ -637,7 +673,13 @@ for _ in $(seq 1 60); do
 done
 
 if [ "$HEALTHY" != 1 ]; then
-  c_warn "服务未在预期时间内就绪，请检查日志：./deploy.sh --logs"
+  c_err "服务未能就绪（容器未进入 healthy 状态），最近日志如下："
+  cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+  if [ -n "$cid" ]; then
+    docker logs --tail 30 "$cid" 2>&1 | tail -30
+  fi
+  c_err "请根据上方日志排查（典型原因：外部数据库/Redis 地址或密码填错），完整日志：./deploy.sh --logs"
+  exit 1
 fi
 
 HOST_FOR_URL="localhost"
