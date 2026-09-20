@@ -144,16 +144,26 @@ CMS 后台端口: 9002
 完整示例见 [`nginx/host-proxy.example.conf`](nginx/host-proxy.example.conf)，核心两块：
 
 ```nginx
+# WebSocket 升级映射（conf.d 在 http 上下文加载，顶层 map 即可）
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 server {
     listen 80;
     server_name blog.example.com;
     client_max_body_size 200m;        # 必设！默认 1m 会导致媒体上传/主题安装 413
     location / {
         proxy_pass http://127.0.0.1:9001;
+        proxy_http_version 1.1;       # 默认 1.0 回源，SSE/流式与 keepalive 会异常
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;            # WebSocket/SSE 必留
+        proxy_set_header Connection $connection_upgrade;
+        proxy_buffering off;
     }
 }
 
@@ -163,15 +173,20 @@ server {
     client_max_body_size 200m;
     location / {
         proxy_pass http://127.0.0.1:9002;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
     }
 }
 ```
 
 修改后 `nginx -t && nginx -s reload` 生效。
+
+> **排错：反代返回 502？** 502 表示容器内 nginx 收到了请求、但 Go 后端（127.0.0.1:8111）没有响应，与外层反代配置无关——先执行 `./deploy.sh --logs` 查看后端崩溃原因（典型如外部数据库/Redis 地址填错导致启动失败）。后端恢复后，未安装博客时博客入口会自动显示「博客即将上线」引导页。
 
 **③ DNS 与安全组**
 
