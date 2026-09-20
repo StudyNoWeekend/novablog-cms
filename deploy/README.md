@@ -182,6 +182,19 @@ server {
 
 证书配在宿主机 nginx 的 443 server 块（反代写法同上），生效后重跑 `./deploy.sh --version <tag>`，将「博客对外访问地址」改为 `https://blog.example.com`（媒体 URL 随协议切换，已有数据不受影响）。
 
+## 独立 API 域名部署（可选）
+
+默认拓扑下主题页面与 public 接口同域（博客入口域名即 API 域名，零配置）。如需把公开接口拆到**独立域名**（如 `api.example.com`，只暴露公开接口与媒体文件、不暴露后台），按以下步骤：
+
+1. **反代**：在宿主机 nginx 增加 API 域名 server 块——只放行 `/api/v1/public/`、`/files/`（可选 `/health`、`/ready`），其余 404。完整示例见 [`nginx/host-proxy.example.conf`](nginx/host-proxy.example.conf) 第三个 server 块。
+   > 切勿对该域名 `location /` 全量反代：Go 端会把未匹配路径兜底为主题静态页，等于把整站（含后台页面跳转）暴露在 API 域名下。
+2. **设置 API 地址**：管理后台「模板风格 → 服务地址设置」填入 `http://api.example.com`（可带或不带 `/api/v1` 后缀，主题侧自动归一化）并保存。
+   - 保存后后端立即对**全部已安装主题**重写 `dist/theme-config.js`（注入 `window.__NOVA_CONFIG__.apiBase`），主题前台随即走新域名取数，**无需重装主题**；
+   - 配置持久化到数据库，重启不丢失；填空则清除注入，主题回退同域相对路径取数；
+   - 主题安装/更新时也会按当前配置自动注入。
+3. **验证**：浏览器访问 `http://api.example.com/api/v1/public/config` 应返回配置 JSON；查看主题目录 `data/themes/<主题>/dist/theme-config.js` 内容为注入后的 apiBase。
+4. **CORS**：博客页面跨域调用 API 域名，需博客域名在后端白名单内——deploy.sh 生成的 `cors.allowed_origins` 已包含「博客对外访问地址」，通常无需额外操作；特殊拓扑可在后台「跨域配置」页自行调整。
+
 ## 手动 Compose（不使用脚本）
 
 ```bash

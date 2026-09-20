@@ -8,10 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// ThemeMarketConfig 官方主题市场配置模型，对应 theme_market_configs 数据表（单行模式）。
+// ThemeMarketConfig 主题模块运行配置模型，对应 theme_market_configs 数据表（单行模式）。
 type ThemeMarketConfig struct {
 	ID            string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	MarketBaseURL string    `gorm:"type:varchar(500);not null;default:''"`
+	PublicAPIBase string    `gorm:"type:varchar(500);not null;default:''"`
 	CreatedAt     time.Time `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt     time.Time `gorm:"type:timestamptz;autoUpdateTime"`
 }

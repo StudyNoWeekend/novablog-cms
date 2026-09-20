@@ -2,9 +2,10 @@ package res
 
 import "time"
 
-// ThemeMarketConfigRes 官方主题市场配置响应。
+// ThemeMarketConfigRes 主题模块运行配置响应。
 type ThemeMarketConfigRes struct {
 	MarketBaseURL string    `json:"market_base_url"`
+	PublicAPIBase string    `json:"public_api_base"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
