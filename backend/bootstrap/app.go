@@ -89,11 +89,12 @@ func NewApp(cfgPath string) (*App, error) {
 	})
 	logic.ThemeLogger = logger
 
-	// 官方市场地址：DB 持久化值（首装向导/市场登录/后台修改）优先于 config.yaml 出厂值
+	// 主题模块运行配置：DB 持久化值（后台修改）优先于 config.yaml 出厂值
 	if marketConfig, err := logic.NewThemeMarketConfigLogic().GetConfig(context.Background()); err == nil {
 		logic.SetThemeMarketBaseURL(marketConfig.MarketBaseURL)
+		logic.SetThemePublicAPIBase(marketConfig.PublicAPIBase)
 	} else {
-		logger.Warn("读取官方市场配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
+		logger.Warn("读取主题运行配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
 	}
 
 	// 注入跨域配置：优先级 config.yaml → DB 持久化值 → env 变量（中间件内处理）

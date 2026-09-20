@@ -233,6 +233,18 @@ func (l *ThemeArtifactLogic) InjectThemeConfig(rootDir, apiBase string) error {
 	return os.WriteFile(filepath.Join(rootDir, "dist", "theme-config.js"), []byte(content), 0o644)
 }
 
+// ApplyThemeConfig 将运行时 apiBase 应用到主题制品：非空写入 theme-config.js，空则清除已注入文件
+// （后台修改公开 API 地址后对已安装主题重注入；清空表示回退同域相对路径取数）。
+func (l *ThemeArtifactLogic) ApplyThemeConfig(rootDir, apiBase string) error {
+	if strings.TrimSpace(apiBase) == "" {
+		if err := os.Remove(filepath.Join(rootDir, "dist", "theme-config.js")); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		return nil
+	}
+	return l.InjectThemeConfig(rootDir, apiBase)
+}
+
 // TempRoot 在 dataDir/.tmp 下创建临时解压根（与 dataDir 同一文件系统，保证可原子 mv）。
 func (l *ThemeArtifactLogic) TempRoot() (string, error) {
 	settings := getThemeSettings()

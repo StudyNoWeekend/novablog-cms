@@ -29,6 +29,13 @@ func SetThemeMarketBaseURL(base string) {
 	}
 }
 
+// SetThemePublicAPIBase 运行时覆盖博客公开 API 地址（DB 持久化值启动注入；空值表示同域相对路径取数）。
+func SetThemePublicAPIBase(base string) {
+	if base != "" {
+		themeSettings.PublicAPIBase = base
+	}
+}
+
 // getThemeSettings 读取主题模块配置。
 func getThemeSettings() *ThemeSettings {
 	return themeSettings

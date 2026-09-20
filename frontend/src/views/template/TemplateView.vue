@@ -35,22 +35,27 @@
       </div>
     </a-modal>
 
-    <!-- 官方地址设置弹窗 -->
+    <!-- 服务地址设置弹窗 -->
     <a-modal
       v-model:open="marketConfigOpen"
-      title="官方市场地址"
+      title="官方地址与博客 API"
       :confirm-loading="marketConfigSaving"
       ok-text="保存"
       cancel-text="取消"
       @ok="handleSaveMarketConfig"
     >
       <a-form layout="vertical" autocomplete="off">
-        <a-form-item label="官方地址" :validate-status="marketConfigError ? 'error' : ''" :help="marketConfigError">
+        <a-form-item label="官方市场地址" :validate-status="marketConfigError ? 'error' : ''" :help="marketConfigError">
           <a-input v-model:value="marketConfigURL" :placeholder="store.defaultBaseURL || '请输入官方市场地址'" allow-clear>
             <template #prefix><LinkOutlined /></template>
           </a-input>
         </a-form-item>
-        <p class="market-config-tip">保存后持久化到服务端并立即生效，将作为所有端的全局默认官方地址</p>
+        <a-form-item label="博客 API 地址（可选）" :validate-status="apiURLError ? 'error' : ''" :help="apiURLError">
+          <a-input v-model:value="marketAPIURL" placeholder="https://api.example.com（留空 = 主题同域取数）" allow-clear>
+            <template #prefix><GlobalOutlined /></template>
+          </a-input>
+        </a-form-item>
+        <p class="market-config-tip">官方市场地址决定模板市场与主题安装的取数来源；博客 API 地址用于主题前台访问公开接口——填写独立 API 域名后保存，已安装主题会立即重新注入取数地址，无需重装主题；留空则同域相对路径取数</p>
       </a-form>
     </a-modal>
 
@@ -461,16 +466,28 @@ function handleLogout() {
   })
 }
 
-// ===== 官方地址设置 =====
+// ===== 服务地址设置（官方市场地址 + 博客公开 API 地址）=====
 const marketConfigOpen = ref(false)
 const marketConfigURL = ref('')
+const marketAPIURL = ref('')
 const marketConfigSaving = ref(false)
 const marketConfigError = ref('')
+const apiURLError = ref('')
 
-function openMarketConfig() {
+async function openMarketConfig() {
   marketConfigURL.value = store.defaultBaseURL
+  marketAPIURL.value = ''
   marketConfigError.value = ''
+  apiURLError.value = ''
   marketConfigOpen.value = true
+  // 回显后端持久化值（两个地址）
+  try {
+    const cfg = await configApi.getThemeMarketConfig()
+    if (cfg.market_base_url) marketConfigURL.value = cfg.market_base_url
+    marketAPIURL.value = cfg.public_api_base || ''
+  } catch {
+    // 回显失败时保留本地默认值
+  }
 }
 
 async function handleSaveMarketConfig() {
@@ -479,15 +496,20 @@ async function handleSaveMarketConfig() {
     marketConfigError.value = '官方地址需以 http:// 或 https:// 开头'
     return
   }
+  const apiURL = marketAPIURL.value.trim()
+  if (apiURL && !/^https?:\/\//.test(apiURL)) {
+    apiURLError.value = 'API 地址需以 http:// 或 https:// 开头，留空表示同域取数'
+    return
+  }
   marketConfigSaving.value = true
   try {
-    await configApi.updateThemeMarketConfig({ market_base_url: url })
+    await configApi.updateThemeMarketConfig({ market_base_url: url, public_api_base: apiURL })
     store.defaultBaseURL = url
     store.marketBaseURL = url
     // 本浏览器后续安装/更新请求头同步使用新地址
     marketStorage.setBaseURL(url)
     marketConfigOpen.value = false
-    message.success('官方地址已保存并全局生效')
+    message.success('服务地址已保存并全局生效')
   } catch {
     // 错误由拦截器统一提示
   } finally {
