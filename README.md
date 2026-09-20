@@ -436,7 +436,7 @@ app:
 http:
   port: 8111               # HTTP 服务端口
   read_timeout: 30s        # 请求读超时
-  write_timeout: 30s       # 响应写超时
+  write_timeout: 600s      # 响应写超时（放宽到 10 分钟：主题安装/更新需从 GitHub 下载制品）
 
 log:
   level: debug             # 日志级别：debug / info / warn / error
