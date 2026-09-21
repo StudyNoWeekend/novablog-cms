@@ -9,6 +9,7 @@ type ThemeSettings struct {
 	MarketBaseURL string // 官方主题市场地址（服务端直连；空=禁用首装拉取）
 	GithubToken   string // 可选 GitHub PAT（提升 Release 查询限流额度）
 	PublicAPIBase string // 跨域部署时注入 theme-config.js 的 apiBase；空=同域相对路径
+	ProxyURL      string // 主题下载与 GitHub API 的 HTTP 代理（空=直连；代理不可用自动降级直连）
 	MaxArtifactMB int    // 制品下载上限（MB）
 }
 

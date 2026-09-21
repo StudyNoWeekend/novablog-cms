@@ -32,11 +32,12 @@ type ThemeLogic struct {
 
 // NewThemeLogic 创建 ThemeLogic 实例。
 func NewThemeLogic() *ThemeLogic {
+	settings := getThemeSettings()
 	return &ThemeLogic{
 		themeModel:   model.NewTheme(),
 		bloggerModel: model.NewBlogger(),
 		artifact:     NewThemeArtifactLogic(),
-		github:       &githubartifact.Client{Token: getThemeSettings().GithubToken},
+		github:       &githubartifact.Client{Token: settings.GithubToken, ProxyURL: settings.ProxyURL},
 	}
 }
 

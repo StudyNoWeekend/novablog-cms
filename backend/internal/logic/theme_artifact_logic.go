@@ -19,6 +19,9 @@ import (
 	"time"
 
 	"novablog/enum"
+	"novablog/pkg/proxyhttp"
+
+	"go.uber.org/zap"
 )
 
 // ThemeManifest 主题包清单（theme.json），规范见《主题模板皮肤系统设计文档》3.2。
@@ -57,8 +60,8 @@ const (
 	maxExtractFiles      = 5000      // 文件数 ≤ 5000
 )
 
-// artifactHTTPClient 制品下载客户端（长超时，支持大文件流式下载）。
-var artifactHTTPClient = &http.Client{Timeout: 10 * time.Minute}
+// artifactHTTPTimeout 制品下载超时（长超时，支持大文件流式下载）。
+const artifactHTTPTimeout = 10 * time.Minute
 
 // ThemeArtifactLogic 主题制品处理：下载/校验/解压/注入/落盘。
 type ThemeArtifactLogic struct{}
@@ -66,6 +69,20 @@ type ThemeArtifactLogic struct{}
 // NewThemeArtifactLogic 创建 ThemeArtifactLogic 实例。
 func NewThemeArtifactLogic() *ThemeArtifactLogic {
 	return &ThemeArtifactLogic{}
+}
+
+// downloadClient 按当前配置构建制品下载客户端：
+// 配置了代理时走代理（探测缓存 + 代理中途失败自动降级直连），未配置则纯直连。
+func (l *ThemeArtifactLogic) downloadClient() *http.Client {
+	settings := getThemeSettings()
+	return proxyhttp.NewResilient(proxyhttp.Config{
+		Timeout:  artifactHTTPTimeout,
+		ProxyURL: settings.ProxyURL,
+		OnFallback: func(err error) {
+			themeLog().Warn("主题下载代理不可用，已自动降级直连",
+				zap.String("proxy", settings.ProxyURL), zap.Error(err))
+		},
+	})
 }
 
 // DownloadArtifact 流式下载制品到临时文件，边下边算 sha256。
@@ -81,7 +98,7 @@ func (l *ThemeArtifactLogic) DownloadArtifact(ctx context.Context, rawURL string
 		return "", "", fmt.Errorf("构建制品下载请求失败: %w", err)
 	}
 
-	resp, err := artifactHTTPClient.Do(req)
+	resp, err := l.downloadClient().Do(req)
 	if err != nil {
 		return "", "", fmt.Errorf("下载主题制品失败: %w", err)
 	}

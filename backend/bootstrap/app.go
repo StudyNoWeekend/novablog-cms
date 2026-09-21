@@ -85,6 +85,7 @@ func NewApp(cfgPath string) (*App, error) {
 		MarketBaseURL: cfg.GetString("themes.market_base_url"),
 		GithubToken:   cfg.GetString("themes.github_token"),
 		PublicAPIBase: cfg.GetString("themes.public_api_base"),
+		ProxyURL:      cfg.GetString("themes.proxy_url"),
 		MaxArtifactMB: cfg.GetInt("themes.max_artifact_mb"),
 	})
 	logic.ThemeLogger = logger
