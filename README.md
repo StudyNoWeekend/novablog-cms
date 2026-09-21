@@ -1,4 +1,4 @@
-# NovaBlog Admin
+# NovaBlog CMS
 
 > 面向独立博主的全功能内容管理系统（CMS）— Go + Gin + PostgreSQL + Redis + Vue 3
 
@@ -138,10 +138,10 @@ NovaBlog 不仅是一套内容管理后台，同时也是**博客前端的运行
 - **视频专辑**：多对多关联的专辑系统，一个视频可属于多个专辑；
 - **Bilibili 集成**：内置 B 站视频 URL 解析器，支持嵌入第三方视频内容。
 
-### 🎒 摄影器材库
+### 🎒 个人设备库
 
-- **器材管理**：记录相机机身、镜头及其他配件，含规格参数；
-- **EXIF 自动填充**：上传照片后自动识别所用器材并建立关联，减少手工录入。
+- **设备管理**：记录个人设备信息，含图片、品牌与描述；
+- **EXIF 自动填充**：上传照片后自动识别拍摄参数并填充，减少手工录入。
 
 ### 🗺️ 旅行攻略
 
@@ -165,7 +165,7 @@ NovaBlog 不仅是一套内容管理后台，同时也是**博客前端的运行
 - **嵌套回复**：支持楼中楼式回复互动；
 - **反垃圾**：IP 黑名单 + 人工审核双重保障。
 
-### 🎨 主题 / 模板系统
+### 🎨 主题市场系统
 
 这是 NovaBlog 最具特色的模块，让博客前端成为「可插拔」的资产：
 
@@ -183,7 +183,7 @@ NovaBlog 不仅是一套内容管理后台，同时也是**博客前端的运行
 - **JWT 双令牌**：Access Token（短期）+ Refresh Token（长期），支持无感刷新；
 - **令牌黑名单**：登出后令牌立即失效（Redis 存储，带 TTL）；
 - **IP 黑名单**：可配置的 IP 封禁，支持自动过期；
-- **访问日志**：所有请求落库，支持按保留天数自动清理（默认 7 天，每小时检查一次）；
+- **访问日志**：所有请求落库（含 IP 归属地区，基于 ip2region 离线库解析，不依赖外部 API），支持按保留天数自动清理（默认 7 天，每小时检查一次）；
 - **CORS 白名单**：三层优先级控制（环境变量 > 数据库配置 > 配置文件默认值），后台界面可动态修改；
 - **请求追踪**：全链路 `X-Trace-Id`，便于问题排查；
 - **优雅关闭**：接收 SIGINT/SIGTERM 后安全关闭服务器、数据库与 Redis 连接。
@@ -380,7 +380,7 @@ novablog-cms/
 │   │   │   ├── article/              # 文章管理（Markdown / 富文本）
 │   │   │   ├── media/                # 媒体库
 │   │   │   ├── portfolio/            # 摄影作品集
-│   │   │   ├── equipment/            # 摄影器材
+│   │   │   ├── equipment/            # 个人设备
 │   │   │   ├── video/                # 视频作品
 │   │   │   ├── travel/               # 旅行攻略（含地图）
 │   │   │   ├── playlist/             # 音乐播放列表
@@ -479,6 +479,11 @@ security:
   blacklist_ttl_minutes: 60    # IP 黑名单默认封禁时长（分钟）
   log_retention_days: 7        # 访问日志保留天数
 
+geoip:
+  data_dir: ./data/geoip   # IP 地区库目录（缺失 ip2region_v4.xdb 时自动下载）
+  download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
+  proxy_url: ""            # 地区库下载代理（空 = 直连，代理不可用自动降级直连）
+
 themes:
   data_dir: ./data/themes  # 主题制品解压根目录
   market_base_url: ""      # 官方主题市场地址（空 = 禁用首装拉取）
@@ -550,7 +555,7 @@ cors:
 | GET | `/public/portfolios/:id` | 作品集详情 |
 | GET | `/public/videos` | 视频作品列表 |
 | GET | `/public/videos/:id` | 视频详情 |
-| GET | `/public/equipments` | 摄影器材列表 |
+| GET | `/public/equipments` | 个人设备列表 |
 | GET | `/public/music/songs` | 音乐曲目列表 |
 | GET | `/public/music/audio-url/:song_id` | 获取受控音频流 URL |
 | GET | `/public/music/playlists` | 音乐播放列表 |
@@ -568,7 +573,7 @@ cors:
 | 文章 | `/articles/*` | 增删改查、状态切换 |
 | 作品集 | `/portfolios/*` | 增删改查 |
 | 视频 | `/videos/*` | 增删改查、专辑管理 |
-| 器材 | `/equipments/*` | 增删改查 |
+| 个人设备 | `/equipments/*` | 增删改查 |
 | 攻略 | `/travels/*` | 增删改查 |
 | 音乐 | `/music/*` | 歌曲 CRUD、音频上传、歌单管理 |
 | 第三方歌单 | `/playlists/*` | 歌单导入与管理 |

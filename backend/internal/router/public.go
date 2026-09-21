@@ -2,6 +2,7 @@ package router
 
 import (
 	"novablog/internal/controller"
+	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +23,11 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 
 	public := r.Group("")
 	{
+		// 应用版本号下发（免鉴权）：构建期 -ldflags 注入，供管理端侧边栏展示
+		public.GET("/version", func(c *gin.Context) {
+			response.Success(c, gin.H{"version": Version})
+		})
+
 		// 公共配置下发（免鉴权）：官方市场地址默认值等由后端控制
 		public.GET("/config", pc.GetPublicConfig)
 
@@ -58,9 +64,17 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 		public.GET("/videos", pc.GetVideos)
 		public.GET("/videos/:id", pc.GetVideoDetail)
 
-		// 摄影器材
+		// 个人设备
 		public.GET("/equipments", pc.GetEquipments)
 		public.GET("/equipments/:id", pc.GetEquipmentDetail)
+
+		// 项目经历
+		public.GET("/projects", pc.GetProjects)
+		public.GET("/projects/:id", pc.GetProjectDetail)
+
+		// 开源作品
+		public.GET("/open-sources", pc.GetOpenSources)
+		public.GET("/open-sources/:id", pc.GetOpenSourceDetail)
 
 		// 音乐
 		public.GET("/music/songs", pc.GetSongs)

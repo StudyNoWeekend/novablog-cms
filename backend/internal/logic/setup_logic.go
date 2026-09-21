@@ -13,6 +13,7 @@ import (
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
 	"novablog/internal/storage"
+	"novablog/pkg/novablogapi"
 	"novablog/utils/crypto"
 	"novablog/utils/hash"
 
@@ -200,10 +201,11 @@ var (
 	themeInstallJob *ThemeInstallJob
 )
 
-// StartThemeInstall 启动首装主题安装任务：拉取官方默认主题并激活；
-// marketBaseURL 为首装向导输入的官方地址（覆盖 config.yaml 的 themes.market_base_url）。
+// StartThemeInstall 启动首装主题安装任务：登录官方账号后拉取默认主题并激活；
+// marketBaseURL 为首装向导输入的官方地址（覆盖 config.yaml 的 themes.market_base_url），
+// marketEmail/marketPassword 为官方市场账号（官方代理下载要求登录态，密码仅瞬时使用不落库）。
 // 重复触发时若任务进行中则返回当前状态，已有激活主题时幂等成功。
-func (l *SetupLogic) StartThemeInstall(ctx context.Context, marketBaseURL string) (*res.ThemeInstallStatusRes, error) {
+func (l *SetupLogic) StartThemeInstall(ctx context.Context, marketBaseURL, marketEmail, marketPassword string) (*res.ThemeInstallStatusRes, error) {
 	// 必须先完成博主账号初始化
 	count, err := l.bloggerModel.Count(ctx)
 	if err != nil {
@@ -247,7 +249,7 @@ func (l *SetupLogic) StartThemeInstall(ctx context.Context, marketBaseURL string
 	themeInstallJob = job
 	themeInstallMu.Unlock()
 
-	go l.runThemeInstall(job, marketBaseURL)
+	go l.runThemeInstall(job, marketBaseURL, marketEmail, marketPassword)
 	return themeInstallStatusRes(job), nil
 }
 
@@ -262,8 +264,8 @@ func (l *SetupLogic) GetThemeInstallStatus(ctx context.Context) (*res.ThemeInsta
 	return themeInstallStatusRes(job), nil
 }
 
-// runThemeInstall 执行安装任务：从官方市场拉取默认主题并激活。
-func (l *SetupLogic) runThemeInstall(job *ThemeInstallJob, marketBaseURL string) {
+// runThemeInstall 执行安装任务：登录官方账号后从官方市场拉取默认主题并激活。
+func (l *SetupLogic) runThemeInstall(job *ThemeInstallJob, marketBaseURL, marketEmail, marketPassword string) {
 	// 统一的任务状态更新入口（避免跨协程数据竞争）
 	setJob := func(mutate func(*ThemeInstallJob)) {
 		themeInstallMu.Lock()
@@ -293,8 +295,35 @@ func (l *SetupLogic) runThemeInstall(job *ThemeInstallJob, marketBaseURL string)
 
 	themeLogic := NewThemeLogic()
 
+	// 官方代理下载要求登录态：先用向导填写的官方账号换取 Token（密码仅瞬时使用，不落库）
+	marketToken := ""
+	if marketEmail != "" && marketPassword != "" {
+		if base, berr := novablogapi.NormalizeBaseURL(getThemeSettings().MarketBaseURL); berr == nil {
+			pair, _, loginErr := novablogapi.Login(ctx, base, marketEmail, marketPassword)
+			if loginErr != nil {
+				msg := loginErr.Error()
+				var authErr *novablogapi.AuthError
+				if errors.As(loginErr, &authErr) && authErr.Message != "" {
+					// 透传官方登录错误文案（如"邮箱或密码错误"）
+					msg = authErr.Message
+				} else if bizErr, ok := mapUpstreamError(loginErr).(*enum.BizError); ok {
+					msg = bizErr.Msg
+				}
+				setJob(func(j *ThemeInstallJob) {
+					j.Status = "failed"
+					j.Stage = "done"
+					j.Message = "官方账号登录失败：" + msg
+					j.FinishedAt = time.Now()
+				})
+				SetupLogger.Error("首装官方账号登录失败", zap.Error(loginErr))
+				return
+			}
+			marketToken = pair.AccessToken
+		}
+	}
+
 	setJob(func(j *ThemeInstallJob) { j.Stage = "installing" })
-	theme, err := themeLogic.InstallDefault(ctx)
+	theme, err := themeLogic.InstallDefault(ctx, marketToken)
 	if err != nil {
 		msg := err.Error()
 		var bizErr *enum.BizError

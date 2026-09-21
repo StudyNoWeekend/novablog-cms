@@ -308,7 +308,7 @@ func (m *AnalyticsModel) GetTopTravelGuides(ctx context.Context, sort string, li
 	return rows, nil
 }
 
-// GetRecentComments 查询最新 N 条评论，LEFT JOIN articles 和 travel_guides 获取目标标题。
+// GetRecentComments 查询最新 N 条访客评论（排除博主回复），LEFT JOIN articles 和 travel_guides 获取目标标题。
 func (m *AnalyticsModel) GetRecentComments(ctx context.Context, limit int) ([]RecentCommentRow, error) {
 	var rows []RecentCommentRow
 	err := m.db.WithContext(ctx).
@@ -316,7 +316,7 @@ func (m *AnalyticsModel) GetRecentComments(ctx context.Context, limit int) ([]Re
 		Select("c.id, c.nickname, c.content, c.target_type, c.target_id, c.is_blogger, c.created_at, COALESCE(a.title, t.title, '') as target_title").
 		Joins("LEFT JOIN articles a ON c.target_type = 'article' AND c.target_id = a.id AND a.deleted_at IS NULL").
 		Joins("LEFT JOIN travel_guides t ON c.target_type = 'travel_guide' AND c.target_id = t.id AND t.deleted_at IS NULL").
-		Where("c.deleted_at IS NULL").
+		Where("c.deleted_at IS NULL AND c.is_blogger = false").
 		Order("c.created_at DESC").
 		Limit(limit).
 		Scan(&rows).Error

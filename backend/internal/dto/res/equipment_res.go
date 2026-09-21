@@ -2,7 +2,7 @@ package res
 
 import "time"
 
-// EquipmentRes 摄影器材响应结构体。
+// EquipmentRes 个人设备响应结构体。
 type EquipmentRes struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
@@ -14,7 +14,7 @@ type EquipmentRes struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// EquipmentListRes 摄影器材列表响应结构体。
+// EquipmentListRes 个人设备列表响应结构体。
 type EquipmentListRes struct {
 	List       []EquipmentRes `json:"list"`
 	Total      int64          `json:"total"`

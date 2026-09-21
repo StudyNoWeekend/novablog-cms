@@ -77,6 +77,7 @@ func NewApp(cfgPath string) (*App, error) {
 	logic.AuthLogger = logger
 	logic.SetupLogger = logger
 	logic.MusicLogger = logger
+	logic.CommentLogger = logger
 
 	// 注入主题模块配置
 	logic.SetThemeSettings(&logic.ThemeSettings{
@@ -89,6 +90,12 @@ func NewApp(cfgPath string) (*App, error) {
 		MaxArtifactMB: cfg.GetInt("themes.max_artifact_mb"),
 	})
 	logic.ThemeLogger = logger
+
+	// 注入开源作品模块配置：与主题模块共用 GitHub 访问配置（token 提升限流额度、代理走探测降级）
+	logic.SetOpenSourceSettings(&logic.OpenSourceSettings{
+		GithubToken: cfg.GetString("themes.github_token"),
+		ProxyURL:    cfg.GetString("themes.proxy_url"),
+	})
 
 	// 主题模块运行配置：DB 持久化值（后台修改）优先于 config.yaml 出厂值
 	if marketConfig, err := logic.NewThemeMarketConfigLogic().GetConfig(context.Background()); err == nil {

@@ -60,7 +60,7 @@ import {
   StarOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
-import type { ThemeItem } from '@/types/template'
+import type { ThemeItem } from '@/types/theme'
 import { isPreviewURL, themeGradient, themeStatusText, THEME_TYPE_LABELS } from '@/utils/themeDisplay'
 
 const props = defineProps<{

@@ -228,3 +228,23 @@ func (m *ArticleModel) IncrementViewCount(ctx context.Context, slug string) erro
 		Where("slug = ? AND status = ?", slug, 2).
 		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
 }
+
+// IncrementViewCountByID 根据 ID 增加文章浏览量，仅对已发布文章生效。
+func (m *ArticleModel) IncrementViewCountByID(ctx context.Context, id string) error {
+	return m.db.WithContext(ctx).
+		Model(&Article{}).
+		Where("id = ? AND status = ?", id, 2).
+		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
+}
+
+// UpdateCommentCount 增减文章评论计数，仅对已发布文章生效。delta 为 +1（新增）或 -1（删除）。
+func (m *ArticleModel) UpdateCommentCount(ctx context.Context, id string, delta int) error {
+	expr := gorm.Expr("comment_count + ?", delta)
+	if delta < 0 {
+		expr = gorm.Expr("GREATEST(comment_count - ?, 0)", -delta)
+	}
+	return m.db.WithContext(ctx).
+		Model(&Article{}).
+		Where("id = ? AND status = ?", id, 2).
+		UpdateColumn("comment_count", expr).Error
+}

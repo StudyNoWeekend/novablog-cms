@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -22,8 +23,19 @@ import (
 // client 公用 HTTP 客户端，统一设置超时。
 var client = &http.Client{Timeout: 15 * time.Second}
 
+// downloadResolveClient 不跟随重定向的客户端，专用于解析官方代理下载地址的 302 Location。
+var downloadResolveClient = &http.Client{
+	Timeout: 15 * time.Second,
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
+
 // apiPrefix 官方 API 版本前缀。
 const apiPrefix = "/api/v1"
+
+// officialDownloadPathPattern 官方代理下载地址的路径段：{apiPrefix}/themes/{id}/download。
+var officialDownloadPathPattern = regexp.MustCompile(`^` + apiPrefix + `/themes/\d+/download/?$`)
 
 // AuthError 官方返回 401：主题接口场景表示登录已失效，登录/刷新场景表示凭据错误。
 type AuthError struct {
@@ -233,11 +245,6 @@ type RatingResult struct {
 	Rating float64 `json:"rating"`
 }
 
-// DownloadResult 下载/安装结果。
-type DownloadResult struct {
-	DownloadURL string `json:"download_url"`
-}
-
 // DefaultTheme 官方默认主题（GET /themes/default 返回，含制品下载地址）。
 type DefaultTheme struct {
 	ThemeItem
@@ -356,13 +363,83 @@ func RateTheme(ctx context.Context, baseURL, id string, score int, token string)
 	return data, nil
 }
 
-// DownloadTheme 下载/安装主题（计数 +1），返回主题包下载地址。
-func DownloadTheme(ctx context.Context, baseURL, id, token string) (DownloadResult, error) {
-	var data DownloadResult
-	if err := call(ctx, baseURL, http.MethodPost, "/themes/"+id+"/download", token, nil, &data); err != nil {
-		return DownloadResult{}, err
+// IsOfficialDownloadURL 判断 rawURL 是否为官方代理下载地址（{官方API}/api/v1/themes/{id}/download）。
+// 仅当 host 与官方 base 完全一致时才认定为官方地址：调用方据此决定是否携带官方 Token，
+// 避免把凭据发送到第三方 host。其他形态（.tar.gz 直链、GitHub 仓库目录地址等）返回 false。
+func IsOfficialDownloadURL(baseURL, rawURL string) bool {
+	if baseURL == "" || rawURL == "" {
+		return false
 	}
-	return data, nil
+	base, err := NormalizeBaseURL(baseURL)
+	if err != nil {
+		return false
+	}
+	baseU, err := url.Parse(base)
+	if err != nil {
+		return false
+	}
+	u, err := url.Parse(rawURL)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return false
+	}
+	return strings.EqualFold(u.Host, baseU.Host) && officialDownloadPathPattern.MatchString(u.Path)
+}
+
+// ResolveDownload 请求官方代理下载地址（GET /themes/{id}/download）：
+// 官方计数 +1 后 302 重定向到真实下载地址，本方法不跟随重定向，解析并返回 Location。
+// token 必填（官方下载代理要求登录态）；401 → AuthError，404 等 → APIError。
+func ResolveDownload(ctx context.Context, rawURL, token string) (string, error) {
+	if rawURL == "" {
+		return "", errors.New("官方下载地址不能为空")
+	}
+	if token == "" {
+		return "", &AuthError{Message: "官方下载代理需要登录态"}
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("构建下载代理请求失败: %w", err)
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := downloadResolveClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("请求官方下载代理失败: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusFound {
+		location := resp.Header.Get("Location")
+		if location == "" {
+			return "", fmt.Errorf("官方下载代理未返回重定向地址")
+		}
+		// Location 理论上为绝对地址，防御性解析相对地址
+		if ref, perr := req.URL.Parse(location); perr == nil {
+			location = ref.String()
+		}
+		return location, nil
+	}
+
+	// 非 302：响应体为官方统一 JSON 错误结构（也可能为空），尽力解析
+	var envelope officialResp
+	_ = json.NewDecoder(resp.Body).Decode(&envelope)
+
+	switch {
+	case resp.StatusCode == http.StatusUnauthorized || envelope.Code == http.StatusUnauthorized:
+		msg := envelope.Message
+		if msg == "" {
+			msg = "官方账号登录已失效"
+		}
+		return "", &AuthError{Message: msg}
+	case resp.StatusCode == http.StatusOK || envelope.Code == http.StatusOK:
+		return "", fmt.Errorf("官方下载代理未按预期重定向(HTTP %d)", resp.StatusCode)
+	default:
+		msg := envelope.Message
+		if msg == "" {
+			msg = resp.Status
+		}
+		return "", &APIError{Code: envelope.Code, Message: msg}
+	}
 }
 
 // ListFavorites 查询当前用户收藏的主题列表（按收藏时间倒序，已删除主题自动跳过）。

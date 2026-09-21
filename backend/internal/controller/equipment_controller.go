@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// EquipmentController 摄影器材控制器结构体。
+// EquipmentController 个人设备控制器结构体。
 type EquipmentController struct {
 	logic *logic.EquipmentLogic
 }
@@ -19,7 +19,7 @@ func NewEquipmentController() *EquipmentController {
 	return &EquipmentController{logic: logic.NewEquipmentLogic()}
 }
 
-// Create 创建摄影器材 POST /api/v1/equipments
+// Create 创建个人设备 POST /api/v1/equipments
 func (c *EquipmentController) Create(ctx *gin.Context) {
 	var r req.CreateEquipmentReq
 	if err := ctx.ShouldBindJSON(&r); err != nil {
@@ -34,7 +34,7 @@ func (c *EquipmentController) Create(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// GetList 获取摄影器材列表 GET /api/v1/equipments
+// GetList 获取个人设备列表 GET /api/v1/equipments
 func (c *EquipmentController) GetList(ctx *gin.Context) {
 	var r req.EquipmentListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
@@ -49,7 +49,7 @@ func (c *EquipmentController) GetList(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// GetByID 获取摄影器材详情 GET /api/v1/equipments/:id
+// GetByID 获取个人设备详情 GET /api/v1/equipments/:id
 func (c *EquipmentController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := c.logic.GetByID(ctx, id)
@@ -60,7 +60,7 @@ func (c *EquipmentController) GetByID(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// Update 更新摄影器材 PUT /api/v1/equipments/:id
+// Update 更新个人设备 PUT /api/v1/equipments/:id
 func (c *EquipmentController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var r req.UpdateEquipmentReq
@@ -76,7 +76,7 @@ func (c *EquipmentController) Update(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// Delete 删除摄影器材 DELETE /api/v1/equipments/:id
+// Delete 删除个人设备 DELETE /api/v1/equipments/:id
 func (c *EquipmentController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := c.logic.Delete(ctx, id); err != nil {

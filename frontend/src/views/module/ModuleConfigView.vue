@@ -54,7 +54,8 @@ const modules: ModuleItem[] = [
   { key: 'video_enabled', label: '视频管理', description: '博客前台的视频作品展示' },
   { key: 'travel_enabled', label: '旅行管理', description: '博客前台的旅行攻略展示' },
   { key: 'portfolio_enabled', label: '作品集管理', description: '博客前台的摄影作品集展示' },
-  { key: 'equipment_enabled', label: '设备管理', description: '博客前台的摄影器材展示' },
+  { key: 'equipment_enabled', label: '个人设备', description: '博客前台的个人设备展示' },
+  { key: 'project_enabled', label: '项目经历', description: '博客前台的项目经历展示' },
 ]
 
 const loading = ref(true)
@@ -68,6 +69,7 @@ const formState = reactive<Record<string, boolean>>({
   travel_enabled: true,
   portfolio_enabled: true,
   equipment_enabled: true,
+  project_enabled: true,
 })
 
 async function fetchConfig() {

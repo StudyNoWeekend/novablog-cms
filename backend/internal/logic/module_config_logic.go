@@ -38,6 +38,7 @@ func moduleConfigToCache(m *model.ModuleConfig) *cache.ModuleConfigCacheData {
 		TravelEnabled:    m.TravelEnabled,
 		PortfolioEnabled: m.PortfolioEnabled,
 		EquipmentEnabled: m.EquipmentEnabled,
+		ProjectEnabled:   m.ProjectEnabled,
 	}
 }
 
@@ -51,6 +52,7 @@ func moduleConfigCacheToRes(c *cache.ModuleConfigCacheData) *res.ModuleConfigRes
 		TravelEnabled:    c.TravelEnabled,
 		PortfolioEnabled: c.PortfolioEnabled,
 		EquipmentEnabled: c.EquipmentEnabled,
+		ProjectEnabled:   c.ProjectEnabled,
 	}
 }
 
@@ -64,6 +66,7 @@ func moduleConfigToRes(m *model.ModuleConfig) *res.ModuleConfigRes {
 		TravelEnabled:    m.TravelEnabled,
 		PortfolioEnabled: m.PortfolioEnabled,
 		EquipmentEnabled: m.EquipmentEnabled,
+		ProjectEnabled:   m.ProjectEnabled,
 		UpdatedAt:        m.UpdatedAt,
 	}
 }
@@ -121,6 +124,9 @@ func (l *ModuleConfigLogic) UpdateConfig(ctx context.Context, r *req.UpdateModul
 	}
 	if r.EquipmentEnabled != nil {
 		config.EquipmentEnabled = *r.EquipmentEnabled
+	}
+	if r.ProjectEnabled != nil {
+		config.ProjectEnabled = *r.ProjectEnabled
 	}
 
 	// 更新数据库

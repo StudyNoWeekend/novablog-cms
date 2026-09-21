@@ -62,6 +62,10 @@ CONFIG_DIR="" UPLOADS_DIR="" THEMES_DIR="" LOGS_DIR="" FRONTEND_DIR="" FRONTEND_
 PGDATA_DIR="" REDISDATA_DIR=""
 MARKET_URL=""
 
+NGINX_MODE=""            # ""=未指定(自动检测) / 1=启用 --host-nginx / 0=禁用 --no-host-nginx
+NGINX_CONF_DIR="/etc/nginx/conf.d"
+NGINX_CONF_DIR_INPUT=""
+
 VERSION_SET=0
 
 usage() {
@@ -87,6 +91,13 @@ NovaBlog 部署脚本
   --public-url <地址>    博客对外访问地址（默认 http://<博客入口域名>，未配域名时 http://localhost:<博客端口>）
   --domain <域名>        博客入口 server_name（默认 _，即任意域名/ IP）
   --admin-domain <域名>  后台入口 server_name（默认 _）
+
+宿主机 nginx 反代（可选）
+  宿主机已有 nginx 时，可让脚本把本博客的反代配置写入 conf.d 并自动 reload：
+    ./deploy.sh --name llcms --host-nginx --domain blog.example.com --admin-domain cms.example.com
+  脚本会生成 /etc/nginx/conf.d/<博客名>.conf（nginx -t 校验通过后 systemctl reload nginx）；
+  重复部署覆盖该文件，--down 时删除并 reload。域名必须是裸域名（不带 http://）；
+  博客域名为 _ 时表示直连任意 IP，无法做反代路由，须先填具体域名再启用。
 
 数据库（PostgreSQL）
   --db-host <主机>     PostgreSQL 地址；留空或 localhost/127.0.0.1 时自动部署内置容器
@@ -114,6 +125,10 @@ NovaBlog 部署脚本
 
 其他
   --market-url <地址>    官方主题市场地址（首装拉取默认主题用，可留空）
+  --host-nginx           启用宿主机 nginx 反代：自动生成 <博客名>.conf 到 conf.d
+                         并 systemctl reload nginx（域名须为裸域名，详见下方说明）
+  --no-host-nginx        禁用宿主机 nginx 反代（默认：自动检测，交互时询问）
+  --nginx-conf-dir <目录> nginx conf.d 目录（默认 /etc/nginx/conf.d）
   -y, --yes              全部使用默认值/已有配置，不进入交互问答
   --status               查看容器状态（可 --name 指定博客，仅一个博客时自动选中）
   --logs                 跟踪应用日志
@@ -155,6 +170,9 @@ while [ $# -gt 0 ]; do
     --pgdata-dir) PGDATA_DIR="${2:?--pgdata-dir 需要一个值}"; shift 2 ;;
     --redisdata-dir) REDISDATA_DIR="${2:?--redisdata-dir 需要一个值}"; shift 2 ;;
     --market-url) MARKET_URL="${2:?--market-url 需要一个值}"; shift 2 ;;
+    --host-nginx) NGINX_MODE=1; shift ;;
+    --no-host-nginx) NGINX_MODE=0; shift ;;
+    --nginx-conf-dir) NGINX_CONF_DIR_INPUT="${2:?--nginx-conf-dir 需要一个值}"; NGINX_CONF_DIR="$NGINX_CONF_DIR_INPUT"; shift 2 ;;
     -y|--yes) ASSUME_YES=1; shift ;;
     --status) ACTION="status"; shift ;;
     --logs) ACTION="logs"; shift ;;
@@ -249,6 +267,231 @@ compose_up_failed() {
 查看详细日志：./deploy.sh --name ${NAME} --logs
 EOF
   exit 1
+}
+
+# ============================== 宿主机 nginx 反代 ==============================
+# 可选能力：把本博客的反代配置写入宿主机 /etc/nginx/conf.d/<博客名>.conf 并 reload，
+# 让访客可通过 80/443 免端口访问（多博客同机：每博客一个独立 .conf，互不覆盖）。
+# 该能力属于"尽力而为"：任何 nginx 环节失败都只警告、不中断容器部署（直连端口始终可用）。
+
+# HOST_NGINX_SUDO 管理命令前缀：root 为空；非 root 为 sudo / sudo -n（无 tty 时避免卡在密码输入）
+HOST_NGINX_SUDO=""
+if [ "$(id -u)" != 0 ] && command -v sudo >/dev/null 2>&1; then
+  HOST_NGINX_SUDO="sudo"
+  [ "$INTERACTIVE" = 1 ] || HOST_NGINX_SUDO="sudo -n"
+fi
+
+# host_nginx_sudo "命令..." 执行可能需提权的 nginx 管理命令
+host_nginx_sudo() {
+  if [ -n "$HOST_NGINX_SUDO" ]; then $HOST_NGINX_SUDO "$@"; else "$@"; fi
+}
+
+# host_nginx_write <文件> <内容>：root 直接写；否则利用 sudo tee 写入
+host_nginx_write() {
+  local f="$1"
+  if [ -n "$HOST_NGINX_SUDO" ]; then
+    printf '%s' "$2" | $HOST_NGINX_SUDO tee "$f" >/dev/null
+  else
+    mkdir -p "$(dirname "$f")"
+    printf '%s' "$2" > "$f"
+  fi
+}
+
+# nginx_available 输出可用的 nginx 可执行文件路径（搜索常见安装位置）
+nginx_available() {
+  local cand
+  for cand in nginx /usr/sbin/nginx /usr/local/nginx/sbin/nginx /opt/homebrew/opt/nginx/bin/nginx; do
+    command -v "$cand" >/dev/null 2>&1 && { printf '%s' "$cand"; return 0; }
+  done
+  return 1
+}
+
+# nginx_test <nginx 路径或空>：0=自检通过 1=配置错误 3=未安装 nginx
+nginx_test() {
+  local nginx_bin="$1"
+  [ -n "$nginx_bin" ] || return 3
+  if host_nginx_sudo "$nginx_bin" -t >/dev/null 2>&1; then return 0; else return 1; fi
+}
+
+# nginx_reload <nginx 路径或空>：0=已 reload 1=失败
+nginx_reload() {
+  local nginx_bin="$1"
+  if command -v systemctl >/dev/null 2>&1 && host_nginx_sudo systemctl reload nginx >/dev/null 2>&1; then
+    return 0
+  fi
+  if command -v service >/dev/null 2>&1 && host_nginx_sudo service nginx reload >/dev/null 2>&1; then
+    return 0
+  fi
+  [ -n "$nginx_bin" ] || return 1
+  host_nginx_sudo "$nginx_bin" -s reload >/dev/null 2>&1
+}
+
+# host_nginx_available 判定宿主机 nginx 反代适用性：conf.d 目录存在即视为目标可用
+host_nginx_available() { [ -d "$NGINX_CONF_DIR" ]; }
+
+# normalize_server_name 去掉 http(s):// 前缀与结尾斜杠（与 DOMAIN 镜像同样清洗逻辑）
+normalize_server_name() {
+  local v="$1"
+  v="${v#http://}"; v="${v#https://}"; v="${v%/}"
+  printf '%s' "$v"
+}
+
+# host_nginx_conf_name：<博客名>.conf（同机多博客天然互不冲突）
+host_nginx_conf_name() { printf '%s.conf' "$NAME"; }
+
+# host_nginx_map_var：nginx 变量名不允许连字符，'a-b' → 'a_b'
+host_nginx_map_var() { printf '%s' "$NAME" | tr '-' '_'; }
+
+# host_nginx_generate <输出到 stdout>：渲染本博客的反代配置（博客块 + 可选的 CMS 块）
+# 依赖已确定的 BLOG_PORT / ADMIN_PORT / DOMAIN / ADMIN_DOMAIN
+host_nginx_generate() {
+  local map_var blog_server admin_server
+  map_var="$(host_nginx_map_var)"
+  # map 变量名带博客名后缀，多博客同机时各自的 conf 互不冲突
+  cat <<EOF
+# NovaBlog 外层 nginx 反代配置 —— 由 deploy.sh 生成（$(date '+%Y-%m-%d %H:%M:%S')）
+# 博客名称：${NAME}；重复部署会自动覆盖本文件，请勿手工修改；--down 会删除本文件。
+# 博客入口 → ${DOMAIN} → 127.0.0.1:${BLOG_PORT}；后台入口 → ${ADMIN_DOMAIN} → 127.0.0.1:${ADMIN_PORT}
+
+# WebSocket 升级映射（conf.d 会在 http 上下文加载，此处顶层 map 即可）
+map \$http_upgrade \$connection_upgrade_${map_var} {
+    default upgrade;
+    ''      close;
+}
+
+EOF
+  cat <<EOF
+# ---- 博客前台（访客入口）----
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    client_max_body_size 200m;
+
+    location / {
+        proxy_pass http://127.0.0.1:${BLOG_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        # WebSocket / SSE / 流式接口：升级头 + 关闭缓冲，长连接不被截断
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade_${map_var};
+        proxy_buffering off;
+        proxy_read_timeout 300s;
+    }
+}
+EOF
+  # CMS 后台块：仅当填了独立后台域名才生成（否则后台直接走端口访问）
+  if [ "$ADMIN_DOMAIN" != "_" ]; then
+    cat <<EOF
+
+# ---- CMS 管理后台 ----
+server {
+    listen 80;
+    server_name ${ADMIN_DOMAIN};
+
+    client_max_body_size 200m;
+
+    location / {
+        proxy_pass http://127.0.0.1:${ADMIN_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade_${map_var};
+        proxy_write_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+}
+EOF
+  fi
+}
+
+# host_nginx_write_conf 生成 → nginx -t 校验 → reload 的安全写入流程
+# 返回 0=已完成（含写入但未 reload 或还原后警告）；非 0 视为未启用，由调用方决定
+host_nginx_write_conf() {
+  local conf nginx_bin test_before test_after bak
+  conf="$NGINX_CONF_DIR/$(host_nginx_conf_name)"
+  nginx_bin="$(nginx_available || true)"
+
+  # 自检基线：已有配置本来就坏时，我们的文件照写但不 reload，交由用户核查
+  nginx_test "$nginx_bin"; test_before=$?
+  if [ "$test_before" = 1 ]; then
+    c_warn "检测到 nginx 配置本身校验失败（与本博客无关），仍会写入 ${conf}，但不会自动 reload，请手工核查后再 reload。"
+  fi
+
+  bak=""
+  if [ -f "$conf" ]; then
+    # 备份旧配置，我们的渲染版校验失败时可还原
+    bak="$(mktemp "${conf}.bak.XXXXXX")" || bak=""
+    if [ -n "$bak" ]; then
+      if [ -n "$HOST_NGINX_SUDO" ]; then $HOST_NGINX_SUDO cp "$conf" "$bak"; else cp "$conf" "$bak"; fi
+    fi
+  fi
+
+  host_nginx_write "$conf" "$(host_nginx_generate)" || { c_err "写入 nginx 配置失败：${conf}"; return 0; }
+  c_info "已生成宿主机反代配置：$conf"
+
+  nginx_test "$nginx_bin"; test_after=$?
+  if [ "$test_after" = 1 ]; then
+    # 我们的配置导致校验失败：还原（或删除新文件），警告但不中断部署
+    c_err "nginx 配置校验失败，已还原 ${conf}。"
+    if [ -n "$bak" ] && [ -f "$bak" ]; then
+      if [ -n "$HOST_NGINX_SUDO" ]; then $HOST_NGINX_SUDO mv "$bak" "$conf"; else mv "$bak" "$conf"; fi
+    else
+      if [ -n "$HOST_NGINX_SUDO" ]; then $HOST_NGINX_SUDO rm -f "$conf"; else rm -f "$conf"; fi
+    fi
+    return 0
+  fi
+  if [ -n "$bak" ] && [ -f "$bak" ]; then
+    [ -n "$HOST_NGINX_SUDO" ] && $HOST_NGINX_SUDO rm -f "$bak" || rm -f "$bak"
+  fi
+
+  if [ "$test_before" != 0 ] && [ "$test_after" = 0 ]; then
+    # 基线更早就失败：即使现在通过也不自动 reload（可能还有别的坏文件在排队）
+    c_warn "nginx 配置基线校验失败，虽已写入 ${conf} 但暂不 reload，请手工核对全量配置。"
+    return 0
+  fi
+
+  c_info "nginx -t 校验通过，重新加载配置 ..."
+  if nginx_reload "$nginx_bin"; then
+    c_info "nginx 已 reload，生效地址：http://${DOMAIN}/（博客）、http://${ADMIN_DOMAIN}/admin/（后台）"
+  else
+    c_warn "nginx 未运行或 reload 失败，配置已写入 ${conf}，生效后会按此配置运行（当前无 reload 服务时请手工 nginx -s reload）。"
+  fi
+  return 0
+}
+
+# host_nginx_remove_conf 删除 .conf 并 reload（--down 时调用），出错仅警告
+host_nginx_remove_conf() {
+  local conf nginx_bin
+  conf="$NGINX_CONF_DIR/$(host_nginx_conf_name)"
+  [ -f "$conf" ] || return 0
+  nginx_bin="$(nginx_available || true)"
+  c_info "删除宿主机反代配置：$conf"
+  if [ -n "$HOST_NGINX_SUDO" ]; then $HOST_NGINX_SUDO rm -f "$conf"; else rm -f "$conf"; fi
+  nginx_test "$nginx_bin"; rc=$?
+  if [ "$rc" = 1 ]; then
+    c_warn "nginx 配置校验失败（可能其他 .conf 有误），已删除 ${conf} 但未 reload，请手工核查。"
+    return 0
+  fi
+  if nginx_reload "$nginx_bin"; then
+    c_info "nginx 已 reload，${conf} 已生效移除。"
+  else
+    c_warn "nginx 未运行或 reload 失败，${conf} 已删除，启动 nginx 后即生效。"
+  fi
+  return 0
+}
+
+# host_nginx_print_info 部署摘要：宿主机反代一行
+host_nginx_print_info() {
+  local conf
+  conf="$NGINX_CONF_DIR/$(host_nginx_conf_name)"
+  printf '  宿主机反代     %s（域名 %s → 127.0.0.1:%s）\n' "$conf" "$DOMAIN" "$BLOG_PORT"
 }
 
 # ============================== 前置检查 ==============================
@@ -645,6 +888,11 @@ security:
   enabled: true
   blacklist_ttl_minutes: 60
   log_retention_days: 7
+
+geoip:
+  data_dir: /app/data/geoip
+  download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
+  proxy_url: ""
 
 themes:
   data_dir: /app/data/themes

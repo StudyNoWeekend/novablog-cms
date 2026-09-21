@@ -30,7 +30,7 @@
 
     <!-- 主题不存在 -->
     <a-empty v-else-if="!detail" description="主题不存在或已下架">
-      <a-button type="primary" @click="goBack">返回模板市场</a-button>
+      <a-button type="primary" @click="goBack">返回主题市场</a-button>
     </a-empty>
 
     <div v-else class="detail-layout">
@@ -171,7 +171,7 @@ import {
   StarFilled,
   StarOutlined,
 } from '@ant-design/icons-vue'
-import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/template'
+import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/theme'
 import { useThemeMarketStore } from '@/stores/themeMarket'
 import { isPreviewURL, themeGradient, themeStatusText, THEME_TYPE_LABELS } from '@/utils/themeDisplay'
 
@@ -194,7 +194,7 @@ const isPaid = computed(() => detail.value?.price === 'paid')
 const favorited = computed(() => (detail.value ? store.favoriteIds.has(detail.value.id) : false))
 
 function goBack() {
-  router.push('/templates')
+  router.push('/themes')
 }
 
 /** 并行拉取详情与版本历史 */
@@ -211,8 +211,8 @@ function retryReleases() {
 }
 
 function handleAuthExpired() {
-  // 官方登录失效后详情接口不可用，退回模板页弹出登录遮罩
-  router.replace('/templates')
+  // 官方登录失效后详情接口不可用，退回主题页弹出登录遮罩
+  router.replace('/themes')
 }
 
 async function handleLike() {
@@ -261,9 +261,9 @@ async function handleDownload() {
 
 onMounted(() => {
   window.addEventListener(MARKET_AUTH_EXPIRED_EVENT, handleAuthExpired)
-  // 未连接官方市场时退回模板页（登录遮罩在该页展示）
+  // 未连接官方市场时退回主题页（登录遮罩在该页展示）
   if (!store.loggedIn) {
-    router.replace('/templates')
+    router.replace('/themes')
     return
   }
   loadAll()

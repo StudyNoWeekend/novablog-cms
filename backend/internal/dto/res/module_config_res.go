@@ -11,5 +11,6 @@ type ModuleConfigRes struct {
 	TravelEnabled    bool      `json:"travel_enabled"`
 	PortfolioEnabled bool      `json:"portfolio_enabled"`
 	EquipmentEnabled bool      `json:"equipment_enabled"`
+	ProjectEnabled   bool      `json:"project_enabled"`
 	UpdatedAt        time.Time `json:"updated_at"`
 }

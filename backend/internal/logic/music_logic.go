@@ -108,7 +108,9 @@ func (l *MusicLogic) GetSongByID(ctx context.Context, id string) (*res.SongRes, 
 //
 // 副作用：更新成功后使对应的音频 URL 缓存失效，避免 B 站新链接与旧缓存不一致。
 func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSongReq) (*res.SongRes, error) {
-	song, err := l.songModel.GetByID(ctx, id)
+	// 使用 GetByIDRaw 跳过 AfterFind 钩子，读取存储中的原始 cover_url，
+	// 避免将钩子解析出的完整 URL 原样写回，覆盖相对路径存储值。
+	song, err := l.songModel.GetByIDRaw(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("歌曲不存在")
 	}
@@ -304,12 +306,17 @@ func pickBestAudioURL(entries []bilibili.AudioEntry) string {
 // saveCoverToStorage 将外部封面 URL 下载并保存到已配置的对象存储中。
 // 路径格式：music/cover/{uuid}.{ext}（前置 PathPrefix）。
 // 若存储未配置或保存失败，降级使用原始 URL，仅记录警告。
+// 对于已托管在当前存储中的 URL（本地 BaseURL 或云存储自定义域名，如媒体库选择），直接复用，不重复下载。
 func (l *MusicLogic) saveCoverToStorage(ctx context.Context, coverURL string) string {
 	if coverURL == "" {
 		return coverURL
 	}
 	// 仅处理外部 HTTP(S) URL（Bilibili CDN 等），已保存的本地路径跳过
 	if !strings.HasPrefix(coverURL, "http://") && !strings.HasPrefix(coverURL, "https://") {
+		return coverURL
+	}
+	// 已属于本站/当前存储托管的地址（如媒体库选择），直接复用
+	if isSelfHostedURL(coverURL, l.manager.GetActiveConfig()) {
 		return coverURL
 	}
 
@@ -383,6 +390,27 @@ func extFromContentType(contentType string) string {
 	default:
 		return ".jpg"
 	}
+}
+
+// isSelfHostedURL 判断 URL 是否已托管在本地站点或当前存储上，避免重复下载落地。
+// 命中以下任一情况即视为自托管：
+//   - 以当前存储配置的 CustomDomain 为前缀；
+//   - 以本地 BaseURL（/files 静态资源前缀）为前缀。
+//
+// 云存储默认桶域名（COS/OSS/MinIO）生成的 URL 无法在此精确匹配，但这类地址通常
+// 是媒体库或历史封面数据，即便被再次下载也只是多存一份，不影响正确性。
+func isSelfHostedURL(coverURL string, activeCfg *model.StorageConfig) bool {
+	if activeCfg != nil && activeCfg.CustomDomain != "" &&
+		strings.HasPrefix(coverURL, strings.TrimRight(activeCfg.CustomDomain, "/")+"/") {
+		return true
+	}
+	if model.BaseURL != "" {
+		base := strings.TrimRight(model.BaseURL, "/")
+		if strings.HasPrefix(coverURL, base+"/files/") {
+			return true
+		}
+	}
+	return false
 }
 
 // toSongRes 转换为歌曲响应。

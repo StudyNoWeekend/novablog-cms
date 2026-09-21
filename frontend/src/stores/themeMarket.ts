@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { message } from 'ant-design-vue'
 
-import { themeMarketApi } from '@/api/template'
+import { themeMarketApi, resolveMarketRetries, abortMarketRetries } from '@/api/theme'
 import { configApi } from '@/api/config'
 import { marketStorage } from '@/utils/storage'
 import type {
@@ -13,7 +13,7 @@ import type {
   ThemeMarketFilters,
   ThemeReleaseItem,
   ThemeStats,
-} from '@/types/template'
+} from '@/types/theme'
 
 // 官方服务地址默认值由后端下发（GET /public/config），前端不硬编码；
 // defaultBaseURL 保存后端当前生效值，marketBaseURL 为本浏览器实际使用的地址（登录弹窗可改）
@@ -170,6 +170,8 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     defaultBaseURL.value = baseURL
     marketUser.value = res.user
     loggedIn.value = true
+    // 用新 Token 重放登录失效期间挂起的请求（安装/更新/下载等自动继续）
+    resolveMarketRetries()
     await initMarketData()
   }
 
@@ -180,6 +182,8 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
   }
 
   async function logout() {
+    // 挂起中的请求不再等待重放，直接拒绝
+    abortMarketRetries()
     try {
       await themeMarketApi.logout()
     } catch {

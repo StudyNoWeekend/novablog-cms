@@ -4,7 +4,7 @@ import type { AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 
 import { message } from 'ant-design-vue'
 import { storage } from '@/utils/storage'
 import type { ApiResponse } from '@/types/api'
-import { MARKET_AUTH_EXPIRED_CODE } from '@/types/template'
+import { MARKET_AUTH_EXPIRED_CODE } from '@/types/theme'
 
 interface ApiRequest {
   get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>

@@ -62,7 +62,10 @@ func InitDB(cfg *DBConfig) (*gorm.DB, error) {
 		return nil, fmt.Errorf("自动迁移失败: %w", err)
 	}
 
-	// 5. 设置全局 DB
+	// 5. 数据一致性回填（幂等）：用真实评论数校正 comment_count/review_count 计数
+	backfillCounters(db)
+
+	// 6. 设置全局 DB
 	model.DB = db
 
 	return db, nil
@@ -128,8 +131,49 @@ func autoMigrate(db *gorm.DB) error {
 		&model.ModuleConfig{},
 		&model.Theme{},
 		&model.PhotoEquipment{},
+		&model.Project{},
+		&model.OpenSourceWork{},
 		&model.CorsConfig{},
 		&model.ThirdPartyPlaylist{},
 		&model.ThemeMarketConfig{},
 	)
+}
+
+// backfillCounters 用真实数据校正内容计数（幂等，每次启动执行一次）：
+//   - articles.comment_count ← comments 表中 target_type='article' 的未删除评论数
+//   - travel_guides.review_count ← comments 表中 target_type='travel_guide' 的未删除评论数
+//
+// 修复历史遗留：评论计数器从未被维护导致文章管理/热门排行始终显示 0。
+// 仅校正有评论但计数明显偏小（相差 >= 1）的内容，其余保持不变。
+func backfillCounters(db *gorm.DB) {
+	// 文章评论数回填
+	if err := db.Exec(`
+		UPDATE articles a
+		SET comment_count = t.real_count
+		FROM (
+			SELECT c.target_id, COUNT(*) AS real_count
+			FROM comments c
+			WHERE c.target_type = 'article' AND c.deleted_at IS NULL
+			GROUP BY c.target_id
+		) t
+		WHERE a.id = t.target_id
+		  AND t.real_count > a.comment_count
+	`).Error; err != nil {
+		// 回填失败不影响启动
+		return
+	}
+
+	// 旅行攻略评论数回填
+	_ = db.Exec(`
+		UPDATE travel_guides tg
+		SET review_count = t.real_count
+		FROM (
+			SELECT c.target_id, COUNT(*) AS real_count
+			FROM comments c
+			WHERE c.target_type = 'travel_guide' AND c.deleted_at IS NULL
+			GROUP BY c.target_id
+		) t
+		WHERE tg.id = t.target_id
+		  AND t.real_count > tg.review_count
+	`).Error
 }

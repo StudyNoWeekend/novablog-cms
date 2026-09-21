@@ -24,6 +24,12 @@ func (c *ThemeController) marketBaseURL(ctx *gin.Context) string {
 	return ctx.GetHeader(HeaderMarketBaseURL)
 }
 
+// marketToken 读取官方账号 Token 请求头（与 ThemeMarketController 共享 HeaderMarketToken 常量）。
+// 官方代理下载接口要求登录态，安装/更新时必须携带。
+func (c *ThemeController) marketToken(ctx *gin.Context) string {
+	return ctx.GetHeader(HeaderMarketToken)
+}
+
 // List 已安装主题列表 GET /api/v1/themes
 func (c *ThemeController) List(ctx *gin.Context) {
 	result, err := c.logic.List(ctx.Request.Context())
@@ -41,7 +47,7 @@ func (c *ThemeController) Install(ctx *gin.Context) {
 		response.Fail(ctx, enum.ErrInvalidParam.Code, "请提供要安装的官方市场主题 ID", enum.ErrInvalidParam.HttpCode)
 		return
 	}
-	theme, err := c.logic.Install(ctx.Request.Context(), r.ThemeID, r.Version, r.Force, c.marketBaseURL(ctx))
+	theme, err := c.logic.Install(ctx.Request.Context(), r.ThemeID, r.Version, r.Force, c.marketBaseURL(ctx), c.marketToken(ctx))
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -73,7 +79,7 @@ func (c *ThemeController) Uninstall(ctx *gin.Context) {
 // Update 从官方市场更新已安装主题到最新版本 POST /api/v1/themes/:id/update
 func (c *ThemeController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
-	theme, err := c.logic.UpdateTheme(ctx.Request.Context(), id, c.marketBaseURL(ctx))
+	theme, err := c.logic.UpdateTheme(ctx.Request.Context(), id, c.marketBaseURL(ctx), c.marketToken(ctx))
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -419,7 +420,9 @@ func (l *AnalyticsLogic) GetDistribution(ctx context.Context) (*res.Distribution
 	// 计算百分比
 	if total > 0 {
 		for i := range items {
-			items[i].Percentage = float64(items[i].Count) / float64(total) * 100
+			p := float64(items[i].Count) / float64(total) * 100
+			// 保留一位小数
+			items[i].Percentage = math.Round(p*10) / 10
 		}
 	}
 

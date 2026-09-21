@@ -70,7 +70,10 @@ function createDay(
   }
 }
 
-export let travelGuides: TravelGuide[] = [
+// 旧版 mock 数据未包含分类字段，导出前统一补默认值
+type RawTravelGuide = Omit<TravelGuide, 'categoryId' | 'categoryName'>
+
+const rawTravelGuides: RawTravelGuide[] = [
   {
     id: 'tg-001',
     title: '西藏拉萨：雪域圣城8日朝圣之旅',
@@ -710,6 +713,12 @@ export let travelGuides: TravelGuide[] = [
   },
 ]
 
+export const travelGuides: TravelGuide[] = rawTravelGuides.map((guide) => ({
+  ...guide,
+  categoryId: 'cat-travel',
+  categoryName: '旅行攻略',
+}))
+
 function matchDaysRange(days: number, range: TravelFilters['days']): boolean {
   if (!range || range === 'all') return true
   switch (range) {
@@ -781,6 +790,7 @@ export function createEmptyGuide(): TravelGuideFormData {
     status: TravelStatus.Draft,
     destination: '',
     region: 'china',
+    categoryId: undefined,
     days: 3,
     bestMonth: '',
     viewCount: 0,

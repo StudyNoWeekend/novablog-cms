@@ -6,6 +6,7 @@ export interface ModuleConfig {
   travel_enabled: boolean
   portfolio_enabled: boolean
   equipment_enabled: boolean
+  project_enabled: boolean
   updated_at: string
 }
 
@@ -17,4 +18,5 @@ export interface UpdateModuleConfigReq {
   travel_enabled?: boolean
   portfolio_enabled?: boolean
   equipment_enabled?: boolean
+  project_enabled?: boolean
 }

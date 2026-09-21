@@ -22,6 +22,7 @@ type ModuleConfigCacheData struct {
 	TravelEnabled    bool `json:"travel_enabled"`
 	PortfolioEnabled bool `json:"portfolio_enabled"`
 	EquipmentEnabled bool `json:"equipment_enabled"`
+	ProjectEnabled   bool `json:"project_enabled"`
 }
 
 // ModuleConfigCache 模块开关配置缓存操作结构体。

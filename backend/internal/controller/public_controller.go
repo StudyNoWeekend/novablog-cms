@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"context"
 	"errors"
 	"strconv"
+	"time"
 
 	"novablog/enum"
+	"novablog/internal/cache"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/internal/storage"
@@ -27,6 +30,8 @@ type PublicController struct {
 	videoLogic             *logic.VideoLogic
 	musicLogic             *logic.MusicLogic
 	equipmentLogic         *logic.EquipmentLogic
+	projectLogic           *logic.ProjectLogic
+	openSourceLogic        *logic.OpenSourceLogic
 	moduleConfigLogic      *logic.ModuleConfigLogic
 	playlistLogic          *logic.ThirdPartyPlaylistLogic
 	themeMarketConfigLogic *logic.ThemeMarketConfigLogic
@@ -46,6 +51,8 @@ func NewPublicController(manager *storage.Manager, cryptoKey string) *PublicCont
 		videoLogic:             logic.NewVideoLogic(),
 		musicLogic:             logic.NewMusicLogic(manager),
 		equipmentLogic:         logic.NewEquipmentLogic(),
+		projectLogic:           logic.NewProjectLogic(),
+		openSourceLogic:        logic.NewOpenSourceLogic(),
 		moduleConfigLogic:      logic.NewModuleConfigLogic(),
 		playlistLogic:          logic.NewThirdPartyPlaylistLogic(),
 		themeMarketConfigLogic: logic.NewThemeMarketConfigLogic(),
@@ -103,14 +110,16 @@ func (ctrl *PublicController) Init(c *gin.Context) {
 
 // InitThemeReq 首装主题安装请求。
 type InitThemeReq struct {
-	MarketBaseURL string `json:"market_base_url" binding:"omitempty"` // 官方市场地址（向导输入覆盖 config）
+	MarketBaseURL  string `json:"market_base_url" binding:"omitempty"` // 官方市场地址（向导输入覆盖 config）
+	MarketEmail    string `json:"market_email" binding:"omitempty"`    // 官方市场账号（官方代理下载要求登录态）
+	MarketPassword string `json:"market_password" binding:"omitempty"` // 官方市场密码（仅本次服务端登录使用，不落库）
 }
 
 // InitTheme 首装初始化博客外观：拉取官方默认主题并激活 POST /api/v1/public/install/theme
 func (ctrl *PublicController) InitTheme(c *gin.Context) {
 	var r InitThemeReq
 	_ = c.ShouldBindJSON(&r)
-	result, err := ctrl.setupLogic.StartThemeInstall(c.Request.Context(), r.MarketBaseURL)
+	result, err := ctrl.setupLogic.StartThemeInstall(c.Request.Context(), r.MarketBaseURL, r.MarketEmail, r.MarketPassword)
 	if err != nil {
 		var bizErr *enum.BizError
 		if errors.As(err, &bizErr) {
@@ -193,6 +202,8 @@ func (ctrl *PublicController) GetArticleBySlug(ctx *gin.Context) {
 		response.Fail(ctx, enum.ErrNotFound.Code, enum.ErrNotFound.Msg, enum.ErrNotFound.HttpCode)
 		return
 	}
+	// 详情请求顺带累计浏览量（同 IP 在去重窗口内只计一次；部分旧版主题未调用独立上报接口，靠此兜底）
+	ctrl.recordArticleView(ctx, result.ID, slug, ctx.ClientIP())
 	response.Success(ctx, result)
 }
 
@@ -265,12 +276,17 @@ func (ctrl *PublicController) GetRandomArticles(ctx *gin.Context) {
 }
 
 // IncrementArticleView 增加文章浏览量 GET /api/v1/public/articles/:slug/view
+// 与详情接口共用同一套 IP 去重字典，避免新版主题"详情+上报"双调用导致重复计数。
 func (ctrl *PublicController) IncrementArticleView(ctx *gin.Context) {
 	slug := ctx.Param("slug")
-	if err := ctrl.articleLogic.IncrementView(ctx.Request.Context(), slug); err != nil {
-		response.HandleError(ctx, err)
+	// 先解析文章 ID，便于去重键与详情接口一致
+	article, err := ctrl.articleLogic.GetBySlug(ctx.Request.Context(), slug)
+	if err != nil || article == nil || article.Status != 2 {
+		// 文章不存在或未发布：静默，保持与原行为一致（不计数）
+		response.Success(ctx, nil)
 		return
 	}
+	ctrl.recordArticleView(ctx, article.ID, slug, ctx.ClientIP())
 	response.Success(ctx, nil)
 }
 
@@ -352,16 +368,16 @@ func (ctrl *PublicController) GetTravelDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	// 详情请求顺带累计浏览量（同 IP 在去重窗口内只计一次；部分旧版主题未调用独立上报接口，靠此兜底）
+	ctrl.recordTravelView(ctx, result.ID, ctx.ClientIP())
 	response.Success(ctx, result)
 }
 
 // IncrementTravelView 增加旅行攻略浏览量 GET /api/v1/public/travels/:id/view
+// 与详情接口共用同一套 IP 去重字典，避免新版主题"详情+上报"双调用导致重复计数。
 func (ctrl *PublicController) IncrementTravelView(ctx *gin.Context) {
 	id := ctx.Param("id")
-	if err := ctrl.travelLogic.IncrementView(ctx.Request.Context(), id); err != nil {
-		response.HandleError(ctx, err)
-		return
-	}
+	ctrl.recordTravelView(ctx, id, ctx.ClientIP())
 	response.Success(ctx, nil)
 }
 
@@ -464,7 +480,7 @@ func (ctrl *PublicController) GetAudioURL(ctx *gin.Context) {
 	response.Success(ctx, gin.H{"url": url})
 }
 
-// GetEquipments 获取摄影器材列表 GET /api/v1/public/equipments
+// GetEquipments 获取个人设备列表 GET /api/v1/public/equipments
 func (ctrl *PublicController) GetEquipments(ctx *gin.Context) {
 	var r req.EquipmentListReq
 	if err := ctx.ShouldBindQuery(&r); err != nil {
@@ -479,10 +495,62 @@ func (ctrl *PublicController) GetEquipments(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// GetEquipmentDetail 获取摄影器材详情 GET /api/v1/public/equipments/:id
+// GetEquipmentDetail 获取个人设备详情 GET /api/v1/public/equipments/:id
 func (ctrl *PublicController) GetEquipmentDetail(ctx *gin.Context) {
 	id := ctx.Param("id")
 	result, err := ctrl.equipmentLogic.GetByID(ctx.Request.Context(), id)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetProjects 获取已发布项目经历列表 GET /api/v1/public/projects
+func (ctrl *PublicController) GetProjects(ctx *gin.Context) {
+	var r req.ProjectListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.projectLogic.GetPublicList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetProjectDetail 获取已发布项目经历详情 GET /api/v1/public/projects/:id
+func (ctrl *PublicController) GetProjectDetail(ctx *gin.Context) {
+	id := ctx.Param("id")
+	result, err := ctrl.projectLogic.GetPublicDetail(ctx.Request.Context(), id)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetOpenSources 获取已发布开源作品列表 GET /api/v1/public/open-sources
+func (ctrl *PublicController) GetOpenSources(ctx *gin.Context) {
+	var r req.OpenSourceListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.openSourceLogic.GetPublicList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetOpenSourceDetail 获取已发布开源作品详情（含 README） GET /api/v1/public/open-sources/:id
+func (ctrl *PublicController) GetOpenSourceDetail(ctx *gin.Context) {
+	id := ctx.Param("id")
+	result, err := ctrl.openSourceLogic.GetPublicDetail(ctx.Request.Context(), id)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -508,4 +576,65 @@ func (ctrl *PublicController) GetPlaylists(ctx *gin.Context) {
 		return
 	}
 	response.Success(ctx, result)
+}
+
+// viewDedupWindow 浏览去重窗口：同一 IP 对同一内容在窗口内只计一次浏览。
+const viewDedupWindow = 5 * time.Minute
+
+// recordArticleView 记录文章浏览：依赖 Redis SETNX 去重，Redis 不可用时降级为直接计数（不阻塞响应）。
+func (ctrl *PublicController) recordArticleView(ctx *gin.Context, articleID, slug, ip string) {
+	doIncrement := func() {
+		if err := ctrl.articleLogic.IncrementViewByID(ctx.Request.Context(), articleID); err != nil {
+			// 计数失败不阻塞响应，浏览统计可容忍少量丢失
+			return
+		}
+	}
+
+	if cache.RedisClient == nil {
+		// 未配置 Redis：直接计数
+		doIncrement()
+		return
+	}
+
+	key := "view:article:" + articleID + ":" + ip
+	dedupCtx, cancel := context.WithTimeout(ctx.Request.Context(), 2*time.Second)
+	defer cancel()
+	ok, err := cache.RedisClient.SetNX(dedupCtx, key, "1", viewDedupWindow).Result()
+	if err != nil {
+		// Redis 异常：降级为直接计数，保证浏览量仍能累计
+		doIncrement()
+		return
+	}
+	if !ok {
+		return // 去重窗口内已计过，跳过
+	}
+	doIncrement()
+}
+
+// recordTravelView 记录旅行攻略浏览：依赖 Redis SETNX 去重，Redis 不可用时降级为直接计数（不阻塞响应）。
+func (ctrl *PublicController) recordTravelView(ctx *gin.Context, travelID, ip string) {
+	doIncrement := func() {
+		if err := ctrl.travelLogic.IncrementView(ctx.Request.Context(), travelID); err != nil {
+			// 计数失败不阻塞响应，浏览统计可容忍少量丢失
+			return
+		}
+	}
+
+	if cache.RedisClient == nil {
+		doIncrement()
+		return
+	}
+
+	key := "view:travel:" + travelID + ":" + ip
+	dedupCtx, cancel := context.WithTimeout(ctx.Request.Context(), 2*time.Second)
+	defer cancel()
+	ok, err := cache.RedisClient.SetNX(dedupCtx, key, "1", viewDedupWindow).Result()
+	if err != nil {
+		doIncrement()
+		return
+	}
+	if !ok {
+		return
+	}
+	doIncrement()
 }

@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"novablog/bootstrap"
+	"novablog/internal/middleware"
 	"novablog/internal/model"
 	"novablog/internal/router"
 	"novablog/internal/storage"
+	"novablog/pkg/geoip"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -76,6 +78,20 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
+	}
+
+	// 初始化 IP 归属地解析器（访问日志写入时记录地区）
+	{
+		geoipSearcher := geoip.New(geoip.Config{
+			DataDir:     app.Config.GetString("geoip.data_dir"),
+			DownloadURL: app.Config.GetString("geoip.download_url"),
+			ProxyURL:    app.Config.GetString("geoip.proxy_url"),
+		}, app.Logger)
+		if err := geoipSearcher.Load(context.Background()); err != nil {
+			// 加载失败仅降级（地区列为空），不影响服务启动
+			app.Logger.Warn("IP 归属地解析器初始化失败，访问日志将不记录地区", zap.Error(err))
+		}
+		middleware.GeoIP = geoipSearcher
 	}
 
 	router.Version = version

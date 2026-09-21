@@ -1,4 +1,4 @@
-import type { ThemeItem } from '@/types/template'
+import type { ThemeItem } from '@/types/theme'
 
 // THEME_TYPE_LABELS 主题类型取值与展示文案（与官方接口文档对齐）
 export const THEME_TYPE_LABELS: Record<string, string> = {

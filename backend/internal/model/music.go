@@ -29,6 +29,12 @@ func (Song) TableName() string {
 	return "songs"
 }
 
+// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+func (s *Song) AfterFind(tx *gorm.DB) error {
+	s.CoverURL = resolveURL(s.CoverURL)
+	return nil
+}
+
 // SongModel 歌曲模型操作结构体。
 type SongModel struct {
 	db *gorm.DB
@@ -48,6 +54,20 @@ func (m *SongModel) Create(ctx context.Context, song *Song) error {
 func (m *SongModel) GetByID(ctx context.Context, id string) (*Song, error) {
 	var song Song
 	err := m.db.WithContext(ctx).Where("id = ?", id).First(&song).Error
+	if err != nil {
+		return nil, err
+	}
+	return &song, nil
+}
+
+// GetByIDRaw 根据 ID 查询歌曲，跳过 AfterFind 钩子，返回存储中的原始 cover_url。
+// 用于更新路径：避免把钩子解析出的完整 URL 原样写回，覆盖相对路径存储值。
+func (m *SongModel) GetByIDRaw(ctx context.Context, id string) (*Song, error) {
+	var song Song
+	err := m.db.WithContext(ctx).
+		Session(&gorm.Session{SkipHooks: true}).
+		Where("id = ?", id).
+		First(&song).Error
 	if err != nil {
 		return nil, err
 	}

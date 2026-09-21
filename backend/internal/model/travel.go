@@ -165,6 +165,18 @@ func (m *TravelGuideModel) IncrementViewCount(ctx context.Context, id string) er
 		UpdateColumn("view_count", gorm.Expr("view_count + 1")).Error
 }
 
+// UpdateReviewCount 增减旅行攻略评论计数，仅对已发布攻略生效。delta 为 +1（新增）或 -1（删除）。
+func (m *TravelGuideModel) UpdateReviewCount(ctx context.Context, id string, delta int) error {
+	expr := gorm.Expr("review_count + ?", delta)
+	if delta < 0 {
+		expr = gorm.Expr("GREATEST(review_count - ?, 0)", -delta)
+	}
+	return m.db.WithContext(ctx).
+		Model(&TravelGuide{}).
+		Where("id = ? AND status = ?", id, 2).
+		UpdateColumn("review_count", expr).Error
+}
+
 // IncrementLikeCount 根据ID增加旅行攻略点赞数，仅对已发布攻略生效。
 func (m *TravelGuideModel) IncrementLikeCount(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).

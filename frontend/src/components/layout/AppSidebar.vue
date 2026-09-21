@@ -117,6 +117,23 @@
           </router-link>
         </div>
 
+        <!-- 技术 -->
+        <div class="menu-group">
+          <div class="menu-group-title">技术</div>
+          <router-link
+            v-for="item in techMenuItems"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
+        </div>
+
         <!-- 安全 -->
         <div class="menu-group">
           <div class="menu-group-title">安全</div>
@@ -180,6 +197,8 @@ import {
   FileTextOutlined,
   PictureOutlined,
   CameraOutlined,
+  LaptopOutlined,
+  ProjectOutlined,
   PlaySquareOutlined,
   CompassOutlined,
   CustomerServiceOutlined,
@@ -191,6 +210,7 @@ import {
   CloseOutlined,
   BookOutlined,
   SafetyCertificateOutlined,
+  GithubOutlined,
 	  EyeOutlined,
 	  UserOutlined,
 	  CloudServerOutlined,
@@ -206,6 +226,8 @@ const generalMenuItems = [
   { path: '/articles', label: '文章管理', icon: FileTextOutlined },
   { path: '/comments', label: '评论管理', icon: MessageOutlined },
   { path: '/profile/info', label: '个人资料', icon: UserOutlined },
+  { path: '/equipments', label: '个人设备', icon: LaptopOutlined },
+  { path: '/projects', label: '项目经历', icon: ProjectOutlined },
 ]
 
 const musicMenuItems = [
@@ -222,7 +244,10 @@ const travelMenuItems = [
 
 const photoMenuItems = [
   { path: '/portfolios', label: '摄影作品集', icon: CameraOutlined },
-  { path: '/equipments', label: '摄影器材', icon: CameraOutlined },
+]
+
+const techMenuItems = [
+  { path: '/open-sources', label: '开源作品', icon: GithubOutlined },
 ]
 
 const securityMenuItems = [
@@ -232,7 +257,7 @@ const securityMenuItems = [
 ]
 
 		const systemMenuItems = [
-		  { path: '/templates', label: '模板风格', icon: SkinOutlined },
+		  { path: '/themes', label: '主题市场', icon: SkinOutlined },
 		  { path: '/module-config', label: '模块管理', icon: SettingOutlined },
 		  { path: '/profile/storage', label: '对象存储', icon: CloudServerOutlined },
 		  { path: '/profile/cors', label: '跨域配置', icon: SettingOutlined },

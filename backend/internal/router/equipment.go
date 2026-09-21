@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterEquipmentRoutes 注册摄影器材管理路由。
+// RegisterEquipmentRoutes 注册个人设备管理路由。
 func RegisterEquipmentRoutes(r *gin.RouterGroup, equipmentController *controller.EquipmentController, authMiddleware gin.HandlerFunc) {
 	equipments := r.Group("/equipments")
 	equipments.Use(authMiddleware)
