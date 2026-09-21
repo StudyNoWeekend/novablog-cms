@@ -15,7 +15,15 @@
           placeholder="搜索 IP 地址"
           allow-clear
           enter-button
-          style="max-width: 320px"
+          style="max-width: 280px"
+          @search="handleSearch"
+        />
+        <a-input-search
+          v-model:value="searchRegion"
+          placeholder="搜索地区"
+          allow-clear
+          enter-button
+          style="max-width: 280px"
           @search="handleSearch"
         />
       </div>
@@ -30,6 +38,10 @@
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'region'">
+            <span v-if="record.region">{{ record.region }}</span>
+            <span v-else class="text-muted">未知</span>
+          </template>
           <template v-if="column.key === 'total_count'">
             <a-tag color="blue">{{ record.total_count }}</a-tag>
           </template>
@@ -89,6 +101,7 @@ const page = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const searchIP = ref('')
+const searchRegion = ref('')
 
 const pagination = computed(() => ({
   current: page.value,
@@ -99,10 +112,11 @@ const pagination = computed(() => ({
 }))
 
 const columns: TableColumnsType<IPAccessStats> = [
-  { title: 'IP 地址', dataIndex: 'ip', key: 'ip', width: 180 },
-  { title: '总请求数', dataIndex: 'total_count', key: 'total_count', width: 140, align: 'center' },
-  { title: '错误次数', dataIndex: 'error_count', key: 'error_count', width: 140, align: 'center' },
-  { title: '最近访问时间', dataIndex: 'last_access_at', key: 'last_access_at', width: 200 },
+  { title: 'IP 地址', dataIndex: 'ip', key: 'ip', width: 160 },
+  { title: '地区', dataIndex: 'region', key: 'region', width: 220 },
+  { title: '总请求数', dataIndex: 'total_count', key: 'total_count', width: 120, align: 'center' },
+  { title: '错误次数', dataIndex: 'error_count', key: 'error_count', width: 120, align: 'center' },
+  { title: '最近访问时间', dataIndex: 'last_access_at', key: 'last_access_at', width: 190 },
   { title: '操作', key: 'action', width: 100, fixed: 'right' },
 ]
 
@@ -113,6 +127,7 @@ async function fetchAccessStats() {
       page: page.value,
       page_size: pageSize.value,
       ip: searchIP.value,
+      region: searchRegion.value,
     })
     accessStats.value = data.list
     total.value = data.total
@@ -203,7 +218,13 @@ onMounted(() => {
 .toolbar {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.text-muted {
+  color: var(--text-muted, #94a3b8);
 }
 
 :deep(.ant-btn-primary) {

@@ -16,7 +16,7 @@
 
     <!-- 圆角封面 -->
     <img
-      :src="song.cover_url ? song.cover_url.replace(/^http:\/\//, 'https://') : '/favicon.svg'"
+      :src="coverUrl"
       :alt="song.title"
       referrerpolicy="no-referrer"
       class="cover-img"
@@ -41,15 +41,24 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Song } from '@/types/music'
+import { getThumbUrl } from '@/utils/image'
 
-defineProps<{
+const props = defineProps<{
   song: Song
 }>()
 
 const emit = defineEmits<{
   (e: 'play'): void
 }>()
+
+// B站封面 http -> https，避免混合内容拦截；COS 封面生成缩略图节省流量
+const coverUrl = computed(() => {
+  const url = props.song.cover_url
+  if (!url) return '/favicon.svg'
+  return getThumbUrl(url.replace(/^http:\/\//, 'https://'), 160)
+})
 
 function formatDuration(seconds: number): string {
   if (!seconds || seconds <= 0) return '--:--'

@@ -204,7 +204,7 @@ server {
 
 1. **反代**：在宿主机 nginx 增加 API 域名 server 块——只放行 `/api/v1/public/`、`/files/`（可选 `/health`、`/ready`），其余 404。完整示例见 [`nginx/host-proxy.example.conf`](nginx/host-proxy.example.conf) 第三个 server 块。
    > 切勿对该域名 `location /` 全量反代：Go 端会把未匹配路径兜底为主题静态页，等于把整站（含后台页面跳转）暴露在 API 域名下。
-2. **设置 API 地址**：管理后台「模板风格 → 服务地址设置」填入 `http://api.example.com`（可带或不带 `/api/v1` 后缀，主题侧自动归一化）并保存。
+2. **设置 API 地址**：管理后台「主题 → 服务地址设置」填入 `http://api.example.com`（可带或不带 `/api/v1` 后缀，主题侧自动归一化）并保存。
    - 保存后后端立即对**全部已安装主题**重写 `dist/theme-config.js`（注入 `window.__NOVA_CONFIG__.apiBase`），主题前台随即走新域名取数，**无需重装主题**；
    - 配置持久化到数据库，重启不丢失；填空则清除注入，主题回退同域相对路径取数；
    - 主题安装/更新时也会按当前配置自动注入。
@@ -345,4 +345,4 @@ docker exec -i novablog-postgres-1 psql -U postgres -d novablog < novablog.sql
 1. 访问后台入口 → 自动跳转 `/admin/setup`；
 2. 创建博主账号（系统无默认账号，首装向导创建第一个账号）；
 3. 配置存储（本地或对象存储）；
-4. 初始化博客外观：输入官方主题市场地址 → 后端拉取默认主题制品（sha256 校验 + 安全解压 + 清单校验）→ 自动启用；也可跳过，之后在「模板」页安装。
+4. 初始化博客外观：输入官方主题市场地址 → 后端拉取默认主题制品（sha256 校验 + 安全解压 + 清单校验）→ 自动启用；也可跳过，之后在「主题」页安装。

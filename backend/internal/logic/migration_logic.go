@@ -658,6 +658,10 @@ func (l *MigrationLogic) updateContentURLs(ctx context.Context, oldURL, newURL s
 	if err := db.Table("video_works").Where("cover_url = ?", oldURL).Update("cover_url", newURL).Error; err != nil {
 		return fmt.Errorf("更新视频封面失败: %w", err)
 	}
+	// songs.cover_url
+	if err := db.Table("songs").Where("cover_url = ?", oldURL).Update("cover_url", newURL).Error; err != nil {
+		return fmt.Errorf("更新歌曲封面失败: %w", err)
+	}
 	// bloggers.avatar
 	if err := db.Table("bloggers").Where("avatar = ?", oldURL).Update("avatar", newURL).Error; err != nil {
 		return fmt.Errorf("更新博主头像失败: %w", err)

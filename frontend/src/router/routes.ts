@@ -61,8 +61,20 @@ export default [
       {
         path: 'equipments',
         name: 'Equipments',
-        meta: { title: '摄影器材', icon: 'CameraOutlined' },
+        meta: { title: '个人设备', icon: 'LaptopOutlined' },
         component: () => import('@/views/equipment/EquipmentManageView.vue'),
+      },
+      {
+        path: 'projects',
+        name: 'Projects',
+        meta: { title: '项目经历', icon: 'ProjectOutlined' },
+        component: () => import('@/views/project/ProjectManageView.vue'),
+      },
+      {
+        path: 'open-sources',
+        name: 'OpenSources',
+        meta: { title: '开源作品', icon: 'GithubOutlined' },
+        component: () => import('@/views/open-source/OpenSourceManageView.vue'),
       },
       {
         path: 'videos',
@@ -125,16 +137,16 @@ export default [
         component: () => import('@/views/security/SecurityMonitorView.vue'),
       },
       {
-        path: 'templates',
-        name: 'Templates',
-        meta: { title: '模板风格', icon: 'SkinOutlined' },
-        component: () => import('@/views/template/TemplateView.vue'),
+        path: 'themes',
+        name: 'Themes',
+        meta: { title: '主题市场', icon: 'SkinOutlined' },
+        component: () => import('@/views/theme/ThemeView.vue'),
       },
       {
-        path: 'templates/market/:id',
+        path: 'themes/market/:id',
         name: 'ThemeDetail',
         meta: { title: '主题详情', hidden: true },
-        component: () => import('@/views/template/ThemeDetailView.vue'),
+        component: () => import('@/views/theme/ThemeDetailView.vue'),
       },
       {
         path: 'profile',

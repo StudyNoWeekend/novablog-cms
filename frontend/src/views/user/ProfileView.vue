@@ -197,7 +197,7 @@ import { authApi } from '@/api/auth'
 import type { UpdateProfileReq, SocialLink } from '@/types/api'
 import { SOCIAL_PLATFORMS } from '@/components/profile/socialPlatforms'
 import { CHINA_REGIONS } from '@/assets/data/china-regions'
-import type { CascaderOption } from 'ant-design-vue/es/cascader'
+import type { CascaderOptionType } from 'ant-design-vue/es/cascader'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -231,7 +231,7 @@ watch(cityValue, (val) => {
 })
 
 // 级联选择器搜索
-function filter(inputValue: string, path: CascaderOption[]): boolean {
+function filter(inputValue: string, path: CascaderOptionType[]): boolean {
   return path.some((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()))
 }
 

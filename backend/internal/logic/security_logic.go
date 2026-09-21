@@ -244,10 +244,10 @@ func (l *SecurityLogic) ListBlacklists(ctx context.Context, r *req.ListBlacklist
 	}, nil
 }
 
-// GetAccessStatistics 获取按 IP 聚合的访问统计。
+// GetAccessStatistics 获取按 IP 聚合的访问统计，支持 IP 前缀与地区模糊搜索。
 func (l *SecurityLogic) GetAccessStatistics(ctx context.Context, r *req.ListAccessLogReq) (*res.ListIPAccessStatsRes, error) {
 	page, pageSize := r.GetPage(), r.GetPageSize()
-	records, total, err := l.accessLogModel.GetIPAccessStatistics(ctx, r.IP, page, pageSize)
+	records, total, err := l.accessLogModel.GetIPAccessStatistics(ctx, r.IP, r.Region, page, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("查询 IP 访问统计失败: %w", err)
 	}
@@ -256,6 +256,7 @@ func (l *SecurityLogic) GetAccessStatistics(ctx context.Context, r *req.ListAcce
 	for _, record := range records {
 		list = append(list, &res.IPAccessStatsRes{
 			IP:           record.IP,
+			Region:       record.Region,
 			TotalCount:   record.TotalCount,
 			ErrorCount:   record.ErrorCount,
 			LastAccessAt: record.LastAccessAt,

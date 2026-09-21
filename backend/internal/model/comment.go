@@ -97,6 +97,19 @@ func (m *CommentModel) SoftDeleteByParentID(ctx context.Context, parentID string
 	return m.db.WithContext(ctx).Where("parent_id = ?", parentID).Delete(&Comment{}).Error
 }
 
+// CountByParentID 统计指定父评论下未删除的子回复数量。
+func (m *CommentModel) CountByParentID(ctx context.Context, parentID string) (int64, error) {
+	var total int64
+	err := m.db.WithContext(ctx).
+		Model(&Comment{}).
+		Where("parent_id = ? AND deleted_at IS NULL", parentID).
+		Count(&total).Error
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 // GetPublicList 分页查询已通过审核的评论列表，按 target_type 和 target_id 筛选。
 func (m *CommentModel) GetPublicList(ctx context.Context, targetType, targetID string, page, pageSize int) ([]Comment, int64, error) {
 	query := m.db.WithContext(ctx).Model(&Comment{}).

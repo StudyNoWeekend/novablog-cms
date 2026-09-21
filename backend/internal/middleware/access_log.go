@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"novablog/pkg/geoip"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"novablog/internal/model"
@@ -12,8 +14,12 @@ import (
 // Logger 中间件包级日志实例，由 bootstrap 注入。
 var Logger *zap.Logger
 
+// GeoIP IP 归属地解析器，由 bootstrap 注入；未注入时跳过地区解析。
+var GeoIP *geoip.Searcher
+
 // AccessLogMiddleware 记录每个 HTTP 请求的 IP 访问日志。
 // 日志写入采用 fire-and-forget 模式，带 2 秒超时，避免阻塞响应。
+// 地区归属在写入时解析一次并随日志持久化，聚合统计直接读库。
 func AccessLogMiddleware() gin.HandlerFunc {
 	accessLogModel := model.NewAccessLog()
 	return func(c *gin.Context) {
@@ -37,6 +43,11 @@ func AccessLogMiddleware() gin.HandlerFunc {
 			StatusCode: c.Writer.Status(),
 			UserAgent:  ua,
 			CreatedAt:  start,
+		}
+
+		// 解析 IP 归属地区（数据未就绪时返回空，不影响日志写入）
+		if GeoIP != nil {
+			log.Region = GeoIP.Lookup(ip)
 		}
 
 		// 异步写入，带超时控制，不影响响应

@@ -189,17 +189,27 @@
       <!-- 分隔线（storage → theme） -->
       <a-divider v-if="phase === 'storage'" class="setup-divider" />
 
-      <!-- 步骤三：初始化博客外观（拉取官方默认主题） -->
+      <!-- 步骤三：初始化博客外观（登录官方账号并拉取官方默认主题） -->
       <div v-if="phase === 'theme'" class="theme-step">
         <div class="theme-step__icon"><SkinOutlined /></div>
         <h2 class="theme-step__title">初始化博客外观</h2>
-        <p class="theme-step__desc">输入 NovaBlog 官方主题市场地址，将自动获取并启用默认主题</p>
+        <p class="theme-step__desc">输入 NovaBlog 官方主题市场地址并登录官方账号，将自动获取并启用默认主题</p>
 
         <a-form ref="marketFormRef" layout="vertical" class="setup-form" autocomplete="off">
           <a-form-item label="官方市场地址" name="marketBaseURL" :rules="marketURLRules">
             <a-input v-model:value="marketBaseURL" :placeholder="defaultMarketURL || '请输入官方市场地址'" allow-clear size="large">
               <template #prefix><LinkOutlined /></template>
             </a-input>
+          </a-form-item>
+          <a-form-item label="官方账号" name="marketEmail" :rules="marketAccountRules">
+            <a-input v-model:value="marketAccount.email" placeholder="官方市场登录邮箱" allow-clear size="large">
+              <template #prefix><UserOutlined /></template>
+            </a-input>
+          </a-form-item>
+          <a-form-item label="官方密码" name="marketPassword" :rules="marketAccountRules">
+            <a-input-password v-model:value="marketAccount.password" placeholder="官方市场登录密码" size="large">
+              <template #prefix><LockOutlined /></template>
+            </a-input-password>
           </a-form-item>
         </a-form>
 
@@ -239,7 +249,7 @@
             完成，进入登录
           </a-button>
           <a-button size="large" block :disabled="themeStatus?.status === 'running'" @click="goLogin">
-            跳过，稍后在模板页安装
+            跳过，稍后在主题页安装
           </a-button>
         </div>
       </div>
@@ -272,7 +282,7 @@ import { configApi } from '@/api/config'
 import { storageApi } from '@/api/storage'
 import { marketStorage } from '@/utils/storage'
 import { storage } from '@/utils/storage'
-import type { ThemeInstallStatus } from '@/types/template'
+import type { ThemeInstallStatus } from '@/types/theme'
 import type { FormInstance } from 'ant-design-vue'
 
 const router = useRouter()
@@ -309,6 +319,10 @@ const cloudRequiredRules = [{ required: true, message: '此项为必填', trigge
 // 官方市场地址（向导输入）；默认值由后端下发，本地缓存（上次向导输入）优先
 const marketBaseURL = ref(marketStorage.getBaseURL() || '')
 const defaultMarketURL = ref('')
+
+// 官方市场账号（必填）：官方代理下载要求登录态，由后端临时换取 Token，不落库
+const marketAccount = reactive({ email: '', password: '' })
+const marketAccountRules = [{ required: true, message: '官方市场下载需要先登录官方账号', trigger: 'blur' }]
 
 onMounted(async () => {
   try {
@@ -508,11 +522,19 @@ async function skipStorage() {
   phase.value = 'theme'
 }
 
-/** 触发官方默认主题拉取并轮询任务状态 */
+/** 触发官方默认主题拉取并轮询任务状态（先校验官方地址与账号填写完整） */
 async function startThemeInit() {
+  try {
+    await marketFormRef.value?.validate()
+  } catch {
+    return
+  }
   themeStarting.value = true
   try {
-    themeStatus.value = await setupApi.initTheme(marketBaseURL.value || undefined)
+    themeStatus.value = await setupApi.initTheme(marketBaseURL.value || undefined, {
+      email: marketAccount.email.trim(),
+      password: marketAccount.password,
+    })
     if (themeStatus.value.status === 'running' && !pollTimer) {
       pollTimer = setInterval(pollThemeStatus, 1500)
     }
@@ -530,7 +552,7 @@ async function pollThemeStatus() {
     if (status.status !== 'running') {
       stopPolling()
       if (status.status === 'success') {
-        // 持久化官方市场地址，模板页登录弹窗自动填入
+        // 持久化官方市场地址，主题页登录弹窗自动填入
         if (marketBaseURL.value) {
           marketStorage.setBaseURL(marketBaseURL.value)
         }

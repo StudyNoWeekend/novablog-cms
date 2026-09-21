@@ -97,7 +97,7 @@
               <div v-for="(item, idx) in pieLegend" :key="idx" class="legend-row">
                 <span class="legend-dot" :style="{ background: item.color }" />
                 <span class="legend-name">{{ item.name }}</span>
-                <span class="legend-percent">{{ item.percentage }}%</span>
+                <span class="legend-percent">{{ formatPercentage(item.percentage) }}</span>
               </div>
             </div>
           </div>
@@ -424,6 +424,10 @@ function formatCommentTime(dateStr: string): string {
   const hh = String(d.getHours()).padStart(2, '0')
   const min = String(d.getMinutes()).padStart(2, '0')
   return `${mm}-${dd} ${hh}:${min}`
+}
+
+function formatPercentage(value: number): string {
+  return `${value.toFixed(1)}%`
 }
 </script>
 

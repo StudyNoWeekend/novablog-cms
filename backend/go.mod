@@ -9,6 +9,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.12.3
+	github.com/lionsoul2014/ip2region/binding/golang v0.0.0-20260901011515-c1a1fc7d5941
 	github.com/minio/minio-go/v7 v7.2.0
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.11.1

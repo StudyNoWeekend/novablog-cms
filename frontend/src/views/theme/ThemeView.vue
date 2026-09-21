@@ -1,19 +1,19 @@
 <template>
   <div class="page-container">
-    <!-- 官方账号登录遮罩：未登录时盖住整个模板页面，不可绕过 -->
+    <!-- 官方账号登录弹窗：未登录时弹出，可主动关闭（关闭后页面展示登录引导占位） -->
     <a-modal
-      :open="!store.loggedIn"
-      :closable="false"
+      :open="!store.loggedIn && !loginModalDismissed"
       :mask-closable="false"
       :keyboard="false"
       :footer="null"
       centered
       width="400px"
+      @cancel="handleLoginModalClose"
     >
       <div class="market-login">
         <div class="market-login__icon"><SkinOutlined /></div>
         <h2 class="market-login__title">登录 NovaBlog 官方账号</h2>
-        <p class="market-login__desc">连接官方主题市场后，可浏览模板并进行点赞、收藏、评分与下载</p>
+        <p class="market-login__desc">连接官方主题市场后，可浏览主题并进行点赞、收藏、评分与下载</p>
         <a-form :model="loginForm" layout="vertical" autocomplete="off" @finish="handleLogin">
           <a-form-item label="官方地址" name="baseURL" :rules="baseURLRules">
             <a-input v-model:value="loginForm.baseURL" :placeholder="store.defaultBaseURL || '请输入官方市场地址'" allow-clear>
@@ -32,6 +32,10 @@
           </a-form-item>
           <a-button type="primary" html-type="submit" block :loading="loginLoading">登 录</a-button>
         </a-form>
+        <div class="market-login__actions">
+          <a-button block @click="handleGoRegister">去注册</a-button>
+          <a-button block @click="handleLoginModalClose">关 闭</a-button>
+        </div>
       </div>
     </a-modal>
 
@@ -55,13 +59,13 @@
             <template #prefix><GlobalOutlined /></template>
           </a-input>
         </a-form-item>
-        <p class="market-config-tip">官方市场地址决定模板市场与主题安装的取数来源；博客 API 地址用于主题前台访问公开接口——填写独立 API 域名后保存，已安装主题会立即重新注入取数地址，无需重装主题；留空则同域相对路径取数</p>
+        <p class="market-config-tip">官方市场地址决定主题市场与主题安装的取数来源；博客 API 地址用于主题前台访问公开接口——填写独立 API 域名后保存，已安装主题会立即重新注入取数地址，无需重装主题；留空则同域相对路径取数</p>
       </a-form>
     </a-modal>
 
     <template v-if="store.loggedIn">
       <div class="page-header">
-        <h1 class="page-title">模板风格</h1>
+        <h1 class="page-title">主题</h1>
         <div class="market-header-actions">
           <span v-if="store.marketUser" class="market-account">
             <UserOutlined /> {{ store.marketUser.username }}
@@ -94,8 +98,8 @@
       </div>
 
       <a-tabs v-model:active-key="store.activeTab" @change="handleTabChange">
-        <!-- 模板市场 -->
-        <a-tab-pane key="market" tab="模板市场">
+        <!-- 主题市场 -->
+        <a-tab-pane key="market" tab="主题市场">
           <div class="filter-bar">
             <a-select
               v-model:value="store.filters.type"
@@ -151,7 +155,7 @@
             v-else-if="store.loadError"
             status="error"
             title="加载失败"
-            sub-title="获取官方模板市场数据时出错，请重试"
+            sub-title="获取官方主题市场数据时出错，请重试"
           >
             <template #extra>
               <a-button type="primary" @click="store.fetchList()">重试</a-button>
@@ -210,7 +214,7 @@
           </a-result>
 
           <a-empty v-else-if="store.favList.length === 0" description="暂无收藏">
-            <a-button type="primary" @click="store.activeTab = 'market'">去模板市场逛逛</a-button>
+            <a-button type="primary" @click="store.activeTab = 'market'">去主题市场逛逛</a-button>
           </a-empty>
 
           <div v-else class="market-grid">
@@ -240,8 +244,8 @@
           </div>
         </a-tab-pane>
 
-        <!-- 已安装模板 -->
-        <a-tab-pane key="installed" tab="已安装模板">
+        <!-- 已安装主题 -->
+        <a-tab-pane key="installed" tab="已安装主题">
           <div v-if="installedLoading && installedList.length === 0" class="market-grid">
             <div v-for="i in 6" :key="i" class="skeleton-card">
               <a-skeleton active :paragraph="{ rows: 3 }" />
@@ -252,15 +256,15 @@
             v-else-if="installedError"
             status="error"
             title="加载失败"
-            sub-title="获取已安装模板时出错，请重试"
+            sub-title="获取已安装主题时出错，请重试"
           >
             <template #extra>
               <a-button type="primary" @click="fetchInstalled()">重试</a-button>
             </template>
           </a-result>
 
-          <a-empty v-else-if="installedList.length === 0" description="尚未安装任何模板">
-            <a-button type="primary" @click="store.activeTab = 'market'">去模板市场安装</a-button>
+          <a-empty v-else-if="installedList.length === 0" description="尚未安装任何主题">
+            <a-button type="primary" @click="store.activeTab = 'market'">去主题市场安装</a-button>
           </a-empty>
 
           <div v-else class="market-grid">
@@ -284,6 +288,12 @@
         </a-tab-pane>
       </a-tabs>
     </template>
+
+    <!-- 未登录且已关闭登录弹窗时的占位提示 -->
+    <div v-else class="market-login-required">
+      <p class="market-login-required__text">获取主题市场内容需要登录</p>
+      <a-button type="link" @click="loginModalDismissed = false">登陆</a-button>
+    </div>
   </div>
 </template>
 
@@ -300,25 +310,25 @@ import {
   SkinOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
-import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/template'
+import { MARKET_AUTH_EXPIRED_EVENT, abortMarketRetries } from '@/api/theme'
 import { configApi } from '@/api/config'
 import { themeApi } from '@/api/theme'
 import { marketStorage } from '@/utils/storage'
 import { THEME_TYPE_LABELS } from '@/utils/themeDisplay'
-import type { InstalledTheme, ThemeItem } from '@/types/template'
+import type { InstalledTheme, ThemeItem } from '@/types/theme'
 import { useThemeMarketStore } from '@/stores/themeMarket'
-import ThemeCard from '@/components/template/ThemeCard.vue'
-import InstalledThemeCard from '@/components/template/InstalledThemeCard.vue'
+import ThemeCard from '@/components/theme/ThemeCard.vue'
+import InstalledThemeCard from '@/components/theme/InstalledThemeCard.vue'
 
 const router = useRouter()
 const store = useThemeMarketStore()
 
 /** 跳转主题详情页（含版本历史） */
 function goDetail(theme: ThemeItem) {
-  router.push(`/templates/market/${theme.id}`)
+  router.push(`/themes/market/${theme.id}`)
 }
 
-// ===== 已安装模板 =====
+// ===== 已安装主题 =====
 const installedList = ref<InstalledTheme[]>([])
 const installedLoading = ref(false)
 const installedError = ref(false)
@@ -344,14 +354,14 @@ async function fetchInstalled() {
 function handleInstall(theme: ThemeItem) {
   Modal.confirm({
     title: `安装「${theme.title}」？`,
-    content: '将从官方市场下载预构建制品并安装，完成后可在「已安装模板」中启用',
+    content: '将从官方市场下载预构建制品并安装，完成后可在「已安装主题」中启用',
     okText: '安装',
     cancelText: '取消',
     onOk: async () => {
       installingId.value = theme.id
       try {
         await themeApi.install({ theme_id: theme.id })
-        message.success(`「${theme.title}」安装成功，可在「已安装模板」中启用`)
+        message.success(`「${theme.title}」安装成功，可在「已安装主题」中启用`)
         fetchInstalled()
       } catch {
         // 失败原因（制品缺失/引擎不支持等）由拦截器统一提示
@@ -425,7 +435,11 @@ async function handleUpdate(theme: InstalledTheme) {
   })
 }
 
-// ===== 登录遮罩 =====
+// ===== 登录弹窗 =====
+/** 用户主动关闭登录弹窗后的占位态（内存态，刷新页面后未登录仍会重新弹出） */
+const loginModalDismissed = ref(false)
+/** 官方站点注册页（去注册按钮跳转地址） */
+const OFFICIAL_REGISTER_URL = 'http://novablog.ditancafebar.cn/register'
 const loginLoading = ref(false)
 const loginForm = reactive({
   baseURL: marketStorage.getBaseURL() || '',
@@ -456,10 +470,21 @@ async function handleLogin() {
   }
 }
 
+/** 去注册：新标签页打开官方站点注册页 */
+function handleGoRegister() {
+  window.open(OFFICIAL_REGISTER_URL, '_blank', 'noopener')
+}
+
+/** 关闭官方登录弹窗：因登录失效挂起的请求直接拒绝，避免安装/更新按钮无限 loading */
+function handleLoginModalClose() {
+  loginModalDismissed.value = true
+  abortMarketRetries()
+}
+
 function handleLogout() {
   Modal.confirm({
     title: '退出官方账号？',
-    content: '退出后需重新登录才能浏览模板市场',
+    content: '退出后需重新登录才能浏览主题市场',
     okText: '退出',
     cancelText: '取消',
     onOk: () => store.logout(),
@@ -517,9 +542,10 @@ async function handleSaveMarketConfig() {
   }
 }
 
-// 官方登录失效（Token 刷新失败）时弹回登录遮罩
+// 官方登录失效（Token 刷新失败）时重新弹出登录弹窗
 function handleAuthExpiredEvent() {
   store.handleAuthExpired()
+  loginModalDismissed.value = false
 }
 
 // ===== 市场浏览 =====
@@ -621,6 +647,28 @@ onUnmounted(() => {
 
 .market-login :deep(.ant-form) {
   text-align: left;
+}
+
+.market-login__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* ===== 未登录占位提示 ===== */
+.market-login-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 140px 16px;
+}
+
+.market-login-required__text {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-color-secondary, rgba(0, 0, 0, 0.65));
 }
 
 /* ===== 官方地址设置 ===== */

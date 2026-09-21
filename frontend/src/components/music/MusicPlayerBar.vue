@@ -62,6 +62,7 @@
 import { ref, watch, computed } from 'vue'
 import { musicApi } from '@/api/music'
 import type { Song } from '@/types/music'
+import { getThumbUrl } from '@/utils/image'
 
 const props = defineProps<{
   currentSong: Song | null
@@ -93,7 +94,7 @@ function fixCoverUrl(url: string): string {
   return url.replace(/^http:\/\//, 'https://')
 }
 
-const coverUrl = computed(() => fixCoverUrl(props.currentSong?.cover_url || ''))
+const coverUrl = computed(() => getThumbUrl(fixCoverUrl(props.currentSong?.cover_url || ''), 96))
 
 function formatTime(sec: number): string {
   if (!sec || isNaN(sec)) return '00:00'

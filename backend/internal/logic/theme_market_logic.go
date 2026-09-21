@@ -292,18 +292,22 @@ func (l *ThemeMarketLogic) Rating(ctx context.Context, baseURL, token, id string
 	return &res.ThemeMarketRatingRes{Rating: result.Rating}, nil
 }
 
-// Download 下载/安装官方主题，返回主题包地址。
+// Download 下载官方主题：请求官方代理下载接口（计数 +1）并解析出真实下载地址，
+// 前端拿到 GitHub 直链后可直接新窗口打开下载，无需携带官方 Token。
 func (l *ThemeMarketLogic) Download(ctx context.Context, baseURL, token, id string) (*res.ThemeMarketDownloadRes, error) {
 	base, err := normalizeBaseURL(baseURL)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := novablogapi.DownloadTheme(ctx, base, id, token)
+	if strings.TrimSpace(token) == "" {
+		return nil, enum.ErrMarketAuthFailed
+	}
+	location, err := novablogapi.ResolveDownload(ctx, base+"/themes/"+id+"/download", token)
 	if err != nil {
 		return nil, mapUpstreamError(err)
 	}
-	return &res.ThemeMarketDownloadRes{DownloadURL: result.DownloadURL}, nil
+	return &res.ThemeMarketDownloadRes{DownloadURL: location}, nil
 }
 
 // GetFavorites 查询我的收藏列表（按收藏时间倒序）。

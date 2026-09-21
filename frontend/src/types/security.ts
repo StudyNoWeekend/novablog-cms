@@ -35,6 +35,7 @@ export interface BlacklistQuery {
 
 export interface IPAccessStats {
   ip: string
+  region: string
   total_count: number
   error_count: number
   last_access_at: string
@@ -44,6 +45,7 @@ export interface AccessStatsQuery {
   page?: number
   page_size?: number
   ip?: string
+  region?: string
 }
 
 // API 文档相关类型

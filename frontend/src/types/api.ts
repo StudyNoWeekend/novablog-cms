@@ -5,6 +5,11 @@ export interface ApiResponse<T = any> {
   trace_id: string
 }
 
+/** 应用版本信息（后端构建期 -ldflags 注入） */
+export interface AppVersionInfo {
+  version: string
+}
+
 export interface PaginatedData<T> {
   list: T[]
   total: number

@@ -61,22 +61,28 @@ func (l *ThemeLogic) List(ctx context.Context) ([]res.ThemeItemRes, error) {
 }
 
 // Install 从官方市场安装指定主题（按市场主题 ID，可指定版本）。
-// marketBaseURL 优先使用传入值，为空时回退 config.yaml 的 themes.market_base_url。
-func (l *ThemeLogic) Install(ctx context.Context, marketID int64, version string, force bool, marketBaseURL string) (*model.Theme, error) {
+// marketBaseURL 优先使用传入值，为空时回退 config.yaml 的 themes.market_base_url；
+// marketToken 为官方账号 Token，官方代理下载地址必需。
+func (l *ThemeLogic) Install(ctx context.Context, marketID int64, version string, force bool, marketBaseURL, marketToken string) (*model.Theme, error) {
 	baseURL, err := resolveMarketBaseURL(marketBaseURL)
 	if err != nil {
 		return nil, err
 	}
-	item, err := novablogapi.GetTheme(ctx, baseURL, strconv.FormatInt(marketID, 10), "")
+	item, err := novablogapi.GetTheme(ctx, baseURL, strconv.FormatInt(marketID, 10), marketToken)
 	if err != nil {
 		return nil, mapUpstreamError(err)
 	}
-	return l.installFromMarketItem(ctx, item.ThemeItem, item.DownloadURL, version, force)
+	downloadURL, err := resolveMarketDownloadURL(ctx, baseURL, item.DownloadURL, marketToken)
+	if err != nil {
+		return nil, err
+	}
+	return l.installFromMarketItem(ctx, item.ThemeItem, downloadURL, version, force)
 }
 
 // InstallDefault 首装链路：从官方市场拉取默认主题安装。
 // 市场未配置、不可达或无默认主题时抛明确错误（显示官方地址不可达），无兜底。
-func (l *ThemeLogic) InstallDefault(ctx context.Context) (*model.Theme, error) {
+// marketToken 为官方账号 Token，官方代理下载地址必需。
+func (l *ThemeLogic) InstallDefault(ctx context.Context, marketToken string) (*model.Theme, error) {
 	settings := getThemeSettings()
 	if settings.MarketBaseURL == "" {
 		return nil, enum.ErrThemeMarketNotConfigured
@@ -91,11 +97,33 @@ func (l *ThemeLogic) InstallDefault(ctx context.Context) (*model.Theme, error) {
 		return nil, mapUpstreamError(err)
 	}
 
-	theme, installErr := l.installFromMarketItem(ctx, dt.ThemeItem, dt.DownloadURL, "", false)
+	downloadURL, resolveErr := resolveMarketDownloadURL(ctx, base, dt.DownloadURL, marketToken)
+	if resolveErr != nil {
+		return nil, resolveErr
+	}
+	theme, installErr := l.installFromMarketItem(ctx, dt.ThemeItem, downloadURL, "", false)
 	if installErr != nil {
 		return nil, installErr
 	}
 	return theme, nil
+}
+
+// resolveMarketDownloadURL 将官方市场返回的下载地址解析为真实制品地址。
+// 官方 download_url 现指向官方代理下载接口（{官方API}/api/v1/themes/{id}/download）：
+// 请求它需要官方 Token（官方计数 +1 后 302 到真实地址），这里不跟随重定向、解析 Location 返回；
+// 其他形态（.tar.gz 直链、GitHub 仓库目录地址）原样返回，保持向后兼容。
+func resolveMarketDownloadURL(ctx context.Context, baseURL, downloadURL, token string) (string, error) {
+	if !novablogapi.IsOfficialDownloadURL(baseURL, downloadURL) {
+		return downloadURL, nil
+	}
+	if strings.TrimSpace(token) == "" {
+		return "", enum.ErrMarketAuthFailed
+	}
+	location, err := novablogapi.ResolveDownload(ctx, downloadURL, token)
+	if err != nil {
+		return "", mapUpstreamError(err)
+	}
+	return location, nil
 }
 
 // installFromMarketItem 从市场主题元数据执行完整安装链路：
@@ -215,8 +243,9 @@ func (l *ThemeLogic) installFromMarketItem(ctx context.Context, item novablogapi
 }
 
 // UpdateTheme 从官方市场更新已安装主题到最新版本。
-// marketBaseURL 优先使用传入值，为空时回退 config.yaml 的 themes.market_base_url。
-func (l *ThemeLogic) UpdateTheme(ctx context.Context, id string, marketBaseURL string) (*model.Theme, error) {
+// marketBaseURL 优先使用传入值，为空时回退 config.yaml 的 themes.market_base_url；
+// marketToken 为官方账号 Token，官方代理下载地址必需。
+func (l *ThemeLogic) UpdateTheme(ctx context.Context, id string, marketBaseURL, marketToken string) (*model.Theme, error) {
 	// 1. 获取已安装主题
 	theme, err := l.themeModel.GetByID(ctx, id)
 	if err != nil {
@@ -236,7 +265,7 @@ func (l *ThemeLogic) UpdateTheme(ctx context.Context, id string, marketBaseURL s
 
 	// 4. 从官方市场拉取最新版本详情
 	marketID := strconv.FormatInt(theme.MarketID, 10)
-	detail, err := novablogapi.GetTheme(ctx, baseURL, marketID, "")
+	detail, err := novablogapi.GetTheme(ctx, baseURL, marketID, marketToken)
 	if err != nil {
 		return nil, mapUpstreamError(err)
 	}
@@ -250,7 +279,11 @@ func (l *ThemeLogic) UpdateTheme(ctx context.Context, id string, marketBaseURL s
 	}
 
 	// 6. 安装新版本
-	upgraded, err := l.installFromMarketItem(ctx, detail.ThemeItem, detail.DownloadURL, detail.Version, false)
+	downloadURL, err := resolveMarketDownloadURL(ctx, baseURL, detail.DownloadURL, marketToken)
+	if err != nil {
+		return nil, err
+	}
+	upgraded, err := l.installFromMarketItem(ctx, detail.ThemeItem, downloadURL, detail.Version, false)
 	if err != nil {
 		return nil, err
 	}

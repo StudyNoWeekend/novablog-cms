@@ -51,14 +51,22 @@ security:
   blacklist_ttl_minutes: 60
   log_retention_days: 7
 
-# 博客主题（模板）模块：安装/切换/静态托管
+# IP 归属地区解析（访问统计"地区"列）：基于 ip2region 离线数据，不依赖外部 API
+# - data_dir 下缺失 ip2region_v4.xdb 时自动下载；下载/加载失败仅降级（地区列显示"未知"），不影响服务
+# - download_url 官方发布源；如需代理可填 proxy_url（同主题模块代理语义，代理不可用自动直连）或自行放置数据文件
+geoip:
+  data_dir: ./data/geoip
+  download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
+  proxy_url: ""
+
+# 博客主题模块：安装/切换/静态托管
 themes:
   data_dir: ./data/themes            # 主题制品解压根目录
   frontend_dir: ""                   # 自备博客前端目录（含 theme.json 与 dist/，与主题制品包同构）；非空时优先于已安装主题，空=使用后台安装的主题
   market_base_url: "http://novablogapi.ditancafebar.cn" # 官方主题市场地址（出厂默认值；首装向导/市场登录/后台修改后会持久化到 DB 并覆盖此值，服务端直连）
-  github_token: ""                   # 可选 GitHub PAT（提升 Release 查询限流额度）
+  github_token: ""                   # 可选 GitHub PAT（提升 Release 查询与开源作品 README 拉取的限流额度）
   public_api_base: ""                # 跨域部署时注入 theme-config.js 的 apiBase；空=同域相对路径
-  proxy_url: ""                      # 主题下载与 GitHub API 的 HTTP 代理（如 http://172.17.0.1:7890）；空=直连，代理不可用时自动降级直连
+  proxy_url: ""                      # 主题下载、开源作品 README 拉取与 GitHub API 的 HTTP 代理（如 http://172.17.0.1:7890）；空=直连，代理不可用时自动降级直连
   max_artifact_mb: 100               # 制品下载上限（MB）
 
 # 跨域配置（后台页面可动态修改，此值为首次启动默认值）

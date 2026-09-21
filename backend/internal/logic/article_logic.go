@@ -249,6 +249,11 @@ func (l *ArticleLogic) IncrementView(ctx context.Context, slug string) error {
 	return l.model.IncrementViewCount(ctx, slug)
 }
 
+// IncrementViewByID 根据 ID 增加文章浏览量（详情接口兜底计数用）。
+func (l *ArticleLogic) IncrementViewByID(ctx context.Context, id string) error {
+	return l.model.IncrementViewCountByID(ctx, id)
+}
+
 // toArticleRes 转换为列表响应
 func (l *ArticleLogic) toArticleRes(a *model.Article) res.ArticleRes {
 	var tagIDs []string

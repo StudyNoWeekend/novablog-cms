@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">摄影器材</h1>
+      <h1 class="page-title">个人设备</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 新建器材
+        <PlusOutlined /> 新建设备
       </a-button>
     </div>
 
@@ -11,7 +11,7 @@
       <div class="equipment-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索器材名称..."
+          placeholder="搜索设备名称..."
           style="width: 240px"
           allow-clear
         />
@@ -20,7 +20,7 @@
       <a-spin :spinning="loading">
         <a-empty
           v-if="!loading && list.length === 0"
-          description="还没有摄影器材，开始添加吧"
+          description="还没有个人设备，开始添加吧"
           style="margin-top: 48px"
         />
         <div v-else class="equipment-grid">
@@ -33,7 +33,7 @@
                 referrerpolicy="no-referrer"
               />
               <div v-else class="cover-placeholder">
-                <CameraOutlined />
+                <LaptopOutlined />
               </div>
             </div>
             <div class="equipment-info">
@@ -69,17 +69,17 @@
           :total="total"
           :page-size-options="[12, 24, 48]"
           show-size-changer
-          :show-total="(t: number) => `共 ${t} 个器材`"
+          :show-total="(t: number) => `共 ${t} 个设备`"
           @change="handlePageChange"
           @show-size-change="handlePageChange"
         />
       </div>
     </a-card>
 
-    <!-- 新建/编辑器材弹窗 -->
+    <!-- 新建/编辑设备弹窗 -->
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '新建器材' : '编辑器材'"
+      :title="modalMode === 'create' ? '新建设备' : '编辑设备'"
       :confirm-loading="modalLoading"
       width="640px"
       @ok="handleSubmit"
@@ -88,7 +88,7 @@
         <a-form-item label="名称" required>
           <a-input
             v-model:value="form.name"
-            placeholder="请输入器材名称"
+            placeholder="请输入设备名称"
             :maxlength="100"
             show-count
           />
@@ -98,7 +98,7 @@
             <div v-if="form.image_url" class="image-preview">
               <img
                 :src="getThumbUrl(form.image_url, 400)"
-                alt="器材图片"
+                alt="设备图片"
                 referrerpolicy="no-referrer"
               />
               <a-button size="small" @click="mediaPickerVisible = true">
@@ -120,7 +120,7 @@
         <a-form-item label="描述">
           <a-textarea
             v-model:value="form.description"
-            placeholder="请输入器材描述（可选）"
+            placeholder="请输入设备描述（可选）"
             :rows="3"
             :maxlength="500"
             show-count
@@ -140,7 +140,7 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  CameraOutlined,
+  LaptopOutlined,
   PictureOutlined,
 } from '@ant-design/icons-vue'
 import { equipmentApi } from '@/api/equipment'
@@ -237,7 +237,7 @@ function handleMediaSelected(media: { url: string }) {
 
 async function handleSubmit() {
   if (!form.name.trim()) {
-    message.warning('请输入器材名称')
+    message.warning('请输入设备名称')
     return
   }
   modalLoading.value = true

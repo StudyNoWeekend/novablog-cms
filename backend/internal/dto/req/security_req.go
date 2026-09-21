@@ -27,5 +27,6 @@ type ListBlacklistReq struct {
 // ListAccessLogReq IP 访问统计查询请求参数。
 type ListAccessLogReq struct {
 	PageReq
-	IP string `form:"ip" binding:"max=64"`
+	IP     string `form:"ip" binding:"max=64"`
+	Region string `form:"region" binding:"max=128"`
 }

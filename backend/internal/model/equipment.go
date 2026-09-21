@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PhotoEquipment 摄影器材模型，对应 photo_equipment 数据表。
+// PhotoEquipment 个人设备模型，对应 photo_equipment 数据表。
 type PhotoEquipment struct {
 	ID          string         `gorm:"type:uuid;primaryKey"`
 	Name        string         `gorm:"type:varchar(255);not null"`
@@ -31,7 +31,7 @@ func (e *PhotoEquipment) AfterFind(tx *gorm.DB) error {
 	return nil
 }
 
-// PhotoEquipmentModel 摄影器材模型操作结构体。
+// PhotoEquipmentModel 个人设备模型操作结构体。
 type PhotoEquipmentModel struct {
 	db *gorm.DB
 }
@@ -41,12 +41,12 @@ func NewPhotoEquipment() *PhotoEquipmentModel {
 	return &PhotoEquipmentModel{db: DB}
 }
 
-// Create 创建摄影器材记录。
+// Create 创建个人设备记录。
 func (m *PhotoEquipmentModel) Create(ctx context.Context, e *PhotoEquipment) error {
 	return m.db.WithContext(ctx).Create(e).Error
 }
 
-// GetByID 根据 ID 查询摄影器材。
+// GetByID 根据 ID 查询个人设备。
 func (m *PhotoEquipmentModel) GetByID(ctx context.Context, id string) (*PhotoEquipment, error) {
 	var e PhotoEquipment
 	err := m.db.WithContext(ctx).Where("id = ?", id).First(&e).Error
@@ -56,7 +56,7 @@ func (m *PhotoEquipmentModel) GetByID(ctx context.Context, id string) (*PhotoEqu
 	return &e, nil
 }
 
-// GetList 分页查询摄影器材列表，支持按 keyword 模糊搜索名称、按 brand 过滤。
+// GetList 分页查询个人设备列表，支持按 keyword 模糊搜索名称、按 brand 过滤。
 func (m *PhotoEquipmentModel) GetList(ctx context.Context, keyword *string, brand *string, page, pageSize int) ([]PhotoEquipment, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&PhotoEquipment{})
@@ -85,12 +85,12 @@ func (m *PhotoEquipmentModel) GetList(ctx context.Context, keyword *string, bran
 	return list, total, nil
 }
 
-// Update 更新摄影器材。
+// Update 更新个人设备。
 func (m *PhotoEquipmentModel) Update(ctx context.Context, e *PhotoEquipment) error {
 	return m.db.WithContext(ctx).Save(e).Error
 }
 
-// SoftDelete 软删除摄影器材。
+// SoftDelete 软删除个人设备。
 func (m *PhotoEquipmentModel) SoftDelete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&PhotoEquipment{}).Error
 }

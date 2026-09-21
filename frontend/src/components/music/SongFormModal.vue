@@ -42,8 +42,25 @@
         <a-form-item label="歌手" required>
           <a-input v-model:value="formState.artist" placeholder="请输入歌手名称" />
         </a-form-item>
-        <a-form-item label="封面URL">
-          <a-input v-model:value="formState.cover_url" placeholder="请输入封面图片URL" />
+        <a-form-item label="封面">
+          <div class="cover-field">
+            <div class="cover-preview" @click="showMediaPicker = true">
+              <template v-if="formState.cover_url">
+                <img :src="formState.cover_url.replace(/^http:\/\//, 'https://')" alt="封面预览" referrerpolicy="no-referrer" class="cover-preview-img" />
+                <div class="cover-preview-overlay">
+                  <PictureOutlined />
+                </div>
+              </template>
+              <div v-else class="cover-placeholder">
+                <PictureOutlined />
+                <span>选择封面</span>
+              </div>
+            </div>
+            <div class="cover-input">
+              <a-input v-model:value="formState.cover_url" placeholder="封面图片URL，或从左侧媒体库选择" />
+              <div class="cover-input-hint">点击缩略图可从媒体库选择，也可直接粘贴外部图片 URL（B站封面会自动保存到存储）。</div>
+            </div>
+          </div>
         </a-form-item>
         <a-form-item label="分类">
           <a-select
@@ -90,15 +107,20 @@
         </a-form-item>
       </template>
     </a-form>
+
+    <!-- 媒体库选择封面 -->
+    <MediaPicker v-model:visible="showMediaPicker" @selected="handleMediaSelected" />
   </a-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
+import { PictureOutlined } from '@ant-design/icons-vue'
 import { musicApi } from '@/api/music'
 import type { Song, SongCreateReq, ParseResult, BatchCreateSongReq } from '@/types/music'
 import type { Category } from '@/types/category'
+import MediaPicker from '@/components/media/MediaPicker.vue'
 
 const props = defineProps<{
   open: boolean
@@ -122,6 +144,7 @@ const saving = ref(false)
 const biliUrl = ref('')
 const parsing = ref(false)
 const parseStatus = ref<'' | 'processing' | 'success' | 'failed'>('')
+const showMediaPicker = ref(false)
 
 const parseStatusText = computed(() => {
   switch (parseStatus.value) {
@@ -282,6 +305,10 @@ function applyParseResults(results: ParseResult[]) {
       artist: r.artist,
     }))
   }
+}
+
+function handleMediaSelected(media: { id: string; url: string }) {
+  formState.cover_url = media.url
 }
 
 async function handleSave() {
@@ -455,5 +482,73 @@ function handleCancel() {
   color: var(--text-tertiary);
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+/* 封面选择 */
+.cover-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cover-preview {
+  position: relative;
+  flex-shrink: 0;
+  width: 88px;
+  height: 66px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f8fafc;
+  border: 1px dashed var(--border-color, #cbd5e1);
+  transition: all 0.2s;
+}
+.cover-preview:hover {
+  border-color: var(--primary, #3b82f6);
+}
+.cover-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cover-preview-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.cover-preview:hover .cover-preview-overlay {
+  opacity: 1;
+}
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-tertiary, #94a3b8);
+  gap: 2px;
+}
+.cover-placeholder:hover {
+  color: var(--primary, #3b82f6);
+}
+.cover-input {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cover-input-hint {
+  font-size: 12px;
+  color: var(--text-tertiary, #94a3b8);
 }
 </style>

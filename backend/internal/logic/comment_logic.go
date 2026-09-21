@@ -9,6 +9,7 @@ import (
 	"novablog/internal/model"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 // CommentLogic 评论业务逻辑结构体。
@@ -85,6 +86,9 @@ func (l *CommentLogic) Reply(ctx context.Context, bloggerID string, commentID st
 		return nil, fmt.Errorf("创建回复失败: %w", err)
 	}
 
+	// 同步目标内容的评论计数（博主回复同样计入评论数）
+	l.adjustTargetCommentCount(ctx, reply.TargetType, reply.TargetID, 1)
+
 	// 查询目标标题
 	titleCache := make(map[string]string)
 	result := l.toCommentRes(ctx, reply, titleCache)
@@ -93,9 +97,15 @@ func (l *CommentLogic) Reply(ctx context.Context, bloggerID string, commentID st
 
 // Delete 软删除评论及其所有子回复。
 func (l *CommentLogic) Delete(ctx context.Context, id string) error {
-	_, err := l.commentModel.GetByID(ctx, id)
+	target, err := l.commentModel.GetByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("评论不存在")
+	}
+
+	// 级联软删除该评论的所有子回复，统计实际被删除的评论条数
+	childTotal, err := l.commentModel.CountByParentID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("统计子回复失败: %w", err)
 	}
 
 	// 软删除评论本身
@@ -107,6 +117,10 @@ func (l *CommentLogic) Delete(ctx context.Context, id string) error {
 	if err := l.commentModel.SoftDeleteByParentID(ctx, id); err != nil {
 		return fmt.Errorf("删除子回复失败: %w", err)
 	}
+
+	// 同步目标内容的评论计数（评论本身 + 所有子回复）
+	deletedCount := int(1 + childTotal)
+	l.adjustTargetCommentCount(ctx, target.TargetType, target.TargetID, -deletedCount)
 
 	return nil
 }
@@ -133,6 +147,29 @@ func (l *CommentLogic) getTargetTitle(ctx context.Context, targetType, targetID 
 	}
 	cache[cacheKey] = title
 	return title
+}
+
+// adjustTargetCommentCount 同步目标内容的评论计数（article → comment_count，travel_guide → review_count）。
+// delta 为正表示新增评论，为负表示删除评论。目标不存在或未发布时静默忽略。
+func (l *CommentLogic) adjustTargetCommentCount(ctx context.Context, targetType, targetID string, delta int) {
+	var err error
+	switch targetType {
+	case "article":
+		err = l.articleModel.UpdateCommentCount(ctx, targetID, delta)
+	case "travel_guide":
+		err = l.travelGuideModel.UpdateReviewCount(ctx, targetID, delta)
+	default:
+		return
+	}
+	if err != nil {
+		if CommentLogger != nil {
+			CommentLogger.Warn("同步评论计数失败",
+				zap.String("target_type", targetType),
+				zap.String("target_id", targetID),
+				zap.Int("delta", delta),
+				zap.Error(err))
+		}
+	}
 }
 
 // toCommentRes 将 Comment 模型转换为响应结构体。
@@ -197,6 +234,9 @@ func (l *CommentLogic) CreatePublic(ctx context.Context, r *req.CreatePublicComm
 	if err := l.commentModel.Create(ctx, comment); err != nil {
 		return nil, fmt.Errorf("创建评论失败: %w", err)
 	}
+
+	// 同步目标内容的评论计数
+	l.adjustTargetCommentCount(ctx, comment.TargetType, comment.TargetID, 1)
 
 	return &res.CommentPublicRes{
 		ID:         comment.ID,

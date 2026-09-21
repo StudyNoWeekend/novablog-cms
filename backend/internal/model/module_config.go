@@ -18,6 +18,7 @@ type ModuleConfig struct {
 	TravelEnabled    bool      `gorm:"not null;default:true"`
 	PortfolioEnabled bool      `gorm:"not null;default:true"`
 	EquipmentEnabled bool      `gorm:"not null;default:true"`
+	ProjectEnabled   bool      `gorm:"not null;default:true"`
 	CreatedAt        time.Time `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt        time.Time `gorm:"type:timestamptz;autoUpdateTime"`
 }
@@ -57,6 +58,7 @@ func (m *ModuleConfigModel) GetConfig(ctx context.Context) (*ModuleConfig, error
 		TravelEnabled:    true,
 		PortfolioEnabled: true,
 		EquipmentEnabled: true,
+		ProjectEnabled:   true,
 	}
 	if createErr := m.db.WithContext(ctx).Create(&config).Error; createErr != nil {
 		return nil, createErr

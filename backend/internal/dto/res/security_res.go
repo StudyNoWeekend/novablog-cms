@@ -39,6 +39,7 @@ type ListBlacklistRes struct {
 // IPAccessStatsRes IP 访问统计项响应结构体。
 type IPAccessStatsRes struct {
 	IP           string    `json:"ip"`
+	Region       string    `json:"region"` // IP 归属地区，如 "中国 广东省 深圳市"
 	TotalCount   int64     `json:"total_count"`
 	ErrorCount   int64     `json:"error_count"`
 	LastAccessAt time.Time `json:"last_access_at"`

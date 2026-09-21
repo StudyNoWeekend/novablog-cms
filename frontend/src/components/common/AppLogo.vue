@@ -18,15 +18,27 @@
       </svg>
     </span>
     <transition name="logo-text-fade">
-      <span v-if="!collapsed" class="logo-text">Novablog</span>
+      <div v-if="!collapsed" class="logo-brand">
+        <span class="logo-text">Novablog</span>
+        <span class="logo-version">{{ appStore.appVersion }}</span>
+      </div>
     </transition>
   </router-link>
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useAppStore } from '@/stores/app'
+
 defineProps<{
   collapsed?: boolean
 }>()
+
+const appStore = useAppStore()
+
+onMounted(() => {
+  appStore.fetchVersion()
+})
 </script>
 
 <style scoped>
@@ -44,11 +56,28 @@ defineProps<{
   flex-shrink: 0;
 }
 
+.logo-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1;
+  gap: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .logo-text {
   font-size: 18px;
   font-weight: 700;
   color: #1e293b;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.logo-version {
+  font-size: 11px;
+  color: #94a3b8;
   white-space: nowrap;
   overflow: hidden;
 }

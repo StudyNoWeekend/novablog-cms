@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { CheckCircleOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons-vue'
-import type { InstalledTheme } from '@/types/template'
+import type { InstalledTheme } from '@/types/theme'
 import { themeGradient } from '@/utils/themeDisplay'
 
 const props = defineProps<{
