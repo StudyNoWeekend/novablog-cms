@@ -58,6 +58,7 @@ themes:
   market_base_url: "http://novablogapi.ditancafebar.cn" # 官方主题市场地址（出厂默认值；首装向导/市场登录/后台修改后会持久化到 DB 并覆盖此值，服务端直连）
   github_token: ""                   # 可选 GitHub PAT（提升 Release 查询限流额度）
   public_api_base: ""                # 跨域部署时注入 theme-config.js 的 apiBase；空=同域相对路径
+  proxy_url: ""                      # 主题下载与 GitHub API 的 HTTP 代理（如 http://172.17.0.1:7890）；空=直连，代理不可用时自动降级直连
   max_artifact_mb: 100               # 制品下载上限（MB）
 
 # 跨域配置（后台页面可动态修改，此值为首次启动默认值）

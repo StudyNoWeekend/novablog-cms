@@ -652,6 +652,7 @@ themes:
   market_base_url: "$(yaml_quote "$MARKET_URL")"
   github_token: ""
   public_api_base: ""
+  proxy_url: ""                      # 主题下载与 GitHub API 的 HTTP 代理；空=直连，代理不可用时自动降级直连
   max_artifact_mb: 100
 
 cors:

@@ -15,6 +15,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"novablog/pkg/proxyhttp"
 )
 
 // apiBase GitHub REST API 地址（固定域，防 SSRF）。
@@ -29,8 +31,18 @@ var ErrInvalidRepoURL = errors.New("下载地址不是合法的 GitHub 仓库目
 // repoDirPattern 匹配 https://github.com/{owner}/{repo}/tree/{ref}/{dir}（兼容 blob 与多级 ref）。
 var repoDirPattern = regexp.MustCompile(`^https://github\.com/([^/]+)/([^/]+)/(?:tree|blob)/(.+)$`)
 
-// httpClient GitHub API 客户端。
-var httpClient = &http.Client{Timeout: 30 * time.Second}
+// githubProbeURL 代理可用性探测端点（与 apiBase 同域，代表 GitHub 可达性）。
+const githubProbeURL = "https://api.github.com/zen"
+
+// httpClient 按当前配置构建 GitHub API 客户端：
+// 配置了代理时走代理（探测缓存 + 代理中途失败自动降级直连），未配置则纯直连。
+func (c *Client) httpClient() *http.Client {
+	return proxyhttp.NewResilient(proxyhttp.Config{
+		Timeout:  30 * time.Second,
+		ProxyURL: c.ProxyURL,
+		ProbeURL: githubProbeURL,
+	})
+}
 
 // Asset Release 制品资产。
 type Asset struct {
@@ -42,7 +54,8 @@ type Asset struct {
 
 // Client GitHub 制品解析客户端。
 type Client struct {
-	Token string // 可选 PAT，提升限流额度
+	Token    string // 可选 PAT，提升限流额度
+	ProxyURL string // 可选 HTTP 代理（空=直连；代理不可用自动降级直连）
 }
 
 // ghAsset GitHub Release 资产（API 响应子集）。
@@ -113,7 +126,7 @@ func (c *Client) listReleases(ctx context.Context, owner, repo string) ([]ghRele
 		req.Header.Set("Authorization", "Bearer "+c.Token)
 	}
 
-	resp, err := httpClient.Do(req)
+	resp, err := c.httpClient().Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("请求 GitHub Release 失败: %w", err)
 	}
