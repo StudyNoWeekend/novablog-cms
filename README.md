@@ -301,7 +301,7 @@ cd deploy
 ## 📂 项目结构
 
 ```
-novablog-admin/
+novablog-cms/
 ├── backend/                          # Go 后端服务
 │   ├── bootstrap/                    # 应用引导
 │   │   ├── app.go                    # App 初始化（配置加载、依赖装配）
