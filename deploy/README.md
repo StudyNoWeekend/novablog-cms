@@ -18,7 +18,7 @@
         │  └───────────────────────────┬──────────────────────────────┘ │
         └──────────────────────────────┼────────────────────────────────┘
                         ┌──────────────┴──────────────┐
-                   PostgreSQL（内置容器或你的实例）  Redis（内置容器或你的实例）
+                   PostgreSQL（外部实例）           Redis（外部实例）
 ```
 
 | 入口 | 端口（默认） | 内容 |
@@ -33,8 +33,9 @@
 
 ```bash
 cd deploy
-./deploy.sh --name myblog            # 交互式问答（博客名称必填，端口、PG/Redis 等）
-./deploy.sh --name myblog --yes      # 全部默认：内置 PG/Redis，端口 80/8080，镜像版本 latest
+./deploy.sh                          # 交互管理菜单：全新安装 / 容器升级 / 退出
+./deploy.sh --name myblog            # 按参数安装：问答补全（端口、外部 PG/Redis 等，回车沿用已有配置）
+./deploy.sh --name myblog --yes      # 全默认安装：须显式 --db-host / --redis-host（内置 PG/Redis 已移除）
 ```
 
 部署完成后：
@@ -46,6 +47,14 @@ cd deploy
 ## 部署脚本
 
 脚本按**博客名称**隔离部署：生成 `<名称>/.env` 与 `<名称>/config/config.yaml`，全部挂载数据默认收拢在脚本同级 `<名称>/` 目录下，再按选择拼接 compose 文件启动容器（容器前缀 `<名称>-`）。可重复执行（幂等更新/升级）。
+
+**交互管理菜单（零参数运行）**：进入时自动获取最新发布版本号，并扫描本地部署记录与实际容器状态对齐展示（记录版本 vs 运行版本、端口、DB/Redis 模式；不对齐情况显式标警），然后可选：
+
+1. **全新安装**——重名时自动识别：可转为升级（沿用现有配置）、或重新安装（保留数据 / 删除数据重建，后者需输入名称二次确认）；
+2. **容器升级**——单个（可自定目标版本）或批量（统一升到最新版）；升级前在线对比目标版本的 `config.example.yaml`，新增配置逐条让你确认填写（默认取 example 值）、废弃配置提示保留，补写前自动备份 `config.yaml.old`；
+3. 退出。
+
+按参数运行（`./deploy.sh --name ...`）保持原有问答部署流程，适合脚本化与改参数重部署。
 
 ```bash
 ./deploy.sh --name llcms --help      # 查看全部参数
@@ -66,14 +75,14 @@ cd deploy
 | `--admin-port <端口>` | `8080` | CMS 后台端口（宿主） |
 | `--public-url <地址>` | `http://<博客入口域名>`（未配域名时 `http://localhost:<博客端口>`） | 博客对外访问地址，写入 `upload.base_url`（媒体文件 URL 前缀） |
 | `--domain` / `--admin-domain` | `_` | 两个入口的 server_name |
-| `--db-host/--db-port/--db-user/--db-password/--db-name/--db-sslmode` | — | PostgreSQL 地址等信息；主机留空或 localhost/127.0.0.1 时自动部署内置容器；用户/库名/sslmode 默认 `postgres`/`<博客名>`/`disable` |
-| `--redis-host/--redis-port/--redis-password/--redis-db` | — | Redis 地址等信息；主机留空或 localhost/127.0.0.1 时自动部署内置容器 |
+| `--db-host/--db-port/--db-user/--db-password/--db-name/--db-sslmode` | — | 外部 PostgreSQL 地址等信息，**必填**（容器网络内勿用 localhost，宿主机实例可填 `host.docker.internal` 或宿主机 IP）；用户/库名/sslmode 默认 `postgres`/`<博客名>`/`disable` |
+| `--redis-host/--redis-port/--redis-password/--redis-db` | — | 外部 Redis 地址等信息，**必填**（同上，容器网络内勿用 localhost） |
 | `--config-dir <目录>` | `./<名称>/config` | config.yaml 存放目录 |
 | `--uploads-dir <目录>` | `./<名称>/data/uploads` | 媒体上传目录 |
 | `--themes-dir <目录>` | `./<名称>/data/themes` | 主题制品目录 |
 | `--logs-dir <目录>` | `./<名称>/data/logs` | 日志目录 |
 | `--frontend-dir <目录>` | 无 | 自备博客前端目录（含 `theme.json` 与 `dist/`），传 `-` 清除 |
-| `--pgdata-dir` / `--redisdata-dir` | `./<名称>/data/pg`、`./<名称>/data/redis` | 内置数据库数据目录 |
+| `--pgdata-dir` / `--redisdata-dir` | `./<名称>/data/pg`、`./<名称>/data/redis` | 内置数据库数据目录（仅旧版内置模式存量部署使用，新安装不再创建） |
 | `--market-url <地址>` | 无 | 官方主题市场地址（首装拉取默认主题用） |
 | `-y, --yes` | 关 | 全部使用默认值/已有配置，不进入问答 |
 
@@ -98,7 +107,7 @@ cd deploy
 
 ## 单独脚本部署（免克隆仓库）
 
-`deploy.sh` 支持脱离仓库单独运行：只把脚本拷到服务器任意目录（或用一行命令下载），执行时会**自动检测并在线拉取缺失的 compose 文件**（`docker-compose.yml`、内置 PG/Redis 的 overlay 等）。已存在的文件不会被覆盖。
+`deploy.sh` 支持脱离仓库单独运行：只把脚本拷到服务器任意目录（或用一行命令下载），执行时会**自动检测并在线拉取缺失的 compose 文件**（`docker-compose.yml` 及旧版内置 PG/Redis 的存量 overlay 等）。已存在的文件不会被覆盖。
 
 ```bash
 mkdir -p /srv/novablog && cd /srv/novablog
@@ -120,8 +129,9 @@ chmod +x deploy.sh
 - 镜像：`ghcr.io/studynoweekend/novablog-cms:<tag>`，同时提供 `linux/amd64` 与 `linux/arm64`；
 - 版本标签：`v1.0.0` 等语义化版本，稳定版同时更新 `latest`；
 - 不指定 `--version` 时使用 `latest`；
-- 升级：`./deploy.sh --version v1.0.1`（自动拉取新镜像并重建容器，挂载目录中的数据保留）；
-- 回退：`./deploy.sh --version v1.0.0`；
+- 升级（推荐）：`./deploy.sh` → 菜单选「容器升级」——自动获取最新版本号，扫描本地部署并展示记录版本与实际运行版本的对齐情况，支持单个（可自定目标版本）与批量升级；升级前在线对比目标版本 `config.example.yaml`，新增配置逐条确认、废弃配置提示，补写前备份 `config.yaml.old`；容器自动拉取新镜像重建，挂载数据保留；
+- 升级（按参数）：`./deploy.sh --name llcms --version v1.0.1`（问答沿用现有配置，自动拉取新镜像并重建容器）；
+- 回退：`./deploy.sh --name llcms --version v1.0.0`；
 - 确认运行版本：`curl http://<主机>:<博客端口>/health` 返回 `{"status":"ok","version":"v1.0.1"}`。
 
 ## 外层 nginx 反代部署（免端口访问）
@@ -256,10 +266,10 @@ deploy.sh 所在目录/
 ```bash
 cp .env.example .env    # 编辑端口、挂载目录、数据库密码
 
-# 外部 PG/Redis
+# 外部 PG/Redis（推荐，deploy.sh 也仅支持外部实例）
 docker compose up -d
 
-# 内置 PostgreSQL / Redis（可单独或同时使用）
+# 内置 PostgreSQL / Redis（仅旧版存量部署升级时由脚本按 .env 记录继续带起；手动使用需自行维护）
 docker compose -f docker-compose.yml -f docker-compose.local-pg.yml up -d
 docker compose -f docker-compose.yml -f docker-compose.local-redis.yml up -d
 
