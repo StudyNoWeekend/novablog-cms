@@ -64,6 +64,7 @@ REDIS_HOST_SET=0          # 用户是否显式传了 --redis-host
 
 CONFIG_DIR="" UPLOADS_DIR="" THEMES_DIR="" LOGS_DIR="" FRONTEND_DIR="" FRONTEND_DIR_INPUT=""
 PGDATA_DIR="" REDISDATA_DIR=""
+EXTRA_MOUNTS=""           # 升级补写的新增挂载（宿主机路径:容器路径，分号分隔；.env 持久化）
 MARKET_URL=""
 
 NGINX_MODE=""            # ""=未指定(自动检测) / 1=启用 --host-nginx / 0=禁用 --no-host-nginx
@@ -932,13 +933,39 @@ config_diff_patch() { # $1=本地 config.yaml $2=example 文件 $3=版本标签
   echo
   c_info "----- 检测到 $ref 新增配置，逐项确认（回车=example 默认值）-----"
   local patch_file patched_top p top sub raw val line_out
+  EXTRA_MOUNTS_NEW=""
   patch_file="$(mktemp -t novablog-patch.XXXXXX)" || return 1
   patched_top=""
   for p in $missing_pairs; do
     top="${p%%.*}"
     sub="${p#*.}"
     raw="$(yaml_raw_val "$example" "$top" "$sub")"
-    val="$(ask "  ${p}（默认：$(yaml_key "$example" "$top" "$sub")）" "$(yaml_key "$example" "$top" "$sub")")"
+    val="$(yaml_key "$example" "$top" "$sub")"
+    # 挂载路径类配置判定：键名 _dir/_path 后缀，或取值形似路径（example 仓库里常是 ./ 相对开发路径）
+    local is_path=0 cpath="$val"
+    case "$val" in /*|./*|../*) is_path=1 ;; esac
+    case "$sub" in *_dir|*_path) is_path=1 ;; esac
+    if [ "$is_path" = 1 ]; then
+      # 容器内路径规范化：相对值按后端工作目录 /app 归一（与 deploy.sh 生成的生产配置一致）
+      case "$cpath" in
+        /*) : ;;
+        ./*) cpath="/app/${cpath#./}" ;;
+        ../*) cpath="/app/${cpath#../}" ;;
+        *) cpath="/app/$cpath" ;;
+      esac
+      # 宿主机侧按博客目录约定自动挂载，不再询问
+      if mount_target_covered "$cpath"; then
+        c_info "  ${p}：挂载路径 $cpath 已随现有挂载持久化，按默认值写入"
+      else
+        local host_dir
+        host_dir="$(abs_dir "./$NAME/data/$(basename "$cpath")")"
+        c_info "  ${p}：新增挂载路径 —— 宿主机默认挂载到 ${host_dir}（按博客目录约定）"
+        EXTRA_MOUNTS_NEW="${EXTRA_MOUNTS_NEW};$host_dir:$cpath"
+      fi
+      val="$cpath"
+    else
+      val="$(ask "  ${p}（默认：${val}）" "$val")"
+    fi
     case "$raw" in
       \"*|\'*) line_out="  $sub: \"$(yaml_quote "$val")\"" ;;
       *)       line_out="  $sub: $val" ;;
@@ -965,6 +992,78 @@ config_diff_patch() { # $1=本地 config.yaml $2=example 文件 $3=版本标签
   fi
   rm -f "$patch_file"
   return 0
+}
+
+# compose_base_targets 列出基础 docker-compose.yml 已挂载的容器内路径（每行一个）
+compose_base_targets() {
+  [ -f "$SCRIPT_DIR/docker-compose.yml" ] || return 0
+  sed -n 's/^[[:space:]]*-[[:space:]]*//p' "$SCRIPT_DIR/docker-compose.yml" \
+    | awk -F: '{ for (i = 1; i <= NF; i++) if ($i ~ /^\//) { print $i; break } }'
+}
+
+# mount_target_covered 判断容器路径是否已被挂载覆盖（基础卷或既有新增挂载，含父目录前缀）
+mount_target_covered() { # $1=容器路径
+  local dst="$1" t mounts entry
+  while IFS= read -r t; do
+    [ -n "$t" ] || continue
+    case "$dst" in "$t"|"$t"/*) return 0 ;; esac
+  done < <(compose_base_targets)
+  if [ -f "$SCRIPT_DIR/$NAME/.env" ]; then
+    mounts="$(sed -n 's/^NOVABLOG_EXTRA_MOUNTS=//p' "$SCRIPT_DIR/$NAME/.env" | tail -1)"
+    local IFS=';'
+    for entry in $mounts; do
+      [ -n "$entry" ] || continue
+      t="${entry#*:}"
+      case "$dst" in "$t"|"$t"/*) return 0 ;; esac
+    done
+  fi
+  return 1
+}
+
+# register_extra_mounts 把 EXTRA_MOUNTS_NEW 合并进 .env 并重建 compose.extra.yml
+# （按容器路径去重，可重复升级；.env 的 NOVABLOG_EXTRA_MOUNTS 是持久化事实源）
+register_extra_mounts() { # $1=.env 路径
+  local env_file="$1" existing all merged="" seen="" entry t tmp
+  existing="$(sed -n 's/^NOVABLOG_EXTRA_MOUNTS=//p' "$env_file" | tail -1)"
+  all="${existing:+$existing;}${EXTRA_MOUNTS_NEW#;}"
+  local IFS=';'
+  for entry in $all; do
+    [ -n "$entry" ] || continue
+    t="${entry#*:}"
+    case ";$seen;" in *";$t;"*) continue ;; esac
+    seen="$seen;$t"
+    merged="${merged:+$merged;}$entry"
+  done
+  if grep -q '^NOVABLOG_EXTRA_MOUNTS=' "$env_file"; then
+    tmp="$(mktemp -t novablog-env.XXXXXX)" || return 1
+    sed "s#^NOVABLOG_EXTRA_MOUNTS=.*#NOVABLOG_EXTRA_MOUNTS=$merged#" "$env_file" > "$tmp" && mv "$tmp" "$env_file"
+  else
+    printf '\n# ---- 升级补写的新增挂载（宿主机路径:容器路径，分号分隔） ----\nNOVABLOG_EXTRA_MOUNTS=%s\n' "$merged" >> "$env_file"
+  fi
+  chmod 600 "$env_file"
+  write_extra_compose "$env_file" "$merged"
+}
+
+# write_extra_compose 依据挂载串重建 <博客目录>/compose.extra.yml（compose_files 检测到即自动带上）
+write_extra_compose() { # $1=.env 路径 $2=挂载串
+  local env_file="$1" mounts="$2" out entry
+  out="$(dirname "$env_file")/compose.extra.yml"
+  if [ -z "$mounts" ]; then
+    rm -f "$out"
+    return 0
+  fi
+  {
+    echo "# 由 deploy.sh 生成：升级补写的新增挂载，重复升级会整体重写，请勿手工修改"
+    echo "services:"
+    echo "  novablog:"
+    echo "    volumes:"
+    local IFS=';'
+    for entry in $mounts; do
+      [ -n "$entry" ] || continue
+      printf '      - "%s"\n' "$entry"
+    done
+  } > "$out"
+  c_info "已生成新增挂载配置：$out"
 }
 
 # update_env_version 更新 .env 的镜像版本两行（其余行原样保留）
@@ -1003,6 +1102,7 @@ do_upgrade_one() { # $1=博客名称 $2=目标版本
   c_info "----- 升级 ${name}：${cur_ver:-?} → $target -----"
   printf '    端口 %s/%s    域名 %s（升级不改动部署参数）\n' "$blog_port" "$admin_port" "${domain:-_}"
 
+  EXTRA_MOUNTS_NEW=""
   ref="$target"
   [ "$ref" = "latest" ] && ref="main"
   example="$(fetch_example_config "$ref" || true)"
@@ -1015,6 +1115,10 @@ do_upgrade_one() { # $1=博客名称 $2=目标版本
     rm -f "$example"
   else
     c_warn "无法获取 $ref 配置基线（网络不可用？），跳过配置差异检测，仅升级镜像。"
+  fi
+
+  if [ -n "$EXTRA_MOUNTS_NEW" ]; then
+    register_extra_mounts "$ENV_FILE"
   fi
 
   c_info "更新版本记录：$ENV_FILE"
@@ -1169,6 +1273,8 @@ compose_files() {
   [ "$DB_MODE" = "local" ] && files+=(-f docker-compose.local-pg.yml)
   [ "$REDIS_MODE" = "local" ] && files+=(-f docker-compose.local-redis.yml)
   [ "$BUILD" = 1 ] && files+=(-f docker-compose.build.yml)
+  # 升级补写的新增挂载覆盖文件（存在即带上；生成逻辑见 register_extra_mounts）
+  [ -f "$SCRIPT_DIR/$NAME/compose.extra.yml" ] && files+=(-f "$SCRIPT_DIR/$NAME/compose.extra.yml")
   printf '%s\n' "${files[@]}"
 }
 
@@ -1179,6 +1285,7 @@ compose_files_from_env() {
   redis_mode="$(env_get NOVABLOG_REDIS_MODE)"
   [ "$db_mode" = "local" ] && files+=(-f docker-compose.local-pg.yml)
   [ "$redis_mode" = "local" ] && files+=(-f docker-compose.local-redis.yml)
+  [ -f "$SCRIPT_DIR/$NAME/compose.extra.yml" ] && files+=(-f "$SCRIPT_DIR/$NAME/compose.extra.yml")
   printf '%s\n' "${files[@]}"
 }
 
@@ -1249,6 +1356,7 @@ deploy_blog() {
   [ -z "$DB_USER" ] && DB_USER="$(env_get POSTGRES_USER)"
   [ -z "$DB_NAME" ] && DB_NAME="$(env_get POSTGRES_DB)"
   [ -z "$REDIS_PASSWORD" ] && REDIS_PASSWORD="$(env_get REDIS_PASSWORD)"
+  [ -z "$EXTRA_MOUNTS" ] && EXTRA_MOUNTS="$(env_get NOVABLOG_EXTRA_MOUNTS)"
   # config.yaml 路径提前确定（用 .env 回填的 CONFIG_DIR），供 PG/Redis 连接回填读取旧配置；
   # 挂载目录定稿后会重新赋值一次
   CONFIG_FILE="${CONFIG_DIR:+$CONFIG_DIR/config.yaml}"
@@ -1581,6 +1689,7 @@ REDIS_PASSWORD=$REDIS_PASSWORD
 # ---- 其他 ----
 NOVABLOG_PUBLIC_URL=$PUBLIC_URL
 NOVABLOG_MARKET_URL=$MARKET_URL
+NOVABLOG_EXTRA_MOUNTS=$EXTRA_MOUNTS
 ENV
   chmod 600 "$ENV_FILE"
 
