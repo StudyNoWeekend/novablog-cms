@@ -27,6 +27,24 @@ export interface UploadWithPresetRes {
   preset: MediaPreset
 }
 
+export interface MediaUsageItem {
+  id: string
+  title: string
+  field: string
+}
+
+export interface MediaUsageGroup {
+  module: string
+  items: MediaUsageItem[]
+}
+
+export interface MediaUsageRes {
+  media_id: string
+  used: boolean
+  total: number
+  groups: MediaUsageGroup[]
+}
+
 export const mediaApi = {
   upload(file: File, onProgress?: (percent: number) => void) {
     const formData = new FormData()
@@ -58,8 +76,11 @@ export const mediaApi = {
   getList(params?: { file_type?: number; keyword?: string; page?: number; page_size?: number }) {
     return request.get<MediaListRes>('/media', { params })
   },
-  remove(id: string) {
-    return request.delete(`/media/${id}`)
+  getUsages(id: string) {
+    return request.get<MediaUsageRes>(`/media/${id}/usages`)
+  },
+  remove(id: string, force = false) {
+    return request.delete(`/media/${id}`, { params: force ? { force: 'true' } : undefined })
   },
   getPresets(mediaId: string) {
     return request.get<MediaPresetListRes>(`/media/${mediaId}/presets`)

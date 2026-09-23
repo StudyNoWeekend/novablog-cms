@@ -128,7 +128,7 @@ func (c *MusicController) GetParseStatus(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// GetAudioURL 获取音频播放地址 GET /api/v1/music/audio-url/:song_id
+// GetAudioURL 获取播放地址（B站外链播放器） GET /api/v1/music/audio-url/:song_id
 func (c *MusicController) GetAudioURL(ctx *gin.Context) {
 	songID := ctx.Param("song_id")
 

@@ -14,6 +14,9 @@
       <span class="theme-card__price" :class="{ 'theme-card__price--paid': isPaid }">
         {{ isPaid ? `¥${theme.price_amount}` : '免费' }}
       </span>
+      <a-tag v-if="installed" color="success" class="theme-card__installed">
+        <CheckCircleOutlined /> 已安装
+      </a-tag>
       <a-tag v-if="theme.status !== 2" color="warning" class="theme-card__status">
         {{ themeStatusText(theme.status) }}
       </a-tag>
@@ -42,9 +45,9 @@
         <template #icon><StarFilled v-if="favorited" /><StarOutlined v-else /></template>
         {{ favorited ? '已收藏' : '收藏' }}
       </a-button>
-      <a-button size="small" type="primary" :loading="installing" @click="emit('install')">
-        <template #icon><CloudDownloadOutlined /></template>
-        安装
+      <a-button size="small" type="primary" :disabled="installed" :loading="installing" @click="emit('install')">
+        <template #icon><CloudDownloadOutlined v-if="!installed" /><CheckOutlined v-else /></template>
+        {{ installed ? '已安装' : '安装' }}
       </a-button>
     </div>
   </div>
@@ -53,6 +56,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import {
+  CheckCircleOutlined,
+  CheckOutlined,
   CloudDownloadOutlined,
   DownloadOutlined,
   HeartOutlined,
@@ -67,6 +72,7 @@ const props = defineProps<{
   theme: ThemeItem
   favorited?: boolean
   installing?: boolean
+  installed?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -153,6 +159,12 @@ watch(
 .theme-card__status {
   position: absolute;
   top: 8px;
+  left: 8px;
+}
+
+.theme-card__installed {
+  position: absolute;
+  bottom: 8px;
   left: 8px;
 }
 

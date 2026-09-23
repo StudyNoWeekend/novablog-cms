@@ -57,14 +57,27 @@ func (c *MediaController) GetList(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// Delete 删除媒体 DELETE /api/v1/media/:id
+// Delete 删除媒体 DELETE /api/v1/media/:id?force=true
+// 被内容引用时需携带 force=true 强制删除。
 func (c *MediaController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
-	if err := c.logic.Delete(ctx, id); err != nil {
+	force := ctx.Query("force") == "true"
+	if err := c.logic.Delete(ctx, id, force); err != nil {
 		response.HandleError(ctx, err)
 		return
 	}
 	response.Success(ctx, nil)
+}
+
+// GetUsages 获取媒体引用情况 GET /api/v1/media/:id/usages
+func (c *MediaController) GetUsages(ctx *gin.Context) {
+	id := ctx.Param("id")
+	result, err := c.logic.GetUsages(ctx, id)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
 }
 
 // CreatePreset 创建媒体预设 POST /api/v1/media/preset

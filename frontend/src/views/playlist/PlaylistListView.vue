@@ -84,8 +84,7 @@
           :has-next="hasNext"
           @prev="playPrev"
           @next="playNext"
-          @play="resumePlay"
-          @pause="pausePlay"
+          @close="closePlayer"
         />
 
         <!-- 添加歌曲弹窗 -->
@@ -279,12 +278,8 @@ function playNext() {
   }
 }
 
-function resumePlay() {
-  // 播放器内部处理
-}
-
-function pausePlay() {
-  // 播放器内部处理
+function closePlayer() {
+  currentSong.value = null
 }
 
 // ---- 第三方歌单相关 ----

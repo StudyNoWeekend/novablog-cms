@@ -94,6 +94,30 @@ func (m *MediaModel) SoftDelete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&Media{}).Error
 }
 
+// GetByIDRaw 根据 ID 查询媒体文件，跳过 AfterFind 钩子，返回存储中的原始 URL。
+// 用于引用扫描与删除：需要匹配的原始存储值而非拼接后的完整 URL。
+func (m *MediaModel) GetByIDRaw(ctx context.Context, id string) (*Media, error) {
+	var media Media
+	err := m.db.WithContext(ctx).
+		Session(&gorm.Session{SkipHooks: true}).
+		Where("id = ?", id).
+		First(&media).Error
+	if err != nil {
+		return nil, err
+	}
+	return &media, nil
+}
+
+// HardDeleteWithPresets 物理删除媒体及其全部预设记录（含软删记录）。
+func (m *MediaModel) HardDeleteWithPresets(ctx context.Context, id string) error {
+	return m.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Unscoped().Where("media_id = ?", id).Delete(&MediaPreset{}).Error; err != nil {
+			return err
+		}
+		return tx.Unscoped().Where("id = ?", id).Delete(&Media{}).Error
+	})
+}
+
 // GetByIDs 按 ID 列表批量查询媒体文件。
 func (m *MediaModel) GetByIDs(ctx context.Context, ids []string) ([]Media, error) {
 	if len(ids) == 0 {

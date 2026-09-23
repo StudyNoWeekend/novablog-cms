@@ -154,8 +154,9 @@ NovaBlog 不仅是一套内容管理后台，同时也是**博客前端的运行
 ### 🎵 音乐播放列表
 
 - **曲库管理**：歌曲信息维护，支持音频文件上传与元数据（封面、歌手、专辑）；
+- **B站歌曲解析**：粘贴 B站视频链接自动解析标题、封面、时长；
+- **内嵌播放**：使用 B站官方外链播放器（iframe）播放，不受防盗链与链接时效限制，不保存音频文件；
 - **第三方歌单**：导入网易云音乐、QQ 音乐、Spotify 等平台的公开歌单；
-- **受控音频流**：音频 URL 带权限校验，防止原创资源被直接盗链；
 - **播放列表**：自定义歌单与排序。
 
 ### 💬 评论系统
@@ -318,7 +319,6 @@ novablog-cms/
 │   │   ├── cache/                    # Redis 缓存层
 │   │   │   ├── article_cache.go      # 文章缓存
 │   │   │   ├── analytics_cache.go    # 统计缓存
-│   │   │   ├── music_cache.go        # 音乐缓存
 │   │   │   ├── security_cache.go     # 安全配置缓存
 │   │   │   ├── module_config_cache.go# 模块开关缓存
 │   │   │   ├── cors_config_cache.go  # 跨域配置缓存
@@ -557,7 +557,7 @@ cors:
 | GET | `/public/videos/:id` | 视频详情 |
 | GET | `/public/equipments` | 个人设备列表 |
 | GET | `/public/music/songs` | 音乐曲目列表 |
-| GET | `/public/music/audio-url/:song_id` | 获取受控音频流 URL |
+| GET | `/public/music/audio-url/:song_id` | 获取播放地址（B站外链播放器，iframe 内嵌播放） |
 | GET | `/public/music/playlists` | 音乐播放列表 |
 | GET | `/public/playlists` | 第三方歌单 |
 | GET | `/public/module-config` | 模块开关配置（前端据此隐藏入口） |

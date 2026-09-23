@@ -1,20 +1,27 @@
 <template>
   <div class="installed-card">
     <div class="installed-card__cover" :style="{ background: gradient }">
-      <span class="installed-card__cover-text">{{ theme.name.slice(0, 1) }}</span>
+      <img
+        v-if="marketPreview && !coverFailed"
+        :src="market!.preview"
+        :alt="displayName"
+        loading="lazy"
+        @error="coverFailed = true"
+      />
+      <span v-else class="installed-card__cover-text">{{ displayName.slice(0, 1) }}</span>
       <a-tag v-if="theme.active" color="success" class="installed-card__badge">
         <CheckCircleOutlined /> 使用中
       </a-tag>
     </div>
 
     <div class="installed-card__body">
-      <h3 class="installed-card__title" :title="theme.name">{{ theme.name }}</h3>
+      <h3 class="installed-card__title" :title="displayName">{{ displayName }}</h3>
       <div class="installed-card__meta">
         <span class="installed-card__version">v{{ theme.version }}</span>
         <span class="installed-card__engine">{{ theme.engine }}</span>
         <span class="installed-card__time">{{ installedTime }}</span>
       </div>
-      <p v-if="theme.description" class="installed-card__desc">{{ theme.description }}</p>
+      <p v-if="displayDesc" class="installed-card__desc">{{ displayDesc }}</p>
     </div>
 
     <div class="installed-card__actions" @click.stop>
@@ -55,13 +62,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { CheckCircleOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons-vue'
-import type { InstalledTheme } from '@/types/theme'
-import { themeGradient } from '@/utils/themeDisplay'
+import type { InstalledTheme, ThemeItem } from '@/types/theme'
+import { isPreviewURL, themeGradient } from '@/utils/themeDisplay'
 
 const props = defineProps<{
   theme: InstalledTheme
+  /** 市场元数据（按 market_id 关联），用于对齐市场展示；缺省时回退制品内信息 */
+  market?: ThemeItem | null
   activating?: boolean
   updating?: boolean
 }>()
@@ -73,7 +82,20 @@ const emit = defineEmits<{
   (e: 'update'): void
 }>()
 
-const gradient = computed(() => themeGradient(props.theme.market_slug || props.theme.theme_id))
+const coverFailed = ref(false)
+
+const marketPreview = computed(() => (props.market ? isPreviewURL(props.market.preview) : false))
+const displayName = computed(() => props.market?.title || props.theme.name)
+const displayDesc = computed(() => props.market?.description || props.theme.description)
+// 渐变按市场主题类型取色（themeGradient 以类型为键），无市场数据时走默认色
+const gradient = computed(() => themeGradient(props.market?.type || ''))
+
+watch(
+  () => props.theme.id,
+  () => {
+    coverFailed.value = false
+  },
+)
 
 const installedTime = computed(() => {
   const d = new Date(props.theme.created_at)
@@ -104,6 +126,13 @@ const installedTime = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.installed-card__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .installed-card__cover-text {

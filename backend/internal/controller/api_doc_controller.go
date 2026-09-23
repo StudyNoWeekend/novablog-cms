@@ -610,12 +610,12 @@ var apiDocs = []APIDocItem{
 		Module:      "音乐",
 		Method:      "GET",
 		Path:        "/music/audio-url/:song_id",
-		Description: "获取歌曲音频播放地址（B站CDN直链）",
+		Description: "获取歌曲播放地址（B站官方外链播放器，iframe 内嵌播放）",
 		Params: []APIDocParam{
 			{Name: "song_id", Type: "string", Required: true, Desc: "歌曲ID"},
 		},
 		Response: []APIDocField{
-			{Name: "url", Type: "string", Desc: "音频播放地址，有效期约120分钟"},
+			{Name: "url", Type: "string", Desc: "B站外链播放器地址，供 iframe.src 使用"},
 		},
 	},
 	{

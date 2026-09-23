@@ -78,6 +78,7 @@ func NewApp(cfgPath string) (*App, error) {
 	logic.SetupLogger = logger
 	logic.MusicLogger = logger
 	logic.CommentLogger = logger
+	logic.MediaLogger = logger
 
 	// 注入主题模块配置
 	logic.SetThemeSettings(&logic.ThemeSettings{

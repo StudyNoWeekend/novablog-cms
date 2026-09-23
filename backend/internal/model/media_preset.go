@@ -81,6 +81,16 @@ func (m *MediaPresetModel) GetByMediaID(ctx context.Context, mediaID string) ([]
 	return presets, nil
 }
 
+// GetAllByMediaIDUnscoped 查询指定原图下的全部预设（含软删除），用于删除清理与引用扫描。
+func (m *MediaPresetModel) GetAllByMediaIDUnscoped(ctx context.Context, mediaID string) ([]MediaPreset, error) {
+	var presets []MediaPreset
+	err := m.db.WithContext(ctx).Unscoped().
+		Where("media_id = ?", mediaID).
+		Order("created_at DESC").
+		Find(&presets).Error
+	return presets, err
+}
+
 // SoftDelete 软删除媒体预设。
 func (m *MediaPresetModel) SoftDelete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&MediaPreset{}).Error

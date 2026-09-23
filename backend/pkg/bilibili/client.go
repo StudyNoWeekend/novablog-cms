@@ -44,11 +44,12 @@ type VideoInfo struct {
 	Pages     []VideoPage // 全部分P
 }
 
-// AudioEntry DASH 音频流条目，对应 B 站 /x/player/playurl 返回的 dash.audio 列表。
-type AudioEntry struct {
-	ID        int    // 音质代码
-	BaseURL   string // CDN 直链（URL 上常带有 expire 查询参数）
-	Bandwidth int    // 码率
+// BuildEmbedURL 构造 B 站官方外链播放器地址，供 iframe 内嵌播放。
+// 官方外链无需解析 CDN 直链，不受 Referer 防盗链与链接时效限制。
+// autoplay=1 配合 iframe allow="autoplay" 在用户点击歌曲后自动播放；
+// danmaku=0 关闭弹幕；high_quality=1 请求较高清晰度。
+func BuildEmbedURL(bvid string) string {
+	return fmt.Sprintf("https://player.bilibili.com/player.html?bvid=%s&autoplay=1&danmaku=0&high_quality=1", bvid)
 }
 
 // newRequest 创建带 UA/Referer 的 GET 请求。
@@ -144,43 +145,4 @@ func FetchVideoInfo(ctx context.Context, bvid string) (*VideoInfo, error) {
 		})
 	}
 	return info, nil
-}
-
-// biliPlayurlResp /x/player/playurl 响应（仅解析需要的字段）。
-type biliPlayurlResp struct {
-	Code int `json:"code"`
-	Data struct {
-		Dash struct {
-			Audio []AudioEntry `json:"audio"`
-		} `json:"dash"`
-	} `json:"data"`
-}
-
-// FetchAudioEntries 调用 B 站 /x/player/playurl 拉取 DASH 音频流列表。
-// 官方文档: https://socialsisteryi.github.io/bilibili-API-collect/docs/video/videostream_url.html
-// 返回的 BaseURL 中通常带 `expire` 查询参数，可用于精确推断失效时间。
-func FetchAudioEntries(ctx context.Context, bvid string, cid int64) ([]AudioEntry, error) {
-	url := fmt.Sprintf("https://api.bilibili.com/x/player/playurl?bvid=%s&cid=%d&fnval=16&fnver=0", bvid, cid)
-	req, err := newRequest(ctx, url)
-	if err != nil {
-		return nil, fmt.Errorf("创建请求失败: %w", err)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("请求播放地址失败: %w", err)
-	}
-	defer resp.Body.Close()
-
-	var body biliPlayurlResp
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return nil, fmt.Errorf("解析播放地址响应失败: %w", err)
-	}
-	if body.Code != 0 {
-		return nil, fmt.Errorf("获取播放地址失败, code: %d", body.Code)
-	}
-	if len(body.Data.Dash.Audio) == 0 {
-		return nil, fmt.Errorf("未找到可用的音频流")
-	}
-	return body.Data.Dash.Audio, nil
 }

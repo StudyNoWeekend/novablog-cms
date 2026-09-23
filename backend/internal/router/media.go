@@ -16,6 +16,7 @@ func RegisterMediaRoutes(r *gin.RouterGroup, mediaController *controller.MediaCo
 		media.GET("", mediaController.GetList)
 		media.DELETE("/:id", mediaController.Delete)
 
+		media.GET("/:id/usages", mediaController.GetUsages)
 		media.GET("/:id/presets", mediaController.GetPresets)
 		media.POST("/preset", mediaController.CreatePreset)
 		media.DELETE("/preset/:id", mediaController.DeletePreset)

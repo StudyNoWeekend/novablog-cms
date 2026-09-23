@@ -873,7 +873,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 #### GET /api/v1/public/music/audio-url/:song_id
 
-获取歌曲音频播放地址（返回 B站 CDN 直链）。
+获取歌曲播放地址（返回 B 站官方外链播放器地址，前端用 iframe 内嵌播放）。
 
 **路径参数:**
 
@@ -885,14 +885,26 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| url | string | B 站 CDN 直链，有效期约 120 分钟 |
+| url | string | B 站官方外链播放器地址，供 iframe.src 使用 |
 
-**缓存策略**：
+**说明：**
 
-- 后端使用 Redis 缓存音频 URL，缓存 key 格式 `music:audio:<song_id>`。
-- 缓存 TTL 与 B 站 URL 中 `expire` 查询参数对齐（通常 120 分钟），并预留 5% 安全余量。
-- 若 URL 中无 `expire` 或解析失败，回退 2 小时兜底 TTL。
-- 歌曲更新/删除时会主动失效缓存。
+- 播放器地址格式：`https://player.bilibili.com/player.html?bvid=<BVID>&autoplay=1&danmaku=0&high_quality=1`。
+- 该地址为 B 站官方外链播放器页，需用 `<iframe>` 内嵌播放，而非 `<audio>`/`<video>` 直接引用。
+- 不解析 CDN 直链：B 站 CDN（bilivideo/upos 等）对请求来源做 Referer 白名单校验，浏览器直连第三方站点会返回 403；外链播放器不受防盗链与链接时效限制。
+- 若前端传入 `autoplay=1`（接口默认带），需在 iframe 上配置 `allow="autoplay; fullscreen; encrypted-media"` 以允许自动播放与全屏。
+
+**iframe 用法示例:**
+
+```html
+<iframe
+  :src="url"
+  allow="autoplay; fullscreen; encrypted-media"
+  allowfullscreen
+  scrolling="no"
+  frameborder="0"
+></iframe>
+```
 
 **响应示例:**
 
@@ -901,7 +913,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
   "code": 0,
   "msg": "success",
   "data": {
-    "url": "https://example.com/audio.m4s?expire=1719999999&..."
+    "url": "https://player.bilibili.com/player.html?bvid=BV1GJ411x7h7&autoplay=1&danmaku=0&high_quality=1"
   }
 }
 ```

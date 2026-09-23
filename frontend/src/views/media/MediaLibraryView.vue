@@ -67,14 +67,18 @@
                 <div v-else class="video-card">
                   <PlayCircleOutlined class="video-icon" />
                 </div>
-                <div v-if="item.file_type === 1" class="media-overlay">
+                <div class="media-overlay">
                   <a-button
+                    v-if="item.file_type === 1"
                     type="primary"
                     size="small"
                     ghost
                     @click.stop="openWorkbench(item)"
                   >
                     <SettingOutlined /> 预设
+                  </a-button>
+                  <a-button size="small" danger ghost @click.stop="openDelete(item)">
+                    <DeleteOutlined /> 删除
                   </a-button>
                 </div>
               </div>
@@ -87,7 +91,15 @@
             :data-source="list"
             :pagination="false"
             row-key="id"
-          />
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'actions'">
+                <a-button type="link" danger size="small" @click="openDelete(record as MediaItem)">
+                  删除
+                </a-button>
+              </template>
+            </template>
+          </a-table>
         </template>
       </a-spin>
 
@@ -114,6 +126,12 @@
       :size="selectedMedia.size"
       @saved="handleWorkbenchSaved"
     />
+
+    <MediaDeleteModal
+      v-model:visible="deleteVisible"
+      :media="deleteTarget"
+      @success="handleDeleteSuccess"
+    />
   </div>
 </template>
 
@@ -128,6 +146,7 @@ import {
   UnorderedListOutlined,
   PlayCircleOutlined,
   SettingOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
@@ -135,6 +154,7 @@ import { getThumbUrl } from '@/utils/image'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 import MediaPresetWorkbench from '@/components/media/MediaPresetWorkbench.vue'
+import MediaDeleteModal from '@/components/media/MediaDeleteModal.vue'
 
 const activeTab = ref<'1' | '2'>('1')
 const fileType = computed(() => Number(activeTab.value))
@@ -151,6 +171,9 @@ const { page, pageSize, total, reset, handlePageChange: changePagination } = use
 
 const workbenchVisible = ref(false)
 const selectedMedia = ref<MediaItem | null>(null)
+
+const deleteVisible = ref(false)
+const deleteTarget = ref<MediaItem | null>(null)
 
 const columns: TableColumnsType<MediaItem> = [
   {
@@ -184,6 +207,11 @@ const columns: TableColumnsType<MediaItem> = [
     key: 'created_at',
     width: 180,
     customRender: ({ text }) => formatDateTime(text),
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 100,
   },
 ]
 
@@ -265,6 +293,15 @@ function handleWorkbenchSaved() {
   fetchList()
 }
 
+function openDelete(item: MediaItem) {
+  deleteTarget.value = item
+  deleteVisible.value = true
+}
+
+function handleDeleteSuccess() {
+  fetchList()
+}
+
 function formatBytes(bytes?: number): string {
   if (bytes == null || bytes === 0) return '0 B'
   const k = 1024
@@ -329,6 +366,7 @@ function formatDateTime(time?: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   transition: opacity 0.2s;
