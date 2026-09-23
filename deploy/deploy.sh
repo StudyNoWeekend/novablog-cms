@@ -56,9 +56,11 @@ ADMIN_DOMAIN=""
 
 DB_MODE=""
 DB_HOST="" DB_PORT="" DB_USER="" DB_PASSWORD="" DB_NAME="" DB_SSLMODE=""
+DB_HOST_SET=0             # 用户是否显式传了 --db-host（存量 local 模式重跑判定用）
 
 REDIS_MODE=""
 REDIS_HOST="" REDIS_PORT="" REDIS_PASSWORD="" REDIS_DB=""
+REDIS_HOST_SET=0          # 用户是否显式传了 --redis-host
 
 CONFIG_DIR="" UPLOADS_DIR="" THEMES_DIR="" LOGS_DIR="" FRONTEND_DIR="" FRONTEND_DIR_INPUT=""
 PGDATA_DIR="" REDISDATA_DIR=""
@@ -142,6 +144,8 @@ EOF
 }
 
 # ============================== 参数解析 ==============================
+# 原始参数个数：零参数判定用（parse 循环 shift 后 $# 恒为 0，不可再用）
+ORIG_ARGC="$#"
 while [ $# -gt 0 ]; do
   case "$1" in
     --name) NAME="${2:?--name 需要一个值}"; shift 2 ;;
@@ -155,14 +159,14 @@ while [ $# -gt 0 ]; do
     --domain) DOMAIN="${2:?--domain 需要一个值}"; shift 2 ;;
     --admin-domain) ADMIN_DOMAIN="${2:?--admin-domain 需要一个值}"; shift 2 ;;
     --db) DB_MODE="${2:?--db 需要一个值}"; shift 2 ;;
-    --db-host) DB_HOST="${2:?--db-host 需要一个值}"; shift 2 ;;
+    --db-host) DB_HOST="${2:?--db-host 需要一个值}"; DB_HOST_SET=1; shift 2 ;;
     --db-port) DB_PORT="${2:?--db-port 需要一个值}"; shift 2 ;;
     --db-user) DB_USER="${2:?--db-user 需要一个值}"; shift 2 ;;
     --db-password) DB_PASSWORD="${2:?--db-password 需要一个值}"; shift 2 ;;
     --db-name) DB_NAME="${2:?--db-name 需要一个值}"; shift 2 ;;
     --db-sslmode) DB_SSLMODE="${2:?--db-sslmode 需要一个值}"; shift 2 ;;
     --redis) REDIS_MODE="${2:?--redis 需要一个值}"; shift 2 ;;
-    --redis-host) REDIS_HOST="${2:?--redis-host 需要一个值}"; shift 2 ;;
+    --redis-host) REDIS_HOST="${2:?--redis-host 需要一个值}"; REDIS_HOST_SET=1; shift 2 ;;
     --redis-port) REDIS_PORT="${2:?--redis-port 需要一个值}"; shift 2 ;;
     --redis-password) REDIS_PASSWORD="${2:?--redis-password 需要一个值}"; shift 2 ;;
     --redis-db) REDIS_DB="${2:?--redis-db 需要一个值}"; shift 2 ;;
@@ -631,9 +635,120 @@ scan_deployments() {
   return 0
 }
 
-# ---- 安装/升级流程入口（Task 2/3 填充；函数名与参数为跨任务接口，勿改名）----
+# ---- 安装/升级流程入口（menu_upgrade/do_upgrade_one 由升级任务填充；函数名与参数为跨任务接口，勿改名）----
+
+# show_blog_brief 展示单个博客的现有部署摘要（重名检测时给用户对齐信息）
+show_blog_brief() { # $1=名称 $2=.env 路径
+  local name="$1" env_file="$2" info
+  local rec_ver blog_port admin_port db_mode redis_mode
+  rec_ver="$(blog_env_get "$env_file" NOVABLOG_VERSION)"
+  blog_port="$(blog_env_get "$env_file" NOVABLOG_HTTP_PORT)"
+  admin_port="$(blog_env_get "$env_file" NOVABLOG_ADMIN_HTTP_PORT)"
+  db_mode="$(blog_env_get "$env_file" NOVABLOG_DB_MODE)"
+  redis_mode="$(blog_env_get "$env_file" NOVABLOG_REDIS_MODE)"
+  echo "    记录版本 ${rec_ver:--} | 端口 ${blog_port:--}/${admin_port:--} | DB/Redis ${db_mode:-?}/${redis_mode:-?}"
+  info="$(blog_container_info "$name")"
+  if [ -n "$info" ]; then
+    echo "    运行中：${info%% *}（镜像 ${info#* }）"
+  else
+    echo "    当前无 novablog 容器"
+  fi
+}
+
+# down_old_containers 停止并移除某博客的现有容器（重装前调用，尽力而为）
+# 依赖全局 NAME 已设为目标博客；$2=.env 路径（无记录时传空）
+down_old_containers() { # $1=博客名称 $2=.env 路径或空
+  local name="$1" env_file="$2"
+  c_info "停止并移除现有容器（${name}）..."
+  if [ -n "$env_file" ] && [ -f "$env_file" ]; then
+    ENV_FILE="$env_file"
+    run_compose_from_env down || c_warn "compose down 未完全成功，继续重装流程"
+  else
+    docker compose -p "$name" -f docker-compose.yml down --remove-orphans || c_warn "容器移除未完全成功，继续重装流程"
+  fi
+}
+
 menu_install() {
-  c_warn "全新安装流程尚未实现（后续任务填充）。"
+  echo
+  c_info "===== 全新安装 ====="
+  c_info "每个博客独立目录 <名称>/ 与独立容器（前缀 <名称>-），同机多博客互不影响"
+  local input_name=""
+  if ! read -r -p "博客名称（如 llcms；字母/数字/-/_，自动转小写，留空取消）: " input_name; then
+    c_info "已取消。"
+    return 0
+  fi
+  input_name="$(printf '%s' "$input_name" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+  [ -n "$input_name" ] || { c_info "已取消。"; return 0; }
+  if ! name_valid "$input_name"; then
+    c_err "博客名称不合法：${input_name}（仅允许小写字母、数字、中划线、下划线，且以字母或数字开头）"
+    return 0
+  fi
+
+  NAME="$input_name"
+  BLOG_DIR="$SCRIPT_DIR/$NAME"
+  ENV_FILE="$BLOG_DIR/.env"
+  if [ -e "$BLOG_DIR" ] && [ ! -d "$BLOG_DIR" ]; then
+    c_err "${BLOG_DIR} 已存在且不是目录，请换一个博客名称"
+    return 0
+  fi
+
+  # 重名检测：已有部署记录 或 docker 中已有该项目容器
+  local has_record=0 has_containers=0
+  [ -f "$ENV_FILE" ] && has_record=1
+  if [ -n "$(docker ps -aq --filter "label=com.docker.compose.project=$NAME" 2>/dev/null || true)" ]; then
+    has_containers=1
+  fi
+  if [ "$has_record" = 0 ] && [ "$has_containers" = 0 ]; then
+    c_info "名称 $NAME 可用，开始收集部署参数 ..."
+    deploy_blog
+    return 0
+  fi
+
+  c_warn "检测到已存在同名博客部署：$NAME"
+  if [ "$has_record" = 1 ]; then
+    show_blog_brief "$NAME" "$ENV_FILE"
+  else
+    echo "    （无部署记录，仅发现残留容器）"
+  fi
+  local act
+  act="$(ask_choice '如何处理？1=转为升级（沿用现有配置） 2=重新安装（删容器后按新参数覆盖部署） 3=取消' '1|2|3' '3')"
+  case "$act" in
+    1)
+      c_info "转入升级流程：$NAME"
+      do_upgrade_one "$NAME" "$LATEST_VERSION" || c_warn "升级未完成，可稍后在菜单中选择「容器升级」重试。"
+      ;;
+    2)
+      local mode
+      mode="$(ask_choice '重新安装方式：1=保留数据（删容器，保留数据目录） 2=删除数据重建（连数据目录一起删除） 3=取消' '1|2|3' '3')"
+      case "$mode" in
+        1)
+          down_old_containers "$NAME" "$ENV_FILE"
+          c_info "容器已移除，数据目录保留：${BLOG_DIR}（将按本次填写参数覆盖部署）"
+          deploy_blog
+          ;;
+        2)
+          local confirm=""
+          if ! read -r -p "将删除 $BLOG_DIR 全部数据且不可恢复！输入博客名称 $NAME 确认，其它输入取消: " confirm; then
+            confirm=""
+          fi
+          if [ "$confirm" != "$NAME" ]; then
+            c_info "已取消。"
+            return 0
+          fi
+          down_old_containers "$NAME" "$ENV_FILE"
+          rm -rf "$BLOG_DIR"
+          c_info "已删除容器与数据目录，开始全新安装 ..."
+          deploy_blog
+          ;;
+        *)
+          c_info "已取消。"
+          ;;
+      esac
+      ;;
+    *)
+      c_info "已取消。"
+      ;;
+  esac
   return 0
 }
 
@@ -679,16 +794,6 @@ main_menu() {
 command -v docker >/dev/null 2>&1 || die "未找到 docker，请先安装 Docker"
 docker info >/dev/null 2>&1 || die "无法连接 Docker 守护进程，请确认 Docker 已启动"
 docker compose version >/dev/null 2>&1 || die "未找到 docker compose（需 Compose V2）"
-
-# ============================== 入口分流 ==============================
-# 零参数调用 = 交互管理菜单（需终端）；带任何参数 = 部署/管理流程（见 usage）
-if [ "$#" -eq 0 ]; then
-  if [ "$INTERACTIVE" = 1 ]; then
-    main_menu
-    exit 0
-  fi
-  die "交互管理模式需要终端（TTY）运行：请在终端直接执行 ./deploy.sh，或带参数部署（./deploy.sh --help 查看用法）"
-fi
 
 # ============================== 依赖文件在线自举 ==============================
 # 脚本支持脱离仓库单独运行：compose 依赖文件缺失时自动从 GitHub 在线拉取。
@@ -745,10 +850,12 @@ ensure_compose_files() {
 
 # ============================== 博客名称解析 ==============================
 # 博客名称是同机多博客的隔离键：数据目录 <名称>/、容器项目名 <名称>。
+# name_valid 名称合法性检查（菜单流程用返回值分支；带参数流程经 validate_name 以 die 终止）
+name_valid() { printf '%s' "$1" | grep -qE '^[a-z0-9][a-z0-9_-]*$'; }
+
 validate_name() {
   [ -n "$1" ] || die "博客名称不能为空（交互输入，或使用 --name <名称>）"
-  printf '%s' "$1" | grep -qE '^[a-z0-9][a-z0-9_-]*$' \
-    || die "博客名称不合法：$1（仅允许小写字母、数字、中划线、下划线，且以字母或数字开头）"
+  name_valid "$1" || die "博客名称不合法：$1（仅允许小写字母、数字、中划线、下划线，且以字母或数字开头）"
 }
 
 list_blogs() {
@@ -758,46 +865,6 @@ list_blogs() {
   done
   return 0
 }
-
-if [ -z "$NAME" ] && [ "$ACTION" != "up" ]; then
-  # status/logs/down：未指定名称时，仅一个博客自动选中，多个则交互选择
-  blogs="$(list_blogs)"
-  if [ -z "$blogs" ]; then
-    if [ -f "$SCRIPT_DIR/.env" ]; then
-      die "检测到旧版根目录 .env（单博客旧格式，不支持按名称管理）。请先在本目录执行 docker compose down 停止旧容器并删除该文件，再用 --name <名称> 重新部署"
-    fi
-    die "未找到任何博客部署记录（<名称>/.env）。先完成部署：./deploy.sh --name <名称>"
-  fi
-  if [ "$(printf '%s\n' "$blogs" | wc -l)" = 1 ]; then
-    NAME="$(printf '%s' "$blogs" | head -1)"
-  elif [ "$INTERACTIVE" = 1 ]; then
-    c_info "检测到多个博客："
-    printf '%s\n' "$blogs" | sed 's/^/  - /'
-    NAME="$(ask_choice '选择要操作的博客' "$(printf '%s\n' "$blogs" | paste -sd'|' -)" "$(printf '%s' "$blogs" | head -1)")"
-  else
-    die "检测到多个博客，请用 --name 指定其一：$(printf '%s\n' "$blogs" | paste -sd' ' -)"
-  fi
-elif [ -z "$NAME" ] && [ "$INTERACTIVE" = 1 ]; then
-  echo
-  c_info "===== 博客名称 ====="
-  c_info "同机多博客的隔离键：每个博客独立目录 <名称>/ 与独立容器（前缀 <名称>-），互不影响"
-  NAME="$(ask '博客名称（如 llcms；字母/数字/-/_，自动转小写）' "")"
-fi
-# 统一转小写：名称同时用作目录名与容器项目名，保持全小写避免大小写歧义
-NAME="$(printf '%s' "$NAME" | tr 'A-Z' 'a-z')"
-validate_name "$NAME"
-BLOG_DIR="$SCRIPT_DIR/$NAME"
-ENV_FILE="$BLOG_DIR/.env"
-if [ -e "$BLOG_DIR" ] && [ ! -d "$BLOG_DIR" ]; then
-  die "$BLOG_DIR 已存在且不是目录，请换一个博客名称"
-fi
-if [ "$ACTION" != "up" ]; then
-  [ -f "$ENV_FILE" ] || die "博客 $NAME 尚未部署（缺 ${ENV_FILE}），先运行 ./deploy.sh --name $NAME 完成部署"
-fi
-# 旧版根目录 .env（单博客格式）仅作迁移提示，不再参与部署
-if [ "$ACTION" = "up" ] && [ -f "$SCRIPT_DIR/.env" ]; then
-  c_warn "检测到旧版根目录 .env（旧版单博客格式）。若旧容器仍在运行请先停止（本目录执行 docker compose down），避免端口冲突；迁移完成后可删除该文件"
-fi
 
 compose_files() {
   local files=(-f docker-compose.yml)
@@ -834,241 +901,232 @@ run_compose_from_env() {
   docker compose --env-file "$ENV_FILE" -p "$NAME" "${args[@]}" "$@"
 }
 
-case "$ACTION" in
-  status)
-    run_compose_from_env ps
-    exit 0
-    ;;
-  logs)
-    run_compose_from_env logs -f --tail=200 novablog
-    exit 0
-    ;;
-  down)
-    c_info "停止并移除容器（挂载目录中的数据保留）..."
-    run_compose_from_env down
-    c_info "已停止。数据仍在 $ENV_FILE 配置的挂载目录里，重新部署执行 ./deploy.sh --name $NAME 即可。"
-    exit 0
-    ;;
-esac
-
-# --build 需要完整仓库作为构建上下文（frontend/ backend/ 等），缺失时早失败（仅部署路径）
-if [ "$BUILD" = 1 ] && { [ ! -f "$SCRIPT_DIR/Dockerfile" ] || [ ! -d "$SCRIPT_DIR/../backend" ]; }; then
-  die "--build 需要完整仓库（构建上下文为仓库根，需 frontend/ 与 backend/）。请 git clone 仓库后在 deploy/ 目录内运行，或去掉 --build 直接使用线上镜像。"
-fi
-
-# ============================== 收集配置 ==============================
-if [ -f "$ENV_FILE" ]; then
-  c_info "检测到博客 $NAME 已有部署记录（${ENV_FILE}），复用其中配置作为默认值（可直接回车沿用）。"
-fi
-
-[ -z "$IMAGE_REPO" ] && IMAGE_REPO="$(env_get NOVABLOG_IMAGE_REPO)"
-[ "$VERSION_SET" = 0 ] && VERSION="$(env_get NOVABLOG_VERSION)"
-[ -z "$BLOG_PORT" ] && BLOG_PORT="$(env_get NOVABLOG_HTTP_PORT)"
-[ -z "$ADMIN_PORT" ] && ADMIN_PORT="$(env_get NOVABLOG_ADMIN_HTTP_PORT)"
-[ -z "$DOMAIN" ] && DOMAIN="$(env_get NOVABLOG_DOMAIN)"
-[ -z "$ADMIN_DOMAIN" ] && ADMIN_DOMAIN="$(env_get NOVABLOG_ADMIN_DOMAIN)"
-[ -z "$PUBLIC_URL" ] && PUBLIC_URL="$(env_get NOVABLOG_PUBLIC_URL)"
-[ -z "$CONFIG_DIR" ] && CONFIG_DIR="$(env_get NOVABLOG_CONFIG_DIR)"
-[ -z "$UPLOADS_DIR" ] && UPLOADS_DIR="$(env_get NOVABLOG_UPLOADS_DIR)"
-[ -z "$THEMES_DIR" ] && THEMES_DIR="$(env_get NOVABLOG_THEMES_DIR)"
-[ -z "$LOGS_DIR" ] && LOGS_DIR="$(env_get NOVABLOG_LOGS_DIR)"
-[ -z "$FRONTEND_DIR" ] && FRONTEND_DIR="$(env_get NOVABLOG_BLOG_FRONTEND_DIR)"
-[ -z "$PGDATA_DIR" ] && PGDATA_DIR="$(env_get NOVABLOG_PGDATA_DIR)"
-[ -z "$REDISDATA_DIR" ] && REDISDATA_DIR="$(env_get NOVABLOG_REDISDATA_DIR)"
-[ -z "$DB_MODE" ] && DB_MODE="$(env_get NOVABLOG_DB_MODE)"
-[ -z "$REDIS_MODE" ] && REDIS_MODE="$(env_get NOVABLOG_REDIS_MODE)"
-[ -z "$DB_PASSWORD" ] && DB_PASSWORD="$(env_get POSTGRES_PASSWORD)"
-[ -z "$DB_USER" ] && DB_USER="$(env_get POSTGRES_USER)"
-[ -z "$DB_NAME" ] && DB_NAME="$(env_get POSTGRES_DB)"
-[ -z "$REDIS_PASSWORD" ] && REDIS_PASSWORD="$(env_get REDIS_PASSWORD)"
-
-echo
-c_info "===== 入口端口与域名 ====="
-BLOG_PORT="$(ask '博客前端端口' "${BLOG_PORT:-80}")"
-ADMIN_PORT="$(ask 'CMS 后台端口' "${ADMIN_PORT:-8080}")"
-DOMAIN="$(ask '博客入口域名（裸域名如 blog.example.com；任意域名/IP 填 _）' "${DOMAIN:-_}")"
-ADMIN_DOMAIN="$(ask '后台入口域名（裸域名；任意域名/IP 填 _）' "${ADMIN_DOMAIN:-_}")"
-# 误带协议或结尾斜杠时自动清洗，否则会渲染进 nginx server_name 导致域名匹配失效
-strip_url_prefix() { local v="$1"; v="${v#http://}"; v="${v#https://}"; v="${v%/}"; printf '%s' "$v"; }
-DOMAIN="$(strip_url_prefix "$DOMAIN")"
-ADMIN_DOMAIN="$(strip_url_prefix "$ADMIN_DOMAIN")"
-# 对外访问地址默认跟随博客域名（反代/标准端口场景）；未配域名时回退本机直连地址
-public_url_def="http://localhost:$BLOG_PORT"
-[ "$DOMAIN" != "_" ] && public_url_def="http://$DOMAIN"
-PUBLIC_URL="$(ask '博客对外访问地址（媒体文件 URL 基址，访客实际访问地址）' "${PUBLIC_URL:-$public_url_def}")"
-# 未带协议时自动补 http://，否则媒体 URL 与 CORS 白名单会生成非法值
-case "$PUBLIC_URL" in
-  http://*|https://*) ;;
-  *) PUBLIC_URL="http://$PUBLIC_URL"; c_info "博客对外访问地址已自动补全为：$PUBLIC_URL" ;;
-esac
-# CORS 白名单：媒体 URL 基址 + 本地开发端口；配置了独立后台域名时把后台来源一并加入，
-# 否则后台媒体库预设工作台以 crossOrigin 加载原图会被浏览器 CORS 拦截
-CORS_ORIGINS="$PUBLIC_URL,http://localhost:5173,http://localhost:5174"
-if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
-  CORS_ORIGINS="$CORS_ORIGINS,http://$ADMIN_DOMAIN"
-fi
-
-echo
-c_info "===== PostgreSQL ====="
-c_info "（填外部地址；留空或填 localhost / 127.0.0.1 则自动部署内置 PostgreSQL）"
-# 已有部署记录时，先从 config.yaml 回填原有连接，避免重跑时看着空白不敢动
-if [ -z "$DB_HOST" ] && [ -f "$CONFIG_FILE" ]; then
-  DB_HOST="$(yaml_key "$CONFIG_FILE" postgres host)"
-  DB_PORT="$(yaml_key "$CONFIG_FILE" postgres port)"
-  DB_USER="$(yaml_key "$CONFIG_FILE" postgres user)"
-  DB_PASSWORD="$(yaml_key "$CONFIG_FILE" postgres password)"
-  DB_NAME="$(yaml_key "$CONFIG_FILE" postgres dbname)"
-  DB_SSLMODE="$(yaml_key "$CONFIG_FILE" postgres sslmode)"
-fi
-DB_HOST="$(ask 'PostgreSQL 地址（主机名或 IP）' "${DB_HOST:-}")"
-DB_PORT="$(ask 'PostgreSQL 端口（默认 5432）' "${DB_PORT:-5432}")"
-DB_PASSWORD="$(ask_secret 'PostgreSQL 密码（内置模式自动生成，直接回车即可）' "${DB_PASSWORD:-}")"
-[ -n "$DB_PASSWORD" ] || DB_PASSWORD="$(gen_secret 16)"
-# 用户/库名/sslmode 属低频配置，不再逐项提问：默认 postgres / <博客名> / disable，可用 --db-user/--db-name/--db-sslmode 覆盖
-[ -n "$DB_USER" ] || DB_USER="postgres"
-[ -n "$DB_NAME" ] || DB_NAME="$NAME"
-[ -n "$DB_SSLMODE" ] || DB_SSLMODE="disable"
-# 判断是否为内置模式
-if [ -z "$DB_HOST" ] || [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ]; then
-  DB_MODE="local"
-  DB_HOST="postgres"
-else
-  DB_MODE="external"
-fi
-
-echo
-c_info "===== Redis ====="
-c_info "（填外部地址；留空或填 localhost / 127.0.0.1 则自动部署内置 Redis）"
-# 已有部署记录时，先从 config.yaml 回填原有连接
-if [ -z "$REDIS_HOST" ] && [ -f "$CONFIG_FILE" ]; then
-  REDIS_HOST="$(yaml_key "$CONFIG_FILE" redis host)"
-  REDIS_PORT="$(yaml_key "$CONFIG_FILE" redis port)"
-  REDIS_PASSWORD="$(yaml_key "$CONFIG_FILE" redis password)"
-  REDIS_DB="$(yaml_key "$CONFIG_FILE" redis db)"
-fi
-REDIS_HOST="$(ask 'Redis 地址（主机名或 IP）' "${REDIS_HOST:-}")"
-REDIS_PORT="$(ask 'Redis 端口（默认 6379）' "${REDIS_PORT:-6379}")"
-REDIS_PASSWORD="$(ask_secret 'Redis 密码（无密码直接回车）' "${REDIS_PASSWORD:-}")"
-REDIS_DB="$(ask 'Redis 库编号（多博客共用同一 Redis 时，请为每个博客分配不同编号）' "${REDIS_DB:-3}")"
-# 判断是否为内置模式
-if [ -z "$REDIS_HOST" ] || [ "$REDIS_HOST" = "localhost" ] || [ "$REDIS_HOST" = "127.0.0.1" ]; then
-  REDIS_MODE="local"
-  REDIS_HOST="redis"
-else
-  REDIS_MODE="external"
-fi
-
-# 外部服务连通性预检：地址填错若等到容器启动后才暴露，后端会反复崩溃重启且现象只有 502
-echo
-c_info "===== 外部服务连通性预检 ====="
-if [ "$DB_MODE" = "external" ]; then
-  if tcp_reachable "$DB_HOST" "$DB_PORT"; then
-    c_info "PostgreSQL $DB_HOST:$DB_PORT 可达"
-  else
-    die "无法连接 PostgreSQL $DB_HOST:$DB_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
+# ============================== 部署流程（收集配置 → 启动）==============================
+# 菜单安装与带参数流程共用：调用方须已就绪 NAME / BLOG_DIR / ENV_FILE
+deploy_blog() {
+  if [ -f "$ENV_FILE" ]; then
+    c_info "检测到博客 $NAME 已有部署记录（${ENV_FILE}），复用其中配置作为默认值（可直接回车沿用）。"
   fi
-fi
-if [ "$REDIS_MODE" = "external" ]; then
-  if tcp_reachable "$REDIS_HOST" "$REDIS_PORT"; then
-    c_info "Redis $REDIS_HOST:$REDIS_PORT 可达"
-  else
-    die "无法连接 Redis $REDIS_HOST:$REDIS_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
+
+  [ -z "$IMAGE_REPO" ] && IMAGE_REPO="$(env_get NOVABLOG_IMAGE_REPO)"
+  [ "$VERSION_SET" = 0 ] && VERSION="$(env_get NOVABLOG_VERSION)"
+  [ -z "$BLOG_PORT" ] && BLOG_PORT="$(env_get NOVABLOG_HTTP_PORT)"
+  [ -z "$ADMIN_PORT" ] && ADMIN_PORT="$(env_get NOVABLOG_ADMIN_HTTP_PORT)"
+  [ -z "$DOMAIN" ] && DOMAIN="$(env_get NOVABLOG_DOMAIN)"
+  [ -z "$ADMIN_DOMAIN" ] && ADMIN_DOMAIN="$(env_get NOVABLOG_ADMIN_DOMAIN)"
+  [ -z "$PUBLIC_URL" ] && PUBLIC_URL="$(env_get NOVABLOG_PUBLIC_URL)"
+  [ -z "$CONFIG_DIR" ] && CONFIG_DIR="$(env_get NOVABLOG_CONFIG_DIR)"
+  [ -z "$UPLOADS_DIR" ] && UPLOADS_DIR="$(env_get NOVABLOG_UPLOADS_DIR)"
+  [ -z "$THEMES_DIR" ] && THEMES_DIR="$(env_get NOVABLOG_THEMES_DIR)"
+  [ -z "$LOGS_DIR" ] && LOGS_DIR="$(env_get NOVABLOG_LOGS_DIR)"
+  [ -z "$FRONTEND_DIR" ] && FRONTEND_DIR="$(env_get NOVABLOG_BLOG_FRONTEND_DIR)"
+  [ -z "$PGDATA_DIR" ] && PGDATA_DIR="$(env_get NOVABLOG_PGDATA_DIR)"
+  [ -z "$REDISDATA_DIR" ] && REDISDATA_DIR="$(env_get NOVABLOG_REDISDATA_DIR)"
+  [ -z "$DB_MODE" ] && DB_MODE="$(env_get NOVABLOG_DB_MODE)"
+  [ -z "$REDIS_MODE" ] && REDIS_MODE="$(env_get NOVABLOG_REDIS_MODE)"
+  [ -z "$DB_PASSWORD" ] && DB_PASSWORD="$(env_get POSTGRES_PASSWORD)"
+  [ -z "$DB_USER" ] && DB_USER="$(env_get POSTGRES_USER)"
+  [ -z "$DB_NAME" ] && DB_NAME="$(env_get POSTGRES_DB)"
+  [ -z "$REDIS_PASSWORD" ] && REDIS_PASSWORD="$(env_get REDIS_PASSWORD)"
+  # config.yaml 路径提前确定（用 .env 回填的 CONFIG_DIR），供 PG/Redis 连接回填读取旧配置；
+  # 挂载目录定稿后会重新赋值一次
+  CONFIG_FILE="${CONFIG_DIR:+$CONFIG_DIR/config.yaml}"
+
+  echo
+  c_info "===== 入口端口与域名 ====="
+  BLOG_PORT="$(ask '博客前端端口' "${BLOG_PORT:-80}")"
+  ADMIN_PORT="$(ask 'CMS 后台端口' "${ADMIN_PORT:-8080}")"
+  DOMAIN="$(ask '博客入口域名（裸域名如 blog.example.com；任意域名/IP 填 _）' "${DOMAIN:-_}")"
+  ADMIN_DOMAIN="$(ask '后台入口域名（裸域名；任意域名/IP 填 _）' "${ADMIN_DOMAIN:-_}")"
+  # 误带协议或结尾斜杠时自动清洗，否则会渲染进 nginx server_name 导致域名匹配失效
+  strip_url_prefix() { local v="$1"; v="${v#http://}"; v="${v#https://}"; v="${v%/}"; printf '%s' "$v"; }
+  DOMAIN="$(strip_url_prefix "$DOMAIN")"
+  ADMIN_DOMAIN="$(strip_url_prefix "$ADMIN_DOMAIN")"
+  # 对外访问地址默认跟随博客域名（反代/标准端口场景）；未配域名时回退本机直连地址
+  public_url_def="http://localhost:$BLOG_PORT"
+  [ "$DOMAIN" != "_" ] && public_url_def="http://$DOMAIN"
+  PUBLIC_URL="$(ask '博客对外访问地址（媒体文件 URL 基址，访客实际访问地址）' "${PUBLIC_URL:-$public_url_def}")"
+  # 未带协议时自动补 http://，否则媒体 URL 与 CORS 白名单会生成非法值
+  case "$PUBLIC_URL" in
+    http://*|https://*) ;;
+    *) PUBLIC_URL="http://$PUBLIC_URL"; c_info "博客对外访问地址已自动补全为：$PUBLIC_URL" ;;
+  esac
+  # CORS 白名单：媒体 URL 基址 + 本地开发端口；配置了独立后台域名时把后台来源一并加入，
+  # 否则后台媒体库预设工作台以 crossOrigin 加载原图会被浏览器 CORS 拦截
+  CORS_ORIGINS="$PUBLIC_URL,http://localhost:5173,http://localhost:5174"
+  if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
+    CORS_ORIGINS="$CORS_ORIGINS,http://$ADMIN_DOMAIN"
   fi
-fi
 
-# ============================== 挂载目录 ==============================
-# 目录不再逐项提问：默认全部收拢在博客目录 <名称>/ 下；高级场景用 --config-dir 等 flag 覆盖
-# （--frontend-dir 传 - / none 表示清除自备前端，回退到后台安装的主题）
-case "$FRONTEND_DIR_INPUT" in
-  -|none|off|no|NONE) FRONTEND_DIR_INPUT="" ;;
-esac
-if [ -z "$FRONTEND_DIR_INPUT" ] && [ "$(env_get NOVABLOG_FRONTEND_ENABLED)" = "1" ] && [ -n "$FRONTEND_DIR" ]; then
-  # 重跑沿用此前启用的自备前端
-  FRONTEND_DIR_INPUT="$FRONTEND_DIR"
-fi
-if [ -n "$FRONTEND_DIR_INPUT" ]; then
-  FRONTEND_DIR="$(abs_dir "$FRONTEND_DIR_INPUT")"
-else
-  FRONTEND_DIR="$(abs_dir "./$NAME/data/blog-frontend")"
-fi
-CONFIG_DIR="$(abs_dir "${CONFIG_DIR:-./$NAME/config}")"
-UPLOADS_DIR="$(abs_dir "${UPLOADS_DIR:-./$NAME/data/uploads}")"
-THEMES_DIR="$(abs_dir "${THEMES_DIR:-./$NAME/data/themes}")"
-LOGS_DIR="$(abs_dir "${LOGS_DIR:-./$NAME/data/logs}")"
-if [ "$DB_MODE" = "local" ]; then
-  PGDATA_DIR="$(abs_dir "${PGDATA_DIR:-./$NAME/data/pg}")"
-fi
-if [ "$REDIS_MODE" = "local" ]; then
-  REDISDATA_DIR="$(abs_dir "${REDISDATA_DIR:-./$NAME/data/redis}")"
-fi
-[ -n "$MARKET_URL" ] || MARKET_URL="$(env_get NOVABLOG_MARKET_URL)"
-
-echo
-c_info "===== 镜像 ====="
-if [ "$BUILD" = 1 ]; then
-  VERSION="$(ask '本地构建的镜像标签' "${VERSION:-dev}")"
-else
-  VERSION="$(ask '镜像版本号' "${VERSION:-latest}")"
-fi
-# 镜像仓库不再提问：默认官方镜像，可用 --image 覆盖
-
-[ -n "$BLOG_PORT" ] || die "博客前端端口不能为空"
-[ -n "$ADMIN_PORT" ] || die "CMS 后台端口不能为空"
-[ "$BLOG_PORT" != "$ADMIN_PORT" ] || die "博客前端端口与 CMS 后台端口不能相同"
-
-# ============================== 生成 config.yaml ==============================
-CONFIG_FILE="$CONFIG_DIR/config.yaml"
-WRITE_CONFIG=1
-WRITE_GEOIP=0         # 沿用旧配置时，若缺 geoip 段则补写（v1.0.4 新增）
-if [ -f "$CONFIG_FILE" ]; then
-  if [ "$ASSUME_YES" = 1 ]; then
-    c_info "已存在 ${CONFIG_FILE}，--yes 模式沿用现有配置（不覆盖）。"
-    WRITE_CONFIG=0
-    # v1.0.4 起新增 geoip 段；旧配置缺失时补写，避免新后端 IP 归属地不可用
-    if [ -z "$(yaml_key "$CONFIG_FILE" geoip data_dir)" ]; then
-      WRITE_GEOIP=1
-      c_info "检测到旧配置缺少 geoip 段，将补写 IP 归属地配置。"
-    fi
+  echo
+  c_info "===== PostgreSQL ====="
+  c_info "（外部实例；容器网络内勿用 localhost —— 宿主机实例可填 host.docker.internal 或宿主机 IP）"
+  # 已有部署记录时，先从 config.yaml 回填原有连接，避免重跑时看着空白不敢动
+  if [ -z "$DB_HOST" ] && [ -n "$CONFIG_FILE" ] && [ -f "$CONFIG_FILE" ]; then
+    DB_HOST="$(yaml_key "$CONFIG_FILE" postgres host)"
+    DB_PORT="$(yaml_key "$CONFIG_FILE" postgres port)"
+    DB_USER="$(yaml_key "$CONFIG_FILE" postgres user)"
+    DB_PASSWORD="$(yaml_key "$CONFIG_FILE" postgres password)"
+    DB_NAME="$(yaml_key "$CONFIG_FILE" postgres dbname)"
+    DB_SSLMODE="$(yaml_key "$CONFIG_FILE" postgres sslmode)"
+  fi
+  DB_HOST="$(ask 'PostgreSQL 地址（外部实例的主机名或 IP）' "${DB_HOST:-}")"
+  DB_PORT="$(ask 'PostgreSQL 端口（默认 5432）' "${DB_PORT:-5432}")"
+  DB_PASSWORD="$(ask_secret 'PostgreSQL 密码' "${DB_PASSWORD:-}")"
+  [ -n "$DB_PASSWORD" ] || DB_PASSWORD="$(gen_secret 16)"
+  # 用户/库名/sslmode 属低频配置，不再逐项提问：默认 postgres / <博客名> / disable，可用 --db-user/--db-name/--db-sslmode 覆盖
+  [ -n "$DB_USER" ] || DB_USER="postgres"
+  [ -n "$DB_NAME" ] || DB_NAME="$NAME"
+  [ -n "$DB_SSLMODE" ] || DB_SSLMODE="disable"
+  # 内置 PG 自动部署已移除；存量 .env 记录为 local 且未显式 --db-host 的重跑，沿用内置容器与主机名 postgres
+  if [ "$DB_MODE" = "local" ] && [ "$DB_HOST_SET" != 1 ] && [ "$DB_HOST" = "postgres" ]; then
+    :
   else
-    keep="$(ask_choice "已存在 ${CONFIG_FILE}，如何处置？（overwrite 会重写全部配置，但自动保留现有 postgres/redis 连接与 JWT 密钥，并把本次旧配置存为 .old）" 'keep|overwrite' 'keep')"
-    if [ "$keep" = "overwrite" ]; then
-      # 把旧配置备份为 .old（供回滚/比对比对），保留一份最新即可
-      cp "$CONFIG_FILE" "${CONFIG_FILE}.old"
-      c_info "旧配置已备份：${CONFIG_FILE}.old"
+    DB_MODE="external"
+    case "$DB_HOST" in
+      ""|localhost|127.0.0.1)
+        die "已移除内置 PostgreSQL 自动部署：请填写外部 PostgreSQL 地址（宿主机实例可填 host.docker.internal 或宿主机 IP；--yes 全默认安装须加 --db-host）"
+        ;;
+    esac
+  fi
+
+  echo
+  c_info "===== Redis ====="
+  c_info "（外部实例；容器网络内勿用 localhost —— 宿主机实例可填 host.docker.internal 或宿主机 IP）"
+  # 已有部署记录时，先从 config.yaml 回填原有连接
+  if [ -z "$REDIS_HOST" ] && [ -n "$CONFIG_FILE" ] && [ -f "$CONFIG_FILE" ]; then
+    REDIS_HOST="$(yaml_key "$CONFIG_FILE" redis host)"
+    REDIS_PORT="$(yaml_key "$CONFIG_FILE" redis port)"
+    REDIS_PASSWORD="$(yaml_key "$CONFIG_FILE" redis password)"
+    REDIS_DB="$(yaml_key "$CONFIG_FILE" redis db)"
+  fi
+  REDIS_HOST="$(ask 'Redis 地址（外部实例的主机名或 IP）' "${REDIS_HOST:-}")"
+  REDIS_PORT="$(ask 'Redis 端口（默认 6379）' "${REDIS_PORT:-6379}")"
+  REDIS_PASSWORD="$(ask_secret 'Redis 密码（无密码直接回车）' "${REDIS_PASSWORD:-}")"
+  REDIS_DB="$(ask 'Redis 库编号（多博客共用同一 Redis 时，请为每个博客分配不同编号）' "${REDIS_DB:-3}")"
+  # 内置 Redis 自动部署已移除；存量 local 沿用规则同上（未显式 --redis-host 时保持 redis 主机名）
+  if [ "$REDIS_MODE" = "local" ] && [ "$REDIS_HOST_SET" != 1 ] && [ "$REDIS_HOST" = "redis" ]; then
+    :
+  else
+    REDIS_MODE="external"
+    case "$REDIS_HOST" in
+      ""|localhost|127.0.0.1)
+        die "已移除内置 Redis 自动部署：请填写外部 Redis 地址（宿主机实例可填 host.docker.internal 或宿主机 IP；--yes 全默认安装须加 --redis-host）"
+        ;;
+    esac
+  fi
+
+  # 外部服务连通性预检：地址填错若等到容器启动后才暴露，后端会反复崩溃重启且现象只有 502
+  echo
+  c_info "===== 外部服务连通性预检 ====="
+  if [ "$DB_MODE" = "external" ]; then
+    if tcp_reachable "$DB_HOST" "$DB_PORT"; then
+      c_info "PostgreSQL $DB_HOST:$DB_PORT 可达"
     else
+      die "无法连接 PostgreSQL $DB_HOST:$DB_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
+    fi
+  fi
+  if [ "$REDIS_MODE" = "external" ]; then
+    if tcp_reachable "$REDIS_HOST" "$REDIS_PORT"; then
+      c_info "Redis $REDIS_HOST:$REDIS_PORT 可达"
+    else
+      die "无法连接 Redis $REDIS_HOST:$REDIS_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
+    fi
+  fi
+
+  # ============================== 挂载目录 ==============================
+  # 目录不再逐项提问：默认全部收拢在博客目录 <名称>/ 下；高级场景用 --config-dir 等 flag 覆盖
+  # （--frontend-dir 传 - / none 表示清除自备前端，回退到后台安装的主题）
+  case "$FRONTEND_DIR_INPUT" in
+    -|none|off|no|NONE) FRONTEND_DIR_INPUT="" ;;
+  esac
+  if [ -z "$FRONTEND_DIR_INPUT" ] && [ "$(env_get NOVABLOG_FRONTEND_ENABLED)" = "1" ] && [ -n "$FRONTEND_DIR" ]; then
+    # 重跑沿用此前启用的自备前端
+    FRONTEND_DIR_INPUT="$FRONTEND_DIR"
+  fi
+  if [ -n "$FRONTEND_DIR_INPUT" ]; then
+    FRONTEND_DIR="$(abs_dir "$FRONTEND_DIR_INPUT")"
+  else
+    FRONTEND_DIR="$(abs_dir "./$NAME/data/blog-frontend")"
+  fi
+  CONFIG_DIR="$(abs_dir "${CONFIG_DIR:-./$NAME/config}")"
+  UPLOADS_DIR="$(abs_dir "${UPLOADS_DIR:-./$NAME/data/uploads}")"
+  THEMES_DIR="$(abs_dir "${THEMES_DIR:-./$NAME/data/themes}")"
+  LOGS_DIR="$(abs_dir "${LOGS_DIR:-./$NAME/data/logs}")"
+  if [ "$DB_MODE" = "local" ]; then
+    PGDATA_DIR="$(abs_dir "${PGDATA_DIR:-./$NAME/data/pg}")"
+  fi
+  if [ "$REDIS_MODE" = "local" ]; then
+    REDISDATA_DIR="$(abs_dir "${REDISDATA_DIR:-./$NAME/data/redis}")"
+  fi
+  [ -n "$MARKET_URL" ] || MARKET_URL="$(env_get NOVABLOG_MARKET_URL)"
+
+  echo
+  c_info "===== 镜像 ====="
+  if [ "$BUILD" = 1 ]; then
+    VERSION="$(ask '本地构建的镜像标签' "${VERSION:-dev}")"
+  else
+    VERSION="$(ask '镜像版本号' "${VERSION:-${LATEST_VERSION:-latest}}")"
+  fi
+  # 镜像仓库不再提问：默认官方镜像，可用 --image 覆盖
+
+  [ -n "$BLOG_PORT" ] || die "博客前端端口不能为空"
+  [ -n "$ADMIN_PORT" ] || die "CMS 后台端口不能为空"
+  [ "$BLOG_PORT" != "$ADMIN_PORT" ] || die "博客前端端口与 CMS 后台端口不能相同"
+
+  # ============================== 生成 config.yaml ==============================
+  CONFIG_FILE="$CONFIG_DIR/config.yaml"
+  WRITE_CONFIG=1
+  WRITE_GEOIP=0         # 沿用旧配置时，若缺 geoip 段则补写（v1.0.4 新增）
+  if [ -f "$CONFIG_FILE" ]; then
+    if [ "$ASSUME_YES" = 1 ]; then
+      c_info "已存在 ${CONFIG_FILE}，--yes 模式沿用现有配置（不覆盖）。"
       WRITE_CONFIG=0
+      # v1.0.4 起新增 geoip 段；旧配置缺失时补写，避免新后端 IP 归属地不可用
       if [ -z "$(yaml_key "$CONFIG_FILE" geoip data_dir)" ]; then
         WRITE_GEOIP=1
         c_info "检测到旧配置缺少 geoip 段，将补写 IP 归属地配置。"
       fi
+    else
+      keep="$(ask_choice "已存在 ${CONFIG_FILE}，如何处置？（overwrite 会重写全部配置，但自动保留现有 postgres/redis 连接与 JWT 密钥，并把本次旧配置存为 .old）" 'keep|overwrite' 'keep')"
+      if [ "$keep" = "overwrite" ]; then
+        # 把旧配置备份为 .old（供回滚/比对比对），保留一份最新即可
+        cp "$CONFIG_FILE" "${CONFIG_FILE}.old"
+        c_info "旧配置已备份：${CONFIG_FILE}.old"
+      else
+        WRITE_CONFIG=0
+        if [ -z "$(yaml_key "$CONFIG_FILE" geoip data_dir)" ]; then
+          WRITE_GEOIP=1
+          c_info "检测到旧配置缺少 geoip 段，将补写 IP 归属地配置。"
+        fi
+      fi
     fi
   fi
-fi
 
-if [ "$WRITE_CONFIG" = 1 ]; then
-  # 复用已有密钥，避免覆盖后登录态失效
-  ACCESS_SECRET=""; REFRESH_SECRET=""; CRYPTO_SECRET=""
-  if [ -f "$CONFIG_FILE" ]; then
-    ACCESS_SECRET="$(sed -n 's/^[[:space:]]*access_secret:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$/\1/p' "$CONFIG_FILE" | head -1)"
-    REFRESH_SECRET="$(sed -n 's/^[[:space:]]*refresh_secret:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$/\1/p' "$CONFIG_FILE" | head -1)"
-    CRYPTO_SECRET="$(sed -n 's/^[[:space:]]*secret_key:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$/\1/p' "$CONFIG_FILE" | head -1)"
-  fi
-  [ -n "$ACCESS_SECRET" ] || ACCESS_SECRET="$(gen_secret 32)"
-  [ -n "$REFRESH_SECRET" ] || REFRESH_SECRET="$(gen_secret 32)"
-  [ -n "$CRYPTO_SECRET" ] || CRYPTO_SECRET="$(gen_secret 16)"
+  if [ "$WRITE_CONFIG" = 1 ]; then
+    # 复用已有密钥，避免覆盖后登录态失效
+    ACCESS_SECRET=""; REFRESH_SECRET=""; CRYPTO_SECRET=""
+    if [ -f "$CONFIG_FILE" ]; then
+      ACCESS_SECRET="$(sed -n 's/^[[:space:]]*access_secret:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$/\1/p' "$CONFIG_FILE" | head -1)"
+      REFRESH_SECRET="$(sed -n 's/^[[:space:]]*refresh_secret:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$/\1/p' "$CONFIG_FILE" | head -1)"
+      CRYPTO_SECRET="$(sed -n 's/^[[:space:]]*secret_key:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$/\1/p' "$CONFIG_FILE" | head -1)"
+    fi
+    [ -n "$ACCESS_SECRET" ] || ACCESS_SECRET="$(gen_secret 32)"
+    [ -n "$REFRESH_SECRET" ] || REFRESH_SECRET="$(gen_secret 32)"
+    [ -n "$CRYPTO_SECRET" ] || CRYPTO_SECRET="$(gen_secret 16)"
 
-  if [ -n "$FRONTEND_DIR_INPUT" ]; then
-    FRONTEND_DIR_YAML="/app/blog-frontend"
-  else
-    FRONTEND_DIR_YAML=""
-  fi
+    if [ -n "$FRONTEND_DIR_INPUT" ]; then
+      FRONTEND_DIR_YAML="/app/blog-frontend"
+    else
+      FRONTEND_DIR_YAML=""
+    fi
 
-  # 连接信息已在采集阶段从旧 config 回填到 DB_HOST/DB_PORT/REDIS_* 等变量：
-  # 用户没改的字段保持旧值（避免覆盖丢连接），显式 --db-host / 交互改写的字段用新值。
-  # 这里不再回填，变量即最终值；旧配置已备份为 ${CONFIG_FILE}.old 供回滚。
+    # 连接信息已在采集阶段从旧 config 回填到 DB_HOST/DB_PORT/REDIS_* 等变量：
+    # 用户没改的字段保持旧值（避免覆盖丢连接），显式 --db-host / 交互改写的字段用新值。
+    # 这里不再回填，变量即最终值；旧配置已备份为 ${CONFIG_FILE}.old 供回滚。
 
-  c_info "写入配置：$CONFIG_FILE"
-  cat > "$CONFIG_FILE" <<YAML
+    c_info "写入配置：$CONFIG_FILE"
+    cat > "$CONFIG_FILE" <<YAML
 # 由 deploy.sh 生成于 $(date '+%Y-%m-%d %H:%M:%S')；字段说明见 backend/config/config.example.yaml
 app:
   name: backend
@@ -1139,31 +1197,31 @@ themes:
 cors:
   allowed_origins: "$(yaml_quote "$CORS_ORIGINS")"
 YAML
-  chmod 600 "$CONFIG_FILE"
-else
-  # 沿用旧配置；若缺 geoip 段则追加补写（不覆盖其它内容），并备份一份
-  if [ "$WRITE_GEOIP" = 1 ]; then
-    {
-      cat "$CONFIG_FILE"
-      echo
-      cat <<'GEOIP_BLOCK'
+    chmod 600 "$CONFIG_FILE"
+  else
+    # 沿用旧配置；若缺 geoip 段则追加补写（不覆盖其它内容），并备份一份
+    if [ "$WRITE_GEOIP" = 1 ]; then
+      {
+        cat "$CONFIG_FILE"
+        echo
+        cat <<'GEOIP_BLOCK'
 geoip:
   data_dir: /app/data/geoip
   download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
   proxy_url: ""
 GEOIP_BLOCK
-    } > /tmp/novablog-config-merge.$$
-    cp "$CONFIG_FILE" "${CONFIG_FILE}.old" 2>/dev/null || true
-    mv /tmp/novablog-config-merge.$$ "$CONFIG_FILE"
-    chmod 600 "$CONFIG_FILE"
-    c_info "已补写 geoip 段到 ${CONFIG_FILE}（原文件保留为 ${CONFIG_FILE}.old）"
+      } > /tmp/novablog-config-merge.$$
+      cp "$CONFIG_FILE" "${CONFIG_FILE}.old" 2>/dev/null || true
+      mv /tmp/novablog-config-merge.$$ "$CONFIG_FILE"
+      chmod 600 "$CONFIG_FILE"
+      c_info "已补写 geoip 段到 ${CONFIG_FILE}（原文件保留为 ${CONFIG_FILE}.old）"
+    fi
+    c_info "沿用现有配置：$CONFIG_FILE"
   fi
-  c_info "沿用现有配置：$CONFIG_FILE"
-fi
 
-# ============================== 生成 .env ==============================
-c_info "写入环境变量：$ENV_FILE"
-cat > "$ENV_FILE" <<ENV
+  # ============================== 生成 .env ==============================
+  c_info "写入环境变量：$ENV_FILE"
+  cat > "$ENV_FILE" <<ENV
 # 由 deploy.sh 生成于 $(date '+%Y-%m-%d %H:%M:%S')
 
 # ---- 镜像与版本号 ----
@@ -1203,14 +1261,14 @@ REDIS_PASSWORD=$REDIS_PASSWORD
 NOVABLOG_PUBLIC_URL=$PUBLIC_URL
 NOVABLOG_MARKET_URL=$MARKET_URL
 ENV
-chmod 600 "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
 
-# ============================== 镜像校验 ==============================
-if [ "$BUILD" = 0 ] && [ "$SKIP_IMAGE_CHECK" = 0 ]; then
-  c_info "校验镜像 $IMAGE_REPO:$VERSION ..."
-  if ! docker buildx imagetools inspect "$IMAGE_REPO:$VERSION" >/dev/null 2>&1; then
-    c_err "镜像 $IMAGE_REPO:$VERSION 不可用。"
-    cat <<EOF
+  # ============================== 镜像校验 ==============================
+  if [ "$BUILD" = 0 ] && [ "$SKIP_IMAGE_CHECK" = 0 ]; then
+    c_info "校验镜像 $IMAGE_REPO:$VERSION ..."
+    if ! docker buildx imagetools inspect "$IMAGE_REPO:$VERSION" >/dev/null 2>&1; then
+      c_err "镜像 $IMAGE_REPO:$VERSION 不可用。"
+      cat <<EOF
 
 可能原因：
   1) 版本号不存在 —— 可用版本见 https://github.com/StudyNoWeekend/novablog-admin/pkgs/container/novablog-admin
@@ -1219,82 +1277,82 @@ if [ "$BUILD" = 0 ] && [ "$SKIP_IMAGE_CHECK" = 0 ]; then
 
 确认版本号后可重试，或加 --skip-image-check 跳过校验。
 EOF
+      exit 1
+    fi
+  fi
+
+  # ============================== 端口占用预检 ==============================
+  # 同机多博客场景：目标端口被其它项目容器发布时提前失败，避免影响正在运行的博客
+  # （本博客自己的旧容器交给 compose up -d 原地重建，不算冲突）
+  port_conflicts() { # $1=端口 → 输出占用容器名
+    docker ps --format '{{.Names}}\t{{.Ports}}' 2>/dev/null \
+      | awk -F'\t' -v p=":${1}->" '$2 ~ p {print $1}' \
+      | grep -v "^${NAME}-" || true
+  }
+
+  echo
+  c_info "===== 端口占用预检 ====="
+  for port_pair in "$BLOG_PORT:博客前端" "$ADMIN_PORT:CMS 后台"; do
+    port="${port_pair%%:*}"
+    label="${port_pair#*:}"
+    hits="$(port_conflicts "$port")"
+    if [ -n "$hits" ]; then
+      c_err "$label 端口 $port 已被以下容器占用，为不影响在运行的博客，本次部署终止："
+      printf '%s\n' "$hits" | sed 's/^/    - /'
+      die "请为博客 $NAME 换用其它端口（--blog-port / --admin-port），或先停止占用端口的容器"
+    fi
+  done
+  c_info "端口 ${BLOG_PORT}（博客）/ ${ADMIN_PORT}（后台）可用"
+
+  # ============================== 启动 ==============================
+  c_info "启动容器（镜像 ${IMAGE_REPO}:${VERSION}）..."
+  if [ "$BUILD" = 1 ]; then
+    run_compose up -d --build || compose_up_failed
+  else
+    run_compose pull --quiet || c_warn "镜像拉取失败（将使用本地已有镜像继续）"
+    run_compose up -d || compose_up_failed
+  fi
+
+  # 等待健康检查
+  c_info "等待服务就绪 ..."
+  HEALTHY=0
+  for _ in $(seq 1 60); do
+    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+    if [ -n "$cid" ]; then
+      status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true)"
+      if [ "$status" = "healthy" ]; then HEALTHY=1; break; fi
+      if [ "$status" = "unhealthy" ] || [ "$status" = "exited" ]; then break; fi
+    fi
+    sleep 2
+  done
+
+  if [ "$HEALTHY" != 1 ]; then
+    c_err "服务未能就绪（容器未进入 healthy 状态），最近日志如下："
+    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+    if [ -n "$cid" ]; then
+      docker logs --tail 30 "$cid" 2>&1 | tail -30
+    fi
+    c_err "请根据上方日志排查（典型原因：外部数据库/Redis 地址或密码填错），完整日志：./deploy.sh --name $NAME --logs"
     exit 1
   fi
-fi
 
-# ============================== 端口占用预检 ==============================
-# 同机多博客场景：目标端口被其它项目容器发布时提前失败，避免影响正在运行的博客
-# （本博客自己的旧容器交给 compose up -d 原地重建，不算冲突）
-port_conflicts() { # $1=端口 → 输出占用容器名
-  docker ps --format '{{.Names}}\t{{.Ports}}' 2>/dev/null \
-    | awk -F'\t' -v p=":${1}->" '$2 ~ p {print $1}' \
-    | grep -v "^${NAME}-" || true
-}
-
-echo
-c_info "===== 端口占用预检 ====="
-for port_pair in "$BLOG_PORT:博客前端" "$ADMIN_PORT:CMS 后台"; do
-  port="${port_pair%%:*}"
-  label="${port_pair#*:}"
-  hits="$(port_conflicts "$port")"
-  if [ -n "$hits" ]; then
-    c_err "$label 端口 $port 已被以下容器占用，为不影响在运行的博客，本次部署终止："
-    printf '%s\n' "$hits" | sed 's/^/    - /'
-    die "请为博客 $NAME 换用其它端口（--blog-port / --admin-port），或先停止占用端口的容器"
+  # 访客地址优先展示域名形态（走反代/标准端口时不带端口）；本机端口单独列出供反代与直连调试
+  if [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ]; then
+    BLOG_URL="http://$DOMAIN/"
+  else
+    BLOG_URL="http://localhost:$BLOG_PORT/"
   fi
-done
-c_info "端口 ${BLOG_PORT}（博客）/ ${ADMIN_PORT}（后台）可用"
-
-# ============================== 启动 ==============================
-c_info "启动容器（镜像 ${IMAGE_REPO}:${VERSION}）..."
-if [ "$BUILD" = 1 ]; then
-  run_compose up -d --build || compose_up_failed
-else
-  run_compose pull --quiet || c_warn "镜像拉取失败（将使用本地已有镜像继续）"
-  run_compose up -d || compose_up_failed
-fi
-
-# 等待健康检查
-c_info "等待服务就绪 ..."
-HEALTHY=0
-for _ in $(seq 1 60); do
-  cid="$(run_compose ps -q novablog 2>/dev/null || true)"
-  if [ -n "$cid" ]; then
-    status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true)"
-    if [ "$status" = "healthy" ]; then HEALTHY=1; break; fi
-    if [ "$status" = "unhealthy" ] || [ "$status" = "exited" ]; then break; fi
+  if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
+    ADMIN_URL="http://$ADMIN_DOMAIN/admin/"
+    SETUP_URL="http://$ADMIN_DOMAIN/admin/setup"
+  else
+    ADMIN_URL="http://localhost:$ADMIN_PORT/admin/"
+    SETUP_URL="http://localhost:$ADMIN_PORT/admin/setup"
   fi
-  sleep 2
-done
+  FRONTEND_NOTE="（空目录，使用后台安装的主题）"
+  [ -n "$FRONTEND_DIR_INPUT" ] && FRONTEND_NOTE="（自备前端，已启用 themes.frontend_dir）"
 
-if [ "$HEALTHY" != 1 ]; then
-  c_err "服务未能就绪（容器未进入 healthy 状态），最近日志如下："
-  cid="$(run_compose ps -q novablog 2>/dev/null || true)"
-  if [ -n "$cid" ]; then
-    docker logs --tail 30 "$cid" 2>&1 | tail -30
-  fi
-  c_err "请根据上方日志排查（典型原因：外部数据库/Redis 地址或密码填错），完整日志：./deploy.sh --name $NAME --logs"
-  exit 1
-fi
-
-# 访客地址优先展示域名形态（走反代/标准端口时不带端口）；本机端口单独列出供反代与直连调试
-if [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ]; then
-  BLOG_URL="http://$DOMAIN/"
-else
-  BLOG_URL="http://localhost:$BLOG_PORT/"
-fi
-if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
-  ADMIN_URL="http://$ADMIN_DOMAIN/admin/"
-  SETUP_URL="http://$ADMIN_DOMAIN/admin/setup"
-else
-  ADMIN_URL="http://localhost:$ADMIN_PORT/admin/"
-  SETUP_URL="http://localhost:$ADMIN_PORT/admin/setup"
-fi
-FRONTEND_NOTE="（空目录，使用后台安装的主题）"
-[ -n "$FRONTEND_DIR_INPUT" ] && FRONTEND_NOTE="（自备前端，已启用 themes.frontend_dir）"
-
-cat <<EOF
+  cat <<EOF
 
 $(c_info '部署完成')
 
@@ -1316,3 +1374,82 @@ $(c_info '部署完成')
   首次使用：打开后台入口完成安装向导（创建博主账号 → 存储 → 主题）。
   若使用外部 PostgreSQL，请确认库已存在或该账号有建库权限（服务启动会自动建库与建表）。
 EOF
+}
+
+# ============================== 入口分流 ==============================
+# 零参数调用 = 交互管理菜单（需终端）；带任何参数 = 部署/管理流程（见 usage）
+if [ "$ORIG_ARGC" -eq 0 ]; then
+  if [ "$INTERACTIVE" = 1 ]; then
+    main_menu
+    exit 0
+  fi
+  die "交互管理模式需要终端（TTY）运行：请在终端直接执行 ./deploy.sh，或带参数部署（./deploy.sh --help 查看用法）"
+fi
+
+
+if [ -z "$NAME" ] && [ "$ACTION" != "up" ]; then
+  # status/logs/down：未指定名称时，仅一个博客自动选中，多个则交互选择
+  blogs="$(list_blogs)"
+  if [ -z "$blogs" ]; then
+    if [ -f "$SCRIPT_DIR/.env" ]; then
+      die "检测到旧版根目录 .env（单博客旧格式，不支持按名称管理）。请先在本目录执行 docker compose down 停止旧容器并删除该文件，再用 --name <名称> 重新部署"
+    fi
+    die "未找到任何博客部署记录（<名称>/.env）。先完成部署：./deploy.sh --name <名称>"
+  fi
+  if [ "$(printf '%s\n' "$blogs" | wc -l)" = 1 ]; then
+    NAME="$(printf '%s' "$blogs" | head -1)"
+  elif [ "$INTERACTIVE" = 1 ]; then
+    c_info "检测到多个博客："
+    printf '%s\n' "$blogs" | sed 's/^/  - /'
+    NAME="$(ask_choice '选择要操作的博客' "$(printf '%s\n' "$blogs" | paste -sd'|' -)" "$(printf '%s' "$blogs" | head -1)")"
+  else
+    die "检测到多个博客，请用 --name 指定其一：$(printf '%s\n' "$blogs" | paste -sd' ' -)"
+  fi
+elif [ -z "$NAME" ] && [ "$INTERACTIVE" = 1 ]; then
+  echo
+  c_info "===== 博客名称 ====="
+  c_info "同机多博客的隔离键：每个博客独立目录 <名称>/ 与独立容器（前缀 <名称>-），互不影响"
+  NAME="$(ask '博客名称（如 llcms；字母/数字/-/_，自动转小写）' "")"
+fi
+# 统一转小写：名称同时用作目录名与容器项目名，保持全小写避免大小写歧义
+NAME="$(printf '%s' "$NAME" | tr 'A-Z' 'a-z')"
+validate_name "$NAME"
+BLOG_DIR="$SCRIPT_DIR/$NAME"
+ENV_FILE="$BLOG_DIR/.env"
+if [ -e "$BLOG_DIR" ] && [ ! -d "$BLOG_DIR" ]; then
+  die "$BLOG_DIR 已存在且不是目录，请换一个博客名称"
+fi
+if [ "$ACTION" != "up" ]; then
+  [ -f "$ENV_FILE" ] || die "博客 $NAME 尚未部署（缺 ${ENV_FILE}），先运行 ./deploy.sh --name $NAME 完成部署"
+fi
+# 旧版根目录 .env（单博客格式）仅作迁移提示，不再参与部署
+if [ "$ACTION" = "up" ] && [ -f "$SCRIPT_DIR/.env" ]; then
+  c_warn "检测到旧版根目录 .env（旧版单博客格式）。若旧容器仍在运行请先停止（本目录执行 docker compose down），避免端口冲突；迁移完成后可删除该文件"
+fi
+
+case "$ACTION" in
+  status)
+    run_compose_from_env ps
+    exit 0
+    ;;
+  logs)
+    run_compose_from_env logs -f --tail=200 novablog
+    exit 0
+    ;;
+  down)
+    c_info "停止并移除容器（挂载目录中的数据保留）..."
+    run_compose_from_env down
+    c_info "已停止。数据仍在 $ENV_FILE 配置的挂载目录里，重新部署执行 ./deploy.sh --name $NAME 即可。"
+    exit 0
+    ;;
+esac
+
+# --build 需要完整仓库作为构建上下文（frontend/ backend/ 等），缺失时早失败（仅部署路径）
+if [ "$BUILD" = 1 ] && { [ ! -f "$SCRIPT_DIR/Dockerfile" ] || [ ! -d "$SCRIPT_DIR/../backend" ]; }; then
+  die "--build 需要完整仓库（构建上下文为仓库根，需 frontend/ 与 backend/）。请 git clone 仓库后在 deploy/ 目录内运行，或去掉 --build 直接使用线上镜像。"
+fi
+
+# 带参数部署/升级路径（status/logs/down 已在上方分支处理；零参数已在上方进入交互菜单）
+deploy_blog
+exit 0
+
