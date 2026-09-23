@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 #
 # NovaBlog 部署脚本
+#   - 零参数运行进入交互管理菜单（全新安装 / 容器升级 / 退出）
 #   - 按博客名称隔离部署：每个博客一个 <名称>/ 目录（.env、config.yaml 与全部挂载数据）
 #     和一组独立容器（前缀 <名称>-），同机部署多个博客互不影响
 #   - 可选内置 PostgreSQL / Redis，或使用你自己的外部实例（多博客共用时默认按名称分库）
 #   - 可指定博客前端端口、CMS 后台端口、入口域名，以及镜像版本号（不指定则使用 latest）
 #
 # 示例：
+#   ./deploy.sh                                  # 交互管理菜单（全新安装 / 容器升级 / 退出）
 #   ./deploy.sh --name llcms                      # 交互式问答（博客名称必填）
 #   ./deploy.sh --name llcms --yes                # 全部默认（内置 PG/Redis，端口 80/8080，latest）
 #   ./deploy.sh --name llcms --blog-port 9001 --admin-port 9002 --domain blog.example.com
@@ -72,7 +74,9 @@ usage() {
   cat <<'EOF'
 NovaBlog 部署脚本
 
-用法：./deploy.sh --name <博客名称> [选项]
+用法：
+  ./deploy.sh                          交互管理菜单（全新安装 / 容器升级 / 退出）
+  ./deploy.sh --name <博客名称> [选项]   按参数部署（问答补全，回车沿用现有配置）
 
 博客名称（必填，同机多博客的隔离键）
   --name <名称>          用作数据目录名（脚本同级 <名称>/，存放 .env / config.yaml / 全部挂载数据）
@@ -531,10 +535,160 @@ host_nginx_print_info() {
   printf '  宿主机反代     %s（域名 %s → 127.0.0.1:%s）\n' "$conf" "$DOMAIN" "$BLOG_PORT"
 }
 
+# ============================== 交互管理菜单（零参数入口）==============================
+# 零参数运行 ./deploy.sh 时进入：先获取最新版本号并扫描本地部署，
+# 再由用户选择全新安装 / 容器升级 / 退出；带参数运行则走原有部署流程。
+
+# fetch_latest_version 获取最新发布版本号 → 全局 LATEST_VERSION
+# 顺序：GitHub Releases API → git ls-remote --tags 本地排序 → 兜底 latest
+fetch_latest_version() {
+  LATEST_VERSION=""
+  local api_json=""
+  if command -v curl >/dev/null 2>&1; then
+    api_json="$(curl -fsSL --max-time 10 https://api.github.com/repos/StudyNoWeekend/novablog-cms/releases/latest 2>/dev/null || true)"
+  elif command -v wget >/dev/null 2>&1; then
+    api_json="$(wget -qO - -T 10 https://api.github.com/repos/StudyNoWeekend/novablog-cms/releases/latest 2>/dev/null || true)"
+  fi
+  if [ -n "$api_json" ]; then
+    LATEST_VERSION="$(printf '%s' "$api_json" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+  fi
+  if [ -z "$LATEST_VERSION" ] && command -v git >/dev/null 2>&1; then
+    LATEST_VERSION="$(git ls-remote --tags https://github.com/StudyNoWeekend/novablog-cms.git 'refs/tags/v*' 2>/dev/null \
+      | sed 's#.*refs/tags/##' \
+      | grep -E '^v[0-9]+(\.[0-9]+)*$' \
+      | sort -t. -k1.2,1n -k2,2n -k3,3n \
+      | tail -1 || true)"
+  fi
+  if [ -z "$LATEST_VERSION" ]; then
+    LATEST_VERSION="latest"
+    c_warn "未能获取最新版本号（网络不可用？），将使用 latest"
+  fi
+}
+
+# blog_env_get 从指定 .env 文件读取变量（不依赖/不污染全局 ENV_FILE）
+blog_env_get() { # $1=.env 路径 $2=变量名
+  [ -f "$1" ] || return 0
+  sed -n "s/^$2=//p" "$1" | tail -1
+}
+
+# blog_container_info 查询博客 novablog 容器：输出 "状态 镜像"（无容器输出空）
+blog_container_info() { # $1=博客名称
+  local cid state image
+  cid="$(docker ps -a --filter "label=com.docker.compose.project=$1" --filter 'label=com.docker.compose.service=novablog' -q 2>/dev/null | head -1 || true)"
+  [ -n "$cid" ] || return 0
+  state="$(docker inspect -f '{{.State.Status}}' "$cid" 2>/dev/null || true)"
+  image="$(docker inspect -f '{{.Config.Image}}' "$cid" 2>/dev/null || true)"
+  printf '%s %s' "${state:-未知}" "$image"
+}
+
+# scan_deployments 扫描本地部署记录并与 docker 实际容器对齐展示
+# 设定全局 SCAN_RECORD_COUNT（部署记录数）；不对齐情况逐条标警
+scan_deployments() {
+  SCAN_RECORD_COUNT=0
+  local names="" d name env_file rec_ver run_ver run_state blog_port admin_port
+  local db_mode redis_mode info image docker_projects dp
+  for d in "$SCRIPT_DIR"/*/; do
+    [ -f "${d}.env" ] && names="$names $(basename "$d")"
+  done
+  names="${names# }"
+  docker_projects="$(docker ps -a --filter 'label=com.docker.compose.project' --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null | sort -u || true)"
+
+  echo
+  c_info "----- 本地部署扫描 -----"
+  [ -n "$names" ] || c_info "（暂无部署记录，部署后生成 <名称>/.env）"
+  for name in $names; do
+    SCAN_RECORD_COUNT=$((SCAN_RECORD_COUNT + 1))
+    env_file="$SCRIPT_DIR/$name/.env"
+    rec_ver="$(blog_env_get "$env_file" NOVABLOG_VERSION)"
+    blog_port="$(blog_env_get "$env_file" NOVABLOG_HTTP_PORT)"
+    admin_port="$(blog_env_get "$env_file" NOVABLOG_ADMIN_HTTP_PORT)"
+    db_mode="$(blog_env_get "$env_file" NOVABLOG_DB_MODE)"
+    [ -n "$db_mode" ] || db_mode="?"
+    redis_mode="$(blog_env_get "$env_file" NOVABLOG_REDIS_MODE)"
+    [ -n "$redis_mode" ] || redis_mode="?"
+    run_ver="-"; run_state="无容器"
+    info="$(blog_container_info "$name")"
+    if [ -n "$info" ]; then
+      run_state="${info%% *}"
+      image="${info#* }"
+      case "$image" in
+        *:*) run_ver="${image##*:}" ;;
+      esac
+    fi
+    printf '  %-14s 记录版本 %-10s 运行版本 %-10s %-9s 博客端口 %-7s 后台端口 %-7s DB/Redis %s/%s\n' \
+      "$name" "${rec_ver:--}" "$run_ver" "$run_state" "${blog_port:--}" "${admin_port:--}" "$db_mode" "$redis_mode"
+    if [ -n "$rec_ver" ] && [ "$run_ver" != "-" ] && [ "$rec_ver" != "$run_ver" ]; then
+      c_warn "  ${name}：记录版本 $rec_ver 与实际运行版本 $run_ver 不一致"
+    fi
+    if [ "$run_state" = "无容器" ]; then
+      c_warn "  ${name}：有部署记录但未发现 novablog 容器（已停止或已被删除）"
+    fi
+  done
+  for dp in $docker_projects; do
+    case " $names " in *" $dp "*) continue ;; esac
+    c_warn "  发现 compose 项目 $dp 的容器但无部署记录，无法纳入升级管理"
+  done
+  return 0
+}
+
+# ---- 安装/升级流程入口（Task 2/3 填充；函数名与参数为跨任务接口，勿改名）----
+menu_install() {
+  c_warn "全新安装流程尚未实现（后续任务填充）。"
+  return 0
+}
+
+menu_upgrade() {
+  c_warn "容器升级流程尚未实现（后续任务填充）。"
+  return 0
+}
+
+do_upgrade_one() { # $1=博客名称 $2=目标版本
+  c_warn "单博客升级流程尚未实现（后续任务填充）。"
+  return 1
+}
+
+# main_menu 零参数交互主菜单：先获取最新版本号，再循环提供安装/升级/退出
+main_menu() {
+  fetch_latest_version
+  while :; do
+    echo
+    c_info "===== NovaBlog 部署管理 ====="
+    scan_deployments
+    echo
+    printf '  本地已部署：%s 个博客    最新版本：%s\n' "$SCAN_RECORD_COUNT" "$LATEST_VERSION"
+    echo "  1. 全新安装"
+    echo "  2. 容器升级"
+    echo "  3. 退出"
+    local choice=""
+    if ! read -r -p "请选择操作 [1/2/3]: " choice; then
+      echo
+      c_info "已退出。"
+      exit 0
+    fi
+    case "$choice" in
+      1) menu_install ;;
+      2) menu_upgrade ;;
+      3|q|Q|quit|exit) c_info "已退出。"; exit 0 ;;
+      "") : ;;
+      *) c_warn "无效选项：${choice}（请输入 1/2/3）" ;;
+    esac
+  done
+}
+
 # ============================== 前置检查 ==============================
 command -v docker >/dev/null 2>&1 || die "未找到 docker，请先安装 Docker"
 docker info >/dev/null 2>&1 || die "无法连接 Docker 守护进程，请确认 Docker 已启动"
 docker compose version >/dev/null 2>&1 || die "未找到 docker compose（需 Compose V2）"
+
+# ============================== 入口分流 ==============================
+# 零参数调用 = 交互管理菜单（需终端）；带任何参数 = 部署/管理流程（见 usage）
+if [ "$#" -eq 0 ]; then
+  if [ "$INTERACTIVE" = 1 ]; then
+    main_menu
+    exit 0
+  fi
+  die "交互管理模式需要终端（TTY）运行：请在终端直接执行 ./deploy.sh，或带参数部署（./deploy.sh --help 查看用法）"
+fi
 
 # ============================== 依赖文件在线自举 ==============================
 # 脚本支持脱离仓库单独运行：compose 依赖文件缺失时自动从 GitHub 在线拉取。
