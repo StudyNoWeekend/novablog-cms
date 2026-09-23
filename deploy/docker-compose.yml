@@ -34,6 +34,8 @@ services:
       - ${NOVABLOG_UPLOADS_DIR:-./data/uploads}:/app/uploads
       # 主题制品目录（后台安装/切换的主题）
       - ${NOVABLOG_THEMES_DIR:-./data/themes}:/app/data/themes
+      # IP 归属地数据目录（ip2region xdb 缓存，容器重建后无需重新下载）
+      - ${NOVABLOG_GEOIP_DIR:-./data/geoip}:/app/data/geoip
       # 日志目录
       - ${NOVABLOG_LOGS_DIR:-./data/logs}:/app/logs
       # 自备博客前端目录（含 theme.json 与 dist/，与主题制品包同构）
