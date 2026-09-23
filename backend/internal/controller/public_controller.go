@@ -469,7 +469,7 @@ func (ctrl *PublicController) GetSongDetail(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// GetAudioURL 获取歌曲音频播放地址 GET /api/v1/public/music/audio-url/:song_id
+// GetAudioURL 获取播放地址（B站外链播放器） GET /api/v1/public/music/audio-url/:song_id
 func (ctrl *PublicController) GetAudioURL(ctx *gin.Context) {
 	songID := ctx.Param("song_id")
 	url, err := ctrl.musicLogic.GetPublicAudioURL(ctx.Request.Context(), songID)

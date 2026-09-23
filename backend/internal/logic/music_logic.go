@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"novablog/internal/cache"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
@@ -24,23 +23,20 @@ import (
 //
 // 依赖：
 //   - songModel：歌曲数据访问
-//   - musicCache：音频 URL 缓存（B 站 CDN 链接 120 分钟过期，缓存 TTL 与 B 站 URL 中 expire 字段对齐）
 //   - manager：存储管理器，用于自动保存封面到对象存储
 //   - logger：业务日志
 type MusicLogic struct {
-	songModel  *model.SongModel
-	musicCache *cache.MusicCache
-	manager    *storage.Manager
-	logger     *zap.Logger
+	songModel *model.SongModel
+	manager   *storage.Manager
+	logger    *zap.Logger
 }
 
 // NewMusicLogic 创建 MusicLogic 实例。
 func NewMusicLogic(manager *storage.Manager) *MusicLogic {
 	return &MusicLogic{
-		songModel:  model.NewSong(),
-		musicCache: cache.NewMusicCache(),
-		manager:    manager,
-		logger:     MusicLogger,
+		songModel: model.NewSong(),
+		manager:   manager,
+		logger:    MusicLogger,
 	}
 }
 
@@ -105,8 +101,6 @@ func (l *MusicLogic) GetSongByID(ctx context.Context, id string) (*res.SongRes, 
 }
 
 // UpdateSong 更新歌曲。
-//
-// 副作用：更新成功后使对应的音频 URL 缓存失效，避免 B 站新链接与旧缓存不一致。
 func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSongReq) (*res.SongRes, error) {
 	// 使用 GetByIDRaw 跳过 AfterFind 钩子，读取存储中的原始 cover_url，
 	// 避免将钩子解析出的完整 URL 原样写回，覆盖相对路径存储值。
@@ -138,17 +132,10 @@ func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSon
 		return nil, fmt.Errorf("更新歌曲失败: %w", err)
 	}
 
-	// 失效音频 URL 缓存（BVID/CID 可能已变更）。
-	if err := l.musicCache.InvalidateAudioURL(ctx, id); err != nil {
-		l.logger.Warn("失效音频 URL 缓存失败", zap.String("song_id", id), zap.Error(err))
-	}
-
 	return l.toSongRes(song), nil
 }
 
 // DeleteSong 删除歌曲。
-//
-// 副作用：删除成功后使对应的音频 URL 缓存失效。
 func (l *MusicLogic) DeleteSong(ctx context.Context, id string) error {
 	_, err := l.songModel.GetByID(ctx, id)
 	if err != nil {
@@ -156,9 +143,6 @@ func (l *MusicLogic) DeleteSong(ctx context.Context, id string) error {
 	}
 	if err := l.songModel.Delete(ctx, id); err != nil {
 		return err
-	}
-	if err := l.musicCache.InvalidateAudioURL(ctx, id); err != nil {
-		l.logger.Warn("失效音频 URL 缓存失败", zap.String("song_id", id), zap.Error(err))
 	}
 	return nil
 }
@@ -227,13 +211,16 @@ func (l *MusicLogic) BatchCreateSongs(ctx context.Context, r *req.BatchCreateSon
 	return results, nil
 }
 
-// GetAudioURL 获取歌曲的音频播放地址（管理端接口）。
+// GetAudioURL 获取歌曲的播放地址（管理端接口）。
 //
-// 缓存策略：
-//  1. 先查 Redis（key=music:audio:<song_id>）；
-//  2. 命中直接返回；未命中调用 B 站 /x/player/playurl 拉取，并按 URL 中 expire 字段设 TTL。
+// 返回 B 站官方外链播放器地址，前端用 iframe 内嵌播放，
+// 不解析 CDN 直链（官方 CDN 存在 Referer 白名单防盗链，浏览器直连必 403）。
 func (l *MusicLogic) GetAudioURL(ctx context.Context, songID string) (string, error) {
-	return l.fetchAudioURL(ctx, songID)
+	song, err := l.songModel.GetByID(ctx, songID)
+	if err != nil {
+		return "", fmt.Errorf("歌曲不存在")
+	}
+	return bilibili.BuildEmbedURL(song.BVID), nil
 }
 
 // GetPublicSongList 获取公开歌曲列表（无需状态过滤）。
@@ -246,61 +233,9 @@ func (l *MusicLogic) GetPublicSongByID(ctx context.Context, id string) (*res.Son
 	return l.GetSongByID(ctx, id)
 }
 
-// GetPublicAudioURL 获取歌曲的公开音频播放地址。
+// GetPublicAudioURL 获取歌曲的公开播放地址（B 站外链播放器地址）。
 func (l *MusicLogic) GetPublicAudioURL(ctx context.Context, songID string) (string, error) {
-	return l.fetchAudioURL(ctx, songID)
-}
-
-// fetchAudioURL 统一从缓存 / B 站获取音频 URL。
-func (l *MusicLogic) fetchAudioURL(ctx context.Context, songID string) (string, error) {
-	// 1) 缓存命中。
-	if cached, err := l.musicCache.GetAudioURL(ctx, songID); err != nil {
-		l.logger.Warn("读取音频 URL 缓存失败，将直连 B 站", zap.String("song_id", songID), zap.Error(err))
-	} else if cached != nil {
-		return cached.URL, nil
-	}
-
-	// 2) 查 song。
-	song, err := l.songModel.GetByID(ctx, songID)
-	if err != nil {
-		return "", fmt.Errorf("歌曲不存在")
-	}
-
-	// 3) 调 B 站。
-	start := time.Now()
-	entries, err := bilibili.FetchAudioEntries(ctx, song.BVID, song.CID)
-	if err != nil {
-		return "", fmt.Errorf("获取音频地址失败: %w", err)
-	}
-	audioURL := pickBestAudioURL(entries)
-	if audioURL == "" {
-		return "", fmt.Errorf("未找到可用的音频流")
-	}
-	l.logger.Info("获取音频地址成功",
-		zap.String("song_id", songID),
-		zap.String("bvid", song.BVID),
-		zap.Int64("cid", song.CID),
-		zap.Duration("cost_ms", time.Since(start)),
-	)
-
-	// 4) 写缓存（TTL 与 B 站 URL 中 expire 对齐）。
-	if err := l.musicCache.SetAudioURL(ctx, songID, audioURL); err != nil {
-		l.logger.Warn("写入音频 URL 缓存失败", zap.String("song_id", songID), zap.Error(err))
-	}
-	return audioURL, nil
-}
-
-// pickBestAudioURL 选取 bandwidth 最大的音频流。
-func pickBestAudioURL(entries []bilibili.AudioEntry) string {
-	var bestURL string
-	var bestBandwidth int
-	for _, a := range entries {
-		if a.Bandwidth > bestBandwidth {
-			bestBandwidth = a.Bandwidth
-			bestURL = a.BaseURL
-		}
-	}
-	return bestURL
+	return l.GetAudioURL(ctx, songID)
 }
 
 // saveCoverToStorage 将外部封面 URL 下载并保存到已配置的对象存储中。

@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"mime/multipart"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -18,13 +19,26 @@ import (
 	"novablog/internal/storage"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"golang.org/x/image/webp"
 )
+
+// MediaLogger 媒体逻辑日志器，由 bootstrap 注入。
+var MediaLogger *zap.Logger
+
+// mediaLog 返回媒体逻辑日志器，未注入时返回 Nop。
+func mediaLog() *zap.Logger {
+	if MediaLogger != nil {
+		return MediaLogger
+	}
+	return zap.NewNop()
+}
 
 // MediaLogic 媒体业务逻辑结构体。
 type MediaLogic struct {
 	model       *model.MediaModel
 	presetModel *model.MediaPresetModel
+	usageModel  *model.MediaUsageModel
 	manager     *storage.Manager
 }
 
@@ -33,6 +47,7 @@ func NewMediaLogic(manager *storage.Manager) *MediaLogic {
 	return &MediaLogic{
 		model:       model.NewMedia(),
 		presetModel: model.NewMediaPreset(),
+		usageModel:  model.NewMediaUsage(),
 		manager:     manager,
 	}
 }
@@ -157,9 +172,153 @@ func (l *MediaLogic) GetByID(ctx context.Context, id string) (*res.MediaRes, err
 	}, nil
 }
 
-// Delete 软删除媒体。
-func (l *MediaLogic) Delete(ctx context.Context, id string) error {
-	return l.model.SoftDelete(ctx, id)
+// GetUsages 扫描媒体被哪些内容模块引用（文章、旅行攻略、摄影作品集等）。
+func (l *MediaLogic) GetUsages(ctx context.Context, id string) (*res.MediaUsageRes, error) {
+	media, presets, err := l.getMediaWithPresets(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	hits, err := l.usageModel.FindUsages(ctx, media.URL, media.StoragePath, presetIDs(presets), presetOutputKeys(presets))
+	if err != nil {
+		return nil, err
+	}
+
+	return &res.MediaUsageRes{
+		MediaID: id,
+		Used:    len(hits) > 0,
+		Total:   len(hits),
+		Groups:  groupUsageHits(hits),
+	}, nil
+}
+
+// Delete 删除媒体：先扫描引用，被引用时需 force=true 强制删除；确认后
+// 硬删数据库记录（含预设）并尽力删除存储中的原文件与预设成品图。
+func (l *MediaLogic) Delete(ctx context.Context, id string, force bool) error {
+	media, presets, err := l.getMediaWithPresets(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	hits, err := l.usageModel.FindUsages(ctx, media.URL, media.StoragePath, presetIDs(presets), presetOutputKeys(presets))
+	if err != nil {
+		return err
+	}
+	if len(hits) > 0 && !force {
+		return fmt.Errorf("该文件被 %d 处内容引用，无法直接删除", len(hits))
+	}
+
+	if err := l.model.HardDeleteWithPresets(ctx, id); err != nil {
+		return fmt.Errorf("删除媒体记录失败: %w", err)
+	}
+
+	l.deleteStorageFiles(ctx, media, presets)
+	return nil
+}
+
+// getMediaWithPresets 获取媒体原始记录（未经 URL 钩子解析）及其全部预设（含软删）。
+func (l *MediaLogic) getMediaWithPresets(ctx context.Context, id string) (*model.Media, []model.MediaPreset, error) {
+	media, err := l.model.GetByIDRaw(ctx, id)
+	if err != nil {
+		return nil, nil, fmt.Errorf("媒体不存在: %w", err)
+	}
+	presets, err := l.presetModel.GetAllByMediaIDUnscoped(ctx, id)
+	if err != nil {
+		return nil, nil, fmt.Errorf("查询媒体预设失败: %w", err)
+	}
+	return media, presets, nil
+}
+
+// deleteStorageFiles 尽力删除存储中的原文件与预设成品图，失败仅记录日志不回滚。
+func (l *MediaLogic) deleteStorageFiles(ctx context.Context, media *model.Media, presets []model.MediaPreset) {
+	provider := l.manager.GetProvider()
+	if provider == nil {
+		mediaLog().Warn("删除媒体文件跳过：无可用存储 Provider", zap.String("media_id", media.ID))
+		return
+	}
+
+	keys := make([]string, 0, 1+len(presets))
+	if media.StoragePath != "" {
+		keys = append(keys, media.StoragePath)
+	}
+	for _, p := range presets {
+		if p.OutputStoragePath != "" {
+			keys = append(keys, p.OutputStoragePath)
+		}
+	}
+
+	for _, key := range keys {
+		if err := provider.Delete(ctx, key); err != nil {
+			mediaLog().Warn("删除存储文件失败",
+				zap.String("media_id", media.ID),
+				zap.String("key", key),
+				zap.Error(err),
+			)
+		}
+	}
+}
+
+// presetIDs 提取预设 ID 列表。
+func presetIDs(presets []model.MediaPreset) []string {
+	ids := make([]string, 0, len(presets))
+	for _, p := range presets {
+		ids = append(ids, p.ID)
+	}
+	return ids
+}
+
+// presetOutputKeys 提取预设成品图的存储路径列表。
+func presetOutputKeys(presets []model.MediaPreset) []string {
+	keys := make([]string, 0, len(presets))
+	for _, p := range presets {
+		keys = append(keys, p.OutputStoragePath)
+	}
+	return keys
+}
+
+// usageModuleOrder 引用分组在前端展示时的固定模块顺序。
+var usageModuleOrder = []string{
+	model.UsageModuleArticle,
+	model.UsageModuleTravel,
+	model.UsageModulePortfolio,
+	model.UsageModuleProject,
+	model.UsageModuleEquipment,
+	model.UsageModuleVideo,
+	model.UsageModuleSong,
+	model.UsageModuleBlogger,
+}
+
+// groupUsageHits 将引用命中按模块聚合，按固定模块顺序输出，未知模块排最后。
+func groupUsageHits(hits []model.UsageHit) []res.MediaUsageGroup {
+	order := make(map[string]int, len(usageModuleOrder))
+	for i, m := range usageModuleOrder {
+		order[m] = i
+	}
+
+	groups := make([]res.MediaUsageGroup, 0)
+	index := make(map[string]int)
+	for _, h := range hits {
+		i, ok := index[h.Module]
+		if !ok {
+			groups = append(groups, res.MediaUsageGroup{Module: h.Module, Items: []res.MediaUsageItem{}})
+			i = len(groups) - 1
+			index[h.Module] = i
+		}
+		groups[i].Items = append(groups[i].Items, res.MediaUsageItem{ID: h.ID, Title: h.Title, Field: h.Field})
+	}
+
+	sort.SliceStable(groups, func(a, b int) bool {
+		return moduleOrder(order, groups[a].Module) < moduleOrder(order, groups[b].Module)
+	})
+	return groups
+}
+
+// moduleOrder 返回模块的展示顺序，未知模块排最后。
+func moduleOrder(order map[string]int, module string) int {
+	if i, ok := order[module]; ok {
+		return i
+	}
+	return len(usageModuleOrder)
 }
 
 // CreatePreset 创建媒体预设：将前端合成的成品图转存对象存储并记录。

@@ -172,6 +172,7 @@
               :key="theme.id"
               :theme="theme"
               :favorited="store.favoriteIds.has(theme.id)"
+              :installed="installedMarketIds.has(theme.id)"
               :installing="installingId === theme.id"
               @detail="goDetail(theme)"
               @favorite="store.toggleFavorite(theme.id)"
@@ -223,6 +224,7 @@
               :key="theme.id"
               :theme="theme"
               favorited
+              :installed="installedMarketIds.has(theme.id)"
               :installing="installingId === theme.id"
               @detail="goDetail(theme)"
               @favorite="store.toggleFavorite(theme.id)"
@@ -272,6 +274,7 @@
               v-for="theme in installedList"
               :key="theme.id"
               :theme="theme"
+              :market="theme.market_id > 0 ? installedMarketMap.get(theme.market_id) : undefined"
               :activating="activatingId === theme.id"
               :updating="updatingId === theme.id"
               @activate="handleActivate(theme)"
@@ -310,9 +313,8 @@ import {
   SkinOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
-import { MARKET_AUTH_EXPIRED_EVENT, abortMarketRetries } from '@/api/theme'
+import { MARKET_AUTH_EXPIRED_EVENT, abortMarketRetries, themeApi, themeMarketApi } from '@/api/theme'
 import { configApi } from '@/api/config'
-import { themeApi } from '@/api/theme'
 import { marketStorage } from '@/utils/storage'
 import { THEME_TYPE_LABELS } from '@/utils/themeDisplay'
 import type { InstalledTheme, ThemeItem } from '@/types/theme'
@@ -338,11 +340,46 @@ const updatingId = ref<string | null>(null)
 // 博客前台独立域名时经 VITE_BLOG_BASE_URL 指定（同域部署留空）
 const blogBase = import.meta.env.VITE_BLOG_BASE_URL || ''
 
+// installedMarketIds 已安装主题对应的市场主题 ID 集合（builtin/手动导入主题无 market_id，不计入），
+// 供市场与收藏卡片标记"已安装"状态
+const installedMarketIds = computed(() => {
+  const ids = new Set<number>()
+  for (const t of installedList.value) {
+    if (t.market_id > 0) ids.add(t.market_id)
+  }
+  return ids
+})
+
+// installedMarketMap market_id → 市场主题元数据，已安装卡片据此对齐市场展示（封面/标题/描述）
+const installedMarketMap = ref<Map<number, ThemeItem>>(new Map())
+
+/** 补拉已安装主题的市场元数据（市场列表分页内未必包含），
+ * 拉取失败（市场不可达/登录失效）时静默，卡片回退展示制品内信息 */
+async function hydrateInstalledMarketMeta() {
+  const missing = installedList.value.filter(
+    (t) => t.market_id > 0 && !installedMarketMap.value.has(t.market_id),
+  )
+  await Promise.all(
+    missing.map(async (t) => {
+      try {
+        const detail = await themeMarketApi.getDetail(t.market_id)
+        const next = new Map(installedMarketMap.value)
+        next.set(t.market_id, detail)
+        installedMarketMap.value = next
+      } catch {
+        // 静默：保持渐变占位展示
+      }
+    }),
+  )
+}
+
 async function fetchInstalled() {
   installedLoading.value = true
   installedError.value = false
   try {
     installedList.value = await themeApi.getList()
+    // 异步补齐市场元数据，不阻塞列表渲染
+    hydrateInstalledMarketMeta()
   } catch {
     installedError.value = true
   } finally {
@@ -463,6 +500,8 @@ async function handleLogin() {
     await store.login(loginForm.baseURL.trim(), loginForm.email.trim(), loginForm.password)
     loginForm.password = ''
     message.success('已连接官方主题市场')
+    // 登录后补拉已安装列表，市场卡片的"已安装"状态立即可用
+    fetchInstalled()
   } catch {
     // 登录错误（如邮箱或密码错误）由响应拦截器统一提示
   } finally {
@@ -603,6 +642,8 @@ onMounted(async () => {
     if (!store.stats) store.fetchStats()
     if (!store.hotTags.length) store.fetchHotTags()
     if (store.favoriteIds.size === 0) store.fetchFavoriteIds()
+    // 预拉已安装列表：市场/收藏卡片的"已安装"状态依赖它
+    fetchInstalled()
   }
 })
 

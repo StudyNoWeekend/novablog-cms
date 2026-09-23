@@ -34,7 +34,7 @@ export const musicApi = {
     return request.get<ParseTask>(`/music/parse/${taskId}`)
   },
 
-  // 获取音频播放地址（B站CDN直链）
+  // 获取播放地址（B站官方外链播放器地址，供 iframe 内嵌播放）
   getAudioUrl(songId: string) {
     return request.get<{ url: string }>(`/music/audio-url/${songId}`)
   },

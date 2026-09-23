@@ -23,7 +23,7 @@ func RegisterMusicRoutes(r *gin.RouterGroup, musicController *controller.MusicCo
 		music.POST("/parse", musicController.ParseMusic)
 		music.GET("/parse/:task_id", musicController.GetParseStatus)
 
-		// 获取音频播放地址（返回B站CDN直链，不经过后端转发）
+		// 获取播放地址（返回B站官方外链播放器地址，前端用 iframe 内嵌播放）
 		music.GET("/audio-url/:song_id", musicController.GetAudioURL)
 	}
 }
