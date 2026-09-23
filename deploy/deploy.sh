@@ -241,6 +241,43 @@ gen_secret() {
 # yaml_quote 转义双引号字符串
 yaml_quote() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
 
+# yaml_key <文件> <一级键> [<二级键>]：读取 YAML 中 "<一级键>:"（顶层无缩进）子块里的 <二级键> 值
+# - 支持 "..."、"..."' 、裸值/数字，带引号时剥掉首尾引号；找不到返回空字符串
+# - 密码/特殊字符中间的内容原样保留（仅行尾 "#" 注释在 # 前有空格时才截断）
+yaml_key() {
+  local f="$1" top="$2" sub="${3:-}" line val="" in_sec=0
+  [ -f "$f" ] || return 0
+  while IFS='' read -r line; do
+    case "$line" in
+      "${top}:"*)
+        in_sec=1
+        [ -z "$sub" ] && { val="$line"; break; }
+        ;;
+      *)
+        [ "$in_sec" = 1 ] || continue
+        # 段内扫描：命中二级键（两空格缩进）即收下；遇到下一组顶层键（无缩进）则结束
+        case "$line" in
+          "  ${sub}:"*) val="$line"; break ;;
+          [![:space:]]*) break ;;
+        esac
+        ;;
+    esac
+  done < "$f"
+  case "$val" in
+    '  '*)
+      val="${val#*:}"
+      val="$(printf '%s' "$val" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      case "$val" in
+        \"*\") val="${val#\"}"; val="${val%\"}" ;;
+        \'*\') val="${val#\'}"; val="${val%\'}" ;;
+      esac
+      # 仅当 # 前有空白时去掉行尾注释，避免误伤含 # 的密码
+      case "$val" in *" #"*) val="${val% #*}" ;; esac
+      printf '%s' "$val"
+      ;;
+  esac
+}
+
 # abs_dir 相对 deploy/ 解析并创建目录，输出绝对路径
 abs_dir() {
   local p="$1"
@@ -710,12 +747,27 @@ case "$PUBLIC_URL" in
   http://*|https://*) ;;
   *) PUBLIC_URL="http://$PUBLIC_URL"; c_info "博客对外访问地址已自动补全为：$PUBLIC_URL" ;;
 esac
+# CORS 白名单：媒体 URL 基址 + 本地开发端口；配置了独立后台域名时把后台来源一并加入，
+# 否则后台媒体库预设工作台以 crossOrigin 加载原图会被浏览器 CORS 拦截
+CORS_ORIGINS="$PUBLIC_URL,http://localhost:5173,http://localhost:5174"
+if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
+  CORS_ORIGINS="$CORS_ORIGINS,http://$ADMIN_DOMAIN"
+fi
 
 echo
 c_info "===== PostgreSQL ====="
 c_info "（填外部地址；留空或填 localhost / 127.0.0.1 则自动部署内置 PostgreSQL）"
+# 已有部署记录时，先从 config.yaml 回填原有连接，避免重跑时看着空白不敢动
+if [ -z "$DB_HOST" ] && [ -f "$CONFIG_FILE" ]; then
+  DB_HOST="$(yaml_key "$CONFIG_FILE" postgres host)"
+  DB_PORT="$(yaml_key "$CONFIG_FILE" postgres port)"
+  DB_USER="$(yaml_key "$CONFIG_FILE" postgres user)"
+  DB_PASSWORD="$(yaml_key "$CONFIG_FILE" postgres password)"
+  DB_NAME="$(yaml_key "$CONFIG_FILE" postgres dbname)"
+  DB_SSLMODE="$(yaml_key "$CONFIG_FILE" postgres sslmode)"
+fi
 DB_HOST="$(ask 'PostgreSQL 地址（主机名或 IP）' "${DB_HOST:-}")"
-DB_PORT="$(ask 'PostgreSQL 端口' "${DB_PORT:-5432}")"
+DB_PORT="$(ask 'PostgreSQL 端口（默认 5432）' "${DB_PORT:-5432}")"
 DB_PASSWORD="$(ask_secret 'PostgreSQL 密码（内置模式自动生成，直接回车即可）' "${DB_PASSWORD:-}")"
 [ -n "$DB_PASSWORD" ] || DB_PASSWORD="$(gen_secret 16)"
 # 用户/库名/sslmode 属低频配置，不再逐项提问：默认 postgres / <博客名> / disable，可用 --db-user/--db-name/--db-sslmode 覆盖
@@ -733,8 +785,15 @@ fi
 echo
 c_info "===== Redis ====="
 c_info "（填外部地址；留空或填 localhost / 127.0.0.1 则自动部署内置 Redis）"
+# 已有部署记录时，先从 config.yaml 回填原有连接
+if [ -z "$REDIS_HOST" ] && [ -f "$CONFIG_FILE" ]; then
+  REDIS_HOST="$(yaml_key "$CONFIG_FILE" redis host)"
+  REDIS_PORT="$(yaml_key "$CONFIG_FILE" redis port)"
+  REDIS_PASSWORD="$(yaml_key "$CONFIG_FILE" redis password)"
+  REDIS_DB="$(yaml_key "$CONFIG_FILE" redis db)"
+fi
 REDIS_HOST="$(ask 'Redis 地址（主机名或 IP）' "${REDIS_HOST:-}")"
-REDIS_PORT="$(ask 'Redis 端口' "${REDIS_PORT:-6379}")"
+REDIS_PORT="$(ask 'Redis 端口（默认 6379）' "${REDIS_PORT:-6379}")"
 REDIS_PASSWORD="$(ask_secret 'Redis 密码（无密码直接回车）' "${REDIS_PASSWORD:-}")"
 REDIS_DB="$(ask 'Redis 库编号（多博客共用同一 Redis 时，请为每个博客分配不同编号）' "${REDIS_DB:-3}")"
 # 判断是否为内置模式
@@ -806,13 +865,29 @@ fi
 # ============================== 生成 config.yaml ==============================
 CONFIG_FILE="$CONFIG_DIR/config.yaml"
 WRITE_CONFIG=1
+WRITE_GEOIP=0         # 沿用旧配置时，若缺 geoip 段则补写（v1.0.4 新增）
 if [ -f "$CONFIG_FILE" ]; then
   if [ "$ASSUME_YES" = 1 ]; then
     c_info "已存在 ${CONFIG_FILE}，--yes 模式沿用现有配置（不覆盖）。"
     WRITE_CONFIG=0
+    # v1.0.4 起新增 geoip 段；旧配置缺失时补写，避免新后端 IP 归属地不可用
+    if [ -z "$(yaml_key "$CONFIG_FILE" geoip data_dir)" ]; then
+      WRITE_GEOIP=1
+      c_info "检测到旧配置缺少 geoip 段，将补写 IP 归属地配置。"
+    fi
   else
-    keep="$(ask_choice "已存在 ${CONFIG_FILE}，是否覆盖？覆盖会重写数据库/端口等配置（JWT 密钥会保留）" 'keep|overwrite' 'keep')"
-    [ "$keep" = "keep" ] && WRITE_CONFIG=0
+    keep="$(ask_choice "已存在 ${CONFIG_FILE}，如何处置？（overwrite 会重写全部配置，但自动保留现有 postgres/redis 连接与 JWT 密钥，并把本次旧配置存为 .old）" 'keep|overwrite' 'keep')"
+    if [ "$keep" = "overwrite" ]; then
+      # 把旧配置备份为 .old（供回滚/比对比对），保留一份最新即可
+      cp "$CONFIG_FILE" "${CONFIG_FILE}.old"
+      c_info "旧配置已备份：${CONFIG_FILE}.old"
+    else
+      WRITE_CONFIG=0
+      if [ -z "$(yaml_key "$CONFIG_FILE" geoip data_dir)" ]; then
+        WRITE_GEOIP=1
+        c_info "检测到旧配置缺少 geoip 段，将补写 IP 归属地配置。"
+      fi
+    fi
   fi
 fi
 
@@ -833,6 +908,10 @@ if [ "$WRITE_CONFIG" = 1 ]; then
   else
     FRONTEND_DIR_YAML=""
   fi
+
+  # 连接信息已在采集阶段从旧 config 回填到 DB_HOST/DB_PORT/REDIS_* 等变量：
+  # 用户没改的字段保持旧值（避免覆盖丢连接），显式 --db-host / 交互改写的字段用新值。
+  # 这里不再回填，变量即最终值；旧配置已备份为 ${CONFIG_FILE}.old 供回滚。
 
   c_info "写入配置：$CONFIG_FILE"
   cat > "$CONFIG_FILE" <<YAML
@@ -904,10 +983,27 @@ themes:
   max_artifact_mb: 100
 
 cors:
-  allowed_origins: "$(yaml_quote "$PUBLIC_URL,http://localhost:5173,http://localhost:5174")"
+  allowed_origins: "$(yaml_quote "$CORS_ORIGINS")"
 YAML
   chmod 600 "$CONFIG_FILE"
 else
+  # 沿用旧配置；若缺 geoip 段则追加补写（不覆盖其它内容），并备份一份
+  if [ "$WRITE_GEOIP" = 1 ]; then
+    {
+      cat "$CONFIG_FILE"
+      echo
+      cat <<'GEOIP_BLOCK'
+geoip:
+  data_dir: /app/data/geoip
+  download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
+  proxy_url: ""
+GEOIP_BLOCK
+    } > /tmp/novablog-config-merge.$$
+    cp "$CONFIG_FILE" "${CONFIG_FILE}.old" 2>/dev/null || true
+    mv /tmp/novablog-config-merge.$$ "$CONFIG_FILE"
+    chmod 600 "$CONFIG_FILE"
+    c_info "已补写 geoip 段到 ${CONFIG_FILE}（原文件保留为 ${CONFIG_FILE}.old）"
+  fi
   c_info "沿用现有配置：$CONFIG_FILE"
 fi
 
