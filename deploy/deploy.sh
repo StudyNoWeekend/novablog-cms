@@ -753,13 +753,311 @@ menu_install() {
 }
 
 menu_upgrade() {
-  c_warn "容器升级流程尚未实现（后续任务填充）。"
+  echo
+  c_info "===== 容器升级 ====="
+  scan_deployments
+  if [ "$SCAN_RECORD_COUNT" -eq 0 ]; then
+    c_warn "没有可升级的部署记录（仅发现容器而无 <名称>/.env 的项目无法安全升级）。"
+    return 0
+  fi
+  local mode
+  mode="$(ask_choice '升级方式：1=单个升级 2=批量升级（全部升到最新版） 0=返回' '1|2|0' '0')"
+  case "$mode" in
+    1)
+      local blogs name target
+      blogs="$(list_blogs | paste -sd'|' -)"
+      name="$(ask "要升级的博客（${blogs}）" "$(list_blogs | head -1)")"
+      name="$(printf '%s' "$name" | tr 'A-Z' 'a-z' | tr -d '[:space:]')"
+      if ! list_blogs | grep -qx "$name"; then
+        c_err "博客 $name 无部署记录。"
+        return 0
+      fi
+      target="$(ask "目标版本号（回车=最新 ${LATEST_VERSION}）" "$LATEST_VERSION")"
+      do_upgrade_one "$name" "$target" || c_err "$name 升级失败，可重试或查看 ./deploy.sh --name $name --logs"
+      ;;
+    2)
+      local ok=0 fail=0 failed="" name
+      c_info "批量升级：全部博客统一升到 $LATEST_VERSION"
+      for name in $(list_blogs); do
+        if do_upgrade_one "$name" "$LATEST_VERSION"; then
+          ok=$((ok + 1))
+        else
+          fail=$((fail + 1))
+          failed="$failed $name"
+        fi
+      done
+      echo
+      c_info "批量升级完成：成功 $ok 个，失败 $fail 个"
+      [ -n "$failed" ] && c_warn "失败列表：$failed"
+      ;;
+  esac
   return 0
 }
 
-do_upgrade_one() { # $1=博客名称 $2=目标版本
-  c_warn "单博客升级流程尚未实现（后续任务填充）。"
+# ============================== 配置差异对比（升级用）==============================
+
+# yaml_top_keys 列出 YAML 顶层键（每行一个）
+yaml_top_keys() { # $1=文件
+  [ -f "$1" ] || return 0
+  sed -n 's/^\([A-Za-z_][A-Za-z0-9_-]*\):.*/\1/p' "$1"
+}
+
+# yaml_sub_keys 列出某顶层键段内的二级键（两空格缩进；段结束即停止）
+yaml_sub_keys() { # $1=文件 $2=顶层键
+  local f="$1" top="$2" line in_sec=0
+  [ -f "$f" ] || return 0
+  while IFS='' read -r line; do
+    case "$line" in
+      "${top}:"*) in_sec=1 ;;
+      [A-Za-z_]*)
+        # set -e 下勿写 "[ cond ] && return"：条件为假会使整个函数以非零退出
+        if [ "$in_sec" = 1 ]; then return 0; fi ;;
+      "  "*)
+        [ "$in_sec" = 1 ] || continue
+        case "$line" in
+          "  "[A-Za-z_]*":"*) printf '%s\n' "$(printf '%s' "$line" | sed 's/^  \([A-Za-z_][A-Za-z0-9_-]*\):.*/\1/')" ;;
+        esac
+        ;;
+    esac
+  done < "$f"
+  return 0
+}
+
+# yaml_raw_val 读取二级键的原始值文本（保留引号形态，补写时按 example 的形态回写，
+# 避免把裸数字/裸布尔配成字符串导致后端 yaml 反序列化失败）
+yaml_raw_val() { # $1=文件 $2=顶层键 $3=二级键
+  local f="$1" top="$2" sub="$3" line val="" in_sec=0
+  [ -f "$f" ] || return 0
+  while IFS='' read -r line; do
+    case "$line" in
+      "${top}:"*) in_sec=1 ;;
+      [A-Za-z_]*)
+        if [ "$in_sec" = 1 ]; then break; fi ;;
+      "  ${sub}:"*)
+        [ "$in_sec" = 1 ] || continue
+        val="$line"; break ;;
+    esac
+  done < "$f"
+  case "$val" in
+    '  '*)
+      val="${val#*:}"
+      val="$(printf '%s' "$val" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      case "$val" in *" #"*) val="${val% #*}" ;; esac
+      printf '%s' "$val"
+      ;;
+  esac
+}
+
+# yaml_insert_sub 在文件的 top: 段头之后插入一行二级键（YAML 段内键序无关）
+yaml_insert_sub() { # $1=文件 $2=顶层键 $3=插入行
+  local f="$1" top="$2" newline="$3" tmp
+  tmp="$(mktemp -t novablog-ins.XXXXXX)" || return 1
+  awk -v top="$top" -v nl="$newline" \
+    '!done && $0 ~ "^"top":" { print; print nl; done=1; next } { print }' "$f" > "$tmp" \
+    && mv "$tmp" "$f"
+}
+
+# fetch_example_config 下载目标版本的 config.example.yaml，成功时输出临时文件路径
+# 版本基线取 raw.githubusercontent / jsdelivr 双源，与 compose 文件自举同一策略
+fetch_example_config() { # $1=ref（tag 如 v1.0.4，latest 用 main）
+  local ref="$1" url src dest
+  [ "$ref" = "latest" ] && ref="main"
+  dest="$(mktemp -t novablog-example.XXXXXX)" || return 1
+  local sources=()
+  if [ -n "${NOVABLOG_RAW_BASE:-}" ]; then
+    sources=("$NOVABLOG_RAW_BASE")
+  else
+    sources=(
+      "https://raw.githubusercontent.com/StudyNoWeekend/novablog-cms/${ref}/backend/config"
+      "https://cdn.jsdelivr.net/gh/StudyNoWeekend/novablog-cms@${ref}/backend/config"
+    )
+  fi
+  for src in "${sources[@]}"; do
+    url="${src%/}/config.example.yaml"
+    # 本函数经命令替换取值：进度日志必须走 stderr，否则会污染返回的文件路径
+    c_info "获取配置基线：$url" >&2
+    if fetch_url "$url" "$dest" && [ -s "$dest" ] && [ -n "$(yaml_top_keys "$dest")" ]; then
+      printf '%s' "$dest"
+      return 0
+    fi
+  done
+  rm -f "$dest"
   return 1
+}
+
+# config_diff_patch 对比本地 config.yaml 与目标版本 example：
+#   新增（example 有、本地无）→ 逐条询问填写并补写（默认值取 example，形态随 example）；
+#   废弃（本地有、example 无）→ 提示将原样保留；已存在键的值差异不提示（自定义值合法）。
+#   补写前备份 .old。$3=版本标签（仅用于展示）
+config_diff_patch() { # $1=本地 config.yaml $2=example 文件 $3=版本标签
+  local local_cfg="$1" example="$2" ref="${3:-目标版本}"
+  local missing_pairs="" tops_to_add="" added=0
+  local etop esub ltop lsub
+
+  for etop in $(yaml_top_keys "$example"); do
+    if printf '%s\n' "$(yaml_top_keys "$local_cfg")" | grep -qx "$etop"; then
+      for esub in $(yaml_sub_keys "$example" "$etop"); do
+        if ! printf '%s\n' "$(yaml_sub_keys "$local_cfg" "$etop")" | grep -qx "$esub"; then
+          missing_pairs="$missing_pairs $etop.$esub"
+        fi
+      done
+    else
+      esub="$(yaml_sub_keys "$example" "$etop")"
+      if [ -n "$esub" ]; then
+        for esub in $esub; do
+          missing_pairs="$missing_pairs $etop.$esub"
+        done
+        tops_to_add="$tops_to_add $etop"
+      fi
+    fi
+  done
+
+  for ltop in $(yaml_top_keys "$local_cfg"); do
+    if ! printf '%s\n' "$(yaml_top_keys "$example")" | grep -qx "$ltop"; then
+      c_warn "  废弃：$ltop —— $ref 不再读取该段，将原样保留"
+      continue
+    fi
+    for lsub in $(yaml_sub_keys "$local_cfg" "$ltop"); do
+      if ! printf '%s\n' "$(yaml_sub_keys "$example" "$ltop")" | grep -qx "$lsub"; then
+        c_warn "  废弃：$ltop.$lsub —— $ref 不再读取该键，将原样保留"
+      fi
+    done
+  done
+
+  if [ -z "$missing_pairs" ]; then
+    c_info "配置无新增项（对比 ${ref}）。"
+    return 0
+  fi
+
+  echo
+  c_info "----- 检测到 $ref 新增配置，逐项确认（回车=example 默认值）-----"
+  local patch_file patched_top p top sub raw val line_out
+  patch_file="$(mktemp -t novablog-patch.XXXXXX)" || return 1
+  patched_top=""
+  for p in $missing_pairs; do
+    top="${p%%.*}"
+    sub="${p#*.}"
+    raw="$(yaml_raw_val "$example" "$top" "$sub")"
+    val="$(ask "  ${p}（默认：$(yaml_key "$example" "$top" "$sub")）" "$(yaml_key "$example" "$top" "$sub")")"
+    case "$raw" in
+      \"*|\'*) line_out="  $sub: \"$(yaml_quote "$val")\"" ;;
+      *)       line_out="  $sub: $val" ;;
+    esac
+    if printf '%s\n' $tops_to_add | grep -qx "$top"; then
+      # 本地缺整段：段头+子键统一追加到文件尾（仅一次段头）
+      if ! printf '%s\n' $patched_top | grep -qx "$top"; then
+        printf '%s:\n' "$top" >> "$patch_file"
+        patched_top="$patched_top $top"
+      fi
+      printf '%s\n' "$line_out" >> "$patch_file"
+    else
+      # 本地已有该段：插入段头之后
+      yaml_insert_sub "$local_cfg" "$top" "$line_out"
+    fi
+    added=$((added + 1))
+  done
+  if [ -s "$patch_file" ]; then
+    cp "$local_cfg" "${local_cfg}.old"
+    { cat "$local_cfg"; echo; cat "$patch_file"; } > "${patch_file}.merge"
+    mv "${patch_file}.merge" "$local_cfg"
+    chmod 600 "$local_cfg"
+    c_info "已补写 $added 个新增配置项到 ${local_cfg}（原配置备份为 ${local_cfg}.old）"
+  fi
+  rm -f "$patch_file"
+  return 0
+}
+
+# update_env_version 更新 .env 的镜像版本两行（其余行原样保留）
+update_env_version() { # $1=.env 路径 $2=版本号
+  local f="$1" ver="$2" tmp
+  tmp="$(mktemp -t novablog-env.XXXXXX)" || return 1
+  awk -v v="$ver" '
+    /^NOVABLOG_VERSION=/ { print "NOVABLOG_VERSION=" v; next }
+    /^NOVABLOG_BUILD_VERSION=/ { print (v == "latest" ? "NOVABLOG_BUILD_VERSION=dev" : "NOVABLOG_BUILD_VERSION=" v); next }
+    { print }
+  ' "$f" > "$tmp" && mv "$tmp" "$f"
+  chmod 600 "$f"
+}
+
+# do_upgrade_one 单博客升级：配置差异补写 → 版本号更新 → 端口预检 → 拉取重建 → 健康检查
+# 升级只改版本与新增配置，不改端口/域名/DB 等部署参数
+do_upgrade_one() { # $1=博客名称 $2=目标版本
+  local name="$1" target="$2"
+  ENV_FILE="$SCRIPT_DIR/$name/.env"
+  if [ ! -f "$ENV_FILE" ]; then
+    c_err "博客 $name 无部署记录（缺 ${ENV_FILE}），无法升级。"
+    return 1
+  fi
+  NAME="$name"
+  BLOG_DIR="$SCRIPT_DIR/$name"
+
+  local cur_ver blog_port admin_port domain config_file image_repo ref example
+  cur_ver="$(blog_env_get "$ENV_FILE" NOVABLOG_VERSION)"
+  blog_port="$(blog_env_get "$ENV_FILE" NOVABLOG_HTTP_PORT)"
+  admin_port="$(blog_env_get "$ENV_FILE" NOVABLOG_ADMIN_HTTP_PORT)"
+  domain="$(blog_env_get "$ENV_FILE" NOVABLOG_DOMAIN)"
+  config_file="$(blog_env_get "$ENV_FILE" NOVABLOG_CONFIG_DIR)/config.yaml"
+  image_repo="$(blog_env_get "$ENV_FILE" NOVABLOG_IMAGE_REPO)"
+
+  echo
+  c_info "----- 升级 ${name}：${cur_ver:-?} → $target -----"
+  printf '    端口 %s/%s    域名 %s（升级不改动部署参数）\n' "$blog_port" "$admin_port" "${domain:-_}"
+
+  ref="$target"
+  [ "$ref" = "latest" ] && ref="main"
+  example="$(fetch_example_config "$ref" || true)"
+  if [ -n "$example" ]; then
+    if [ -f "$config_file" ]; then
+      config_diff_patch "$config_file" "$example" "$target"
+    else
+      c_warn "未找到 ${config_file}，跳过配置差异检测。"
+    fi
+    rm -f "$example"
+  else
+    c_warn "无法获取 $ref 配置基线（网络不可用？），跳过配置差异检测，仅升级镜像。"
+  fi
+
+  c_info "更新版本记录：$ENV_FILE"
+  update_env_version "$ENV_FILE" "$target"
+
+  if [ "$BUILD" = 0 ] && [ "$SKIP_IMAGE_CHECK" = 0 ]; then
+    c_info "校验镜像 $image_repo:$target ..."
+    if ! docker buildx imagetools inspect "$image_repo:$target" >/dev/null 2>&1; then
+      c_err "镜像 $image_repo:$target 不可用（版本号不存在或未登录 ghcr.io）。"
+      return 1
+    fi
+  fi
+
+  # 端口预检：本博客自己的旧容器不算冲突（交给 compose 原地重建）
+  local port hits
+  for port in "$blog_port" "$admin_port"; do
+    hits="$(port_conflicts "$port")"
+    if [ -n "$hits" ]; then
+      c_err "端口 $port 已被其它容器占用，本次升级终止："
+      printf '%s\n' "$hits" | sed 's/^/    - /'
+      return 1
+    fi
+  done
+
+  c_info "拉取镜像并重建容器 ..."
+  run_compose pull --quiet || c_warn "镜像拉取失败（将使用本地已有镜像继续）。"
+  if ! run_compose up -d; then
+    c_err "容器重建失败：$name"
+    return 1
+  fi
+
+  if ! wait_healthy; then
+    c_err "$name 升级后服务未就绪，最近日志如下："
+    local cid
+    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+    if [ -n "$cid" ]; then
+      docker logs --tail 30 "$cid" 2>&1 | tail -30
+    fi
+    c_err "完整日志：./deploy.sh --name $name --logs"
+    return 1
+  fi
+  c_info "$name 升级完成：$target"
+  return 0
 }
 
 # main_menu 零参数交互主菜单：先获取最新版本号，再循环提供安装/升级/退出
@@ -804,9 +1102,9 @@ case "$VERSION" in v[0-9]*) RAW_REF="$VERSION" ;; esac
 
 fetch_url() { # $1=url $2=目标文件
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$1" -o "$2"
+    curl -fsSL --connect-timeout 10 --max-time 30 "$1" -o "$2"
   elif command -v wget >/dev/null 2>&1; then
-    wget -qO "$2" "$1"
+    wget -qO "$2" -T 30 "$1"
   else
     return 127
   fi
@@ -903,6 +1201,29 @@ run_compose_from_env() {
 
 # ============================== 部署流程（收集配置 → 启动）==============================
 # 菜单安装与带参数流程共用：调用方须已就绪 NAME / BLOG_DIR / ENV_FILE
+# port_conflicts 输出占用指定端口的其它项目容器名（本博客自己的旧容器不算冲突）
+port_conflicts() { # $1=端口
+  docker ps --format '{{.Names}}\t{{.Ports}}' 2>/dev/null \
+    | awk -F'\t' -v p=":${1}->" '$2 ~ p {print $1}' \
+    | grep -v "^${NAME}-" || true
+}
+
+# wait_healthy 等待 novablog 容器进入 healthy（部署与升级共用）；0=就绪 1=未就绪
+wait_healthy() {
+  c_info "等待服务就绪 ..."
+  local cid status
+  for _ in $(seq 1 60); do
+    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+    if [ -n "$cid" ]; then
+      status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true)"
+      if [ "$status" = "healthy" ]; then return 0; fi
+      if [ "$status" = "unhealthy" ] || [ "$status" = "exited" ]; then return 1; fi
+    fi
+    sleep 2
+  done
+  return 1
+}
+
 deploy_blog() {
   if [ -f "$ENV_FILE" ]; then
     c_info "检测到博客 $NAME 已有部署记录（${ENV_FILE}），复用其中配置作为默认值（可直接回车沿用）。"
@@ -1284,12 +1605,6 @@ EOF
   # ============================== 端口占用预检 ==============================
   # 同机多博客场景：目标端口被其它项目容器发布时提前失败，避免影响正在运行的博客
   # （本博客自己的旧容器交给 compose up -d 原地重建，不算冲突）
-  port_conflicts() { # $1=端口 → 输出占用容器名
-    docker ps --format '{{.Names}}\t{{.Ports}}' 2>/dev/null \
-      | awk -F'\t' -v p=":${1}->" '$2 ~ p {print $1}' \
-      | grep -v "^${NAME}-" || true
-  }
-
   echo
   c_info "===== 端口占用预检 ====="
   for port_pair in "$BLOG_PORT:博客前端" "$ADMIN_PORT:CMS 后台"; do
@@ -1314,19 +1629,7 @@ EOF
   fi
 
   # 等待健康检查
-  c_info "等待服务就绪 ..."
-  HEALTHY=0
-  for _ in $(seq 1 60); do
-    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
-    if [ -n "$cid" ]; then
-      status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true)"
-      if [ "$status" = "healthy" ]; then HEALTHY=1; break; fi
-      if [ "$status" = "unhealthy" ] || [ "$status" = "exited" ]; then break; fi
-    fi
-    sleep 2
-  done
-
-  if [ "$HEALTHY" != 1 ]; then
+  if ! wait_healthy; then
     c_err "服务未能就绪（容器未进入 healthy 状态），最近日志如下："
     cid="$(run_compose ps -q novablog 2>/dev/null || true)"
     if [ -n "$cid" ]; then
