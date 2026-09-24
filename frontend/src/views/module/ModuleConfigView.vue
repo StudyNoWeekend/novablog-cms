@@ -2,7 +2,7 @@
   <div class="module-config-page">
     <div class="page-header">
       <h1>模块管理</h1>
-      <p class="page-desc">控制各功能模块的开启状态。关闭后，博客前台将隐藏对应模块入口和内容，管理后台始终可访问。</p>
+      <p class="page-desc">控制各功能模块的开启状态。关闭后，博客前台和后台菜单将隐藏对应模块，后台也无法通过输入网址访问；重新开启请从本页操作。</p>
     </div>
 
     <a-card class="config-card" :bordered="false">
@@ -39,6 +39,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { moduleApi } from '@/api/module'
+import { useModuleStore } from '@/stores/module'
 import type { UpdateModuleConfigReq } from '@/types/module'
 
 interface ModuleItem {
@@ -56,10 +57,12 @@ const modules: ModuleItem[] = [
   { key: 'portfolio_enabled', label: '作品集管理', description: '博客前台的摄影作品集展示' },
   { key: 'equipment_enabled', label: '个人设备', description: '博客前台的个人设备展示' },
   { key: 'project_enabled', label: '项目经历', description: '博客前台的项目经历展示' },
+  { key: 'open_source_enabled', label: '开源作品', description: '博客前台的 GitHub 开源作品展示' },
 ]
 
 const loading = ref(true)
 const saving = ref(false)
+const moduleStore = useModuleStore()
 
 const formState = reactive<Record<string, boolean>>({
   article_enabled: true,
@@ -70,6 +73,7 @@ const formState = reactive<Record<string, boolean>>({
   portfolio_enabled: true,
   equipment_enabled: true,
   project_enabled: true,
+  open_source_enabled: true,
 })
 
 async function fetchConfig() {
@@ -97,6 +101,8 @@ async function handleSave() {
   saving.value = true
   try {
     await moduleApi.updateConfig(diff)
+    // 强制刷新全局模块配置，让侧边栏菜单与路由拦截立即生效
+    await moduleStore.fetchConfig(true)
     message.success('模块配置已更新')
   } catch {
     // Error handled by interceptor

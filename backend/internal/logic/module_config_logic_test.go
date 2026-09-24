@@ -25,6 +25,7 @@ func TestModuleConfigGetDefault(t *testing.T) {
 	assert.True(t, config.TravelEnabled, "旅行模块应默认开启")
 	assert.True(t, config.PortfolioEnabled, "作品集模块应默认开启")
 	assert.True(t, config.EquipmentEnabled, "设备模块应默认开启")
+	assert.True(t, config.OpenSourceEnabled, "开源作品模块应默认开启")
 }
 
 func TestModuleConfigUpdatePartial(t *testing.T) {

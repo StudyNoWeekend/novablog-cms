@@ -7,6 +7,7 @@ export interface ModuleConfig {
   portfolio_enabled: boolean
   equipment_enabled: boolean
   project_enabled: boolean
+  open_source_enabled: boolean
   updated_at: string
 }
 
@@ -19,4 +20,5 @@ export interface UpdateModuleConfigReq {
   portfolio_enabled?: boolean
   equipment_enabled?: boolean
   project_enabled?: boolean
+  open_source_enabled?: boolean
 }
