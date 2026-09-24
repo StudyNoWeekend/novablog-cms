@@ -106,18 +106,12 @@ func NewApp(cfgPath string) (*App, error) {
 		logger.Warn("读取主题运行配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
 	}
 
-	// 注入跨域配置：优先级 config.yaml → DB 持久化值 → env 变量（中间件内处理）
+	// 注入跨域配置：DB 是唯一权威（后台保存的值不被任何来源覆盖）；
+	// config.yaml 仅在 DB 无有效数据时作为初始值播种，环境变量不再参与
 	corsLogic := logic.NewCorsConfigLogic()
-	// 1. 从 config.yaml 读取作为初始值
-	cfgCorsOrigin := cfg.GetString("cors.allowed_origins")
-	if cfgCorsOrigin != "" {
-		middleware.SetAllowedOrigins(cfgCorsOrigin)
+	if err := corsLogic.InitFromFallback(context.Background(), cfg.GetString("cors.allowed_origins")); err != nil {
+		logger.Warn("跨域配置引导失败，中间件使用默认白名单", zap.Error(err))
 	}
-	// 2. 尝试从 DB 读取持久化配置——仅当 DB 值不是默认值时覆盖（用户已在后台页面自定义）
-	if corsConfig, err := corsLogic.GetConfig(context.Background()); err == nil && corsConfig.AllowedOrigins != "http://localhost:5173,http://localhost:5174" {
-		middleware.SetAllowedOrigins(corsConfig.AllowedOrigins)
-	}
-	// 3. 环境变量 CORS_ALLOWED_ORIGINS 优先级最高，已在中间件内部处理
 
 	middleware.AuthLogger = logger
 	middleware.Logger = logger
