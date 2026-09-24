@@ -316,7 +316,7 @@ import {
 import { MARKET_AUTH_EXPIRED_EVENT, abortMarketRetries, themeApi, themeMarketApi } from '@/api/theme'
 import { configApi } from '@/api/config'
 import { marketStorage } from '@/utils/storage'
-import { THEME_TYPE_LABELS } from '@/utils/themeDisplay'
+import { THEME_TYPE_LABELS, themeDisplayName } from '@/utils/themeDisplay'
 import type { InstalledTheme, ThemeItem } from '@/types/theme'
 import { useThemeMarketStore } from '@/stores/themeMarket'
 import ThemeCard from '@/components/theme/ThemeCard.vue'
@@ -390,7 +390,7 @@ async function fetchInstalled() {
 /** 从官方市场安装主题（长任务：下载/校验/解压/落库） */
 function handleInstall(theme: ThemeItem) {
   Modal.confirm({
-    title: `安装「${theme.title}」？`,
+    title: `安装「${themeDisplayName(theme.title, theme.slug)}」？`,
     content: '将从官方市场下载预构建制品并安装，完成后可在「已安装主题」中启用',
     okText: '安装',
     cancelText: '取消',
@@ -398,7 +398,7 @@ function handleInstall(theme: ThemeItem) {
       installingId.value = theme.id
       try {
         await themeApi.install({ theme_id: theme.id })
-        message.success(`「${theme.title}」安装成功，可在「已安装主题」中启用`)
+        message.success(`「${themeDisplayName(theme.title, theme.slug)}」安装成功，可在「已安装主题」中启用`)
         fetchInstalled()
       } catch {
         // 失败原因（制品缺失/引擎不支持等）由拦截器统一提示

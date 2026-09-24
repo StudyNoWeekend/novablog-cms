@@ -4,12 +4,12 @@
       <img
         v-if="coverURL && !coverFailed"
         :src="theme.preview"
-        :alt="theme.title"
+        :alt="displayName"
         loading="lazy"
         @error="coverFailed = true"
       />
       <div v-else class="theme-card__placeholder" :style="{ background: themeGradient(theme.type) }">
-        <span class="theme-card__placeholder-text">{{ theme.title.slice(0, 1) }}</span>
+        <span class="theme-card__placeholder-text">{{ displayName.slice(0, 1) }}</span>
       </div>
       <span class="theme-card__price" :class="{ 'theme-card__price--paid': isPaid }">
         {{ isPaid ? `¥${theme.price_amount}` : '免费' }}
@@ -23,11 +23,15 @@
     </div>
 
     <div class="theme-card__body">
-      <h3 class="theme-card__title" :title="theme.title">{{ theme.title }}</h3>
+      <h3 class="theme-card__title" :title="displayName">{{ displayName }}</h3>
       <div class="theme-card__meta">
         <span class="theme-card__author"><UserOutlined /> {{ theme.author }}</span>
-        <span class="theme-card__type">{{ themeTypeLabel }}</span>
+        <span class="theme-card__type">
+          <span v-if="themeTypeLabel">{{ themeTypeLabel }}</span>
+          <span v-if="theme.version" class="theme-card__version">v{{ theme.version }}</span>
+        </span>
       </div>
+      <p class="theme-card__desc" :title="theme.description || ''">{{ theme.description || '暂无介绍' }}</p>
       <div v-if="theme.styles?.length" class="theme-card__tags">
         <a-tag v-for="s in theme.styles.slice(0, 3)" :key="s">{{ s }}</a-tag>
         <a-tag v-if="theme.styles.length > 3">+{{ theme.styles.length - 3 }}</a-tag>
@@ -36,6 +40,9 @@
         <span :title="`下载 ${theme.downloads} 次`"><DownloadOutlined /> {{ theme.downloads }}</span>
         <span :title="`点赞 ${theme.likes} 次`"><HeartOutlined /> {{ theme.likes }}</span>
         <span :title="`评分 ${theme.rating}`"><StarOutlined /> {{ theme.rating > 0 ? theme.rating.toFixed(1) : '暂无' }}</span>
+        <span v-if="theme.created_at" class="theme-card__time" :title="`上架时间：${theme.created_at}`">
+          <ClockCircleOutlined /> {{ theme.created_at }}
+        </span>
       </div>
     </div>
 
@@ -58,6 +65,7 @@ import { computed, ref, watch } from 'vue'
 import {
   CheckCircleOutlined,
   CheckOutlined,
+  ClockCircleOutlined,
   CloudDownloadOutlined,
   DownloadOutlined,
   HeartOutlined,
@@ -66,7 +74,13 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import type { ThemeItem } from '@/types/theme'
-import { isPreviewURL, themeGradient, themeStatusText, THEME_TYPE_LABELS } from '@/utils/themeDisplay'
+import {
+  isPreviewURL,
+  themeDisplayName,
+  themeGradient,
+  themeStatusText,
+  THEME_TYPE_LABELS,
+} from '@/utils/themeDisplay'
 
 const props = defineProps<{
   theme: ThemeItem
@@ -84,7 +98,10 @@ const emit = defineEmits<{
 const coverFailed = ref(false)
 const coverURL = computed(() => isPreviewURL(props.theme.preview))
 const isPaid = computed(() => props.theme.price === 'paid')
-const themeTypeLabel = computed(() => THEME_TYPE_LABELS[props.theme.type] || props.theme.type)
+const displayName = computed(() => themeDisplayName(props.theme.title, props.theme.slug))
+const themeTypeLabel = computed(() =>
+  props.theme.type ? THEME_TYPE_LABELS[props.theme.type] || props.theme.type : '',
+)
 
 watch(
   () => props.theme.id,
@@ -202,6 +219,28 @@ watch(
   white-space: nowrap;
 }
 
+.theme-card__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.theme-card__version {
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+.theme-card__desc {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-color-secondary, rgba(0, 0, 0, 0.65));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .theme-card__tags {
   display: flex;
   flex-wrap: wrap;
@@ -224,6 +263,14 @@ watch(
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.theme-card__time {
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .theme-card__actions {
