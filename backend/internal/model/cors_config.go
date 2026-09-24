@@ -31,23 +31,24 @@ func NewCorsConfig() *CorsConfigModel {
 	return &CorsConfigModel{db: DB}
 }
 
-// GetConfig 获取跨域配置，如果不存在则插入默认配置并返回。
+// GetConfig 获取跨域配置记录（纯读取，不自动创建；无记录时返回 gorm.ErrRecordNotFound）。
 func (m *CorsConfigModel) GetConfig(ctx context.Context) (*CorsConfig, error) {
 	var config CorsConfig
 	err := m.db.WithContext(ctx).First(&config).Error
-	if err == nil {
-		return &config, nil
-	}
-	if err != gorm.ErrRecordNotFound {
+	if err != nil {
 		return nil, err
 	}
-	// 不存在则创建默认配置
-	config = CorsConfig{
+	return &config, nil
+}
+
+// CreateConfig 创建跨域配置记录（DB 无数据时由启动引导播种或首次保存调用）。
+func (m *CorsConfigModel) CreateConfig(ctx context.Context, origins string) (*CorsConfig, error) {
+	config := CorsConfig{
 		ID:             uuid.New().String(),
-		AllowedOrigins: "http://localhost:5173,http://localhost:5174",
+		AllowedOrigins: origins,
 	}
-	if createErr := m.db.WithContext(ctx).Create(&config).Error; createErr != nil {
-		return nil, createErr
+	if err := m.db.WithContext(ctx).Create(&config).Error; err != nil {
+		return nil, err
 	}
 	return &config, nil
 }

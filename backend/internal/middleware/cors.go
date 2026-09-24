@@ -2,49 +2,43 @@ package middleware
 
 import (
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
-// CORS 默认兜底值（仅在 环境变量、DB配置、config.yaml 均未设置时生效）
+// CORS 默认兜底值（仅当 DB 与 config.yaml 均未提供有效白名单时生效）
 const defaultAllowedOrigins = "http://localhost:5173,http://localhost:5174"
 
-// 包级变量：由 SetAllowedOrigins 写入，中间件从该变量读取（RWMutex 保护）
+// 包级变量：由 SetAllowedOrigins 写入，中间件从该变量读取（RWMutex 保护）。
+// DB 是唯一权威数据源：启动时由 bootstrap 从 DB 读取写入（DB 无数据时以
+// config.yaml 播种），运行期由后台保存配置（CorsConfigLogic.UpdateConfig）热更新。
 var (
 	corsAllowedOrigins   = defaultAllowedOrigins
 	corsAllowedOriginsMu sync.RWMutex
 )
 
-// SetAllowedOrigins 设置允许的来源白名单（由 logic.CorsConfigLogic 在更新配置时调用）。
-// 设置的优先级：环境变量 CORS_ALLOWED_ORIGINS > 此变量 > 硬编码默认值。
+// SetAllowedOrigins 设置允许的来源白名单（启动引导与后台保存配置时调用）。
 func SetAllowedOrigins(origins string) {
 	corsAllowedOriginsMu.Lock()
 	corsAllowedOrigins = origins
 	corsAllowedOriginsMu.Unlock()
 }
 
-// getEffectiveOrigins 获取实际生效的来源白名单（按优先级）。
+// getEffectiveOrigins 获取实际生效的来源白名单，空值时回退硬编码默认值。
 func getEffectiveOrigins() string {
-	// 优先级 1：环境变量
-	if env := os.Getenv("CORS_ALLOWED_ORIGINS"); env != "" {
-		return env
-	}
-	// 优先级 2：包级变量（由后台页面配置写入）
 	corsAllowedOriginsMu.RLock()
 	val := corsAllowedOrigins
 	corsAllowedOriginsMu.RUnlock()
 	if val != "" {
 		return val
 	}
-	// 优先级 3：硬编码默认值
 	return defaultAllowedOrigins
 }
 
 // CORSMiddleware 跨域资源共享中间件（基于白名单校验来源）。
-// 白名单来源按优先级读取：环境变量 → 后台页面配置 → 默认值。
+// 白名单唯一来源为 SetAllowedOrigins 写入的包级变量（DB 权威，config.yaml 播种兜底）。
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
