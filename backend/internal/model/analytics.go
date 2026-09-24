@@ -27,7 +27,7 @@ type TopArticleRow struct {
 
 // TopTravelRow 热门旅行攻略排行数据行。
 type TopTravelRow struct {
-	ID           string     `gorm:"column:id`
+	ID           string     `gorm:"column:id"`
 	Title        string     `gorm:"column:title"`
 	ViewCount    int64      `gorm:"column:view_count"`
 	CommentCount int64      `gorm:"column:comment_count"`
