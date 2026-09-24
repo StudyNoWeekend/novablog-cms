@@ -50,7 +50,7 @@
         </div>
 
         <!-- 音乐 -->
-        <div class="menu-group">
+        <div v-if="musicMenuItems.length" class="menu-group">
           <div class="menu-group-title">音乐</div>
           <router-link
             v-for="item in musicMenuItems"
@@ -67,7 +67,7 @@
         </div>
 
         <!-- 视频分享 -->
-        <div class="menu-group">
+        <div v-if="videoMenuItems.length" class="menu-group">
           <div class="menu-group-title">视频分享</div>
           <router-link
             v-for="item in videoMenuItems"
@@ -84,7 +84,7 @@
         </div>
 
         <!-- 旅行分享 -->
-        <div class="menu-group">
+        <div v-if="travelMenuItems.length" class="menu-group">
           <div class="menu-group-title">旅行分享</div>
           <router-link
             v-for="item in travelMenuItems"
@@ -101,7 +101,7 @@
         </div>
 
         <!-- 摄影 -->
-        <div class="menu-group">
+        <div v-if="photoMenuItems.length" class="menu-group">
           <div class="menu-group-title">摄影</div>
           <router-link
             v-for="item in photoMenuItems"
@@ -118,7 +118,7 @@
         </div>
 
         <!-- 技术 -->
-        <div class="menu-group">
+        <div v-if="techMenuItems.length" class="menu-group">
           <div class="menu-group-title">技术</div>
           <router-link
             v-for="item in techMenuItems"
@@ -152,7 +152,7 @@
         </div>
 
         <!-- 媒体库 -->
-        <div class="menu-group">
+        <div v-if="moduleStore.isEnabled('media_enabled')" class="menu-group">
           <router-link
             to="/media"
             class="nav-item"
@@ -189,9 +189,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import type { Component } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { useModuleStore, type ModuleKey } from '@/stores/module'
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -220,35 +222,55 @@ import AppLogo from '@/components/common/AppLogo.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
+const moduleStore = useModuleStore()
 const isMobile = ref(false)
 
-const generalMenuItems = [
-  { path: '/articles', label: '文章管理', icon: FileTextOutlined },
+interface SidebarMenuItem {
+  path: string
+  label: string
+  icon: Component
+  moduleKey?: ModuleKey
+}
+
+const allGeneralMenuItems: SidebarMenuItem[] = [
+  { path: '/articles', label: '文章管理', icon: FileTextOutlined, moduleKey: 'article_enabled' },
   { path: '/comments', label: '评论管理', icon: MessageOutlined },
   { path: '/profile/info', label: '个人资料', icon: UserOutlined },
-  { path: '/equipments', label: '个人设备', icon: LaptopOutlined },
-  { path: '/projects', label: '项目经历', icon: ProjectOutlined },
+  { path: '/equipments', label: '个人设备', icon: LaptopOutlined, moduleKey: 'equipment_enabled' },
+  { path: '/projects', label: '项目经历', icon: ProjectOutlined, moduleKey: 'project_enabled' },
 ]
 
-const musicMenuItems = [
-  { path: '/playlists', label: '音乐播放列表', icon: CustomerServiceOutlined },
+const allMusicMenuItems: SidebarMenuItem[] = [
+  { path: '/playlists', label: '音乐播放列表', icon: CustomerServiceOutlined, moduleKey: 'music_enabled' },
 ]
 
-const videoMenuItems = [
-  { path: '/videos', label: '视频作品', icon: PlaySquareOutlined },
+const allVideoMenuItems: SidebarMenuItem[] = [
+  { path: '/videos', label: '视频作品', icon: PlaySquareOutlined, moduleKey: 'video_enabled' },
 ]
 
-const travelMenuItems = [
-  { path: '/travels', label: '旅行攻略', icon: CompassOutlined },
+const allTravelMenuItems: SidebarMenuItem[] = [
+  { path: '/travels', label: '旅行攻略', icon: CompassOutlined, moduleKey: 'travel_enabled' },
 ]
 
-const photoMenuItems = [
-  { path: '/portfolios', label: '摄影作品集', icon: CameraOutlined },
+const allPhotoMenuItems: SidebarMenuItem[] = [
+  { path: '/portfolios', label: '摄影作品集', icon: CameraOutlined, moduleKey: 'portfolio_enabled' },
 ]
 
-const techMenuItems = [
-  { path: '/open-sources', label: '开源作品', icon: GithubOutlined },
+const allTechMenuItems: SidebarMenuItem[] = [
+  { path: '/open-sources', label: '开源作品', icon: GithubOutlined, moduleKey: 'open_source_enabled' },
 ]
+
+// 按模块开关过滤：未配置开关的菜单项（评论、资料、安全、系统等）始终显示
+function visibleItems(items: SidebarMenuItem[]): SidebarMenuItem[] {
+  return items.filter((item) => !item.moduleKey || moduleStore.isEnabled(item.moduleKey))
+}
+
+const generalMenuItems = computed(() => visibleItems(allGeneralMenuItems))
+const musicMenuItems = computed(() => visibleItems(allMusicMenuItems))
+const videoMenuItems = computed(() => visibleItems(allVideoMenuItems))
+const travelMenuItems = computed(() => visibleItems(allTravelMenuItems))
+const photoMenuItems = computed(() => visibleItems(allPhotoMenuItems))
+const techMenuItems = computed(() => visibleItems(allTechMenuItems))
 
 const securityMenuItems = [
   { path: '/api-doc', label: 'API 文档', icon: BookOutlined },
@@ -287,6 +309,7 @@ function handleResize() {
 }
 
 onMounted(() => {
+  moduleStore.fetchConfig()
   handleResize()
   window.addEventListener('resize', handleResize)
 })

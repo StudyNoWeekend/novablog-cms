@@ -683,6 +683,7 @@ var apiDocs = []APIDocItem{
 			{Name: "portfolio_enabled", Type: "bool", Desc: "作品集管理模块是否开启"},
 			{Name: "equipment_enabled", Type: "bool", Desc: "设备管理模块是否开启"},
 			{Name: "project_enabled", Type: "bool", Desc: "项目经历管理模块是否开启"},
+			{Name: "open_source_enabled", Type: "bool", Desc: "开源作品模块是否开启"},
 			{Name: "updated_at", Type: "string", Desc: "配置最后更新时间"},
 		},
 	},

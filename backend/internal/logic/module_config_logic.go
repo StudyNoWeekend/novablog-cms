@@ -31,43 +31,46 @@ func NewModuleConfigLogic() *ModuleConfigLogic {
 // modelToCache 将数据库模型转换为缓存数据结构。
 func moduleConfigToCache(m *model.ModuleConfig) *cache.ModuleConfigCacheData {
 	return &cache.ModuleConfigCacheData{
-		ArticleEnabled:   m.ArticleEnabled,
-		MediaEnabled:     m.MediaEnabled,
-		MusicEnabled:     m.MusicEnabled,
-		VideoEnabled:     m.VideoEnabled,
-		TravelEnabled:    m.TravelEnabled,
-		PortfolioEnabled: m.PortfolioEnabled,
-		EquipmentEnabled: m.EquipmentEnabled,
-		ProjectEnabled:   m.ProjectEnabled,
+		ArticleEnabled:    m.ArticleEnabled,
+		MediaEnabled:      m.MediaEnabled,
+		MusicEnabled:      m.MusicEnabled,
+		VideoEnabled:      m.VideoEnabled,
+		TravelEnabled:     m.TravelEnabled,
+		PortfolioEnabled:  m.PortfolioEnabled,
+		EquipmentEnabled:  m.EquipmentEnabled,
+		ProjectEnabled:    m.ProjectEnabled,
+		OpenSourceEnabled: m.OpenSourceEnabled,
 	}
 }
 
 // cacheToRes 将缓存数据转换为响应结构体。
 func moduleConfigCacheToRes(c *cache.ModuleConfigCacheData) *res.ModuleConfigRes {
 	return &res.ModuleConfigRes{
-		ArticleEnabled:   c.ArticleEnabled,
-		MediaEnabled:     c.MediaEnabled,
-		MusicEnabled:     c.MusicEnabled,
-		VideoEnabled:     c.VideoEnabled,
-		TravelEnabled:    c.TravelEnabled,
-		PortfolioEnabled: c.PortfolioEnabled,
-		EquipmentEnabled: c.EquipmentEnabled,
-		ProjectEnabled:   c.ProjectEnabled,
+		ArticleEnabled:    c.ArticleEnabled,
+		MediaEnabled:      c.MediaEnabled,
+		MusicEnabled:      c.MusicEnabled,
+		VideoEnabled:      c.VideoEnabled,
+		TravelEnabled:     c.TravelEnabled,
+		PortfolioEnabled:  c.PortfolioEnabled,
+		EquipmentEnabled:  c.EquipmentEnabled,
+		ProjectEnabled:    c.ProjectEnabled,
+		OpenSourceEnabled: c.OpenSourceEnabled,
 	}
 }
 
 // modelToRes 将数据库模型直接转换为响应结构体。
 func moduleConfigToRes(m *model.ModuleConfig) *res.ModuleConfigRes {
 	return &res.ModuleConfigRes{
-		ArticleEnabled:   m.ArticleEnabled,
-		MediaEnabled:     m.MediaEnabled,
-		MusicEnabled:     m.MusicEnabled,
-		VideoEnabled:     m.VideoEnabled,
-		TravelEnabled:    m.TravelEnabled,
-		PortfolioEnabled: m.PortfolioEnabled,
-		EquipmentEnabled: m.EquipmentEnabled,
-		ProjectEnabled:   m.ProjectEnabled,
-		UpdatedAt:        m.UpdatedAt,
+		ArticleEnabled:    m.ArticleEnabled,
+		MediaEnabled:      m.MediaEnabled,
+		MusicEnabled:      m.MusicEnabled,
+		VideoEnabled:      m.VideoEnabled,
+		TravelEnabled:     m.TravelEnabled,
+		PortfolioEnabled:  m.PortfolioEnabled,
+		EquipmentEnabled:  m.EquipmentEnabled,
+		ProjectEnabled:    m.ProjectEnabled,
+		OpenSourceEnabled: m.OpenSourceEnabled,
+		UpdatedAt:         m.UpdatedAt,
 	}
 }
 
@@ -127,6 +130,9 @@ func (l *ModuleConfigLogic) UpdateConfig(ctx context.Context, r *req.UpdateModul
 	}
 	if r.ProjectEnabled != nil {
 		config.ProjectEnabled = *r.ProjectEnabled
+	}
+	if r.OpenSourceEnabled != nil {
+		config.OpenSourceEnabled = *r.OpenSourceEnabled
 	}
 
 	// 更新数据库

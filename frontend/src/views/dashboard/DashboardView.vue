@@ -37,7 +37,7 @@
 
       <!-- 待办提醒区 -->
       <div v-if="todoReminder.show" class="todo-reminder">
-        <div v-if="todoReminder.drafts > 0" class="todo-item" @click="goToArticles">
+        <div v-if="todoReminder.drafts > 0 && moduleStore.isEnabled('article_enabled')" class="todo-item" @click="goToArticles">
           <span class="todo-count">{{ todoReminder.drafts }}</span>
           <span class="todo-text">篇草稿待发布</span>
           <span class="todo-arrow">&rarr;</span>
@@ -171,6 +171,7 @@ import {
 } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { analyticsApi } from '@/api/analytics'
+import { useModuleStore } from '@/stores/module'
 import type {
   OverviewData,
   ContentTrendData,
@@ -210,6 +211,7 @@ const distribution = ref<DistributionData | null>(null)
 const recentComments = ref<RecentCommentsData | null>(null)
 const activeRange = ref('30d')
 const router = useRouter()
+const moduleStore = useModuleStore()
 
 async function loadOverview() {
   try {
