@@ -41,15 +41,15 @@
             <img
               v-if="coverURL && !coverFailed"
               :src="detail.preview"
-              :alt="detail.title"
+              :alt="displayName"
               @error="coverFailed = true"
             />
             <div v-else class="detail-cover__placeholder" :style="{ background: themeGradient(detail.type) }">
-              <span>{{ detail.title.slice(0, 1) }}</span>
+              <span>{{ displayName.slice(0, 1) }}</span>
             </div>
           </div>
 
-          <h2 class="detail-title">{{ detail.title }}</h2>
+          <h2 class="detail-title">{{ displayName }}</h2>
           <div class="detail-tags">
             <a-tag color="blue">{{ typeLabel }}</a-tag>
             <a-tag v-for="s in detail.styles" :key="s">{{ s }}</a-tag>
@@ -173,7 +173,7 @@ import {
 } from '@ant-design/icons-vue'
 import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/theme'
 import { useThemeMarketStore } from '@/stores/themeMarket'
-import { isPreviewURL, themeGradient, themeStatusText, THEME_TYPE_LABELS } from '@/utils/themeDisplay'
+import { isPreviewURL, themeDisplayName, themeGradient, themeStatusText, THEME_TYPE_LABELS } from '@/utils/themeDisplay'
 
 const route = useRoute()
 const router = useRouter()
@@ -189,6 +189,9 @@ const myRating = ref(0)
 const themeId = Number(route.params.id)
 const detail = computed(() => store.currentDetail)
 const coverURL = computed(() => isPreviewURL(detail.value?.preview || ''))
+const displayName = computed(() =>
+  detail.value ? themeDisplayName(detail.value.title, detail.value.slug) : '',
+)
 const typeLabel = computed(() => (detail.value ? THEME_TYPE_LABELS[detail.value.type] || detail.value.type : ''))
 const isPaid = computed(() => detail.value?.price === 'paid')
 const favorited = computed(() => (detail.value ? store.favoriteIds.has(detail.value.id) : false))
