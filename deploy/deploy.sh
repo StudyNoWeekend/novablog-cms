@@ -1241,11 +1241,12 @@ fetch_missing_file() { # $1=文件名（相对 deploy/ 目录）
 }
 
 # ensure_compose_files 预检 docker compose 参数中的 -f 文件，缺失则在线拉取
+# 只自举仓库自带的裸文件名；含路径分隔符的参数（如博客目录的 compose.extra.yml）为本地生成文件，不在线拉取
 ensure_compose_files() {
   local arg
   for arg in "$@"; do
     [ "$arg" = "-f" ] && continue
-    case "$arg" in -*) continue ;; esac
+    case "$arg" in -*) continue ;; */*) continue ;; esac
     fetch_missing_file "$arg" || exit 1
   done
 }
