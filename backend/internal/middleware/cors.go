@@ -53,10 +53,14 @@ func CORSMiddleware() gin.HandlerFunc {
 			}
 		}
 
+		// Vary: Origin 必须无条件返回：响应内容随 Origin 头变化，缓存层（浏览器/CDN）
+		// 需按 Origin 区分变体。否则无 Origin 的 no-cors 请求（如媒体网格缩略图）会缓存
+		// 不含 ACAO 的响应，后续带 crossOrigin='anonymous' 的同 URL 请求命中缓存即失败。
+		c.Header("Vary", "Origin")
+
 		// 设置 CORS 响应头
 		if allowed && origin != "" {
 			c.Header("Access-Control-Allow-Origin", origin)
-			c.Header("Vary", "Origin")
 			c.Header("Access-Control-Allow-Credentials", "true")
 		}
 

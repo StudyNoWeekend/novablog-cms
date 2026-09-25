@@ -56,7 +56,8 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        expires 7d;
+        # 跨域语义的媒体文件不宜长缓存（网格 no-cors 与工作台 crossOrigin 并存），后端已无条件返回 Vary: Origin
+        expires 1h;
         add_header Cache-Control "public";
     }
 
@@ -119,7 +120,8 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        expires 7d;
+        # 跨域语义的媒体文件不宜长缓存（网格 no-cors 与工作台 crossOrigin 并存），后端已无条件返回 Vary: Origin
+        expires 1h;
         add_header Cache-Control "public";
     }
 
