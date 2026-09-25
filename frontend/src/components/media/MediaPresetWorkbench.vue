@@ -341,6 +341,19 @@ onMounted(() => {
   }
 })
 
+// 工作台原图需以 crossOrigin='anonymous' 加载，要求响应携带 ACAO 头。
+// 媒体网格缩略图以 no-cors 方式加载并可能缓存了不含 ACAO 的响应（未带 Vary: Origin 的历史缓存），
+// 追加 wbv 参数更换缓存键，确保工作台始终回源拿到带 ACAO 的响应。
+function workbenchUrl(): string {
+  try {
+    const u = new URL(props.originalUrl)
+    u.searchParams.set('wbv', '1')
+    return u.toString()
+  } catch {
+    return props.originalUrl
+  }
+}
+
 async function loadOriginal() {
   if (!props.originalUrl) return
   loading.value = true
@@ -358,7 +371,7 @@ async function loadOriginal() {
       message.error('原图加载失败，请检查对象存储 CORS 配置')
       loading.value = false
     }
-    img.src = props.originalUrl
+    img.src = workbenchUrl()
 
     exifInfo.filename = props.filename || ''
     exifInfo.size = props.size || 0
@@ -374,7 +387,7 @@ async function loadOriginal() {
 async function readExif() {
   if (!props.originalUrl || originalMime.value !== 'image/jpeg') return
   try {
-    const res = await fetch(props.originalUrl, { mode: 'cors' })
+    const res = await fetch(workbenchUrl(), { mode: 'cors' })
     if (!res.ok) return
     const buffer = await res.arrayBuffer()
     originalBuffer.value = buffer

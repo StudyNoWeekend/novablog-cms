@@ -108,3 +108,28 @@ func TestCORSMiddlewareOriginTrimming(t *testing.T) {
 	w := doPreflight(r, "https://blog.example.com")
 	assert.Equal(t, http.StatusNoContent, w.Code)
 }
+
+// TestCORSMiddlewareVaryAlwaysPresent Vary: Origin 必须无条件返回：
+// 无 Origin（no-cors 网格请求）与白名单外请求的响应都带 Vary，
+// 缓存层才能按 Origin 区分变体，避免缓存投毒导致 crossOrigin 请求命中无 ACAO 的缓存。
+func TestCORSMiddlewareVaryAlwaysPresent(t *testing.T) {
+	SetAllowedOrigins("https://db.example.com")
+	r := newCORSRouter()
+
+	// 无 Origin 头的请求（模拟媒体网格 no-cors <img>）
+	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, "Origin", w.Header().Get("Vary"), "无 Origin 请求也应返回 Vary: Origin")
+	assert.Empty(t, w.Header().Get("Access-Control-Allow-Origin"))
+
+	// 白名单外的请求
+	w = doPreflight(r, "https://evil.example.com")
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Equal(t, "Origin", w.Header().Get("Vary"), "白名单外请求也应返回 Vary: Origin")
+
+	// 白名单内的请求（回归：行为不变）
+	w = doPreflight(r, "https://db.example.com")
+	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, "Origin", w.Header().Get("Vary"))
+}
