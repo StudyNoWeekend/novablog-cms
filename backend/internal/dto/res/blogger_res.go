@@ -43,6 +43,7 @@ type BloggerProfileRes struct {
 	BlogDescription string          `json:"blog_description"` // 博客描述
 	Email           string          `json:"email"`            // 邮箱
 	City            string          `json:"city"`             // 所在城市
+	Role            string          `json:"role"`             // 创作方向（首装/补选所选角色 key，多选逗号分隔；空串表示未选过）
 	SocialLinks     []SocialLinkRes `json:"social_links"`     // 社交平台链接数组
 	Tags            []string        `json:"tags"`             // 标签数组
 }

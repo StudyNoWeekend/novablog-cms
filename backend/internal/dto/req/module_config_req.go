@@ -11,4 +11,9 @@ type UpdateModuleConfigReq struct {
 	EquipmentEnabled  *bool `json:"equipment_enabled"`
 	ProjectEnabled    *bool `json:"project_enabled"`
 	OpenSourceEnabled *bool `json:"open_source_enabled"`
+	RecipeEnabled     *bool `json:"recipe_enabled"`
+	BookEnabled       *bool `json:"book_enabled"`
+	GameEnabled       *bool `json:"game_enabled"`
+	FitnessEnabled    *bool `json:"fitness_enabled"`
+	TechStackEnabled  *bool `json:"tech_stack_enabled"`
 }

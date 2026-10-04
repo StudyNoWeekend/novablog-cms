@@ -13,6 +13,7 @@ func RegisterProfileRoutes(r *gin.RouterGroup, profileController *controller.Pro
 	{
 		profile.GET("", profileController.GetProfile)
 		profile.PUT("", profileController.UpdateProfile)
+		profile.PUT("/roles", profileController.UpdateRoles)
 		profile.POST("/upload-icon", profileController.UploadIcon)
 		profile.POST("/upload-background", profileController.UploadBackground)
 		profile.POST("/upload-avatar", profileController.UploadAvatar)

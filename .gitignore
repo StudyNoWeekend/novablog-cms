@@ -15,6 +15,7 @@ bin/
 *.exe~
 *.dll
 *.so
+/design
 *.dylib
 # Go 测试 / 性能输出
 *.test

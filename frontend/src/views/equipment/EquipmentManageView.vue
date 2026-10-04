@@ -129,7 +129,7 @@
       </a-form>
     </a-modal>
 
-    <MediaPicker v-model:visible="mediaPickerVisible" @selected="handleMediaSelected" />
+    <MediaPicker v-model:visible="mediaPickerVisible" module="equipment" @selected="handleMediaSelected" />
   </div>
 </template>
 

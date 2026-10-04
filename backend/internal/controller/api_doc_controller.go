@@ -638,6 +638,181 @@ var apiDocs = []APIDocItem{
 		},
 	},
 
+	// 美食菜谱模块
+	{
+		Module:      "美食菜谱",
+		Method:      "GET",
+		Path:        "/recipes",
+		Description: "获取已发布菜谱列表",
+		Params: []APIDocParam{
+			{Name: "page", Type: "int", Required: false, Desc: "页码"},
+			{Name: "page_size", Type: "int", Required: false, Desc: "每页条数"},
+			{Name: "keyword", Type: "string", Required: false, Desc: "标题/摘要/标签关键词"},
+			{Name: "difficulty", Type: "int", Required: false, Desc: "难度筛选:1=简单,2=中等,3=困难"},
+		},
+		Response: []APIDocField{
+			{Name: "list", Type: "array", Desc: "菜谱列表（元素含 id/title/cover/summary/difficulty/minutes/servings/tags）"},
+			{Name: "total", Type: "int", Desc: "总数"},
+			{Name: "page", Type: "int", Desc: "当前页"},
+			{Name: "page_size", Type: "int", Desc: "每页条数"},
+			{Name: "total_pages", Type: "int", Desc: "总页数"},
+		},
+	},
+	{
+		Module:      "美食菜谱",
+		Method:      "GET",
+		Path:        "/recipes/:id",
+		Description: "获取已发布菜谱详情（含食材清单与步骤）",
+		Params: []APIDocParam{
+			{Name: "id", Type: "string", Required: true, Desc: "菜谱ID"},
+		},
+		Response: []APIDocField{
+			{Name: "id", Type: "string", Desc: "菜谱ID"},
+			{Name: "title", Type: "string", Desc: "菜谱名称"},
+			{Name: "cover", Type: "string", Desc: "封面图URL"},
+			{Name: "summary", Type: "string", Desc: "一句话介绍"},
+			{Name: "ingredients", Type: "array", Desc: "食材清单 [{name,amount}]"},
+			{Name: "steps", Type: "array", Desc: "步骤 [{text,image}]"},
+			{Name: "difficulty", Type: "int", Desc: "难度:1=简单,2=中等,3=困难"},
+			{Name: "minutes", Type: "int", Desc: "总耗时（分钟）"},
+			{Name: "servings", Type: "int", Desc: "份量"},
+			{Name: "tags", Type: "string", Desc: "标签，逗号分隔"},
+			{Name: "created_at", Type: "string", Desc: "创建时间"},
+			{Name: "updated_at", Type: "string", Desc: "更新时间"},
+		},
+	},
+
+	// 读书书架模块
+	{
+		Module:      "读书书架",
+		Method:      "GET",
+		Path:        "/books",
+		Description: "获取已发布书籍列表",
+		Params: []APIDocParam{
+			{Name: "page", Type: "int", Required: false, Desc: "页码"},
+			{Name: "page_size", Type: "int", Required: false, Desc: "每页条数"},
+			{Name: "keyword", Type: "string", Required: false, Desc: "书名/作者关键词"},
+			{Name: "reading_status", Type: "string", Required: false, Desc: "阅读状态筛选:want/reading/done"},
+		},
+		Response: []APIDocField{
+			{Name: "list", Type: "array", Desc: "书籍列表（元素含 id/title/author/cover/rating/reading_status）"},
+			{Name: "total", Type: "int", Desc: "总数"},
+			{Name: "page", Type: "int", Desc: "当前页"},
+			{Name: "page_size", Type: "int", Desc: "每页条数"},
+			{Name: "total_pages", Type: "int", Desc: "总页数"},
+		},
+	},
+	{
+		Module:      "读书书架",
+		Method:      "GET",
+		Path:        "/books/:id",
+		Description: "获取已发布书籍详情（含书评）",
+		Params: []APIDocParam{
+			{Name: "id", Type: "string", Required: true, Desc: "书籍ID"},
+		},
+		Response: []APIDocField{
+			{Name: "id", Type: "string", Desc: "书籍ID"},
+			{Name: "title", Type: "string", Desc: "书名"},
+			{Name: "author", Type: "string", Desc: "作者"},
+			{Name: "cover", Type: "string", Desc: "封面图URL"},
+			{Name: "rating", Type: "int", Desc: "评分 0-5，0=未评分"},
+			{Name: "reading_status", Type: "string", Desc: "阅读状态:want=想读,reading=在读,done=读完"},
+			{Name: "review", Type: "string", Desc: "书评（Markdown）"},
+			{Name: "started_at", Type: "string", Desc: "开始阅读时间，可为null"},
+			{Name: "finished_at", Type: "string", Desc: "读完时间，可为null"},
+			{Name: "created_at", Type: "string", Desc: "创建时间"},
+			{Name: "updated_at", Type: "string", Desc: "更新时间"},
+		},
+	},
+
+	// 游戏库模块
+	{
+		Module:      "游戏库",
+		Method:      "GET",
+		Path:        "/games",
+		Description: "获取已发布游戏列表",
+		Params: []APIDocParam{
+			{Name: "page", Type: "int", Required: false, Desc: "页码"},
+			{Name: "page_size", Type: "int", Required: false, Desc: "每页条数"},
+			{Name: "keyword", Type: "string", Required: false, Desc: "游戏标题关键词"},
+			{Name: "platform", Type: "string", Required: false, Desc: "按平台模糊筛选"},
+			{Name: "genre", Type: "string", Required: false, Desc: "按类型模糊筛选"},
+			{Name: "play_status", Type: "string", Required: false, Desc: "游玩状态筛选:want/playing/played"},
+		},
+		Response: []APIDocField{
+			{Name: "list", Type: "array", Desc: "游戏列表（元素含 id/title/cover/platform/genre/play_status/play_hours/rating）"},
+			{Name: "total", Type: "int", Desc: "总数"},
+			{Name: "page", Type: "int", Desc: "当前页"},
+			{Name: "page_size", Type: "int", Desc: "每页条数"},
+			{Name: "total_pages", Type: "int", Desc: "总页数"},
+		},
+	},
+	{
+		Module:      "游戏库",
+		Method:      "GET",
+		Path:        "/games/:id",
+		Description: "获取已发布游戏详情（含短评）",
+		Params: []APIDocParam{
+			{Name: "id", Type: "string", Required: true, Desc: "游戏ID"},
+		},
+		Response: []APIDocField{
+			{Name: "id", Type: "string", Desc: "游戏ID"},
+			{Name: "title", Type: "string", Desc: "游戏名称"},
+			{Name: "cover", Type: "string", Desc: "封面图URL"},
+			{Name: "platform", Type: "string", Desc: "平台"},
+			{Name: "genre", Type: "string", Desc: "游戏类型"},
+			{Name: "play_status", Type: "string", Desc: "游玩状态:want=想玩,playing=在玩,played=玩过"},
+			{Name: "play_hours", Type: "int", Desc: "累计游玩时长（小时）"},
+			{Name: "rating", Type: "int", Desc: "评分 0-10，0=未评分"},
+			{Name: "short_review", Type: "string", Desc: "短评"},
+			{Name: "created_at", Type: "string", Desc: "创建时间"},
+			{Name: "updated_at", Type: "string", Desc: "更新时间"},
+		},
+	},
+
+	// 健身训练模块
+	{
+		Module:      "健身训练",
+		Method:      "GET",
+		Path:        "/fitness",
+		Description: "获取已发布训练记录列表（按训练日期倒序）",
+		Params: []APIDocParam{
+			{Name: "page", Type: "int", Required: false, Desc: "页码"},
+			{Name: "page_size", Type: "int", Required: false, Desc: "每页条数"},
+			{Name: "keyword", Type: "string", Required: false, Desc: "标题关键词"},
+			{Name: "type", Type: "string", Required: false, Desc: "训练类型筛选:strength=力量,cardio=有氧,stretch=拉伸"},
+		},
+		Response: []APIDocField{
+			{Name: "list", Type: "array", Desc: "训练记录列表（元素含 id/date/title/type/duration_min/calories）"},
+			{Name: "total", Type: "int", Desc: "总数"},
+			{Name: "page", Type: "int", Desc: "当前页"},
+			{Name: "page_size", Type: "int", Desc: "每页条数"},
+			{Name: "total_pages", Type: "int", Desc: "总页数"},
+		},
+	},
+
+	// 技术栈模块
+	{
+		Module:      "技术栈",
+		Method:      "GET",
+		Path:        "/tech-stacks",
+		Description: "获取已发布技术栈条目列表",
+		Params: []APIDocParam{
+			{Name: "page", Type: "int", Required: false, Desc: "页码"},
+			{Name: "page_size", Type: "int", Required: false, Desc: "每页条数"},
+			{Name: "keyword", Type: "string", Required: false, Desc: "名称关键词"},
+			{Name: "category", Type: "string", Required: false, Desc: "按分类筛选:language/framework/tool/database 等"},
+			{Name: "level", Type: "int", Required: false, Desc: "按熟练度筛选:1=了解,2=熟悉,3=熟练,4=精通"},
+		},
+		Response: []APIDocField{
+			{Name: "list", Type: "array", Desc: "技术栈条目列表"},
+			{Name: "total", Type: "int", Desc: "总数"},
+			{Name: "page", Type: "int", Desc: "当前页"},
+			{Name: "page_size", Type: "int", Desc: "每页条数"},
+			{Name: "total_pages", Type: "int", Desc: "总页数"},
+		},
+	},
+
 	// 系统模块
 	{
 		Module:      "系统",
@@ -684,6 +859,11 @@ var apiDocs = []APIDocItem{
 			{Name: "equipment_enabled", Type: "bool", Desc: "设备管理模块是否开启"},
 			{Name: "project_enabled", Type: "bool", Desc: "项目经历管理模块是否开启"},
 			{Name: "open_source_enabled", Type: "bool", Desc: "开源作品模块是否开启"},
+			{Name: "recipe_enabled", Type: "bool", Desc: "美食菜谱模块是否开启"},
+			{Name: "book_enabled", Type: "bool", Desc: "读书书架模块是否开启"},
+			{Name: "game_enabled", Type: "bool", Desc: "游戏库模块是否开启"},
+			{Name: "fitness_enabled", Type: "bool", Desc: "健身训练模块是否开启"},
+			{Name: "tech_stack_enabled", Type: "bool", Desc: "技术栈模块是否开启"},
 			{Name: "updated_at", Type: "string", Desc: "配置最后更新时间"},
 		},
 	},

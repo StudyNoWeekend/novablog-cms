@@ -31,6 +31,7 @@ type Blogger struct {
 	PageBackground  string         `gorm:"type:varchar(500)"`                     // 页面背景图 URL
 	SocialLinks     string         `gorm:"type:jsonb"`                            // 社交平台链接 JSON 数组
 	Tags            string         `gorm:"type:jsonb"`                            // 标签 JSON 字符串数组
+	Role            string         `gorm:"type:varchar(200);default:''"`          // 创作方向（首装向导所选角色 key，多选逗号分隔，如 tech/travel）
 	ActiveThemeID   *string        `gorm:"type:uuid;index"`                       // 激活主题实例 ID（themes.id，nil=未激活）
 	LastLoginAt     *time.Time     `gorm:"type:timestamptz"`                      // 最后登录时间
 	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间

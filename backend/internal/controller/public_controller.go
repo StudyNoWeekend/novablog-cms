@@ -32,13 +32,18 @@ type PublicController struct {
 	equipmentLogic         *logic.EquipmentLogic
 	projectLogic           *logic.ProjectLogic
 	openSourceLogic        *logic.OpenSourceLogic
+	recipeLogic            *logic.RecipeLogic
+	bookLogic              *logic.BookLogic
+	gameLogic              *logic.GameLogic
+	fitnessLogic           *logic.FitnessLogic
+	techStackLogic         *logic.TechStackLogic
 	moduleConfigLogic      *logic.ModuleConfigLogic
 	playlistLogic          *logic.ThirdPartyPlaylistLogic
 	themeMarketConfigLogic *logic.ThemeMarketConfigLogic
 }
 
 // NewPublicController 创建 PublicController 实例。
-func NewPublicController(manager *storage.Manager, cryptoKey string) *PublicController {
+func NewPublicController(manager *storage.Manager, cryptoKey, uploadDir string) *PublicController {
 	return &PublicController{
 		setupLogic:             logic.NewSetupLogic(manager, cryptoKey),
 		articleLogic:           logic.NewArticleLogic(),
@@ -49,10 +54,15 @@ func NewPublicController(manager *storage.Manager, cryptoKey string) *PublicCont
 		travelLogic:            logic.NewTravelGuideLogic(),
 		portfolioLogic:         logic.NewPortfolioLogic(),
 		videoLogic:             logic.NewVideoLogic(),
-		musicLogic:             logic.NewMusicLogic(manager),
+		musicLogic:             logic.NewMusicLogic(manager, logic.NewMediaLogic(manager, uploadDir)),
 		equipmentLogic:         logic.NewEquipmentLogic(),
 		projectLogic:           logic.NewProjectLogic(),
 		openSourceLogic:        logic.NewOpenSourceLogic(),
+		recipeLogic:            logic.NewRecipeLogic(),
+		bookLogic:              logic.NewBookLogic(),
+		gameLogic:              logic.NewGameLogic(),
+		fitnessLogic:           logic.NewFitnessLogic(),
+		techStackLogic:         logic.NewTechStackLogic(),
 		moduleConfigLogic:      logic.NewModuleConfigLogic(),
 		playlistLogic:          logic.NewThirdPartyPlaylistLogic(),
 		themeMarketConfigLogic: logic.NewThemeMarketConfigLogic(),
@@ -566,6 +576,111 @@ func (ctrl *PublicController) GetModuleConfig(ctx *gin.Context) {
 		return
 	}
 	response.Success(ctx, config)
+}
+
+// GetRecipes 获取已发布菜谱列表 GET /api/v1/public/recipes
+func (ctrl *PublicController) GetRecipes(ctx *gin.Context) {
+	var r req.RecipeListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.recipeLogic.GetPublicList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetRecipeDetail 获取已发布菜谱详情 GET /api/v1/public/recipes/:id
+func (ctrl *PublicController) GetRecipeDetail(ctx *gin.Context) {
+	result, err := ctrl.recipeLogic.GetPublicDetail(ctx.Request.Context(), ctx.Param("id"))
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetBooks 获取已发布书籍列表 GET /api/v1/public/books
+func (ctrl *PublicController) GetBooks(ctx *gin.Context) {
+	var r req.BookListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.bookLogic.GetPublicList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetBookDetail 获取已发布书籍详情（含书评） GET /api/v1/public/books/:id
+func (ctrl *PublicController) GetBookDetail(ctx *gin.Context) {
+	result, err := ctrl.bookLogic.GetPublicDetail(ctx.Request.Context(), ctx.Param("id"))
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetGames 获取已发布游戏列表 GET /api/v1/public/games
+func (ctrl *PublicController) GetGames(ctx *gin.Context) {
+	var r req.GameListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.gameLogic.GetPublicList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetGameDetail 获取已发布游戏详情 GET /api/v1/public/games/:id
+func (ctrl *PublicController) GetGameDetail(ctx *gin.Context) {
+	result, err := ctrl.gameLogic.GetPublicDetail(ctx.Request.Context(), ctx.Param("id"))
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetFitnessRecords 获取已发布训练记录列表 GET /api/v1/public/fitness
+func (ctrl *PublicController) GetFitnessRecords(ctx *gin.Context) {
+	var r req.FitnessListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.fitnessLogic.GetPublicList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetTechStacks 获取已发布技术栈条目列表 GET /api/v1/public/tech-stacks
+func (ctrl *PublicController) GetTechStacks(ctx *gin.Context) {
+	var r req.TechStackListReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctrl.techStackLogic.GetPublicList(ctx.Request.Context(), &r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
 }
 
 // GetPlaylists 获取前台展示的第三方歌单列表 GET /api/v1/public/playlists

@@ -69,6 +69,10 @@ themes:
   proxy_url: ""                      # 主题下载、开源作品 README 拉取与 GitHub API 的 HTTP 代理（如 http://172.17.0.1:7890）；空=直连，代理不可用时自动降级直连
   max_artifact_mb: 100               # 制品下载上限（MB）
 
+# 图片搜索配置（管理端「在线搜索图标/封面」功能的外部图源）
+image_search:
+  proxy_url: "" # 可选 HTTP 代理；空=直连，代理不可用时自动降级直连
+
 # 跨域配置（后台页面可动态修改，此值为首次启动默认值）
 cors:
   allowed_origins: "http://localhost:5173,http://localhost:5174"

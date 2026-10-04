@@ -1,7 +1,6 @@
 package logic
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
@@ -24,19 +24,22 @@ import (
 // 依赖：
 //   - songModel：歌曲数据访问
 //   - manager：存储管理器，用于自动保存封面到对象存储
+//   - mediaLogic：媒体库逻辑，封面转存统一登记到媒体库（归属「音乐」文件夹）
 //   - logger：业务日志
 type MusicLogic struct {
-	songModel *model.SongModel
-	manager   *storage.Manager
-	logger    *zap.Logger
+	songModel  *model.SongModel
+	manager    *storage.Manager
+	mediaLogic *MediaLogic
+	logger     *zap.Logger
 }
 
 // NewMusicLogic 创建 MusicLogic 实例。
-func NewMusicLogic(manager *storage.Manager) *MusicLogic {
+func NewMusicLogic(manager *storage.Manager, mediaLogic *MediaLogic) *MusicLogic {
 	return &MusicLogic{
-		songModel: model.NewSong(),
-		manager:   manager,
-		logger:    MusicLogger,
+		songModel:  model.NewSong(),
+		manager:    manager,
+		mediaLogic: mediaLogic,
+		logger:     MusicLogger,
 	}
 }
 
@@ -238,9 +241,8 @@ func (l *MusicLogic) GetPublicAudioURL(ctx context.Context, songID string) (stri
 	return l.GetAudioURL(ctx, songID)
 }
 
-// saveCoverToStorage 将外部封面 URL 下载并保存到已配置的对象存储中。
-// 路径格式：music/cover/{uuid}.{ext}（前置 PathPrefix）。
-// 若存储未配置或保存失败，降级使用原始 URL，仅记录警告。
+// saveCoverToStorage 将外部封面 URL 下载并转存到媒体库（登记 media 表，归属「音乐」文件夹）。
+// 若转存失败，降级使用原始 URL，仅记录警告。
 // 对于已托管在当前存储中的 URL（本地 BaseURL 或云存储自定义域名，如媒体库选择），直接复用，不重复下载。
 func (l *MusicLogic) saveCoverToStorage(ctx context.Context, coverURL string) string {
 	if coverURL == "" {
@@ -254,10 +256,7 @@ func (l *MusicLogic) saveCoverToStorage(ctx context.Context, coverURL string) st
 	if isSelfHostedURL(coverURL, l.manager.GetActiveConfig()) {
 		return coverURL
 	}
-
-	provider := l.manager.GetProviderOrReload(ctx)
-	if provider == nil {
-		l.logger.Warn("存储未配置，跳过封面保存", zap.String("cover_url", coverURL))
+	if l.mediaLogic == nil {
 		return coverURL
 	}
 
@@ -287,28 +286,22 @@ func (l *MusicLogic) saveCoverToStorage(ctx context.Context, coverURL string) st
 	// 根据 Content-Type 确定扩展名
 	contentType := resp.Header.Get("Content-Type")
 	ext := extFromContentType(contentType)
-	if ext == "" {
-		ext = ".jpg"
-	}
 
-	// 生成对象 key：music/cover/{uuid}.{ext}
-	storeFilename := uuid.New().String() + ext
-	key := fmt.Sprintf("music/cover/%s", storeFilename)
-	if activeCfg := l.manager.GetActiveConfig(); activeCfg != nil && activeCfg.PathPrefix != "" {
-		key = fmt.Sprintf("%s/%s", strings.Trim(activeCfg.PathPrefix, "/"), key)
-	}
-
-	newURL, err := provider.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), contentType)
+	media, err := l.mediaLogic.SaveRemoteBytes(ctx,
+		fmt.Sprintf("music-cover-%s%s", time.Now().Format("20060102150405"), ext),
+		contentType, data,
+		MediaUploadOptions{Module: enum.MediaModuleMusic},
+	)
 	if err != nil {
-		l.logger.Warn("上传封面到存储失败", zap.Error(err))
+		l.logger.Warn("转存封面到媒体库失败", zap.Error(err))
 		return coverURL
 	}
 
-	l.logger.Info("封面已自动保存到存储",
+	l.logger.Info("封面已自动保存到媒体库",
 		zap.String("source", coverURL),
-		zap.String("saved", newURL),
+		zap.String("saved", media.URL),
 	)
-	return newURL
+	return media.URL
 }
 
 // extFromContentType 根据 Content-Type 返回文件扩展名。

@@ -1,3 +1,5 @@
+import type { RoleKey } from '@/constants/setupRoles'
+
 export interface ApiResponse<T = any> {
   code: number
   msg: string
@@ -47,6 +49,8 @@ export interface UserInfo {
   blog_description: string
   email: string
   city: string
+  /** 创作方向角色 key，多选逗号分隔；空串表示未选过（旧版本用户/首装跳过），需弹窗补选 */
+  role?: string
   social_links?: SocialLink[]
   tags?: string[]
 }
@@ -63,6 +67,14 @@ export interface UpdateProfileReq {
   blog_description?: string
   social_links?: SocialLink[]
   tags?: string[]
+}
+
+/** 补选创作方向请求（旧版本用户未选爱好的兼容入口） */
+export interface UpdateRolesReq {
+  /** 角色 key 数组，与后端 rolePresetModules 白名单一致 */
+  roles: RoleKey[]
+  /** 最终模块开关全量 map（computeModulePreset 产物）；不传时后端按角色预设并集兜底 */
+  modules?: Record<string, boolean>
 }
 
 // ---- 跨域配置 ----

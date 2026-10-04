@@ -69,7 +69,7 @@
     </div>
 
     <!-- 媒体选择器弹窗 -->
-    <MediaPicker v-model:visible="showMediaPicker" @selected="handleMediaSelected" />
+    <MediaPicker v-model:visible="showMediaPicker" module="article" @selected="handleMediaSelected" />
   </div>
 </template>
 

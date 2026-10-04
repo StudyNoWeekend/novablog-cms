@@ -109,7 +109,7 @@
     </a-form>
 
     <!-- 媒体库选择封面 -->
-    <MediaPicker v-model:visible="showMediaPicker" @selected="handleMediaSelected" />
+    <MediaPicker v-model:visible="showMediaPicker" module="music" @selected="handleMediaSelected" />
   </a-modal>
 </template>
 

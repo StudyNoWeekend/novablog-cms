@@ -233,8 +233,11 @@ async function handleFileChange(e: Event) {
     const res = await mediaApi.uploadWithPreset(
       file,
       '默认无 EXIF',
-      (percent) => {
-        uploadPercent.value = percent
+      {
+        module: 'travel',
+        onProgress: (percent) => {
+          uploadPercent.value = percent
+        },
       }
     )
     if (res.media && res.preset) {

@@ -16,8 +16,8 @@ type MusicController struct {
 }
 
 // NewMusicController 创建 MusicController 实例。
-func NewMusicController(manager *storage.Manager) *MusicController {
-	return &MusicController{logic: logic.NewMusicLogic(manager)}
+func NewMusicController(manager *storage.Manager, mediaLogic *logic.MediaLogic) *MusicController {
+	return &MusicController{logic: logic.NewMusicLogic(manager, mediaLogic)}
 }
 
 // CreateSong 创建歌曲 POST /api/v1/music/songs

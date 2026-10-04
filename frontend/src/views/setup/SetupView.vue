@@ -12,7 +12,10 @@
 
       <!-- 欢迎文字 -->
       <p class="setup-welcome">欢迎使用 Novablog</p>
-      <p class="setup-desc">创建您的博主账号以开始使用系统</p>
+      <p class="setup-desc">{{ phaseDescriptions[phase] }}</p>
+
+      <!-- 步骤指示条 -->
+      <a-steps :current="stepCurrent" size="small" class="setup-steps" :items="stepItems" />
 
       <!-- 步骤一：创建博主账号 -->
       <a-form
@@ -22,7 +25,7 @@
         layout="vertical"
         class="setup-form"
         autocomplete="off"
-        @finish="handleInit"
+        @finish="goRoleStep"
       >
         <!-- 用户名 -->
         <a-form-item name="username" :rules="usernameRules">
@@ -90,13 +93,72 @@
             :loading="loading"
             :class="{ 'btn-loading': loading }"
           >
-            完成初始化
+            下一步：选择创作方向
           </a-button>
         </a-form-item>
       </a-form>
 
       <!-- 分隔线 -->
       <a-divider v-if="phase === 'form'" class="setup-divider" />
+
+      <!-- 步骤二：选择创作方向（可多选，随创建账号一起提交） -->
+      <div v-if="phase === 'role'" class="role-step">
+        <h2 class="role-step__title">你想打造怎样的博客？</h2>
+        <p class="role-step__desc">选择你的创作方向（可多选），系统将按方向预置后台功能模块，之后可在「模块管理」中随时调整。</p>
+
+        <RolePickerCards v-model:selected="selectedRoles" class="role-step__picker" />
+
+        <div class="role-preset">
+          <div class="role-preset__header">
+            <span class="role-preset__title">将为你开启的模块</span>
+            <a-button type="link" size="small" @click="showCustomize = !showCustomize">
+              {{ showCustomize ? '收起微调' : '自定义微调' }}
+            </a-button>
+          </div>
+          <div class="role-preset__chips">
+            <span
+              v-for="item in moduleChips"
+              :key="item.key"
+              class="module-chip"
+              :class="{ 'module-chip--off': !item.enabled }"
+            >
+              <CheckOutlined v-if="item.enabled" class="module-chip__check" />
+              {{ item.label }}
+              <em v-if="item.common" class="module-chip__badge">通用</em>
+            </span>
+          </div>
+          <div v-if="showCustomize" class="role-preset__customize">
+            <div v-for="item in customizableModules" :key="item.key" class="customize-row">
+              <span class="customize-row__label">{{ item.label }}</span>
+              <a-switch
+                v-model:checked="moduleOverrides[item.key]"
+                size="small"
+                :aria-label="`开关 ${item.label} 模块`"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="role-step__actions">
+          <a-space direction="vertical" style="width: 100%">
+            <a-button
+              type="primary"
+              size="large"
+              block
+              :loading="loading"
+              :class="{ 'btn-loading': loading }"
+              @click="handleInit"
+            >
+              创建账号
+            </a-button>
+            <a-button size="large" block :disabled="loading" @click="skipRole">
+              跳过，稍后再选
+            </a-button>
+          </a-space>
+        </div>
+      </div>
+
+      <a-divider v-if="phase === 'role'" class="setup-divider" />
 
       <!-- 步骤二：配置对象存储 -->
       <div v-if="phase === 'storage'" class="storage-step">
@@ -261,12 +323,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   ApiOutlined,
   CheckCircleOutlined,
+  CheckOutlined,
   CloseCircleOutlined,
   CloudServerOutlined,
   LinkOutlined,
@@ -274,7 +337,6 @@ import {
   LockOutlined,
   SaveOutlined,
   SkinOutlined,
-  SmileOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { setupApi } from '@/api/setup'
@@ -284,6 +346,9 @@ import { marketStorage } from '@/utils/storage'
 import { storage } from '@/utils/storage'
 import type { ThemeInstallStatus } from '@/types/theme'
 import type { FormInstance } from 'ant-design-vue'
+import { MODULE_DEFS, COMMON_MODULE_KEYS, type ModuleKey } from '@/constants/modules'
+import { computeModulePreset, type RoleKey } from '@/constants/setupRoles'
+import RolePickerCards from '@/components/common/RolePickerCards.vue'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
@@ -291,11 +356,59 @@ const marketFormRef = ref<FormInstance>()
 const storageFormRef = ref<FormInstance>()
 const loading = ref(false)
 
-// 首装阶段：form 创建账号 → storage 对象存储 → theme 初始化博客外观
-const phase = ref<'form' | 'storage' | 'theme'>('form')
+// 首装阶段：form 创建账号 → role 选择创作方向 → storage 对象存储 → theme 初始化博客外观
+const phase = ref<'form' | 'role' | 'storage' | 'theme'>('form')
 const themeStarting = ref(false)
 const themeStatus = ref<ThemeInstallStatus | null>(null)
 let pollTimer: ReturnType<typeof setInterval> | null = null
+
+const stepItems = [
+  { title: '账号' },
+  { title: '方向' },
+  { title: '存储' },
+  { title: '外观' },
+]
+const stepCurrent = computed(() => ({ form: 0, role: 1, storage: 2, theme: 3 })[phase.value])
+const phaseDescriptions: Record<string, string> = {
+  form: '创建您的博主账号以开始使用系统',
+  role: '选择创作方向，系统将预置对应的功能模块',
+  storage: '选择文件存储方式，可跳过稍后配置',
+  theme: '获取官方默认主题，一键完成博客外观初始化',
+}
+
+// ---- 创作方向选择 ----
+const selectedRoles = ref<RoleKey[]>([])
+const showCustomize = ref(false)
+const moduleOverrides = reactive<Record<string, boolean>>({})
+
+// 角色变化时清空手动微调，重新应用预设
+watch(selectedRoles, () => {
+  Object.keys(moduleOverrides).forEach((key) => delete moduleOverrides[key])
+})
+
+/** 最终模块开关 = 角色并集预设 + 手动微调 */
+const finalModules = computed<Record<ModuleKey, boolean>>(() => {
+  const preset = computeModulePreset(selectedRoles.value)
+  for (const [key, value] of Object.entries(moduleOverrides)) {
+    if (key in preset) {
+      preset[key as ModuleKey] = value
+    }
+  }
+  return preset
+})
+
+const moduleChips = computed(() =>
+  MODULE_DEFS.map((def) => ({
+    key: def.key,
+    label: def.label,
+    common: COMMON_MODULE_KEYS.includes(def.key),
+    enabled: finalModules.value[def.key],
+  })),
+)
+
+const customizableModules = computed(() =>
+  MODULE_DEFS.filter((def) => !COMMON_MODULE_KEYS.includes(def.key)),
+)
 
 // 存储配置表单
 const storageForm = reactive({
@@ -383,26 +496,50 @@ const confirmPasswordRules = [
   },
 ]
 
+/** 账号步本地校验通过后进入创作方向选择步 */
+async function goRoleStep() {
+  try {
+    await formRef.value?.validate()
+  } catch {
+    return
+  }
+  phase.value = 'role'
+}
+
+/** 创建账号：携带所选创作方向与最终模块开关一起提交 */
 async function handleInit() {
   loading.value = true
   try {
-    const res = await setupApi.init({
+    const payload: Parameters<typeof setupApi.init>[0] = {
       username: form.username,
       password: form.password,
       nickname: form.nickname || undefined,
-    })
+    }
+    if (selectedRoles.value.length > 0) {
+      payload.role = selectedRoles.value.join(',')
+      payload.modules = { ...finalModules.value }
+    }
+    const res = await setupApi.init(payload)
     if (res.success) {
       storage.setInitialized(true)
       message.success('博主账号创建成功')
       phase.value = 'storage'
     } else {
       message.error(res.message || '初始化失败')
+      phase.value = 'form'
     }
   } catch (error: any) {
     message.error(error?.message || '初始化失败，请重试')
+    phase.value = 'form'
   } finally {
     loading.value = false
   }
+}
+
+/** 跳过创作方向选择：不带角色直接初始化（模块保持默认全开） */
+async function skipRole() {
+  selectedRoles.value = []
+  await handleInit()
 }
 
 /** 存储提供商切换时重置云存储参数 */
@@ -891,5 +1028,117 @@ onUnmounted(stopPolling)
   margin: 0;
   letter-spacing: 1px;
   user-select: none;
+}
+
+/* 步骤指示条 */
+.setup-steps {
+  margin-bottom: 20px;
+}
+
+.setup-steps :deep(.ant-steps-item-title) {
+  font-size: 13px !important;
+}
+
+/* 创作方向选择步 */
+.role-step__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  margin: 0 0 6px;
+}
+
+.role-step__desc {
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 16px;
+  line-height: 1.6;
+}
+
+/* 角色卡片滚动容器（卡片网格与卡片样式在 RolePickerCards 组件内） */
+.role-step__picker {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.role-preset {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #f8f9fb;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.role-preset__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.role-preset__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.role-preset__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.module-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: rgba(74, 108, 247, 0.08);
+  color: #4a6cf7;
+  transition: opacity 0.2s;
+}
+
+.module-chip--off {
+  background: #eef1f5;
+  color: #94a3b8;
+}
+
+.module-chip__check {
+  font-size: 10px;
+}
+
+.module-chip__badge {
+  font-style: normal;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.role-preset__customize {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 16px;
+}
+
+.customize-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+
+.customize-row__label {
+  font-size: 13px;
+  color: #475569;
+}
+
+.role-step__actions {
+  margin-top: 16px;
 }
 </style>

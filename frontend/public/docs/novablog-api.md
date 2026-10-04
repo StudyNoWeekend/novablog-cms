@@ -24,8 +24,14 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
   - [6.9 视频作品模块（公开）](#69-视频作品模块公开)
   - [6.10 音乐播放器模块（公开）](#610-音乐播放器模块公开)
   - [6.11 摄影器材模块（公开）](#611-摄影器材模块公开)
-  - [6.12 模块开关配置（公开）](#612-模块开关配置公开)
-  - [6.13 第三方歌单（公开）](#613-第三方歌单公开)
+  - [6.12 开源作品模块（公开）](#612-开源作品模块公开)
+  - [6.13 美食菜谱模块（公开）](#613-美食菜谱模块公开)
+  - [6.14 读书书架模块（公开）](#614-读书书架模块公开)
+  - [6.15 游戏库模块（公开）](#615-游戏库模块公开)
+  - [6.16 健身训练模块（公开）](#616-健身训练模块公开)
+  - [6.17 技术栈模块（公开）](#617-技术栈模块公开)
+  - [6.18 模块开关配置（公开）](#618-模块开关配置公开)
+  - [6.19 第三方歌单（公开）](#619-第三方歌单公开)
 - [七、数据脱敏规则](#七数据脱敏规则)
 - [八、使用限制](#八使用限制)
 
@@ -49,7 +55,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 ### 分页请求参数（通用）
 
-所有列表接口均支持以下分页参数：
+所有分页列表接口均支持以下分页参数（例外：第三方歌单 `/api/v1/public/playlists` 与 `/api/v1/public/music/playlists` 为非分页接口，分页参数不生效，见 6.19）：
 
 | 参数 | 类型 | 位置 | 必填 | 默认值 | 说明 |
 |------|------|------|------|--------|------|
@@ -67,6 +73,11 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
   "total_pages": 0
 }
 ```
+
+### 字段类型约定
+
+- **time**：RFC3339 格式的 JSON 字符串（例：`2026-09-09T12:00:00Z`，由后端 `time.Time` 序列化而来）。文中个别以 `string` 标注的时间字段（如 6.18 的 `updated_at`）格式相同。
+- **URL 类字段**（各模块 `cover`/`cover_url`/`icon`/`image_url` 等，模型带 `AfterFind` 钩子）：后端返回前将相对路径自动拼接为 `{upload.base_url}/files/{相对路径}`（`upload.base_url` 为后端配置的访问基础 URL）；以 `http://`/`https://` 开头的值原样返回；未配置 `upload.base_url` 时相对路径原样返回。未带钩子的字段（如菜谱详情的 `steps[].image`）不做拼接、原样返回相对路径，接入者可按同一规则自行拼接。
 
 ---
 
@@ -924,7 +935,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 获取歌曲列表（第三方歌单）。与 `/api/v1/public/playlists` 为同一处理函数。
 
-**请求参数:** 无
+**请求参数:** 无（非分页接口；传入 `page`/`page_size` 会被忽略，响应为裸数组而非分页结构）
 
 **响应 data 字段（数组）:**
 
@@ -991,7 +1002,362 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 ---
 
-### 6.12 模块开关配置（公开）
+### 6.12 开源作品模块（公开）
+
+#### GET /api/v1/public/open-sources
+
+获取已发布开源作品列表（仅返回 status=1）。
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| page | int | 否 | 1 | 页码 |
+| page_size | int | 否 | 20 | 每页条数（最大 100） |
+| keyword | string | 否 | - | 模糊搜索仓库名称/一句话介绍 |
+| status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
+
+**响应 data 字段（分页），list 中每项:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 作品 ID |
+| name | string | 仓库名称 |
+| repo_url | string | 仓库链接（GitHub 仓库地址） |
+| summary | string | 一句话介绍（列表卡片展示） |
+| language | string | 主语言 |
+| topics | string | 主题标签，逗号分隔 |
+| stars | int | Star 数（管理端刷新远端仓库时快照） |
+| homepage | string | 主页/演示地址 |
+| status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **排序规则**：`sort_order ASC, stars DESC, created_at DESC`。
+> **status 强制**: logic 层强制覆盖为 1，仅返回已发布开源作品。
+> **列表不含 README**：列表查询剔除 `readme` 大字段，需要 README 时调用详情接口。
+
+---
+
+#### GET /api/v1/public/open-sources/:id
+
+获取已发布开源作品详情（含 README 原文）。未发布（status≠1）或已删除的作品视为不存在，返回「开源作品不存在」。
+
+**路径参数:**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 开源作品 ID |
+
+**响应 data 字段:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 作品 ID |
+| name | string | 仓库名称 |
+| repo_url | string | 仓库链接（GitHub 仓库地址） |
+| summary | string | 一句话介绍 |
+| readme | string | README 原文（Markdown，管理端创建/刷新时自动从 GitHub 拉取入库） |
+| language | string | 主语言 |
+| topics | string | 主题标签，逗号分隔 |
+| stars | int | Star 数（管理端刷新远端仓库时快照） |
+| homepage | string | 主页/演示地址 |
+| status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
+| sort_order | int | 排序 |
+| readme_updated_at | time | README 最近拉取时间（null 表示尚未拉取） |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+---
+
+### 6.13 美食菜谱模块（公开）
+
+#### GET /api/v1/public/recipes
+
+获取已发布菜谱列表（仅返回 status=1）。
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| page | int | 否 | 1 | 页码 |
+| page_size | int | 否 | 20 | 每页条数（最大 100） |
+| keyword | string | 否 | - | 模糊搜索标题/摘要/标签 |
+| difficulty | int | 否 | - | 按难度筛选（1=简单, 2=中等, 3=困难） |
+| status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
+
+**响应 data 字段（分页），list 中每项:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 菜谱 ID |
+| title | string | 菜谱名称 |
+| cover | string | 封面 URL（`AfterFind` 自动拼接为绝对 URL） |
+| summary | string | 一句话简介 |
+| difficulty | int | 难度（1=简单, 2=中等, 3=困难） |
+| minutes | int | 总耗时（分钟） |
+| servings | int | 份量 |
+| tags | string | 标签，逗号分隔 |
+| status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **排序规则**：`sort_order ASC, created_at DESC`。
+> **status 强制**: logic 层强制覆盖为 1，传入的 `status` 参数不生效，仅返回已发布菜谱。
+> **列表裁剪**: 列表项不含 `ingredients`/`steps` 大字段，仅详情接口返回。
+
+---
+
+#### GET /api/v1/public/recipes/:id
+
+获取已发布菜谱详情（未发布或不存在均视为不存在）。
+
+**路径参数:**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 菜谱 ID |
+
+**响应 data 字段:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 菜谱 ID |
+| title | string | 菜谱名称 |
+| cover | string | 封面 URL（`AfterFind` 自动拼接为绝对 URL） |
+| summary | string | 一句话简介 |
+| ingredients | array | 食材清单，`[{name, amount}]` |
+| steps | array | 步骤列表，`[{text, image}]`（`image` 为相对路径，不自动拼接绝对 URL） |
+| difficulty | int | 难度（1=简单, 2=中等, 3=困难） |
+| minutes | int | 总耗时（分钟） |
+| servings | int | 份量 |
+| tags | string | 标签，逗号分隔 |
+| status | int | 状态（1=已发布） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **相对路径说明**：`steps[].image` 原样返回相对路径，不做自动拼接。本系统相对路径资源的统一拼接规则为 `{upload.base_url}/files/{相对路径}`（`cover` 等字段由后端 `AfterFind` 钩子自动完成，见「字段类型约定」）；渲染 `steps[].image` 时可按同一规则自行拼接，或直接存储绝对 URL。
+
+---
+
+### 6.14 读书书架模块（公开）
+
+#### GET /api/v1/public/books
+
+获取已发布书籍列表（仅返回 status=1）。
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| page | int | 否 | 1 | 页码（min=1） |
+| page_size | int | 否 | 20 | 每页条数（min=1，max=100） |
+| keyword | string | 否 | - | 模糊搜索书名/作者（title ILIKE / author ILIKE） |
+| reading_status | string | 否 | - | 按阅读状态筛选（want=想读 / reading=在读 / done=读完），留空或传 `all` 表示不过滤 |
+| status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
+
+**响应 data 字段（分页），list 中每项:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 书籍 ID |
+| title | string | 书名 |
+| author | string | 作者 |
+| cover | string | 封面 URL（`AfterFind` 自动拼接为绝对 URL） |
+| rating | int | 评分（0-5 星，0=未评分） |
+| reading_status | string | 阅读状态（want=想读，reading=在读，done=读完） |
+| status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **排序规则**：`sort_order ASC, updated_at DESC`。
+> **status 强制**：logic 层强制覆盖为 1，仅返回已发布书籍。
+> 列表为卡片响应，不含书评大字段 `review`（完整字段见下方详情接口）。
+
+---
+
+#### GET /api/v1/public/books/:id
+
+获取已发布书籍详情（含书评）。
+
+**路径参数:**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 书籍 ID |
+
+**响应 data 字段:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 书籍 ID |
+| title | string | 书名 |
+| author | string | 作者 |
+| cover | string | 封面 URL（`AfterFind` 自动拼接为绝对 URL） |
+| rating | int | 评分（0-5 星，0=未评分） |
+| reading_status | string | 阅读状态（want=想读，reading=在读，done=读完） |
+| review | string | 书评（Markdown） |
+| started_at | time | 开始阅读时间（可为 null） |
+| finished_at | time | 读完时间（可为 null） |
+| status | int | 状态（1=已发布） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **status 强制**：详情不区分状态查询，但 logic 层校验 `status != 1` 时按「书籍不存在」返回，草稿对外不可见。
+
+---
+
+### 6.15 游戏库模块（公开）
+
+#### GET /api/v1/public/games
+
+获取已发布游戏列表（仅返回 status=1）。
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| page | int | 否 | 1 | 页码 |
+| page_size | int | 否 | 20 | 每页条数（最大 100） |
+| keyword | string | 否 | - | 模糊搜索标题 |
+| platform | string | 否 | - | 按平台模糊筛选（PC/PS5/Switch/Xbox/移动端等） |
+| genre | string | 否 | - | 按游戏类型模糊筛选（RPG/FPS/独立游戏等） |
+| play_status | string | 否 | - | 按游玩状态精确筛选：want=想玩 / playing=在玩 / played=玩过（传 all 时不过滤） |
+| status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
+
+**响应 data 字段（分页），list 中每项:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 游戏 ID |
+| title | string | 游戏名称 |
+| cover | string | 封面 URL（`AfterFind` 自动拼接为绝对 URL） |
+| platform | string | 平台（PC/PS5/Switch/Xbox/移动端等） |
+| genre | string | 游戏类型（RPG/FPS/独立游戏等） |
+| play_status | string | 游玩状态（want=想玩，playing=在玩，played=玩过） |
+| play_hours | int | 累计游玩时长（小时） |
+| rating | int | 评分（0-10 分，0=未评分） |
+| status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **排序规则**：`sort_order ASC, updated_at DESC`。
+> **status 强制**: logic 层强制覆盖为 1，仅返回已发布游戏。
+> 列表为卡片视图，不含 short_review 短评字段（仅详情返回）。
+
+---
+
+#### GET /api/v1/public/games/:id
+
+获取已发布游戏详情（未发布的游戏视为不存在）。
+
+**路径参数:**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 游戏 ID |
+
+**响应 data 字段:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 游戏 ID |
+| title | string | 游戏名称 |
+| cover | string | 封面 URL（`AfterFind` 自动拼接为绝对 URL） |
+| platform | string | 平台（PC/PS5/Switch/Xbox/移动端等） |
+| genre | string | 游戏类型（RPG/FPS/独立游戏等） |
+| play_status | string | 游玩状态（want=想玩，playing=在玩，played=玩过） |
+| play_hours | int | 累计游玩时长（小时） |
+| rating | int | 评分（0-10 分，0=未评分） |
+| short_review | string | 短评 |
+| status | int | 状态（1=已发布） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+---
+
+### 6.16 健身训练模块（公开）
+
+#### GET /api/v1/public/fitness
+
+获取已发布训练记录列表（仅返回 status=1）。
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| page | int | 否 | 1 | 页码 |
+| page_size | int | 否 | 20 | 每页条数（最大 100） |
+| keyword | string | 否 | - | 模糊搜索标题 |
+| type | string | 否 | - | 训练类型筛选：strength=力量 / cardio=有氧 / stretch=拉伸；传 `all` 或留空查询全部 |
+| status | int | 否 | - | 状态筛选；公开接口强制覆盖为 1，传入其他值不生效 |
+
+**响应 data 字段（分页），list 中每项:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 训练记录 ID |
+| date | time | 训练日期 |
+| title | string | 训练标题 |
+| type | string | 训练类型（strength=力量 / cardio=有氧 / stretch=拉伸） |
+| duration_min | int | 训练时长（分钟） |
+| calories | int | 消耗热量（千卡） |
+| status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **排序规则**：`date DESC, created_at DESC`（按训练日期倒序，同日再按创建时间倒序）。
+> **status 强制**: logic 层强制覆盖为 1，仅返回已发布训练记录。
+> **字段裁剪**: 列表项为卡片结构，不含 `content`（动作清单 `[{name,sets,reps,note}]`）与 `notes`（备注）大字段；本模块未提供公开详情路由。模型无 `AfterFind` 钩子，所有字段原样返回，不涉及 URL 自动拼接。
+
+---
+
+### 6.17 技术栈模块（公开）
+
+#### GET /api/v1/public/tech-stacks
+
+获取已发布技术栈条目列表（仅返回 status=1）。
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| page | int | 否 | 1 | 页码 |
+| page_size | int | 否 | 20 | 每页条数，max=100 |
+| keyword | string | 否 | - | 模糊搜索名称 |
+| category | string | 否 | - | 按分类精确筛选（全等匹配，非模糊），如 language/framework/tool/database；分类为管理端维护的自由文本，无固定枚举 |
+| level | int | 否 | - | 按熟练度筛选（1=了解, 2=熟悉, 3=熟练, 4=精通） |
+| status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
+
+**响应 data 字段（分页），list 中每项:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 技术栈条目 ID |
+| name | string | 技术名称 |
+| category | string | 分类（language/framework/tool/database 等） |
+| icon | string | 图标 URL（`AfterFind` 自动拼接为绝对 URL，相对路径追加 `/files/` 前缀） |
+| level | int | 熟练度（1=了解, 2=熟悉, 3=熟练, 4=精通） |
+| description | string | 描述 |
+| status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
+| sort_order | int | 排序 |
+| created_at | time | 创建时间 |
+| updated_at | time | 更新时间 |
+
+> **排序规则**：`sort_order ASC, created_at DESC`。
+> **status 强制**: logic 层强制覆盖为 1（查询参数中的 status 不生效），仅返回已发布技术栈条目。
+
+---
+
+### 6.18 模块开关配置（公开）
 
 #### GET /api/v1/public/module-config
 
@@ -1010,7 +1376,14 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | travel_enabled | bool | 旅行管理模块是否开启 |
 | portfolio_enabled | bool | 作品集管理模块是否开启 |
 | equipment_enabled | bool | 设备管理模块是否开启 |
-| updated_at | string | 配置最后更新时间 |
+| project_enabled | bool | 项目经历管理模块是否开启 |
+| open_source_enabled | bool | 开源作品模块是否开启 |
+| recipe_enabled | bool | 美食菜谱模块是否开启 |
+| book_enabled | bool | 读书书架模块是否开启 |
+| game_enabled | bool | 游戏库模块是否开启 |
+| fitness_enabled | bool | 健身训练模块是否开启 |
+| tech_stack_enabled | bool | 技术栈模块是否开启 |
+| updated_at | string | 配置最后更新时间（RFC3339 格式字符串，与全文 `time` 类型字段格式一致） |
 
 **响应示例:**
 
@@ -1026,22 +1399,31 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
     "travel_enabled": true,
     "portfolio_enabled": true,
     "equipment_enabled": true,
+    "project_enabled": true,
+    "open_source_enabled": true,
+    "recipe_enabled": true,
+    "book_enabled": true,
+    "game_enabled": true,
+    "fitness_enabled": true,
+    "tech_stack_enabled": true,
     "updated_at": "2026-09-09T12:00:00Z"
   }
 }
 ```
 
-> **注意:** 模块开关仅作用于公开侧（前端展示），管理后台始终可访问模块管理入口，以方便管理员重新开启模块。
+> **开关的作用方式**：模块开关**不拦截任何公开接口**。本组 `/api/v1/public/*` 接口始终可用并正常返回数据（即使对应开关为 `false`，也不会返回错误或空列表）；开关仅供前端做展示决策——前端先调用本接口读取各开关，再自行决定是否展示对应模块入口、是否调用对应接口。管理后台始终可访问模块管理入口，以方便管理员重新开启模块。
+> **默认值**：配置尚未初始化时，后端自动创建默认配置，全部开关均为 `true`。
+> **第三方歌单**（6.19）无独立开关，公开接口层也不受 `music_enabled` 等任何开关拦截；`music_enabled` 仅影响前端相关入口的展示。
 
 ---
 
-### 6.13 第三方歌单（公开）
+### 6.19 第三方歌单（公开）
 
 #### GET /api/v1/public/playlists
 
 获取前台展示的第三方歌单列表。与 `/api/v1/public/music/playlists` 为同一处理函数。
 
-**请求参数:** 无
+**请求参数:** 无（非分页接口；传入 `page`/`page_size` 会被忽略，响应为裸数组而非分页结构）
 
 **响应 data 字段（数组）:**
 
@@ -1077,7 +1459,13 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | 项目经历 | 全部字段（不含 deleted_at） | - |
 | 音乐歌曲 | 全部字段（不含 deleted_at） | - |
 | 摄影器材 | 全部字段（不含 deleted_at） | - |
-| 模块开关配置 | article_enabled, media_enabled, music_enabled, video_enabled, travel_enabled, portfolio_enabled, equipment_enabled, updated_at | - |
+| 开源作品 | 列表接口返回分页结构（list/total/page/page_size/total_pages），list 项含 id、name、repo_url、summary、language、topics、stars、homepage、status、sort_order、created_at、updated_at；详情接口在列表字段基础上增加 readme、readme_updated_at；均不含 deleted_at | 列表接口不返回 readme 与 readme_updated_at（仅详情接口返回） |
+| 美食菜谱 | 列表项含 id、title、cover、summary、difficulty、minutes、servings、tags、status、sort_order、created_at、updated_at；详情接口在列表字段基础上增加 ingredients、steps；均不含 deleted_at | 列表接口不返回 ingredients/steps（仅详情接口返回） |
+| 读书书架 | 列表项含 id、title、author、cover、rating、reading_status、status、sort_order、created_at、updated_at；详情接口在列表字段基础上增加 review、started_at、finished_at；均不含 deleted_at | 列表接口不返回 review/started_at/finished_at（仅详情接口返回） |
+| 游戏库 | 列表项含 id、title、cover、platform、genre、play_status、play_hours、rating、status、sort_order、created_at、updated_at；详情接口在列表字段基础上增加 short_review；均不含 deleted_at | 列表接口不返回 short_review（仅详情接口返回） |
+| 健身训练 | 列表接口返回分页结构（list/total/page/page_size/total_pages），list 项含 id、date、title、type、duration_min、calories、status、sort_order、created_at、updated_at；本模块无公开详情接口；不含 deleted_at | deleted_at；content（动作清单）与 notes（备注）不在公开接口返回范围内（无公开详情接口） |
+| 技术栈 | 列表接口返回分页结构（list/total/page/page_size/total_pages），list 项含 id、name、category、icon、level、description、status、sort_order、created_at、updated_at；不含 deleted_at | - |
+| 模块开关配置 | article_enabled, media_enabled, music_enabled, video_enabled, travel_enabled, portfolio_enabled, equipment_enabled, project_enabled, open_source_enabled, recipe_enabled, book_enabled, game_enabled, fitness_enabled, tech_stack_enabled, updated_at | - |
 | 第三方歌单（公开） | id, title, cover_url, platform, platform_url, description, sort_order, enabled, created_at, updated_at | - |
 
 ---
@@ -1126,7 +1514,21 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | 视频 | 1 | 已发布 |
 | 项目经历 | 0 | 草稿 |
 | 项目经历 | 1 | 已发布 |
-| 评论 | 2 | 已通过审核（默认） |
+| 评论 | 2 | 已通过审核（评论创建时即写为该值，默认免审核；当前未定义其他状态值，公开列表仅返回该状态） |
+| 开源作品 | 0 | 草稿 |
+| 开源作品 | 1 | 已发布 |
+| 美食菜谱 | 0 | 草稿 |
+| 美食菜谱 | 1 | 已发布 |
+| 读书书架 | 0 | 草稿 |
+| 读书书架 | 1 | 已发布 |
+| 游戏库 | 0 | 草稿 |
+| 游戏库 | 1 | 已发布 |
+| 健身训练 | 0 | 草稿 |
+| 健身训练 | 1 | 已发布 |
+| 技术栈 | 0 | 草稿 |
+| 技术栈 | 1 | 已发布 |
+
+> 上列采用「0=草稿 / 1=已发布」两态的模块（作品集、视频、项目经历、开源作品、美食菜谱、读书书架、游戏库、健身训练、技术栈），其公开列表/详情接口均强制只返回 status=1 的记录，草稿不对外可见。
 
 ### 分类类型
 

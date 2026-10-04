@@ -37,8 +37,10 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 初始化依赖
 	authController := controller.NewAuthController()
-	publicController := controller.NewPublicController(storageMgr, cryptoKey)
-	mediaController := controller.NewMediaController(storageMgr)
+	publicController := controller.NewPublicController(storageMgr, cryptoKey, uploadDir)
+	mediaLogic := logic.NewMediaLogic(storageMgr, uploadDir)
+	mediaController := controller.NewMediaController(mediaLogic)
+	mediaFolderController := controller.NewMediaFolderController(logic.NewMediaFolderLogic())
 	categoryController := controller.NewCategoryController()
 	tagController := controller.NewTagController()
 	articleController := controller.NewArticleController()
@@ -47,12 +49,12 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	equipmentController := controller.NewEquipmentController()
 	projectController := controller.NewProjectController()
 	travelController := controller.NewTravelGuideController()
-	musicController := controller.NewMusicController(storageMgr)
+	musicController := controller.NewMusicController(storageMgr, mediaLogic)
 	commentController := controller.NewCommentController()
 	analyticsController := controller.NewAnalyticsController()
 	securityController := controller.NewSecurityController()
 	apiDocController := controller.NewAPIDocController()
-	profileController := controller.NewProfileController(storageMgr)
+	profileController := controller.NewProfileController(mediaLogic)
 	moduleConfigController := controller.NewModuleConfigController()
 	authMiddleware := middleware.AuthMiddleware(accessSecret)
 
@@ -86,8 +88,8 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	// 注册认证路由
 	RegisterAuthRoutes(api, authController, authMiddleware)
 
-	// 注册媒体管理路由
-	RegisterMediaRoutes(api, mediaController, authMiddleware)
+	// 注册媒体管理路由（含文件夹管理）
+	RegisterMediaRoutes(api, mediaController, mediaFolderController, authMiddleware)
 
 	// 注册存储配置管理路由
 	RegisterStorageRoutes(api, storageController, migrationController, authMiddleware)
@@ -114,6 +116,21 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	openSourceController := controller.NewOpenSourceController()
 	RegisterOpenSourceRoutes(api, openSourceController, authMiddleware)
 
+	// 注册美食菜谱管理路由
+	RegisterRecipeRoutes(api, controller.NewRecipeController(), authMiddleware)
+
+	// 注册读书书架管理路由
+	RegisterBookRoutes(api, controller.NewBookController(), authMiddleware)
+
+	// 注册游戏库管理路由
+	RegisterGameRoutes(api, controller.NewGameController(), authMiddleware)
+
+	// 注册健身训练管理路由
+	RegisterFitnessRoutes(api, controller.NewFitnessController(), authMiddleware)
+
+	// 注册技术栈管理路由
+	RegisterTechStackRoutes(api, controller.NewTechStackController(), authMiddleware)
+
 	// 注册旅行攻略管理路由
 	RegisterTravelRoutes(api, travelController, authMiddleware)
 
@@ -131,6 +148,9 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册 API 文档路由
 	RegisterAPIDocRoutes(api, apiDocController, authMiddleware)
+
+	// 注册图片搜索路由
+	RegisterImageSearchRoutes(api, controller.NewImageSearchController(logic.NewImageSearchLogic(mediaLogic)), authMiddleware)
 
 	// 注册官方主题市场代理路由
 	themeMarketController := controller.NewThemeMarketController()

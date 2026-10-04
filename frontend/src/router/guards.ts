@@ -4,8 +4,9 @@ import { useModuleStore, type ModuleKey } from '@/stores/module'
 import { setupApi } from '@/api/setup'
 import { storage } from '@/utils/storage'
 
-// 受模块开关控制的路由根段（含详情/编辑等子路由，按第一段匹配）
-const pathModuleMap: Record<string, ModuleKey> = {
+// 受模块开关控制的路由根段（含详情/编辑等子路由，按第一段匹配）。
+// 导出供补选爱好弹窗在保存后判断当前路由对应模块是否被关闭。
+export const pathModuleMap: Record<string, ModuleKey> = {
   articles: 'article_enabled',
   media: 'media_enabled',
   playlists: 'music_enabled',
@@ -15,6 +16,11 @@ const pathModuleMap: Record<string, ModuleKey> = {
   equipments: 'equipment_enabled',
   projects: 'project_enabled',
   'open-sources': 'open_source_enabled',
+  recipes: 'recipe_enabled',
+  books: 'book_enabled',
+  games: 'game_enabled',
+  fitness: 'fitness_enabled',
+  'tech-stacks': 'tech_stack_enabled',
 }
 
 export function setupGuards(router: Router) {

@@ -68,6 +68,9 @@ func InitDB(cfg *DBConfig) (*gorm.DB, error) {
 	// 6. 设置全局 DB
 	model.DB = db
 
+	// 7. 媒体文件夹初始化（仅首次启动）：播种模块顶级文件夹并归类存量媒体
+	initMediaFolders(db)
+
 	return db, nil
 }
 
@@ -114,6 +117,7 @@ func autoMigrate(db *gorm.DB) error {
 		&model.ArticleTag{},
 		&model.Media{},
 		&model.MediaPreset{},
+		&model.MediaFolder{},
 		&model.StorageConfig{},
 		&model.StorageMigrationTask{},
 		&model.StorageMigrationItem{},
@@ -133,6 +137,11 @@ func autoMigrate(db *gorm.DB) error {
 		&model.PhotoEquipment{},
 		&model.Project{},
 		&model.OpenSourceWork{},
+		&model.Recipe{},
+		&model.Book{},
+		&model.Game{},
+		&model.FitnessRecord{},
+		&model.TechStackItem{},
 		&model.CorsConfig{},
 		&model.ThirdPartyPlaylist{},
 		&model.ThemeMarketConfig{},

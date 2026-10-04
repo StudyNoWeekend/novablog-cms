@@ -6,6 +6,31 @@
     :footer="null"
     @cancel="handleCancel"
   >
+    <div class="picker-breadcrumb">
+      <a-breadcrumb>
+        <a-breadcrumb-item>
+          <a @click.prevent="enterFolder(null)">全部文件</a>
+        </a-breadcrumb-item>
+        <a-breadcrumb-item v-for="folder in currentPath" :key="folder.id">
+          <a @click.prevent="enterFolder(folder.id)">{{ folder.name }}</a>
+        </a-breadcrumb-item>
+      </a-breadcrumb>
+      <span v-if="currentFolder" class="picker-folder-name">{{ currentFolder.name }}</span>
+    </div>
+
+    <!-- 当前文件夹的子文件夹 -->
+    <div v-if="subFolders.length > 0" class="picker-folders">
+      <div
+        v-for="folder in subFolders"
+        :key="folder.id"
+        class="picker-folder-item"
+        @click="enterFolder(folder.id)"
+      >
+        <FolderFilled class="picker-folder-icon" />
+        <span class="picker-folder-title" :title="folder.name">{{ folder.name }}</span>
+      </div>
+    </div>
+
     <div class="media-picker-grid">
       <div
         v-for="item in mediaList"
@@ -20,7 +45,7 @@
         </div>
       </div>
     </div>
-    <a-empty v-if="!loading && mediaList.length === 0" description="暂无图片" />
+    <a-empty v-if="!loading && subFolders.length === 0 && mediaList.length === 0" description="此文件夹为空" />
     <a-pagination
       v-if="total > 20"
       :current="page"
@@ -37,14 +62,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { CheckCircleFilled } from '@ant-design/icons-vue'
+import { computed, ref, watch } from 'vue'
+import { CheckCircleFilled, FolderFilled } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
 import { getThumbUrl } from '@/utils/image'
+import { useMediaFolders } from '@/composables/useMediaFolders'
 
 const props = defineProps<{
   visible: boolean
+  /** 业务模块 key：打开时自动定位到对应模块文件夹（如 recipe/game/book） */
+  module?: string
 }>()
 
 const emit = defineEmits<{
@@ -52,18 +80,38 @@ const emit = defineEmits<{
   (e: 'selected', media: { id: string; url: string }): void
 }>()
 
+const { folderTree, fetchFolderTree, findFolderPath, findFolder, findModuleFolder } = useMediaFolders()
+
 const open = ref(props.visible)
 const mediaList = ref<MediaItem[]>([])
 const loading = ref(false)
 const page = ref(1)
 const total = ref(0)
 const selectedId = ref<string | null>(null)
+const currentFolderId = ref<string | null>(null)
 
-watch(() => props.visible, (v) => {
+const currentFolder = computed(() =>
+  currentFolderId.value ? findFolder(folderTree.value, currentFolderId.value) : null
+)
+
+const currentPath = computed(() =>
+  currentFolderId.value ? findFolderPath(folderTree.value, currentFolderId.value) : []
+)
+
+const subFolders = computed(() => {
+  if (!currentFolderId.value) return folderTree.value
+  return currentFolder.value?.children || []
+})
+
+watch(() => props.visible, async (v) => {
   open.value = v
   if (v) {
     page.value = 1
     selectedId.value = null
+    await fetchFolderTree()
+    // 优先定位到业务模块对应的文件夹
+    const moduleFolder = props.module ? findModuleFolder(folderTree.value, props.module) : null
+    currentFolderId.value = moduleFolder?.id || null
     fetchMedia()
   }
 })
@@ -74,10 +122,22 @@ watch(open, (v) => {
   }
 })
 
+function enterFolder(folderId: string | null) {
+  if (currentFolderId.value === folderId) return
+  currentFolderId.value = folderId
+  page.value = 1
+  selectedId.value = null
+  fetchMedia()
+}
+
 async function fetchMedia() {
   loading.value = true
   try {
-    const res = await mediaApi.getList({ page: page.value, page_size: 20 })
+    const res = await mediaApi.getList({
+      page: page.value,
+      page_size: 20,
+      folder_id: currentFolderId.value || 'root',
+    })
     mediaList.value = res.list || []
     total.value = res.total || 0
   } catch {}
@@ -103,6 +163,53 @@ function handleCancel() {
 </script>
 
 <style scoped>
+.picker-breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.picker-folder-name {
+  font-size: 13px;
+  color: var(--text-secondary, #595959);
+}
+
+.picker-folders {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.picker-folder-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color, #f0f0f0);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.picker-folder-item:hover {
+  border-color: var(--primary, #4a6cf7);
+}
+
+.picker-folder-icon {
+  color: #faad14;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.picker-folder-title {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .media-picker-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

@@ -8,16 +8,20 @@ import (
 	"gorm.io/gorm"
 )
 
-// 引用扫描的模块名称。
+// 引用扫描的模块名称（与媒体库模块文件夹名保持一致，供自动归类按名匹配）。
 const (
 	UsageModuleArticle   = "文章"
+	UsageModuleRecipe    = "美食菜谱"
+	UsageModuleBook      = "读书书架"
+	UsageModuleGame      = "游戏库"
+	UsageModuleTechStack = "技术栈"
 	UsageModuleTravel    = "旅行攻略"
 	UsageModulePortfolio = "摄影作品集"
 	UsageModuleProject   = "项目经历"
 	UsageModuleEquipment = "个人设备"
 	UsageModuleVideo     = "视频作品"
 	UsageModuleSong      = "音乐"
-	UsageModuleBlogger   = "博主信息"
+	UsageModuleBlogger   = "博主资料"
 )
 
 // UsageHit 媒体引用命中：某内容模块中的某条内容在某个位置引用了该媒体。
@@ -63,6 +67,29 @@ func (m *MediaUsageModel) FindUsages(ctx context.Context, mediaURL, mediaKey str
 		return nil, err
 	}
 	if err := m.scanTextField(ctx, "articles", UsageModuleArticle, "正文", "title", "content", keys, true, &hits); err != nil {
+		return nil, err
+	}
+
+	// 美食菜谱：封面 / 步骤图（steps 为 jsonb）
+	if err := m.scanURLField(ctx, "recipes", UsageModuleRecipe, "封面", "title", "cover", mediaURL, keys, true, &hits); err != nil {
+		return nil, err
+	}
+	if err := m.scanTextField(ctx, "recipes", UsageModuleRecipe, "步骤图", "title", "steps::text", keys, true, &hits); err != nil {
+		return nil, err
+	}
+
+	// 读书书架：封面
+	if err := m.scanURLField(ctx, "books", UsageModuleBook, "封面", "title", "cover", mediaURL, keys, true, &hits); err != nil {
+		return nil, err
+	}
+
+	// 游戏库：封面
+	if err := m.scanURLField(ctx, "games", UsageModuleGame, "封面", "title", "cover", mediaURL, keys, true, &hits); err != nil {
+		return nil, err
+	}
+
+	// 技术栈：图标
+	if err := m.scanURLField(ctx, "tech_stack_items", UsageModuleTechStack, "图标", "name", "icon", mediaURL, keys, true, &hits); err != nil {
 		return nil, err
 	}
 
