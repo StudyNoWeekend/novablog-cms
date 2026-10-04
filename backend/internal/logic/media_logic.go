@@ -3,6 +3,7 @@ package logic
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
@@ -21,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/image/webp"
+	"gorm.io/gorm"
 )
 
 // MediaLogger 媒体逻辑日志器，由 bootstrap 注入。
@@ -39,33 +42,61 @@ type MediaLogic struct {
 	model       *model.MediaModel
 	presetModel *model.MediaPresetModel
 	usageModel  *model.MediaUsageModel
+	folderModel *model.MediaFolderModel
 	manager     *storage.Manager
+	uploadDir   string // 本地存储目录（未配置对象存储时降级使用）
+}
+
+// MediaUploadOptions 媒体上传归属选项：决定文件归属的文件夹与物理存储路径前缀。
+type MediaUploadOptions struct {
+	Module   string // 业务模块 key（enum.MediaModuleFolders 的键），归属到对应模块文件夹
+	FolderID string // 显式指定目标文件夹 ID，优先于 Module
 }
 
 // NewMediaLogic 创建 MediaLogic 实例。
-func NewMediaLogic(manager *storage.Manager) *MediaLogic {
+func NewMediaLogic(manager *storage.Manager, uploadDir string) *MediaLogic {
 	return &MediaLogic{
 		model:       model.NewMedia(),
 		presetModel: model.NewMediaPreset(),
 		usageModel:  model.NewMediaUsage(),
+		folderModel: model.NewMediaFolder(),
 		manager:     manager,
+		uploadDir:   uploadDir,
 	}
 }
 
-// UploadFile 上传文件到对象存储并记录到数据库。
-func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileHeader) (*res.MediaRes, error) {
+// activeProvider 获取当前对象存储 Provider；未配置时降级为本地存储，保证上传能力开箱可用。
+func (l *MediaLogic) activeProvider(ctx context.Context) (storage.StorageProvider, error) {
+	if p := l.manager.GetProviderOrReload(ctx); p != nil {
+		return p, nil
+	}
+	fallback, err := storage.NewLocalProvider(l.uploadDir, "", "")
+	if err != nil {
+		return nil, fmt.Errorf("初始化本地存储失败: %w", err)
+	}
+	mediaLog().Warn("未配置对象存储，本次上传降级为本地存储", zap.String("upload_dir", l.uploadDir))
+	return fallback, nil
+}
+
+// UploadFile 上传文件到对象存储并记录到数据库。归属优先级：opts.FolderID > opts.Module > 根目录。
+func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileHeader, opts MediaUploadOptions) (*res.MediaRes, error) {
 	src, err := fileHeader.Open()
 	if err != nil {
 		return nil, fmt.Errorf("打开上传文件失败: %w", err)
 	}
 	defer src.Close()
 
-	provider := l.manager.GetProviderOrReload(ctx)
-	if provider == nil {
-		return nil, fmt.Errorf("对象存储未配置，请在存储配置页面创建并激活存储配置")
+	folder, err := l.resolveTargetFolder(ctx, opts)
+	if err != nil {
+		return nil, err
 	}
 
-	// 生成对象 key：images/2006/01/uuid.ext
+	provider, perr := l.activeProvider(ctx)
+	if perr != nil {
+		return nil, perr
+	}
+
+	// 生成对象 key：{中文文件夹链}/2006/01/uuid.ext（根目录兜底 未分类/）
 	now := time.Now()
 	dateDir := now.Format("2006/01")
 	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
@@ -73,7 +104,11 @@ func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileH
 		ext = ".bin"
 	}
 	storeFilename := uuid.New().String() + ext
-	key := fmt.Sprintf("images/%s/%s", dateDir, storeFilename)
+	prefix, err := l.storagePrefix(ctx, folder)
+	if err != nil {
+		return nil, err
+	}
+	key := fmt.Sprintf("%s/%s/%s", prefix, dateDir, storeFilename)
 
 	// 若配置了 PathPrefix 则拼接前缀
 	if activeCfg := l.manager.GetActiveConfig(); activeCfg != nil && activeCfg.PathPrefix != "" {
@@ -97,49 +132,216 @@ func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileH
 		URL:         url,
 		StoragePath: key,
 		StorageType: provider.Type(),
+		FolderID:    folderIDPtr(folder),
 	}
 
 	if err := l.model.Create(ctx, media); err != nil {
 		return nil, fmt.Errorf("保存媒体记录失败: %w", err)
 	}
 
+	return l.toMediaRes(ctx, media)
+}
+
+// SaveRemoteBytes 将外部图片字节写入当前存储并登记媒体记录（供图片搜索转存等使用）。
+func (l *MediaLogic) SaveRemoteBytes(ctx context.Context, filename, contentType string, data []byte, opts MediaUploadOptions) (*res.MediaRes, error) {
+	folder, err := l.resolveTargetFolder(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := l.activeProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ext := strings.ToLower(filepath.Ext(filename))
+	if ext == "" {
+		ext = ".bin"
+	}
+	storeFilename := uuid.New().String() + ext
+	prefix, err := l.storagePrefix(ctx, folder)
+	if err != nil {
+		return nil, err
+	}
+	key := fmt.Sprintf("%s/%s/%s", prefix, time.Now().Format("2006/01"), storeFilename)
+	if activeCfg := l.manager.GetActiveConfig(); activeCfg != nil && activeCfg.PathPrefix != "" {
+		key = fmt.Sprintf("%s/%s", strings.Trim(activeCfg.PathPrefix, "/"), key)
+	}
+
+	url, err := provider.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), contentType)
+	if err != nil {
+		return nil, fmt.Errorf("转存图片失败: %w", err)
+	}
+
+	media := &model.Media{
+		ID:          uuid.New().String(),
+		Filename:    filename,
+		FileType:    getFileType(ext),
+		MimeType:    getMimeType(ext),
+		Size:        int64(len(data)),
+		URL:         url,
+		StoragePath: key,
+		StorageType: provider.Type(),
+		FolderID:    folderIDPtr(folder),
+	}
+	if err := l.model.Create(ctx, media); err != nil {
+		return nil, fmt.Errorf("保存媒体记录失败: %w", err)
+	}
+
+	return l.toMediaRes(ctx, media)
+}
+
+// resolveTargetFolder 解析上传归属文件夹：FolderID 优先，其次按模块 key 归入模块文件夹，否则根目录。
+func (l *MediaLogic) resolveTargetFolder(ctx context.Context, opts MediaUploadOptions) (*model.MediaFolder, error) {
+	if opts.FolderID != "" {
+		folder, err := l.folderModel.GetByID(ctx, opts.FolderID)
+		if err != nil {
+			return nil, fmt.Errorf("目标文件夹不存在: %w", err)
+		}
+		return folder, nil
+	}
+	if opts.Module != "" {
+		return l.ensureModuleFolder(ctx, opts.Module)
+	}
+	return nil, nil
+}
+
+// ensureModuleFolder 获取模块对应的顶级文件夹，不存在时自动创建；未知模块 key 返回根目录。
+func (l *MediaLogic) ensureModuleFolder(ctx context.Context, moduleKey string) (*model.MediaFolder, error) {
+	name, ok := enum.MediaModuleFolders[moduleKey]
+	if !ok {
+		mediaLog().Warn("上传携带未知模块 key，按根目录处理", zap.String("module", moduleKey))
+		return nil, nil
+	}
+	folder, err := l.folderModel.GetTopByModuleKey(ctx, moduleKey)
+	if err == nil {
+		return folder, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("查询模块文件夹失败: %w", err)
+	}
+	// 兜底匹配同名顶级文件夹（兼容历史上仅有同名文件夹、无 module_key 的情况）
+	folder, err = l.folderModel.GetTopByName(ctx, name)
+	if err == nil {
+		return folder, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("查询模块文件夹失败: %w", err)
+	}
+	folder = &model.MediaFolder{ID: uuid.New().String(), Name: name, ModuleKey: &moduleKey}
+	if err := l.folderModel.Create(ctx, folder); err != nil {
+		return nil, fmt.Errorf("创建模块文件夹失败: %w", err)
+	}
+	return folder, nil
+}
+
+// rootStorageDir 根目录上传时物理存储路径的一级目录名。
+const rootStorageDir = "未分类"
+
+// storagePrefix 计算物理存储路径前缀：文件夹祖先链名称；根目录返回 未分类。
+func (l *MediaLogic) storagePrefix(ctx context.Context, folder *model.MediaFolder) (string, error) {
+	if folder == nil {
+		return rootStorageDir, nil
+	}
+	names, err := l.folderModel.AncestorNames(ctx, folder)
+	if err != nil {
+		return "", fmt.Errorf("计算存储路径失败: %w", err)
+	}
+	return strings.Join(names, "/"), nil
+}
+
+// folderIDPtr 提取文件夹 ID 指针（根目录为 nil）。
+func folderIDPtr(folder *model.MediaFolder) *string {
+	if folder == nil {
+		return nil
+	}
+	return &folder.ID
+}
+
+// toMediaRes 构建媒体响应（含所属文件夹信息）。
+func (l *MediaLogic) toMediaRes(ctx context.Context, media *model.Media) (*res.MediaRes, error) {
+	folderName := ""
+	if media.FolderID != nil {
+		folder, err := l.folderModel.GetByID(ctx, *media.FolderID)
+		if err != nil {
+			return nil, fmt.Errorf("查询所属文件夹失败: %w", err)
+		}
+		folderName = folder.Name
+	}
 	return &res.MediaRes{
-		ID:        media.ID,
-		Filename:  media.Filename,
-		FileType:  media.FileType,
-		MimeType:  media.MimeType,
-		Size:      media.Size,
-		URL:       media.URL,
-		CreatedAt: media.CreatedAt,
+		ID:         media.ID,
+		Filename:   media.Filename,
+		FileType:   media.FileType,
+		MimeType:   media.MimeType,
+		Size:       media.Size,
+		URL:        model.ResolveURL(media.URL),
+		Width:      media.Width,
+		Height:     media.Height,
+		FolderID:   ptrToString(media.FolderID),
+		FolderName: folderName,
+		CreatedAt:  media.CreatedAt,
 	}, nil
 }
 
-// GetList 获取媒体列表。
+// GetList 获取媒体列表。FolderID 取值：nil=全部；"root"=根目录；其他=指定文件夹。
 func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.MediaListRes, error) {
-	list, total, err := l.model.GetList(ctx, req.FileType, req.Keyword, req.GetPage(), req.GetPageSize())
+	var folderID *string
+	rootOnly := false
+	if req.FolderID != nil && *req.FolderID != "" {
+		if *req.FolderID == "root" {
+			rootOnly = true
+		} else {
+			folderID = req.FolderID
+		}
+	}
+
+	list, total, err := l.model.GetList(ctx, req.FileType, req.Keyword, folderID, rootOnly, req.GetPage(), req.GetPageSize())
 	if err != nil {
 		return nil, err
 	}
 
 	provider := l.manager.GetProvider()
 
-	var items []res.MediaRes
+	// 批量查询所属文件夹名
+	folderIDs := make([]string, 0, len(list))
+	for _, m := range list {
+		if m.FolderID != nil {
+			folderIDs = append(folderIDs, *m.FolderID)
+		}
+	}
+	folderNames := make(map[string]string)
+	if len(folderIDs) > 0 {
+		folders, err := l.folderModel.GetByIDs(ctx, folderIDs)
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range folders {
+			folderNames[f.ID] = f.Name
+		}
+	}
+
+	items := make([]res.MediaRes, 0, len(list))
 	for _, m := range list {
 		thumbURL := ptrToString(m.ThumbURL)
 		if thumbURL == "" && provider != nil {
 			thumbURL = provider.GetThumbURL(m.URL, 300)
 		}
+		folderName := ""
+		if m.FolderID != nil {
+			folderName = folderNames[*m.FolderID]
+		}
 		items = append(items, res.MediaRes{
-			ID:        m.ID,
-			Filename:  m.Filename,
-			FileType:  m.FileType,
-			MimeType:  m.MimeType,
-			Size:      m.Size,
-			URL:       m.URL,
-			ThumbURL:  thumbURL,
-			Width:     m.Width,
-			Height:    m.Height,
-			CreatedAt: m.CreatedAt,
+			ID:         m.ID,
+			Filename:   m.Filename,
+			FileType:   m.FileType,
+			MimeType:   m.MimeType,
+			Size:       m.Size,
+			URL:        m.URL,
+			ThumbURL:   thumbURL,
+			Width:      m.Width,
+			Height:     m.Height,
+			FolderID:   ptrToString(m.FolderID),
+			FolderName: folderName,
+			CreatedAt:  m.CreatedAt,
 		})
 	}
 
@@ -158,18 +360,20 @@ func (l *MediaLogic) GetByID(ctx context.Context, id string) (*res.MediaRes, err
 	if err != nil {
 		return nil, err
 	}
-	return &res.MediaRes{
-		ID:        m.ID,
-		Filename:  m.Filename,
-		FileType:  m.FileType,
-		MimeType:  m.MimeType,
-		Size:      m.Size,
-		URL:       m.URL,
-		ThumbURL:  ptrToString(m.ThumbURL),
-		Width:     m.Width,
-		Height:    m.Height,
-		CreatedAt: m.CreatedAt,
-	}, nil
+	return l.toMediaRes(ctx, m)
+}
+
+// MoveMedia 批量移动媒体到指定文件夹（folderID 为空表示移回根目录）。
+func (l *MediaLogic) MoveMedia(ctx context.Context, mediaIDs []string, folderID *string) error {
+	if folderID != nil && *folderID != "" {
+		if _, err := l.folderModel.GetByID(ctx, *folderID); err != nil {
+			return fmt.Errorf("目标文件夹不存在: %w", err)
+		}
+	}
+	if err := l.model.UpdateFolderIDs(ctx, mediaIDs, folderID); err != nil {
+		return fmt.Errorf("移动媒体失败: %w", err)
+	}
+	return nil
 }
 
 // GetUsages 扫描媒体被哪些内容模块引用（文章、旅行攻略、摄影作品集等）。
@@ -279,6 +483,10 @@ func presetOutputKeys(presets []model.MediaPreset) []string {
 // usageModuleOrder 引用分组在前端展示时的固定模块顺序。
 var usageModuleOrder = []string{
 	model.UsageModuleArticle,
+	model.UsageModuleRecipe,
+	model.UsageModuleBook,
+	model.UsageModuleGame,
+	model.UsageModuleTechStack,
 	model.UsageModuleTravel,
 	model.UsageModulePortfolio,
 	model.UsageModuleProject,
@@ -329,9 +537,9 @@ func (l *MediaLogic) CreatePreset(ctx context.Context, req *req.CreatePresetReq,
 		return nil, fmt.Errorf("原图不存在: %w", err)
 	}
 
-	provider := l.manager.GetProviderOrReload(ctx)
-	if provider == nil {
-		return nil, fmt.Errorf("对象存储未配置，请在存储配置页面创建并激活存储配置")
+	provider, perr := l.activeProvider(ctx)
+	if perr != nil {
+		return nil, perr
 	}
 
 	src, err := fileHeader.Open()
@@ -389,7 +597,7 @@ func (l *MediaLogic) UploadWithPreset(ctx context.Context, req *req.UploadWithPr
 		return nil, fmt.Errorf("不支持的文件格式，仅支持 .jpg/.jpeg/.png/.webp")
 	}
 
-	mediaRes, err := l.UploadFile(ctx, fileHeader)
+	mediaRes, err := l.UploadFile(ctx, fileHeader, MediaUploadOptions{Module: req.Module, FolderID: req.FolderID})
 	if err != nil {
 		return nil, err
 	}
@@ -418,9 +626,9 @@ func (l *MediaLogic) UploadWithPreset(ctx context.Context, req *req.UploadWithPr
 		return nil, fmt.Errorf("编码 JPEG 失败: %w", err)
 	}
 
-	provider := l.manager.GetProviderOrReload(ctx)
-	if provider == nil {
-		return nil, fmt.Errorf("对象存储未配置，请在存储配置页面创建并激活存储配置")
+	provider, perr := l.activeProvider(ctx)
+	if perr != nil {
+		return nil, perr
 	}
 
 	storeFilename := uuid.New().String() + ".jpg"
@@ -508,7 +716,7 @@ func (l *MediaLogic) DeletePreset(ctx context.Context, id string) error {
 // getFileType 获取文件类型：1图片 2视频 3音频 0其他。
 func getFileType(ext string) int16 {
 	switch ext {
-	case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp":
+	case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico":
 		return 1
 	case ".mp4", ".avi", ".mov", ".mkv", ".webm":
 		return 2
@@ -532,6 +740,8 @@ func getMimeType(ext string) string {
 		return "image/webp"
 	case ".svg":
 		return "image/svg+xml"
+	case ".ico":
+		return "image/x-icon"
 	case ".mp4":
 		return "video/mp4"
 	case ".mp3":

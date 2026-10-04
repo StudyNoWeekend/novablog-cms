@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
@@ -12,13 +14,15 @@ import (
 
 // BloggerLogic 博主业务逻辑结构体。
 type BloggerLogic struct {
-	bloggerModel *model.BloggerModel
+	bloggerModel      *model.BloggerModel
+	moduleConfigLogic *ModuleConfigLogic
 }
 
 // NewBloggerLogic 创建 BloggerLogic 实例。
 func NewBloggerLogic() *BloggerLogic {
 	return &BloggerLogic{
-		bloggerModel: model.NewBlogger(),
+		bloggerModel:      model.NewBlogger(),
+		moduleConfigLogic: NewModuleConfigLogic(),
 	}
 }
 
@@ -94,13 +98,8 @@ func (l *BloggerLogic) GetPublicInfo(ctx context.Context) (*res.BloggerPublicRes
 	}, nil
 }
 
-// GetProfile 获取博主管理端资料信息。
-func (l *BloggerLogic) GetProfile(ctx context.Context, userID string) (*res.BloggerProfileRes, error) {
-	blogger, err := l.bloggerModel.GetByID(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("获取博主信息失败: %w", err)
-	}
-
+// newProfileRes 博主模型 → 管理端资料响应 DTO。
+func newProfileRes(blogger *model.Blogger) *res.BloggerProfileRes {
 	return &res.BloggerProfileRes{
 		Nickname:        blogger.Nickname,
 		Avatar:          blogger.Avatar,
@@ -111,9 +110,20 @@ func (l *BloggerLogic) GetProfile(ctx context.Context, userID string) (*res.Blog
 		BlogDescription: blogger.BlogDescription,
 		Email:           blogger.Email,
 		City:            blogger.City,
+		Role:            blogger.Role,
 		SocialLinks:     parseSocialLinks(blogger.SocialLinks),
 		Tags:            parseTags(blogger.Tags),
-	}, nil
+	}
+}
+
+// GetProfile 获取博主管理端资料信息。
+func (l *BloggerLogic) GetProfile(ctx context.Context, userID string) (*res.BloggerProfileRes, error) {
+	blogger, err := l.bloggerModel.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("获取博主信息失败: %w", err)
+	}
+
+	return newProfileRes(blogger), nil
 }
 
 // UpdateProfile 更新博主个人资料。
@@ -169,17 +179,61 @@ func (l *BloggerLogic) UpdateProfile(ctx context.Context, userID string, r *req.
 		return nil, fmt.Errorf("更新博主信息失败: %w", err)
 	}
 
-	return &res.BloggerProfileRes{
-		Nickname:        blogger.Nickname,
-		Avatar:          blogger.Avatar,
-		Bio:             blogger.Bio,
-		PageBackground:  blogger.PageBackground,
-		BlogIcon:        blogger.BlogIcon,
-		BlogTitle:       blogger.BlogTitle,
-		BlogDescription: blogger.BlogDescription,
-		Email:           blogger.Email,
-		City:            blogger.City,
-		SocialLinks:     parseSocialLinks(blogger.SocialLinks),
-		Tags:            parseTags(blogger.Tags),
-	}, nil
+	return newProfileRes(blogger), nil
+}
+
+// UpdateRoles 补选创作方向角色（旧版本用户未选爱好的兼容入口，可重复提交）：
+// 更新 bloggers.role，并按所选角色应用模块开关——显式 modules 全量覆盖优先，
+// 未传时按角色预设并集兜底（通用模块 article/media 恒开，不受影响）。
+func (l *BloggerLogic) UpdateRoles(ctx context.Context, userID string, r *req.UpdateRolesReq) (*res.BloggerProfileRes, error) {
+	blogger, err := l.bloggerModel.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("获取博主信息失败: %w", err)
+	}
+
+	// 校验角色 key 白名单并去重
+	seen := make(map[string]struct{}, len(r.Roles))
+	roles := make([]string, 0, len(r.Roles))
+	for _, key := range r.Roles {
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		if _, ok := rolePresetModules[key]; !ok {
+			return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "未知的创作方向角色: "+key, enum.ErrInvalidParam.HttpCode)
+		}
+		if _, dup := seen[key]; dup {
+			continue
+		}
+		seen[key] = struct{}{}
+		roles = append(roles, key)
+	}
+	if len(roles) == 0 {
+		return nil, enum.ErrInvalidParam
+	}
+
+	// 校验模块开关 key 白名单
+	for key := range r.Modules {
+		if !IsValidModuleKey(key) {
+			return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "未知的模块开关: "+key, enum.ErrInvalidParam.HttpCode)
+		}
+	}
+
+	// 应用模块开关预设（写入后 ApplyModuleMap 内部热更新缓存）
+	if r.Modules != nil {
+		if err := l.moduleConfigLogic.ApplyModuleMap(ctx, r.Modules); err != nil {
+			return nil, err
+		}
+	} else if modules, presetErr := rolePreset(strings.Join(roles, ",")); presetErr == nil {
+		if err := l.moduleConfigLogic.ApplyModuleMap(ctx, modules); err != nil {
+			return nil, err
+		}
+	}
+
+	blogger.Role = strings.Join(roles, ",")
+	if err := l.bloggerModel.Update(ctx, blogger); err != nil {
+		return nil, fmt.Errorf("更新创作方向失败: %w", err)
+	}
+
+	return newProfileRes(blogger), nil
 }

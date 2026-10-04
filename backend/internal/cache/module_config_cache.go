@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	// CacheKeyModuleConfig 模块开关配置缓存键（v2：新增 open_source_enabled 字段后换键，避免旧缓存缺字段被解析为 false）
-	CacheKeyModuleConfig = "module:config:v2"
+	// CacheKeyModuleConfig 模块开关配置缓存键（v3：新增 recipe/book/game/fitness/tech_stack 五个开关字段后换键，避免旧缓存缺字段被解析为 false）
+	CacheKeyModuleConfig = "module:config:v3"
 )
 
 // ModuleConfigCacheData 模块开关配置缓存数据结构体，用于 Redis 缓存序列化。
@@ -24,6 +24,11 @@ type ModuleConfigCacheData struct {
 	EquipmentEnabled  bool `json:"equipment_enabled"`
 	ProjectEnabled    bool `json:"project_enabled"`
 	OpenSourceEnabled bool `json:"open_source_enabled"`
+	RecipeEnabled     bool `json:"recipe_enabled"`
+	BookEnabled       bool `json:"book_enabled"`
+	GameEnabled       bool `json:"game_enabled"`
+	FitnessEnabled    bool `json:"fitness_enabled"`
+	TechStackEnabled  bool `json:"tech_stack_enabled"`
 }
 
 // ModuleConfigCache 模块开关配置缓存操作结构体。

@@ -20,6 +20,7 @@ type Media struct {
 	Height      *int           `gorm:"type:int"`
 	StoragePath string         `gorm:"column:storage_path;type:varchar(500)"`
 	StorageType string         `gorm:"column:storage_type;type:varchar(20);default:'local'"` // local/aliyun/tencent/minio
+	FolderID    *string        `gorm:"type:uuid;index;column:folder_id"`                     // 所属文件夹，NULL=根目录
 	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
@@ -64,8 +65,9 @@ func (m *MediaModel) GetByID(ctx context.Context, id string) (*Media, error) {
 	return &media, nil
 }
 
-// GetList 分页查询媒体文件列表，支持按文件类型和文件名过滤，排除软删除记录。
-func (m *MediaModel) GetList(ctx context.Context, fileType *int16, keyword *string, page, pageSize int) ([]Media, int64, error) {
+// GetList 分页查询媒体文件列表，支持按文件类型、文件名和所属文件夹过滤，排除软删除记录。
+// folderID 为空且 rootOnly 为 false 时不限文件夹；rootOnly 为 true 时仅查根目录（folder_id IS NULL）。
+func (m *MediaModel) GetList(ctx context.Context, fileType *int16, keyword *string, folderID *string, rootOnly bool, page, pageSize int) ([]Media, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&Media{})
 
@@ -74,6 +76,11 @@ func (m *MediaModel) GetList(ctx context.Context, fileType *int16, keyword *stri
 	}
 	if keyword != nil && *keyword != "" {
 		query = query.Where("filename ILIKE ?", "%"+*keyword+"%")
+	}
+	if rootOnly {
+		query = query.Where("folder_id IS NULL")
+	} else if folderID != nil && *folderID != "" {
+		query = query.Where("folder_id = ?", *folderID)
 	}
 
 	if err := query.Count(&total).Error; err != nil {
@@ -149,6 +156,20 @@ func (m *MediaModel) UpdateStorageInfo(ctx context.Context, id, url, storageType
 			"url":          url,
 			"storage_type": storageType,
 		}).Error
+}
+
+// UpdateFolderIDs 批量更新媒体的所属文件夹（folderID 为空表示移回根目录）。
+func (m *MediaModel) UpdateFolderIDs(ctx context.Context, ids []string, folderID *string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	updates := map[string]interface{}{}
+	if folderID == nil || *folderID == "" {
+		updates["folder_id"] = nil
+	} else {
+		updates["folder_id"] = *folderID
+	}
+	return m.db.WithContext(ctx).Model(&Media{}).Where("id IN ?", ids).Updates(updates).Error
 }
 
 // CountNotOnStorage counts media files not on the target storage platform.

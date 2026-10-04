@@ -21,3 +21,9 @@ type UpdateProfileReq struct {
 	SocialLinks     *[]SocialLinkReq `json:"social_links" binding:"omitempty"`            // 社交平台链接数组
 	Tags            *[]string        `json:"tags" binding:"omitempty,max=20,dive,max=30"` // 标签数组
 }
+
+// UpdateRolesReq 补选创作方向请求（旧版本用户未选爱好时的兼容入口）。
+type UpdateRolesReq struct {
+	Roles   []string        `json:"roles" binding:"required,min=1,max=17"` // 角色 key 数组，白名单在 logic 层校验
+	Modules map[string]bool `json:"modules"`                               // 最终模块开关全量 map；nil 时按所选角色预设并集兜底
+}

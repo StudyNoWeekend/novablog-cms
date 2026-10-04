@@ -77,6 +77,36 @@ export default [
         component: () => import('@/views/open-source/OpenSourceManageView.vue'),
       },
       {
+        path: 'recipes',
+        name: 'Recipes',
+        meta: { title: '美食菜谱', icon: 'CoffeeOutlined' },
+        component: () => import('@/views/recipe/RecipeManageView.vue'),
+      },
+      {
+        path: 'books',
+        name: 'Books',
+        meta: { title: '读书书架', icon: 'ReadOutlined' },
+        component: () => import('@/views/book/BookManageView.vue'),
+      },
+      {
+        path: 'games',
+        name: 'Games',
+        meta: { title: '游戏库', icon: 'RocketOutlined' },
+        component: () => import('@/views/game/GameManageView.vue'),
+      },
+      {
+        path: 'fitness',
+        name: 'Fitness',
+        meta: { title: '健身训练', icon: 'HeartOutlined' },
+        component: () => import('@/views/fitness/FitnessManageView.vue'),
+      },
+      {
+        path: 'tech-stacks',
+        name: 'TechStacks',
+        meta: { title: '技术栈', icon: 'CodeOutlined' },
+        component: () => import('@/views/tech-stack/TechStackManageView.vue'),
+      },
+      {
         path: 'videos',
         name: 'Videos',
         meta: { title: '视频作品', icon: 'PlaySquareOutlined' },

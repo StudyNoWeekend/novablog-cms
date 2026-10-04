@@ -4,7 +4,6 @@ import (
 	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
-	"novablog/internal/storage"
 	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
@@ -16,8 +15,8 @@ type MediaController struct {
 }
 
 // NewMediaController 创建 MediaController 实例。
-func NewMediaController(manager *storage.Manager) *MediaController {
-	return &MediaController{logic: logic.NewMediaLogic(manager)}
+func NewMediaController(mediaLogic *logic.MediaLogic) *MediaController {
+	return &MediaController{logic: mediaLogic}
 }
 
 // Upload 上传文件 POST /api/v1/media/upload
@@ -34,7 +33,10 @@ func (c *MediaController) Upload(ctx *gin.Context) {
 		return
 	}
 
-	media, err := c.logic.UploadFile(ctx, file)
+	media, err := c.logic.UploadFile(ctx, file, logic.MediaUploadOptions{
+		Module:   ctx.PostForm("module"),
+		FolderID: ctx.PostForm("folder_id"),
+	})
 	if err != nil {
 		response.HandleError(ctx, err)
 		return
@@ -63,6 +65,21 @@ func (c *MediaController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	force := ctx.Query("force") == "true"
 	if err := c.logic.Delete(ctx, id, force); err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, nil)
+}
+
+// MoveMedia 批量移动媒体到指定文件夹 PUT /api/v1/media/move
+// folder_id 为空表示移回根目录。
+func (c *MediaController) MoveMedia(ctx *gin.Context) {
+	var r req.MediaMoveReq
+	if err := ctx.ShouldBindJSON(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	if err := c.logic.MoveMedia(ctx, r.MediaIDs, r.FolderID); err != nil {
 		response.HandleError(ctx, err)
 		return
 	}

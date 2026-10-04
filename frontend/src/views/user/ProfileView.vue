@@ -3,61 +3,109 @@
     <a-form layout="vertical" :model="form">
       <a-form-item label="页面背景图">
         <div class="image-field">
-          <a-input
-            v-model:value="form.page_background"
-            placeholder="请输入背景图 URL"
-            allow-clear
-          />
-          <a-upload
-            :show-upload-list="false"
-            :before-upload="(file: File) => handleUpload(file, 'background')"
-            accept="image/*"
+          <div
+            class="image-uploader background-uploader"
+            :class="{ 'is-empty': !form.page_background || brokenImages.background }"
+            role="button"
+            tabindex="0"
+            :aria-label="form.page_background && !brokenImages.background ? '更换背景图' : '上传背景图'"
+            @click="triggerUpload('background')"
+            @keydown.enter.prevent="triggerUpload('background')"
+            @keydown.space.prevent="triggerUpload('background')"
           >
-            <a-button :loading="uploadingBackground">上传</a-button>
-          </a-upload>
-          <div v-if="form.page_background" class="image-preview background-preview">
-            <img :src="form.page_background" alt="背景图预览" @error="onImgError" />
+            <template v-if="form.page_background && !brokenImages.background">
+              <img :src="form.page_background" alt="背景图" @error="onImgError('background')" />
+              <div class="uploader-mask">更换图片</div>
+            </template>
+            <div v-else class="uploader-empty">
+              <PlusOutlined />
+              <span class="uploader-hint">上传图片</span>
+            </div>
+            <div v-if="uploadingBackground" class="uploader-loading">
+              <a-spin size="small" />
+            </div>
           </div>
+          <a-button
+            v-if="form.page_background"
+            type="text"
+            danger
+            size="small"
+            @click="clearImage('background')"
+          >
+            移除
+          </a-button>
         </div>
       </a-form-item>
 
       <a-form-item label="博客 Icon">
         <div class="image-field">
-          <a-input
-            v-model:value="form.blog_icon"
-            placeholder="请输入博客 Icon 图 URL"
-            allow-clear
-          />
-          <a-upload
-            :show-upload-list="false"
-            :before-upload="(file: File) => handleUpload(file, 'icon')"
-            accept="image/*"
+          <div
+            class="image-uploader icon-uploader"
+            :class="{ 'is-empty': !form.blog_icon || brokenImages.icon }"
+            role="button"
+            tabindex="0"
+            :aria-label="form.blog_icon && !brokenImages.icon ? '更换博客 Icon' : '上传博客 Icon'"
+            @click="triggerUpload('icon')"
+            @keydown.enter.prevent="triggerUpload('icon')"
+            @keydown.space.prevent="triggerUpload('icon')"
           >
-            <a-button :loading="uploadingIcon">上传</a-button>
-          </a-upload>
-          <div v-if="form.blog_icon" class="image-preview icon-preview">
-            <img :src="form.blog_icon" alt="Icon 预览" @error="onImgError" />
+            <template v-if="form.blog_icon && !brokenImages.icon">
+              <img :src="form.blog_icon" alt="博客 Icon" @error="onImgError('icon')" />
+              <div class="uploader-mask">更换图片</div>
+            </template>
+            <div v-else class="uploader-empty">
+              <PlusOutlined />
+              <span class="uploader-hint">上传图片</span>
+            </div>
+            <div v-if="uploadingIcon" class="uploader-loading">
+              <a-spin size="small" />
+            </div>
           </div>
+          <a-button
+            v-if="form.blog_icon"
+            type="text"
+            danger
+            size="small"
+            @click="clearImage('icon')"
+          >
+            移除
+          </a-button>
         </div>
       </a-form-item>
 
       <a-form-item label="头像">
         <div class="image-field">
-          <a-input
-            v-model:value="form.avatar"
-            placeholder="请输入头像 URL"
-            allow-clear
-          />
-          <a-upload
-            :show-upload-list="false"
-            :before-upload="(file: File) => handleUpload(file, 'avatar')"
-            accept="image/*"
+          <div
+            class="image-uploader avatar-uploader"
+            :class="{ 'is-empty': !form.avatar || brokenImages.avatar }"
+            role="button"
+            tabindex="0"
+            :aria-label="form.avatar && !brokenImages.avatar ? '更换头像' : '上传头像'"
+            @click="triggerUpload('avatar')"
+            @keydown.enter.prevent="triggerUpload('avatar')"
+            @keydown.space.prevent="triggerUpload('avatar')"
           >
-            <a-button :loading="uploadingAvatar">上传</a-button>
-          </a-upload>
-          <div v-if="form.avatar" class="image-preview avatar-preview">
-            <img :src="form.avatar" alt="头像预览" @error="onImgError" />
+            <template v-if="form.avatar && !brokenImages.avatar">
+              <img :src="form.avatar" alt="头像" @error="onImgError('avatar')" />
+              <div class="uploader-mask">更换图片</div>
+            </template>
+            <div v-else class="uploader-empty">
+              <PlusOutlined />
+              <span class="uploader-hint">上传图片</span>
+            </div>
+            <div v-if="uploadingAvatar" class="uploader-loading">
+              <a-spin size="small" />
+            </div>
           </div>
+          <a-button
+            v-if="form.avatar"
+            type="text"
+            danger
+            size="small"
+            @click="clearImage('avatar')"
+          >
+            移除
+          </a-button>
         </div>
       </a-form-item>
 
@@ -183,6 +231,31 @@
         </div>
       </a-form-item>
 
+      <input
+        ref="backgroundInputRef"
+        type="file"
+        accept="image/*"
+        style="display: none"
+        aria-hidden="true"
+        @change="(e: Event) => handleFileChange(e, 'background')"
+      />
+      <input
+        ref="iconInputRef"
+        type="file"
+        accept="image/*"
+        style="display: none"
+        aria-hidden="true"
+        @change="(e: Event) => handleFileChange(e, 'icon')"
+      />
+      <input
+        ref="avatarInputRef"
+        type="file"
+        accept="image/*"
+        style="display: none"
+        aria-hidden="true"
+        @change="(e: Event) => handleFileChange(e, 'avatar')"
+      />
+
       <a-form-item>
         <a-button type="primary" :loading="saving" @click="handleSave">保存</a-button>
       </a-form-item>
@@ -193,6 +266,7 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted, nextTick, watch } from 'vue'
 import { message } from 'ant-design-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { authApi } from '@/api/auth'
 import type { UpdateProfileReq, SocialLink } from '@/types/api'
 import { SOCIAL_PLATFORMS } from '@/components/profile/socialPlatforms'
@@ -204,6 +278,12 @@ const saving = ref(false)
 const uploadingIcon = ref(false)
 const uploadingBackground = ref(false)
 const uploadingAvatar = ref(false)
+
+const backgroundInputRef = ref<HTMLInputElement | null>(null)
+const iconInputRef = ref<HTMLInputElement | null>(null)
+const avatarInputRef = ref<HTMLInputElement | null>(null)
+// 图片加载失败标记：key 为 'icon' | 'background' | 'avatar'
+const brokenImages = reactive<Record<string, boolean>>({})
 
 const form = reactive<UpdateProfileReq>({
   nickname: '',
@@ -284,6 +364,9 @@ async function loadProfile() {
     cityValue.value = data.city ? data.city.split('/') : []
     socialLinks.value = data.social_links || []
     tags.value = data.tags || []
+    brokenImages.background = false
+    brokenImages.icon = false
+    brokenImages.avatar = false
   } catch {
     message.error('加载个人资料失败')
   } finally {
@@ -303,7 +386,19 @@ async function handleSave() {
   }
 }
 
-async function handleUpload(file: File, type: 'icon' | 'background' | 'avatar') {
+type ImageField = 'icon' | 'background' | 'avatar'
+
+function triggerUpload(type: ImageField) {
+  const uploading = type === 'icon' ? uploadingIcon : type === 'background' ? uploadingBackground : uploadingAvatar
+  if (uploading.value) return
+  const input = type === 'icon' ? iconInputRef.value : type === 'background' ? backgroundInputRef.value : avatarInputRef.value
+  input?.click()
+}
+
+async function handleFileChange(e: Event, type: ImageField) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
   const uploading = type === 'icon' ? uploadingIcon : type === 'background' ? uploadingBackground : uploadingAvatar
   uploading.value = true
   try {
@@ -319,18 +414,29 @@ async function handleUpload(file: File, type: 'icon' | 'background' | 'avatar') 
     } else {
       form.avatar = res.url
     }
+    brokenImages[type] = false
     message.success('上传成功')
   } catch {
     message.error('上传失败')
   } finally {
     uploading.value = false
+    target.value = ''
   }
-  return false
 }
 
-function onImgError(e: Event) {
-  const img = e.target as HTMLImageElement
-  img.style.display = 'none'
+function clearImage(type: ImageField) {
+  if (type === 'icon') {
+    form.blog_icon = ''
+  } else if (type === 'background') {
+    form.page_background = ''
+  } else {
+    form.avatar = ''
+  }
+  brokenImages[type] = false
+}
+
+function onImgError(type: ImageField) {
+  brokenImages[type] = true
 }
 
 onMounted(loadProfile)
@@ -339,53 +445,109 @@ onMounted(loadProfile)
 <style scoped>
 .image-field {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
+  gap: 12px;
+  align-items: center;
 }
 
-.image-preview {
+.image-uploader {
+  position: relative;
   flex-shrink: 0;
-  border: 1px solid #e8e8e8;
-  border-radius: 6px;
+  cursor: pointer;
   overflow: hidden;
-  background: #fafafa;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--bg-card);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.image-preview img {
+.image-uploader:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.image-uploader:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.image-uploader.is-empty {
+  border-style: dashed;
+}
+
+.image-uploader img {
   display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-.background-preview {
+.uploader-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.image-uploader:hover .uploader-empty {
+  color: var(--color-primary);
+}
+
+.uploader-empty :deep(.anticon) {
+  font-size: 20px;
+}
+
+.uploader-hint {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.uploader-mask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  color: #fff;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.image-uploader:hover .uploader-mask,
+.image-uploader:focus-visible .uploader-mask {
+  opacity: 1;
+}
+
+.uploader-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.65);
+  cursor: not-allowed;
+}
+
+.background-uploader {
   width: 200px;
   height: 80px;
 }
 
-.background-preview img {
-  width: 100%;
-  height: 100%;
-}
-
-.avatar-preview {
-  width: 64px;
-  height: 64px;
+.avatar-uploader {
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
 }
 
-.avatar-preview img {
-  width: 100%;
-  height: 100%;
-}
-
-.icon-preview {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-}
-
-.icon-preview img {
-  width: 100%;
-  height: 100%;
+.icon-uploader {
+  width: 56px;
+  height: 56px;
 }
 
 .social-links-container {

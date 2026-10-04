@@ -46,7 +46,7 @@ const editorConfig: Partial<IEditorConfig> = {
     uploadImage: {
       customUpload: async (file: File, insertFn: (url: string, alt?: string, href?: string) => void) => {
         try {
-          const res = await mediaApi.upload(file)
+          const res = await mediaApi.upload(file, { module: 'article' })
           insertFn(res.url, file.name, res.url)
         } catch {
           message.error('图片上传失败')
@@ -56,7 +56,7 @@ const editorConfig: Partial<IEditorConfig> = {
     uploadVideo: {
       customUpload: async (file: File, insertFn: (url: string, poster?: string) => void) => {
         try {
-          const res = await mediaApi.upload(file)
+          const res = await mediaApi.upload(file, { module: 'article' })
           insertFn(res.url, '')
         } catch {
           message.error('视频上传失败')

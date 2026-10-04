@@ -76,6 +76,24 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 		public.GET("/open-sources", pc.GetOpenSources)
 		public.GET("/open-sources/:id", pc.GetOpenSourceDetail)
 
+		// 美食菜谱
+		public.GET("/recipes", pc.GetRecipes)
+		public.GET("/recipes/:id", pc.GetRecipeDetail)
+
+		// 读书书架
+		public.GET("/books", pc.GetBooks)
+		public.GET("/books/:id", pc.GetBookDetail)
+
+		// 游戏库
+		public.GET("/games", pc.GetGames)
+		public.GET("/games/:id", pc.GetGameDetail)
+
+		// 健身训练
+		public.GET("/fitness", pc.GetFitnessRecords)
+
+		// 技术栈
+		public.GET("/tech-stacks", pc.GetTechStacks)
+
 		// 音乐
 		public.GET("/music/songs", pc.GetSongs)
 		public.GET("/music/songs/:id", pc.GetSongDetail)

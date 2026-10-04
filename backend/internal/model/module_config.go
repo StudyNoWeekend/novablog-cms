@@ -20,6 +20,11 @@ type ModuleConfig struct {
 	EquipmentEnabled  bool      `gorm:"not null;default:true"`
 	ProjectEnabled    bool      `gorm:"not null;default:true"`
 	OpenSourceEnabled bool      `gorm:"not null;default:true"`
+	RecipeEnabled     bool      `gorm:"not null;default:true"` // 美食菜谱模块
+	BookEnabled       bool      `gorm:"not null;default:true"` // 读书书架模块
+	GameEnabled       bool      `gorm:"not null;default:true"` // 游戏库模块
+	FitnessEnabled    bool      `gorm:"not null;default:true"` // 健身训练模块
+	TechStackEnabled  bool      `gorm:"not null;default:true"` // 技术栈模块
 	CreatedAt         time.Time `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"type:timestamptz;autoUpdateTime"`
 }
@@ -61,6 +66,11 @@ func (m *ModuleConfigModel) GetConfig(ctx context.Context) (*ModuleConfig, error
 		EquipmentEnabled:  true,
 		ProjectEnabled:    true,
 		OpenSourceEnabled: true,
+		RecipeEnabled:     true,
+		BookEnabled:       true,
+		GameEnabled:       true,
+		FitnessEnabled:    true,
+		TechStackEnabled:  true,
 	}
 	if createErr := m.db.WithContext(ctx).Create(&config).Error; createErr != nil {
 		return nil, createErr

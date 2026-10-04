@@ -4,16 +4,18 @@ import "time"
 
 // MediaRes 媒体响应结构体。
 type MediaRes struct {
-	ID        string    `json:"id"`
-	Filename  string    `json:"filename"`
-	FileType  int16     `json:"file_type"`
-	MimeType  string    `json:"mime_type"`
-	Size      int64     `json:"size"`
-	URL       string    `json:"url"`
-	ThumbURL  string    `json:"thumb_url"`
-	Width     *int      `json:"width"`
-	Height    *int      `json:"height"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         string    `json:"id"`
+	Filename   string    `json:"filename"`
+	FileType   int16     `json:"file_type"`
+	MimeType   string    `json:"mime_type"`
+	Size       int64     `json:"size"`
+	URL        string    `json:"url"`
+	ThumbURL   string    `json:"thumb_url"`
+	Width      *int      `json:"width"`
+	Height     *int      `json:"height"`
+	FolderID   string    `json:"folder_id"`   // 所属文件夹，空=根目录
+	FolderName string    `json:"folder_name"` // 所属文件夹名，根目录为空
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // MediaListRes 媒体列表响应结构体。
@@ -23,6 +25,22 @@ type MediaListRes struct {
 	Page       int        `json:"page"`
 	PageSize   int        `json:"page_size"`
 	TotalPages int        `json:"total_pages"`
+}
+
+// MediaFolderRes 媒体文件夹响应结构体（树节点）。
+type MediaFolderRes struct {
+	ID         string           `json:"id"`
+	Name       string           `json:"name"`
+	ParentID   *string          `json:"parent_id"`
+	ModuleKey  *string          `json:"module_key"` // 业务模块文件夹标记（如 recipe）
+	MediaCount int64            `json:"media_count"`
+	Children   []MediaFolderRes `json:"children"`
+	CreatedAt  time.Time        `json:"created_at"`
+}
+
+// MediaFolderTreeRes 媒体文件夹树响应结构体。
+type MediaFolderTreeRes struct {
+	List []MediaFolderRes `json:"list"`
 }
 
 // MediaPresetRes 媒体预设响应结构体。

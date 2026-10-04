@@ -98,6 +98,11 @@ func NewApp(cfgPath string) (*App, error) {
 		ProxyURL:    cfg.GetString("themes.proxy_url"),
 	})
 
+	// 注入图片搜索模块配置（管理端在线搜图标/封面，代理不可用自动降级直连）
+	logic.SetImageSearchSettings(&logic.ImageSearchSettings{
+		ProxyURL: cfg.GetString("image_search.proxy_url"),
+	})
+
 	// 主题模块运行配置：DB 持久化值（后台修改）优先于 config.yaml 出厂值
 	if marketConfig, err := logic.NewThemeMarketConfigLogic().GetConfig(context.Background()); err == nil {
 		logic.SetThemeMarketBaseURL(marketConfig.MarketBaseURL)

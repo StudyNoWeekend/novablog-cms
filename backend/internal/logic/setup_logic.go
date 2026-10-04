@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -26,18 +27,46 @@ var SetupLogger *zap.Logger
 
 // SetupLogic 初始化业务逻辑结构体。
 type SetupLogic struct {
-	bloggerModel *model.BloggerModel
-	manager      *storage.Manager
-	cryptoKey    string
+	bloggerModel      *model.BloggerModel
+	moduleConfigLogic *ModuleConfigLogic
+	manager           *storage.Manager
+	cryptoKey         string
 }
 
 // NewSetupLogic 创建 SetupLogic 实例。
 func NewSetupLogic(manager *storage.Manager, cryptoKey string) *SetupLogic {
 	return &SetupLogic{
-		bloggerModel: model.NewBlogger(),
-		manager:      manager,
-		cryptoKey:    cryptoKey,
+		bloggerModel:      model.NewBlogger(),
+		moduleConfigLogic: NewModuleConfigLogic(),
+		manager:           manager,
+		cryptoKey:         cryptoKey,
 	}
+}
+
+// rolePresetModules 创作方向角色白名单与模块预设（通用模块 article/media 恒开，不含在此表中）。
+// 首装向导只传 Role 时按此预设应用 module_configs；与前端 constants/setupRoles.ts 保持一致。
+var rolePresetModules = map[string][]string{
+	"tech":       {"project_enabled", "open_source_enabled", "tech_stack_enabled"},
+	"digital":    {"equipment_enabled", "video_enabled"},
+	"photo":      {"portfolio_enabled", "equipment_enabled"},
+	"video":      {"video_enabled"},
+	"music":      {"music_enabled"},
+	"travelvlog": {"travel_enabled", "video_enabled", "equipment_enabled"},
+	"travel":     {"travel_enabled", "equipment_enabled"},
+	"food":       {"recipe_enabled"},
+	"fitness":    {"fitness_enabled", "equipment_enabled"},
+	"fashion":    {"portfolio_enabled"},
+	"pet":        {"portfolio_enabled"},
+	"reading":    {"book_enabled"},
+	"gaming":     {"game_enabled", "video_enabled"},
+	"designer":   {"portfolio_enabled", "project_enabled"},
+	"craft":      {"portfolio_enabled"},
+	"lifestyle":  {},
+	"all": {
+		"music_enabled", "video_enabled", "travel_enabled", "portfolio_enabled",
+		"equipment_enabled", "project_enabled", "open_source_enabled",
+		"recipe_enabled", "book_enabled", "game_enabled", "fitness_enabled", "tech_stack_enabled",
+	},
 }
 
 // CheckStatus 检查系统初始化状态。
@@ -66,6 +95,18 @@ func (l *SetupLogic) InitBlogger(ctx context.Context, r *req.InitReq) (*res.Init
 		return nil, enum.ErrAlreadyInitialized
 	}
 
+	// 校验创作方向角色与模块开关 key
+	if r.Role != "" {
+		if _, err := rolePreset(r.Role); err != nil {
+			return nil, enum.ErrInvalidParam
+		}
+	}
+	for key := range r.Modules {
+		if !IsValidModuleKey(key) {
+			return nil, enum.ErrInvalidParam
+		}
+	}
+
 	// 哈希密码
 	passwordHash, err := hash.HashPassword(r.Password)
 	if err != nil {
@@ -85,6 +126,7 @@ func (l *SetupLogic) InitBlogger(ctx context.Context, r *req.InitReq) (*res.Init
 		Username:     r.Username,
 		PasswordHash: passwordHash,
 		Nickname:     nickname,
+		Role:         r.Role,
 	}
 
 	if err := l.bloggerModel.Create(ctx, blogger); err != nil {
@@ -92,12 +134,49 @@ func (l *SetupLogic) InitBlogger(ctx context.Context, r *req.InitReq) (*res.Init
 		return nil, enum.ErrInternalServer
 	}
 
-	SetupLogger.Info("博主账号初始化成功", zap.String("username", r.Username))
+	// 按角色预设/显式覆盖应用模块开关（best-effort：失败不阻断初始化，保持默认全开）
+	if err := l.applyModulePreset(ctx, r); err != nil {
+		SetupLogger.Warn("应用模块开关预设失败", zap.Error(err))
+	}
+
+	SetupLogger.Info("博主账号初始化成功", zap.String("username", r.Username), zap.String("role", r.Role))
 
 	return &res.InitRes{
 		Success: true,
 		Message: "初始化成功",
 	}, nil
+}
+
+// rolePreset 解析角色 key（支持逗号分隔多选），返回所选角色预置模块开关的并集。
+func rolePreset(role string) (map[string]bool, error) {
+	modules := make(map[string]bool)
+	for _, key := range strings.Split(role, ",") {
+		preset, ok := rolePresetModules[key]
+		if !ok {
+			return nil, fmt.Errorf("未知的创作方向角色: %s", key)
+		}
+		for _, moduleKey := range preset {
+			modules[moduleKey] = true
+		}
+	}
+	return modules, nil
+}
+
+// applyModulePreset 按首装向导选择应用模块开关：
+// 显式传了 modules 时以其为准；否则按 role 预设开启对应模块（通用模块默认已开）。
+func (l *SetupLogic) applyModulePreset(ctx context.Context, r *req.InitReq) error {
+	switch {
+	case r.Modules != nil:
+		return l.moduleConfigLogic.ApplyModuleMap(ctx, r.Modules)
+	case r.Role != "":
+		modules, err := rolePreset(r.Role)
+		if err != nil {
+			return err
+		}
+		return l.moduleConfigLogic.ApplyModuleMap(ctx, modules)
+	default:
+		return nil
+	}
 }
 
 // SetupStorage 首装向导保存存储配置。

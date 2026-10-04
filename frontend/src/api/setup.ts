@@ -9,6 +9,10 @@ export interface InitReq {
   username: string
   password: string
   nickname?: string
+  /** 创作方向角色 key（如 tech/travel），与后端 rolePresetModules 白名单对应 */
+  role?: string
+  /** 模块开关覆盖（key 为 module_configs 开关名），非空时以此为准 */
+  modules?: Record<string, boolean>
 }
 
 export interface InitRes {

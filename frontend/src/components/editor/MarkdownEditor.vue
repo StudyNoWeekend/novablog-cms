@@ -41,7 +41,7 @@ async function handleUploadImage(files: File[]): Promise<{ title: string; url: s
   const results: { title: string; url: string }[] = []
   for (const file of files) {
     try {
-      const res: MediaItem = await mediaApi.upload(file)
+      const res: MediaItem = await mediaApi.upload(file, { module: 'article' })
       results.push({
         title: file.name,
         url: res.url,

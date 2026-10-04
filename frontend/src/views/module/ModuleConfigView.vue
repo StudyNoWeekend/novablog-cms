@@ -40,41 +40,18 @@ import { reactive, ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { moduleApi } from '@/api/module'
 import { useModuleStore } from '@/stores/module'
+import { MODULE_DEFS } from '@/constants/modules'
 import type { UpdateModuleConfigReq } from '@/types/module'
 
-interface ModuleItem {
-  key: keyof UpdateModuleConfigReq
-  label: string
-  description: string
-}
-
-const modules: ModuleItem[] = [
-  { key: 'article_enabled', label: '文章管理', description: '博客前台的文章列表、详情展示' },
-  { key: 'media_enabled', label: '媒体管理', description: '博客前台的图片展示、媒体资源' },
-  { key: 'music_enabled', label: '音乐管理', description: '博客前台的音乐播放器展示' },
-  { key: 'video_enabled', label: '视频管理', description: '博客前台的视频作品展示' },
-  { key: 'travel_enabled', label: '旅行管理', description: '博客前台的旅行攻略展示' },
-  { key: 'portfolio_enabled', label: '作品集管理', description: '博客前台的摄影作品集展示' },
-  { key: 'equipment_enabled', label: '个人设备', description: '博客前台的个人设备展示' },
-  { key: 'project_enabled', label: '项目经历', description: '博客前台的项目经历展示' },
-  { key: 'open_source_enabled', label: '开源作品', description: '博客前台的 GitHub 开源作品展示' },
-]
+const modules = MODULE_DEFS
 
 const loading = ref(true)
 const saving = ref(false)
 const moduleStore = useModuleStore()
 
-const formState = reactive<Record<string, boolean>>({
-  article_enabled: true,
-  media_enabled: true,
-  music_enabled: true,
-  video_enabled: true,
-  travel_enabled: true,
-  portfolio_enabled: true,
-  equipment_enabled: true,
-  project_enabled: true,
-  open_source_enabled: true,
-})
+const formState = reactive<Record<string, boolean>>(
+  Object.fromEntries(modules.map((item) => [item.key, true])),
+)
 
 async function fetchConfig() {
   loading.value = true

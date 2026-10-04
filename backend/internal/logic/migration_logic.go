@@ -110,7 +110,7 @@ func (l *MigrationLogic) runAnalyze(taskID, targetProvider string) {
 	pageSize := 100
 
 	for {
-		list, t, err := l.mediaModel.GetList(ctx, nil, nil, page, pageSize)
+		list, t, err := l.mediaModel.GetList(ctx, nil, nil, nil, false, page, pageSize)
 		if err != nil {
 			l.updateTaskFailed(ctx, taskID, fmt.Sprintf("查询媒体列表失败: %v", err))
 			return
@@ -351,7 +351,7 @@ func (l *MigrationLogic) StartMigration(ctx context.Context, r *req.MigrationSta
 		page := 1
 		pageSize := 100
 		for {
-			list, total, err := l.mediaModel.GetList(ctx, nil, nil, page, pageSize)
+			list, total, err := l.mediaModel.GetList(ctx, nil, nil, nil, false, page, pageSize)
 			if err != nil {
 				l.failTask(ctx, task, fmt.Sprintf("查询媒体列表失败: %v", err))
 				return "", fmt.Errorf("查询媒体列表失败: %w", err)

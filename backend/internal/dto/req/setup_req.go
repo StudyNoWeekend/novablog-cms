@@ -6,6 +6,10 @@ type InitReq struct {
 	Username string `json:"username" binding:"required,min=3,max=50"` // 用户名
 	Password string `json:"password" binding:"required,min=6"`        // 密码
 	Nickname string `json:"nickname" binding:"omitempty,max=50"`      // 昵称
+	Role     string `json:"role" binding:"omitempty,max=50"`          // 创作方向角色 key（如 tech/travel），在 logic 层按白名单校验
+	// Modules 模块开关覆盖（key 为 module_configs 开关名，如 "open_source_enabled"）。
+	// 非 nil 时以此为准应用最终开关；为 nil 且 Role 非空时按角色预设应用。
+	Modules map[string]bool `json:"modules"`
 }
 
 // SetupStorageReq 首装向导存储配置请求。
