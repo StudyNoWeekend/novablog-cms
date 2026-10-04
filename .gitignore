@@ -57,3 +57,8 @@ deploy/config/
 deploy/data/
 # 主题制品与运行时数据（themes.data_dir）
 backend/data/
+
+# 本地/测试环境配置与运行数据（含环境密码，请勿提交）
+backend/config/config.local.yaml
+backend/config/config.e2e.yaml
+backend/uploads_e2e/
