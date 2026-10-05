@@ -37,7 +37,7 @@
     <input
       ref="fileInputRef"
       type="file"
-      accept="image/png, image/jpeg, image/webp"
+      :accept="IMAGE_ACCEPT"
       style="display: none"
       aria-hidden="true"
       @change="handleFileChange"
@@ -57,6 +57,7 @@ import { computed, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { SearchOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
+import { IMAGE_ACCEPT, validateImageFile } from '@/utils/upload'
 import ExternalImagePickerModal from './ExternalImagePickerModal.vue'
 
 const props = defineProps<{
@@ -107,6 +108,14 @@ async function handleFileChange(e: Event) {
   const target = e.target as HTMLInputElement
   const file = target.files?.[0]
   if (!file) return
+
+  // accept 用通配 image/* 保证移动端直接跳图库，格式/大小限制在选取后由前端拦截
+  const error = validateImageFile(file, ['jpg', 'jpeg', 'png', 'webp'])
+  if (error) {
+    message.error(error)
+    target.value = ''
+    return
+  }
 
   uploading.value = true
   try {
