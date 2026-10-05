@@ -2,16 +2,29 @@
   <div class="page-container">
     <div class="page-header">
       <h1 class="page-title">媒体库</h1>
-      <a-upload
-        :show-upload-list="false"
-        :before-upload="handleBeforeUpload"
-        :custom-request="handleCustomUpload"
-        accept="image/*,video/*"
-      >
-        <a-button type="primary" :loading="uploading">
-          <UploadOutlined /> 上传到当前文件夹
-        </a-button>
-      </a-upload>
+      <!-- 图片/视频分开上传：通配 accept 保证 iOS/安卓点击后直接进系统图库 -->
+      <a-space wrap>
+        <a-upload
+          :show-upload-list="false"
+          :before-upload="handleBeforeUpload"
+          :custom-request="handleCustomUpload"
+          :accept="IMAGE_ACCEPT"
+        >
+          <a-button type="primary" :loading="uploading">
+            <UploadOutlined /> 上传图片
+          </a-button>
+        </a-upload>
+        <a-upload
+          :show-upload-list="false"
+          :before-upload="handleBeforeUpload"
+          :custom-request="handleCustomUpload"
+          :accept="VIDEO_ACCEPT"
+        >
+          <a-button type="primary" :loading="uploading">
+            <VideoCameraOutlined /> 上传视频
+          </a-button>
+        </a-upload>
+      </a-space>
     </div>
 
     <a-card>
@@ -283,6 +296,7 @@ import {
 import { mediaApi } from '@/api/media'
 import type { MediaItem, MediaFolderNode } from '@/api/media'
 import { getThumbUrl } from '@/utils/image'
+import { IMAGE_ACCEPT, VIDEO_ACCEPT, MAX_UPLOAD_SIZE } from '@/utils/upload'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 import { useMediaFolders } from '@/composables/useMediaFolders'
@@ -446,8 +460,7 @@ function refreshAll() {
 }
 
 function handleBeforeUpload(file: File) {
-  const maxSize = 100 * 1024 * 1024
-  if (file.size > maxSize) {
+  if (file.size > MAX_UPLOAD_SIZE) {
     message.error('文件大小不能超过 100MB')
     return false
   }
