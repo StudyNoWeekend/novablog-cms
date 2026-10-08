@@ -5,6 +5,7 @@
       <!-- 图片/视频分开上传：通配 accept 保证 iOS/安卓点击后直接进系统图库 -->
       <a-space wrap>
         <a-upload
+          multiple
           :show-upload-list="false"
           :before-upload="handleBeforeUpload"
           :custom-request="handleCustomUpload"
@@ -15,6 +16,7 @@
           </a-button>
         </a-upload>
         <a-upload
+          multiple
           :show-upload-list="false"
           :before-upload="handleBeforeUpload"
           :custom-request="handleCustomUpload"
@@ -467,27 +469,77 @@ function handleBeforeUpload(file: File) {
   return true
 }
 
+// 多选批量上传：开启 multiple 后 antd 对每个选中文件各调一次 customRequest，
+// 这里用计数器把逐文件请求聚合成整批进度，全部结束后统一提示并刷新列表
+const uploadBatch = {
+  total: 0,
+  done: 0,
+  failedNames: [] as string[],
+  activePercents: new Map<string, number>(),
+}
+
 function handleCustomUpload({ file, onSuccess, onError }: any) {
+  const raw = file as File & { uid?: string; name: string }
+  const taskKey = raw.uid || raw.name
+  uploadBatch.total++
   uploading.value = true
+  uploadBatch.activePercents.set(taskKey, 0)
+  updateUploadProgress()
   mediaApi
-    .upload(file as File, {
+    .upload(raw, {
       folder_id: currentFolderId.value === 'root' ? undefined : currentFolderId.value,
       onProgress: (percent) => {
-        message.loading({ content: `上传中 ${percent}%`, key: 'upload', duration: 0 })
+        uploadBatch.activePercents.set(taskKey, percent)
+        updateUploadProgress()
       },
     })
     .then(() => {
-      message.success({ content: '上传成功', key: 'upload' })
       onSuccess?.()
-      refreshAll()
     })
-    .catch((err) => {
-      message.error({ content: err?.message || '上传失败', key: 'upload' })
-      onError?.(err)
+    .catch(() => {
+      uploadBatch.failedNames.push(raw.name)
+      onError?.(new Error('上传失败'))
     })
     .finally(() => {
-      uploading.value = false
+      uploadBatch.activePercents.delete(taskKey)
+      uploadBatch.done++
+      if (uploadBatch.done >= uploadBatch.total) {
+        finishUploadBatch()
+      } else {
+        updateUploadProgress()
+      }
     })
+}
+
+function updateUploadProgress() {
+  const sum = [...uploadBatch.activePercents.values()].reduce((acc, cur) => acc + cur, 0)
+  const percent = Math.min(99, Math.floor(((uploadBatch.done + sum / 100) / uploadBatch.total) * 100))
+  message.loading({
+    content: `上传中 ${percent}%（${uploadBatch.done}/${uploadBatch.total}）`,
+    key: 'upload',
+    duration: 0,
+  })
+}
+
+function finishUploadBatch() {
+  const { total, failedNames } = uploadBatch
+  if (failedNames.length === 0) {
+    message.success({ content: `上传完成，共 ${total} 个文件`, key: 'upload' })
+  } else {
+    const preview = failedNames.slice(0, 3).join('、')
+    const more = failedNames.length > 3 ? ` 等 ${failedNames.length} 个` : ''
+    message.warning({
+      content: `成功 ${total - failedNames.length} 个，失败 ${failedNames.length} 个：${preview}${more}`,
+      key: 'upload',
+      duration: 5,
+    })
+  }
+  uploadBatch.total = 0
+  uploadBatch.done = 0
+  uploadBatch.failedNames = []
+  uploadBatch.activePercents.clear()
+  uploading.value = false
+  refreshAll()
 }
 
 function handleFolderMenu(key: string, folder: MediaFolderNode) {

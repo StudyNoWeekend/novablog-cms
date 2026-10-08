@@ -8,7 +8,7 @@ import (
 )
 
 // RegisterPublicRoutes 注册公开路由（无需认证）。
-func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
+func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController, plc *controller.PlaylistController) {
 	// 首次安装引导接口（公开，避免与"管理后台设置"语义混淆）
 	install := r.Group("/install")
 	{
@@ -33,6 +33,9 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 
 		// 博主信息
 		public.GET("/blogger", pc.GetBlogger)
+
+		// 个人资料选项元数据（星座 + 性格全量选项，供选择器与博客前台使用）
+		public.GET("/profile-meta", pc.GetProfileMeta)
 
 		// 文章（静态路由必须在参数路由之前注册，避免 Gin 路由冲突）
 		public.GET("/articles", pc.GetArticles)
@@ -105,5 +108,8 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController) {
 
 		// 第三方歌单
 		public.GET("/playlists", pc.GetPlaylists)
+
+		// 第三方平台品牌 Logo（免鉴权静态资源，无封面歌单按平台占位展示）
+		public.GET("/platform-logos/:filename", plc.GetPlatformLogo)
 	}
 }

@@ -76,19 +76,86 @@ func parseSocialLinksPublic(data string) []res.SocialLinkPublicRes {
 	return result
 }
 
-// GetPublicInfo 获取博主公开信息（排除敏感字段）。
+// validateProfileMetaKey 校验性格/星座 key 白名单（空串合法，表示清除选择）。
+func validateProfileMetaKey(kind, key string) error {
+	if key == "" {
+		return nil
+	}
+	switch kind {
+	case metaKindPersonality:
+		if _, ok := GetPersonalityConfig(key); ok {
+			return nil
+		}
+		return enum.NewBizError(enum.ErrInvalidParam.Code, "未知的性格类型: "+key, enum.ErrInvalidParam.HttpCode)
+	case metaKindZodiac:
+		if _, ok := GetZodiacConfig(key); ok {
+			return nil
+		}
+		return enum.NewBizError(enum.ErrInvalidParam.Code, "未知的星座: "+key, enum.ErrInvalidParam.HttpCode)
+	}
+	return nil
+}
+
+// buildZodiacPublicMeta 组装公开响应的星座信息，未设置或未开启对外展示时返回 nil。
+func buildZodiacPublicMeta(show bool, key string) *res.ZodiacMetaRes {
+	if !show || key == "" {
+		return nil
+	}
+	cfg, ok := GetZodiacConfig(key)
+	if !ok {
+		return nil
+	}
+	return &res.ZodiacMetaRes{
+		Key:       cfg.Key,
+		Name:      cfg.Name,
+		Image:     cfg.Image,
+		DateRange: cfg.DateRange,
+		Element:   cfg.Element,
+	}
+}
+
+// buildPersonalityPublicMeta 组装公开响应的性格信息，未设置或未开启对外展示时返回 nil。
+func buildPersonalityPublicMeta(show bool, key string) *res.PersonalityMetaRes {
+	if !show || key == "" {
+		return nil
+	}
+	cfg, ok := GetPersonalityConfig(key)
+	if !ok {
+		return nil
+	}
+	return &res.PersonalityMetaRes{
+		Key:         cfg.Key,
+		Name:        cfg.Name,
+		Image:       cfg.Image,
+		Description: cfg.Description,
+	}
+}
+
+// GetPublicInfo 获取博主公开信息（排除敏感字段，并按对外展示开关脱敏）。
 func (l *BloggerLogic) GetPublicInfo(ctx context.Context) (*res.BloggerPublicRes, error) {
 	blogger, err := l.bloggerModel.GetFirst(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取博主信息失败: %w", err)
 	}
 
+	// 邮箱 / 城市：未开启对外展示时返回空串
+	email := ""
+	if blogger.ShowEmail {
+		email = blogger.Email
+	}
+	city := ""
+	if blogger.ShowCity {
+		city = blogger.City
+	}
+
 	return &res.BloggerPublicRes{
 		Nickname:        blogger.Nickname,
 		Avatar:          blogger.Avatar,
 		Bio:             blogger.Bio,
-		Email:           blogger.Email,
-		City:            blogger.City,
+		Email:           email,
+		City:            city,
+		Zodiac:          buildZodiacPublicMeta(blogger.ShowZodiac, blogger.Zodiac),
+		Personality:     buildPersonalityPublicMeta(blogger.ShowPersonality, blogger.Personality),
 		BlogTitle:       blogger.BlogTitle,
 		BlogDescription: blogger.BlogDescription,
 		PageBackground:  blogger.PageBackground,
@@ -96,6 +163,37 @@ func (l *BloggerLogic) GetPublicInfo(ctx context.Context) (*res.BloggerPublicRes
 		SocialLinks:     parseSocialLinksPublic(blogger.SocialLinks),
 		Tags:            parseTags(blogger.Tags),
 	}, nil
+}
+
+// GetProfileMeta 获取个人资料选项元数据（星座 + 性格全量选项）。
+func (l *BloggerLogic) GetProfileMeta() *res.ProfileMetaRes {
+	zodiacList := ListZodiacConfigs()
+	zodiacRes := make([]res.ZodiacMetaRes, 0, len(zodiacList))
+	for _, cfg := range zodiacList {
+		zodiacRes = append(zodiacRes, res.ZodiacMetaRes{
+			Key:       cfg.Key,
+			Name:      cfg.Name,
+			Image:     cfg.Image,
+			DateRange: cfg.DateRange,
+			Element:   cfg.Element,
+		})
+	}
+
+	personalityList := ListPersonalityConfigs()
+	personalityRes := make([]res.PersonalityMetaRes, 0, len(personalityList))
+	for _, cfg := range personalityList {
+		personalityRes = append(personalityRes, res.PersonalityMetaRes{
+			Key:         cfg.Key,
+			Name:        cfg.Name,
+			Image:       cfg.Image,
+			Description: cfg.Description,
+		})
+	}
+
+	return &res.ProfileMetaRes{
+		Zodiac:      zodiacRes,
+		Personality: personalityRes,
+	}
 }
 
 // newProfileRes 博主模型 → 管理端资料响应 DTO。
@@ -110,6 +208,12 @@ func newProfileRes(blogger *model.Blogger) *res.BloggerProfileRes {
 		BlogDescription: blogger.BlogDescription,
 		Email:           blogger.Email,
 		City:            blogger.City,
+		Personality:     blogger.Personality,
+		Zodiac:          blogger.Zodiac,
+		ShowEmail:       blogger.ShowEmail,
+		ShowCity:        blogger.ShowCity,
+		ShowZodiac:      blogger.ShowZodiac,
+		ShowPersonality: blogger.ShowPersonality,
 		Role:            blogger.Role,
 		SocialLinks:     parseSocialLinks(blogger.SocialLinks),
 		Tags:            parseTags(blogger.Tags),
@@ -147,6 +251,32 @@ func (l *BloggerLogic) UpdateProfile(ctx context.Context, userID string, r *req.
 	}
 	if r.City != nil {
 		blogger.City = *r.City
+	}
+	if r.Personality != nil {
+		// 性格 key 白名单校验（空串表示清除）
+		if err := validateProfileMetaKey(metaKindPersonality, *r.Personality); err != nil {
+			return nil, err
+		}
+		blogger.Personality = *r.Personality
+	}
+	if r.Zodiac != nil {
+		// 星座 key 白名单校验（空串表示清除）
+		if err := validateProfileMetaKey(metaKindZodiac, *r.Zodiac); err != nil {
+			return nil, err
+		}
+		blogger.Zodiac = *r.Zodiac
+	}
+	if r.ShowEmail != nil {
+		blogger.ShowEmail = *r.ShowEmail
+	}
+	if r.ShowCity != nil {
+		blogger.ShowCity = *r.ShowCity
+	}
+	if r.ShowZodiac != nil {
+		blogger.ShowZodiac = *r.ShowZodiac
+	}
+	if r.ShowPersonality != nil {
+		blogger.ShowPersonality = *r.ShowPersonality
 	}
 	if r.PageBackground != nil {
 		blogger.PageBackground = *r.PageBackground

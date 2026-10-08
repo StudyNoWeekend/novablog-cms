@@ -247,6 +247,11 @@ func (ctrl *PublicController) GetBlogger(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
+// GetProfileMeta 获取个人资料选项元数据（星座 + 性格全量选项）GET /api/v1/public/profile-meta
+func (ctrl *PublicController) GetProfileMeta(ctx *gin.Context) {
+	response.Success(ctx, ctrl.bloggerLogic.GetProfileMeta())
+}
+
 // GetHotArticles 获取热门文章列表 GET /api/v1/public/articles/hot
 func (ctrl *PublicController) GetHotArticles(ctx *gin.Context) {
 	var r req.HotArticleReq

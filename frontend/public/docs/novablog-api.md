@@ -244,14 +244,37 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | nickname | string | 昵称 |
 | avatar | string | 头像 URL |
 | bio | string | 个人简介 |
-| email | string | 邮箱 |
-| city | string | 所在城市 |
+| email | string | 邮箱（博主关闭"邮箱对外展示"开关时为空串 `""`） |
+| city | string | 所在城市（博主关闭"城市对外展示"开关时为空串 `""`） |
+| zodiac | object \| null | 星座信息 `{key, name, image, date_range, element}`；未设置或博主关闭"星座对外展示"开关时为 `null` |
+| personality | object \| null | 性格信息（MBTI）`{key, name, image, description}`；未设置或博主关闭"性格对外展示"开关时为 `null` |
 | blog_title | string | 博客标题 |
 | blog_description | string | 博客描述 |
 | page_background | string | 页面背景图 URL |
 | blog_icon | string | 博客 icon 图 URL |
 | social_links | array | 社交平台链接数组 [{platform, name, icon, color, url, sort_order}] |
 | tags | array | 标签字符串数组 |
+
+`zodiac` 对象字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| key | string | 星座 key（如 `aries`） |
+| name | string | 星座名称（如 `白羊座`） |
+| image | string | 星座连线图 SVG 片段（24×24 viewBox 内，前端配合 `v-html` 渲染） |
+| date_range | string | 日期范围（如 `3.21-4.19`） |
+| element | string | 星座类型（火象 / 土象 / 风象 / 水象） |
+
+`personality` 对象字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| key | string | MBTI 类型 key（如 `INTJ`） |
+| name | string | 类型名称（如 `建筑师`） |
+| image | string | 四字母徽章 SVG 片段（24×24 viewBox 内，前端配合 `v-html` 渲染） |
+| description | string | 一句话介绍 |
+
+> **注意**：`email`、`city`、`zodiac`、`personality` 四项均受博主在管理后台的"是否对外展示"开关控制，关闭时分别返回空串或 `null`，而非报错或省略字段。
 
 **响应示例:**
 
@@ -265,6 +288,19 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
     "bio": "全栈开发者",
     "email": "cus@example.com",
     "city": "上海",
+    "zodiac": {
+      "key": "leo",
+      "name": "狮子座",
+      "image": "<path d=\"M6 17.5L9.5 13...\"/>",
+      "date_range": "7.23-8.22",
+      "element": "火象"
+    },
+    "personality": {
+      "key": "INTJ",
+      "name": "建筑师",
+      "image": "<rect .../><text ...>INTJ</text>",
+      "description": "沉静而富有想象力，善于将洞察转化为长远策略与体系化方案。"
+    },
     "blog_title": "Cus Blog",
     "blog_description": "记录技术与生活",
     "page_background": "https://example.com/bg.jpg",
@@ -273,6 +309,38 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
       {"platform": "github", "name": "GitHub", "icon": "M12 .297c-6.63...", "color": "#181717", "url": "https://github.com/xxx", "sort_order": 0}
     ],
     "tags": ["Go", "Vue", "摄影"]
+  }
+}
+```
+
+#### GET /api/v1/public/profile-meta
+
+获取个人资料选项元数据：星座（12 项，按日期排序）与性格（MBTI 16 型）全量选项。供博客前台与管理后台选择器共用。
+
+**请求参数:** 无
+
+**响应 data 字段:**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| zodiac | array | 星座选项数组，每项字段同 `GET /api/v1/public/blogger` 的 `zodiac` 对象 |
+| personality | array | 性格选项数组，每项字段同 `GET /api/v1/public/blogger` 的 `personality` 对象 |
+
+**响应示例:**
+
+```json
+{
+  "code": 0,
+  "msg": "success",
+  "data": {
+    "zodiac": [
+      {"key": "aries", "name": "白羊座", "image": "<path .../><circle .../>", "date_range": "3.21-4.19", "element": "火象"},
+      {"key": "taurus", "name": "金牛座", "image": "<path .../><circle .../>", "date_range": "4.20-5.20", "element": "土象"}
+    ],
+    "personality": [
+      {"key": "INTJ", "name": "建筑师", "image": "<rect .../><text ...>INTJ</text>", "description": "沉静而富有想象力，善于将洞察转化为长远策略与体系化方案。"},
+      {"key": "INTP", "name": "逻辑学家", "image": "<rect .../><text ...>INTP</text>", "description": "热衷探索概念与原理，以严谨的逻辑推演理解世界的运行规律。"}
+    ]
   }
 }
 ```
@@ -595,9 +663,100 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| attractions | []map | 景点列表 |
-| itinerary | []map | 行程安排 |
-| reviews | []map | 评价列表 |
+| attractions | []map | 景点列表（结构见下表） |
+| itinerary | []map | 行程安排（结构见下表） |
+| reviews | []map | 评价列表（结构见下表） |
+
+**attractions[] 景点对象字段（JSONB 原样透出）:**
+
+| 字段 | 类型 | 必有 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 景点 ID |
+| name | string | 是 | 景点名称 |
+| description | string | 否 | 景点描述 |
+| image | string | 否 | 景点图片 URL；**JSONB 内部字段不做 URL 拼接**，以存储的原始值返回 |
+| duration | string | 否 | 游玩时长描述（如 "1天"） |
+| location | string | 选点后必有 | 定位文本地址 |
+| latitude | number | 选点后必有 | 纬度（坐标系见 `coordType`） |
+| longitude | number | 选点后必有 | 经度（坐标系见 `coordType`） |
+| coordType | string | 选点后必有 | 坐标系标记: `gcj02`（高德选点）/ `wgs84`（Google 选点） |
+
+> **容错要求**：历史数据可能缺失 `latitude`/`longitude`/`coordType`，也可能以 `coord_type`（下划线）键名存储；读取端必须对字段缺失与键名差异做防御式处理。坐标系语义：`gcj02` 适用于高德/腾讯系，`wgs84` 适用于 OSM/Google；缺失时视为未知坐标系（不做转换，直接使用原始值）。
+
+**itinerary[] 行程日对象字段:**
+
+| 字段 | 类型 | 必有 | 说明 |
+|------|------|------|------|
+| day | number | 是 | 天次（从 1 开始） |
+| title | string | 否 | 当日标题 |
+| description | string | 否 | 当日行程描述 |
+| attractions | []map | 是 | 当日景点完整对象数组（结构同 `attractions[]`） |
+| attractionIds | []string | 是 | 当日景点 ID 列表（与 `attractions` 顺序一致） |
+
+**reviews[] 评价对象字段:**
+
+| 字段 | 类型 | 必有 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 评价 ID |
+| username | string | 是 | 评价者昵称 |
+| avatar | string | 否 | 头像 URL（原始值，不拼接） |
+| rating | number | 否 | 评分 |
+| content | string | 是 | 评价内容 |
+| date | string | 否 | 评价日期文本 |
+
+#### GET /map-embed/travel/:id（地图嵌入页）
+
+> 注意：该端点位于 **CMS 根路径**（不在 `/api/v1` 下），返回 `text/html` 而非 JSON。供博客主题以 `<iframe>` 嵌入，展示攻略内全部含坐标景点的地图（Leaflet + OpenStreetMap 免 key 底图），访客点击景点后按坐标系自动跳转高德/Google 地图。设计详见仓库根目录《novablog-旅行攻略地图展示方案.md》。
+
+**路径参数:**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 攻略 ID |
+
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| h | int | 否 | 420 | 嵌入高度提示（px，200-2000），用于地图区域高度 |
+| lang | string | 否 | zh | 语言（预留） |
+
+**iframe 接入示例:**
+
+```html
+<iframe
+  src="/map-embed/travel/550e8400-e29b-41d4-a716-446655440000?h=420"
+  style="width:100%;border:0;border-radius:12px"
+  loading="lazy"
+  title="景点地图"
+></iframe>
+```
+
+> **地址拼接规则**：与取数 apiBase 同源——`theme-config.js` 注入的 `apiBase` 非空时，剥掉尾部 `/api/v1` 后拼接 `/map-embed/travel/{id}`；为空（同域部署）时直接使用相对路径。
+
+**postMessage 高度协议:**
+
+页面渲染完成后及窗口尺寸变化时向父窗口发送：
+
+```json
+{ "type": "novablog-map-embed:height", "height": 640 }
+```
+
+主题可监听 `message` 事件按需调整 iframe 高度；不监听时保持 `h` 指定高度即可。
+
+#### 景点跳转地图平台 URI 约定
+
+主题在地图之外的场景（如纯列表）也可用以下约定生成跳转链接。**链接始终使用存储的原始坐标**（目标平台消费自己的坐标系，不做转换）：
+
+| 坐标系 | 平台 | URI 模板 |
+|--------|------|----------|
+| gcj02 | 高德地图（推荐默认） | `https://uri.amap.com/marker?position={lng},{lat}&name={name}&src=novablog&callnative=1` |
+| gcj02 | 腾讯地图 | `https://apis.map.qq.com/uri/v1/marker?marker=coord:{lat},{lng};title:{name}&referer=novablog` |
+| wgs84 | Google 地图 | `https://www.google.com/maps/search/?api=1&query={lat},{lng}` |
+| wgs84 | Apple 地图 | `https://maps.apple.com/?ll={lat},{lng}&q={name}` |
+| 无坐标 | 按地名搜索 | 高德 `https://uri.amap.com/search?keyword={location}&src=novablog`；Google `https://www.google.com/maps/search/?api=1&query={location}` |
+
+> `callnative=1` 使移动端浏览器优先唤起高德 App。所有外链建议 `target="_blank"` + `rel="noopener noreferrer"`。
 
 ---
 
@@ -1450,7 +1609,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 | 模块 | 返回字段 | 排除字段 |
 |------|----------|----------|
-| 博主信息 | nickname, avatar, bio, email, city, blog_title, blog_description, page_background, blog_icon, social_links, tags | password_hash, username, last_login_at |
+| 博主信息 | nickname, avatar, bio, email, city, zodiac, personality, blog_title, blog_description, page_background, blog_icon, social_links, tags | password_hash, username, last_login_at |
 | 文章 | 全部字段（不含 deleted_at） | - |
 | 评论（公开） | id, target_type, target_id, parent_id, nickname, website, content, is_blogger, created_at | ip_address, blogger_id, updated_at, target_title |
 | 旅行攻略 | 全部字段（不含 deleted_at） | - |
@@ -1467,6 +1626,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | 技术栈 | 列表接口返回分页结构（list/total/page/page_size/total_pages），list 项含 id、name、category、icon、level、description、status、sort_order、created_at、updated_at；不含 deleted_at | - |
 | 模块开关配置 | article_enabled, media_enabled, music_enabled, video_enabled, travel_enabled, portfolio_enabled, equipment_enabled, project_enabled, open_source_enabled, recipe_enabled, book_enabled, game_enabled, fitness_enabled, tech_stack_enabled, updated_at | - |
 | 第三方歌单（公开） | id, title, cover_url, platform, platform_url, description, sort_order, enabled, created_at, updated_at | - |
+
+> **博主信息对外展示开关**：`email`、`city`、`zodiac`、`personality` 四项额外受博主在管理后台设置的"是否对外展示"开关控制。开关关闭时公开接口不抛错也不省略字段，而是返回空值——`email`/`city` 返回空串 `""`，`zodiac`/`personality` 返回 `null`。开关默认全部开启。
 
 ---
 

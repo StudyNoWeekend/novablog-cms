@@ -21,7 +21,8 @@ function toCreateReq(data: TravelGuideFormData) {
     status: data.status,
     destination: data.destination,
     region: data.region,
-    category_id: data.categoryId,
+    // 空分类传 null（Go 侧指针为 nil 视为未变更），传 "" 会触发 Postgres uuid 解析错误
+    category_id: data.categoryId || null,
     days: data.days,
     best_month: data.bestMonth,
     attractions: data.attractions,

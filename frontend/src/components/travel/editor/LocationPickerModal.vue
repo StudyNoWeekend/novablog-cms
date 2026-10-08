@@ -10,11 +10,11 @@
     <div class="location-picker">
       <!-- 地图服务标签 -->
       <div class="map-service-tag">
-        <a-tag :color="isAmap ? 'green' : 'blue'">
-          {{ isAmap ? '高德地图' : 'Google Maps' }}
+        <a-tag :color="providerColor">
+          {{ providerLabel }}
         </a-tag>
         <span class="map-service-hint">
-          {{ isAmap ? '当前地区使用高德地图' : '当前地区使用 Google Maps' }}
+          {{ providerHint }}
         </span>
       </div>
 
@@ -75,6 +75,8 @@ import { ref, watch, computed, nextTick } from 'vue'
 import { EnvironmentOutlined } from '@ant-design/icons-vue'
 import { useAmap } from '@/composables/useAmap'
 import { useGoogleMap } from '@/composables/useGoogleMap'
+import { useOsm } from '@/composables/useOsm'
+import { mapApi } from '@/api/map'
 import type { MapSearchResult, MapLocationResult } from '@/composables/mapTypes'
 import type { TravelRegion } from '@/types/travel'
 
@@ -88,6 +90,8 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
+type MapProvider = 'amap' | 'google' | 'osm'
+
 const mapContainer = ref<HTMLElement | null>(null)
 const searchKeyword = ref('')
 const searching = ref(false)
@@ -95,10 +99,23 @@ const searchResults = ref<MapSearchResult[]>([])
 const selectedAddress = ref('')
 const selectedLatitude = ref<number | null>(null)
 const selectedLongitude = ref<number | null>(null)
+const provider = ref<MapProvider>('amap')
 
-const isAmap = computed(() => props.region === 'china')
+const providerLabel = computed(() =>
+  provider.value === 'amap' ? '高德地图' : provider.value === 'google' ? 'Google Maps' : 'OSM 免 Key 模式',
+)
+const providerColor = computed(() =>
+  provider.value === 'amap' ? 'green' : provider.value === 'google' ? 'blue' : 'orange',
+)
+const providerHint = computed(() =>
+  provider.value === 'amap'
+    ? '当前地区使用高德地图'
+    : provider.value === 'google'
+      ? '当前地区使用 Google Maps'
+      : '未配置地图 Key 或加载失败，已切换 OSM 免 Key 模式（WGS-84 坐标）',
+)
 
-// 区域中心坐标映射 (高德用 [lng, lat], 谷歌用 {lat, lng})
+// 区域中心坐标映射 (高德用 [lng, lat], 谷歌/OSM 用 {lat, lng})
 const regionCenters: Record<string, { lat: number; lng: number }> = {
   china: { lat: 35.8617, lng: 104.1954 },
   japan: { lat: 36.2048, lng: 138.2529 },
@@ -130,32 +147,66 @@ let mapReady = false
 
 const amap = useAmap()
 const googleMap = useGoogleMap()
+const osm = useOsm()
 
 async function initMap() {
   if (!mapContainer.value) return
 
   const center = regionCenters[props.region] ?? { lat: 35.8617, lng: 104.1954 }
 
-  if (isAmap.value) {
-    await amap.initMap(mapContainer.value, [center.lng, center.lat])
-    amap.onMapClick(async (lng: number, lat: number) => {
-      await handleMapClick(lng, lat)
-    })
+  // 运行时读取后端地图配置（失败容错返回 null，回退编译期 env）
+  const mapConfig = await mapApi.getConfigCached().catch(() => null)
+
+  // 优先按地区选择商业地图（Key 来自后端配置或 .env），加载失败或未配置时降级 OSM 免 Key 模式
+  if (props.region === 'china') {
+    try {
+      await amap.initMap(
+        mapContainer.value,
+        [center.lng, center.lat],
+        { key: mapConfig?.amap_key, securityCode: mapConfig?.amap_security_code },
+      )
+      amap.onMapClick(async (lng: number, lat: number) => {
+        await handleMapClick(lng, lat)
+      })
+      provider.value = 'amap'
+      mapReady = true
+      return
+    } catch {
+      destroyMap()
+    }
   } else {
-    await googleMap.initMap(mapContainer.value, { lat: center.lat, lng: center.lng })
-    googleMap.onMapClick(async (lat: number, lng: number) => {
-      await handleMapClick(lng, lat)
-    })
+    try {
+      await googleMap.initMap(
+        mapContainer.value,
+        { lat: center.lat, lng: center.lng },
+        { key: mapConfig?.google_key },
+      )
+      googleMap.onMapClick(async (lat: number, lng: number) => {
+        await handleMapClick(lng, lat)
+      })
+      provider.value = 'google'
+      mapReady = true
+      return
+    } catch {
+      destroyMap()
+    }
   }
 
+  await osm.initMap(mapContainer.value, center)
+  osm.onMapClick(async (lat: number, lng: number) => {
+    await handleMapClick(lng, lat)
+  })
+  provider.value = 'osm'
   mapReady = true
 }
 
 function destroyMap() {
-  if (isAmap.value) {
+  if (provider.value === 'amap') {
     amap.destroyMap()
-  } else {
+  } else if (provider.value === 'google') {
     googleMap.destroyMap()
+  } else {
+    osm.destroyMap()
   }
   mapReady = false
 }
@@ -165,13 +216,17 @@ async function handleMapClick(lng: number, lat: number) {
   selectedLongitude.value = lng
 
   // 放置标记
-  if (isAmap.value) {
+  if (provider.value === 'amap') {
     amap.placeMarker(lng, lat)
     const address = await amap.reverseGeocode(lng, lat)
     selectedAddress.value = address
-  } else {
+  } else if (provider.value === 'google') {
     googleMap.placeMarker(lat, lng)
     const address = await googleMap.reverseGeocode(lat, lng)
+    selectedAddress.value = address
+  } else {
+    osm.placeMarker(lat, lng)
+    const address = await osm.reverseGeocode(lat, lng)
     selectedAddress.value = address
   }
 }
@@ -182,10 +237,12 @@ async function handleSearch() {
 
   searching.value = true
   try {
-    if (isAmap.value) {
+    if (provider.value === 'amap') {
       searchResults.value = await amap.searchPlaces(keyword)
-    } else {
+    } else if (provider.value === 'google') {
       searchResults.value = await googleMap.searchPlaces(keyword)
+    } else {
+      searchResults.value = await osm.searchPlaces(keyword)
     }
   } catch {
     searchResults.value = []
@@ -199,10 +256,12 @@ async function handleSelectSearchResult(item: MapSearchResult) {
   selectedLatitude.value = item.latitude
   selectedLongitude.value = item.longitude
 
-  if (isAmap.value) {
+  if (provider.value === 'amap') {
     amap.placeMarker(item.longitude, item.latitude)
-  } else {
+  } else if (provider.value === 'google') {
     googleMap.placeMarker(item.latitude, item.longitude)
+  } else {
+    osm.placeMarker(item.latitude, item.longitude)
   }
 
   searchResults.value = []
@@ -218,6 +277,7 @@ function handleConfirm() {
     address: selectedAddress.value,
     latitude: selectedLatitude.value,
     longitude: selectedLongitude.value,
+    coordType: provider.value === 'amap' ? 'gcj02' : 'wgs84',
   })
 }
 

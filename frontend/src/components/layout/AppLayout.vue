@@ -15,7 +15,7 @@
       class="mobile-overlay"
       @click="appStore.sidebarCollapsed = true"
     />
-    <RoleSelectModal v-model:open="roleModalVisible" />
+    <RoleSelectModal v-model:open="appStore.roleModalVisible" />
   </div>
 </template>
 
@@ -31,7 +31,6 @@ import RoleSelectModal from './RoleSelectModal.vue'
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const isMobile = ref(false)
-const roleModalVisible = ref(false)
 
 function checkMobile() {
   isMobile.value = window.innerWidth <= 768
@@ -45,7 +44,7 @@ onMounted(async () => {
   // role 为空（旧版本用户/首装跳过）则弹窗补选；关闭不持久化，刷新后仍未选会再次弹出
   await authStore.fetchUserInfo()
   if (authStore.user && !authStore.user.role) {
-    roleModalVisible.value = true
+    appStore.roleModalVisible = true
   }
 })
 

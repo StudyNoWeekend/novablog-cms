@@ -209,6 +209,12 @@ export default [
         meta: { title: '模块管理', icon: 'SettingOutlined' },
         component: () => import('@/views/module/ModuleConfigView.vue'),
       },
+      {
+        path: 'map-config',
+        name: 'MapConfig',
+        meta: { title: '地图配置' },
+        component: () => import('@/views/map/MapConfigView.vue'),
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/error/NotFoundView.vue') },

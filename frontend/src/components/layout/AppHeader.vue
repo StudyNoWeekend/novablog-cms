@@ -6,7 +6,18 @@
       </span>
       <div class="greeting-wrapper">
         <h1 class="greeting">Hi, {{ nickname }}</h1>
-        <p class="subtitle">欢迎来到你的创作空间</p>
+        <div class="subtitle-row">
+          <p class="subtitle">{{ roleDisplay }}</p>
+          <a-button
+            v-if="hasRole"
+            type="link"
+            size="small"
+            class="role-edit-btn"
+            @click="appStore.roleModalVisible = true"
+          >
+            修改
+          </a-button>
+        </div>
       </div>
     </div>
     <div class="header-right">
@@ -33,12 +44,27 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { SearchOutlined, MailOutlined, BellOutlined, MenuOutlined } from '@ant-design/icons-vue'
 import AppAvatar from '@/components/common/AppAvatar.vue'
+import { ALL_ROLES } from '@/constants/setupRoles'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
 
 const nickname = computed(() => {
   return authStore.user?.nickname || authStore.username || '用户'
+})
+
+const hasRole = computed(() => !!authStore.user?.role)
+
+// 已选创作方向的展示文案：role 为空时回退到欢迎语（失效 key 自动过滤）
+const roleDisplay = computed(() => {
+  const role = authStore.user?.role
+  if (!role) return '欢迎来到你的创作空间'
+  const labels = role
+    .split(',')
+    .map((key) => key.trim())
+    .map((key) => ALL_ROLES.find((r) => r.key === key)?.label)
+    .filter(Boolean)
+  return labels.length ? labels.join(' · ') : '欢迎来到你的创作空间'
 })
 </script>
 
@@ -67,6 +93,18 @@ const nickname = computed(() => {
   flex-direction: column;
   justify-content: center;
   gap: 2px;
+}
+
+.subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.role-edit-btn {
+  height: auto;
+  padding: 0;
+  font-size: 12px;
 }
 
 .hamburger-btn {

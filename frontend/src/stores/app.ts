@@ -11,6 +11,8 @@ export const useAppStore = defineStore('app', () => {
   const sidebarCollapsed = ref(false)
   const breadcrumbs = ref<BreadcrumbItem[]>([])
   const appVersion = ref('')
+  // 创作方向选择/补选弹窗（AppLayout 自动弹出 + AppHeader「修改」按钮共用）
+  const roleModalVisible = ref(false)
 
   // 在途拉取 Promise，避免多个组件挂载时重复请求
   let versionPromise: Promise<void> | null = null
@@ -40,6 +42,7 @@ export const useAppStore = defineStore('app', () => {
     sidebarCollapsed,
     breadcrumbs,
     appVersion,
+    roleModalVisible,
     toggleSidebar,
     setBreadcrumbs,
     fetchVersion,

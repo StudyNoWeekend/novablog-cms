@@ -8,14 +8,27 @@ let clickHandler: ((lng: number, lat: number) => void) | null = null
 let placeSearch: any = null
 let geocoder: any = null
 
-export function useAmap() {
-  const amapKey = import.meta.env.VITE_AMAP_KEY
-  const amapSecurityCode = import.meta.env.VITE_AMAP_SECURITY_CODE
+/** 运行时 Key 配置（后端 map-config 下发）；未提供时回退编译期 env */
+export interface AmapCredentials {
+  key?: string
+  securityCode?: string
+}
 
-  async function initMap(container: HTMLElement, center?: [number, number]): Promise<void> {
-    if (!amapKey) {
-      console.warn('[useAmap] VITE_AMAP_KEY is not configured. Map will not load.')
-      return
+const PLACEHOLDER_KEY = 'your_amap_key_here'
+
+export function useAmap() {
+  const envKey = import.meta.env.VITE_AMAP_KEY
+  const envSecurityCode = import.meta.env.VITE_AMAP_SECURITY_CODE
+
+  async function initMap(
+    container: HTMLElement,
+    center?: [number, number],
+    credentials?: AmapCredentials,
+  ): Promise<void> {
+    const amapKey = credentials?.key || envKey
+    const amapSecurityCode = credentials?.securityCode || envSecurityCode
+    if (!amapKey || amapKey === PLACEHOLDER_KEY) {
+      throw new Error('[useAmap] AMap key is not configured')
     }
 
     // Set security config before loading
@@ -55,6 +68,18 @@ export function useAmap() {
       if (clickHandler) {
         clickHandler(lng, lat)
       }
+    })
+
+    // 等待首屏瓦片渲染完成：Key 无效/安全密钥缺失时 JSAPI 能加载但地图永远渲染不出来，
+    // 此时抛错让调用方（选点弹窗）降级 OSM 免 Key 模式
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error('[useAmap] AMap map did not complete rendering (invalid key or security code?)'))
+      }, 6000)
+      mapInstance.on('complete', () => {
+        clearTimeout(timer)
+        resolve()
+      })
     })
   }
 

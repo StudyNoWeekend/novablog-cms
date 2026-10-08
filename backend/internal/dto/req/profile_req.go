@@ -14,6 +14,12 @@ type UpdateProfileReq struct {
 	Bio             *string          `json:"bio" binding:"omitempty"`                     // 个人简介
 	Email           *string          `json:"email" binding:"omitempty,max=100"`           // 邮箱
 	City            *string          `json:"city" binding:"omitempty,max=100"`            // 所在城市
+	Personality     *string          `json:"personality" binding:"omitempty,max=20"`      // 性格（MBTI key，白名单在 logic 层校验；空串表示清除）
+	Zodiac          *string          `json:"zodiac" binding:"omitempty,max=20"`           // 星座 key（白名单在 logic 层校验；空串表示清除）
+	ShowEmail       *bool            `json:"show_email"`                                  // 邮箱是否对外展示
+	ShowCity        *bool            `json:"show_city"`                                   // 城市是否对外展示
+	ShowZodiac      *bool            `json:"show_zodiac"`                                 // 星座是否对外展示
+	ShowPersonality *bool            `json:"show_personality"`                            // 性格是否对外展示
 	PageBackground  *string          `json:"page_background" binding:"omitempty,max=500"` // 页面背景图 URL
 	BlogIcon        *string          `json:"blog_icon" binding:"omitempty,max=500"`       // 博客 icon 图 URL
 	BlogTitle       *string          `json:"blog_title" binding:"omitempty,max=100"`      // 博客标题

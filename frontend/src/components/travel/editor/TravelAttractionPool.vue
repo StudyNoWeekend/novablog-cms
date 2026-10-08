@@ -220,7 +220,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { Modal } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
   EditOutlined,
@@ -263,6 +263,7 @@ const emptyForm = (): AttractionFormData => ({
   location: '',
   latitude: undefined,
   longitude: undefined,
+  coordType: undefined,
   notes: '',
 })
 
@@ -326,6 +327,8 @@ function handleModalOk() {
   const location = form.location?.trim() ?? ''
 
   if (!name || !duration || !location) {
+    // 给出可见反馈，避免静默失败让用户误以为已添加
+    message.warning('请完善景点名称、游玩天数，并完成选择定位')
     return
   }
 
@@ -338,6 +341,7 @@ function handleModalOk() {
     location,
     latitude: form.latitude,
     longitude: form.longitude,
+    coordType: form.latitude != null ? form.coordType : undefined,
     notes: form.notes?.trim() || undefined,
   } as TravelAttraction
 
@@ -415,6 +419,7 @@ function handleLocationSelect(location: MapLocationResult) {
   form.location = location.address
   form.latitude = location.latitude
   form.longitude = location.longitude
+  form.coordType = location.coordType
   locationPickerVisible.value = false
 }
 

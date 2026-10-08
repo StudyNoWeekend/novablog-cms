@@ -3,7 +3,9 @@ package logic
 import (
 	"context"
 	"errors"
+	"strings"
 
+	"novablog/assets/platformlogos"
 	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
@@ -151,15 +153,28 @@ func (l *ThirdPartyPlaylistLogic) GetPublicList(ctx context.Context) ([]res.Play
 // toRes 将模型转换为响应结构体。
 func (l *ThirdPartyPlaylistLogic) toRes(p *model.ThirdPartyPlaylist) *res.PlaylistRes {
 	return &res.PlaylistRes{
-		ID:          p.ID,
-		Title:       p.Title,
-		CoverURL:    p.CoverURL,
-		Platform:    p.Platform,
-		PlatformURL: p.PlatformURL,
-		Description: p.Description,
-		SortOrder:   p.SortOrder,
-		Enabled:     p.Enabled,
-		CreatedAt:   p.CreatedAt,
-		UpdatedAt:   p.UpdatedAt,
+		ID:           p.ID,
+		Title:        p.Title,
+		CoverURL:     p.CoverURL,
+		Platform:     p.Platform,
+		PlatformURL:  p.PlatformURL,
+		PlatformLogo: platformLogoURL(p.Platform),
+		Description:  p.Description,
+		SortOrder:    p.SortOrder,
+		Enabled:      p.Enabled,
+		CreatedAt:    p.CreatedAt,
+		UpdatedAt:    p.UpdatedAt,
 	}
+}
+
+// platformLogoURL 拼接平台 Logo 完整 URL；与歌曲封面 resolveURL 一致，BaseURL 未配置时返回相对路径。
+func platformLogoURL(platform string) string {
+	path := platformlogos.URLPath(platform)
+	if path == "" {
+		return ""
+	}
+	if model.BaseURL == "" {
+		return path
+	}
+	return strings.TrimRight(model.BaseURL, "/") + path
 }

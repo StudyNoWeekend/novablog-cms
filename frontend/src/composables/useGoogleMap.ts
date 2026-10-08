@@ -9,16 +9,24 @@ let geocoder: google.maps.Geocoder | null = null
 let placesService: google.maps.places.PlacesService | null = null
 let autocompleteService: google.maps.places.AutocompleteService | null = null
 
+/** 运行时 Key 配置（后端 map-config 下发）；未提供时回退编译期 env */
+export interface GoogleMapCredentials {
+  key?: string
+}
+
+const PLACEHOLDER_KEY = 'your_google_maps_api_key_here'
+
 export function useGoogleMap() {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
   async function initMap(
     container: HTMLElement,
     center?: { lat: number; lng: number },
+    credentials?: GoogleMapCredentials,
   ): Promise<void> {
-    if (!apiKey) {
-      console.warn('[useGoogleMap] VITE_GOOGLE_MAPS_API_KEY is not configured. Map will not load.')
-      return
+    const apiKey = credentials?.key || envKey
+    if (!apiKey || apiKey === PLACEHOLDER_KEY) {
+      throw new Error('[useGoogleMap] Google Maps key is not configured')
     }
 
     setOptions({

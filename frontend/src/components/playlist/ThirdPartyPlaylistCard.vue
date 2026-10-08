@@ -3,18 +3,20 @@
     <!-- 封面 -->
     <div class="playlist-card__cover">
       <img
-        v-if="playlist.cover_url"
+        v-if="playlist.cover_url && !coverFailed"
         :src="playlist.cover_url"
         :alt="playlist.title"
         loading="lazy"
         @error="coverFailed = true"
       />
       <div v-else class="playlist-card__placeholder" :style="{ background: platform.color }">
-        <span class="playlist-card__placeholder-text">{{ platform.icon }}</span>
+        <img v-if="platformLogo" :src="platformLogo" class="playlist-card__placeholder-logo" alt="" />
+        <span v-else class="playlist-card__placeholder-text">{{ platform.icon }}</span>
       </div>
       <!-- 平台徽标 -->
       <div class="playlist-card__platform-badge" :style="{ background: platform.color }">
-        {{ platform.icon }}
+        <img v-if="platformLogo" :src="platformLogo" class="playlist-card__badge-logo" alt="" />
+        <template v-else>{{ platform.icon }}</template>
       </div>
     </div>
 
@@ -53,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { ThirdPartyPlaylist } from '@/types/playlist'
 import { getPlatformConfig } from '@/utils/platformConfig'
 
@@ -69,6 +71,15 @@ const emit = defineEmits<{
 
 const coverFailed = ref(false)
 const platform = getPlatformConfig(props.playlist.platform)
+const platformLogo = computed(() => props.playlist.platform_logo || '')
+
+// 封面被修改后重置加载失败标记，允许新封面重新尝试
+watch(
+  () => props.playlist.cover_url,
+  () => {
+    coverFailed.value = false
+  },
+)
 </script>
 
 <style scoped>
@@ -118,6 +129,12 @@ const platform = getPlatformConfig(props.playlist.platform)
   user-select: none;
 }
 
+.playlist-card__placeholder .playlist-card__placeholder-logo {
+  width: 64px;
+  height: 64px;
+  user-select: none;
+}
+
 /* 平台徽标 */
 .playlist-card__platform-badge {
   position: absolute;
@@ -133,6 +150,11 @@ const platform = getPlatformConfig(props.playlist.platform)
   font-size: 14px;
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.playlist-card__platform-badge .playlist-card__badge-logo {
+  width: 15px;
+  height: 15px;
 }
 
 /* 内容 */
