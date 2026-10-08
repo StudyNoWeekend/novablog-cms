@@ -37,6 +37,29 @@ export interface SocialLink {
   sort_order: number
 }
 
+/** 星座选项元数据（image 为 24×24 viewBox 内的自包含 SVG 片段，配合 v-html 渲染） */
+export interface ZodiacMeta {
+  key: string
+  name: string
+  image: string
+  date_range: string
+  element: string
+}
+
+/** 性格选项元数据（MBTI 16 型，image 为四字母徽章 SVG 片段） */
+export interface PersonalityMeta {
+  key: string
+  name: string
+  image: string
+  description: string
+}
+
+/** 个人资料选项元数据（星座 + 性格全量选项） */
+export interface ProfileMeta {
+  zodiac: ZodiacMeta[]
+  personality: PersonalityMeta[]
+}
+
 export interface UserInfo {
   id: string
   username: string
@@ -49,6 +72,18 @@ export interface UserInfo {
   blog_description: string
   email: string
   city: string
+  /** 性格（MBTI key，如 INTJ）；空串表示未设置 */
+  personality?: string
+  /** 星座 key（如 aries）；空串表示未设置 */
+  zodiac?: string
+  /** 邮箱是否对外展示 */
+  show_email?: boolean
+  /** 城市是否对外展示 */
+  show_city?: boolean
+  /** 星座是否对外展示 */
+  show_zodiac?: boolean
+  /** 性格是否对外展示 */
+  show_personality?: boolean
   /** 创作方向角色 key，多选逗号分隔；空串表示未选过（旧版本用户/首装跳过），需弹窗补选 */
   role?: string
   social_links?: SocialLink[]
@@ -61,6 +96,12 @@ export interface UpdateProfileReq {
   bio?: string
   email?: string
   city?: string
+  personality?: string
+  zodiac?: string
+  show_email?: boolean
+  show_city?: boolean
+  show_zodiac?: boolean
+  show_personality?: boolean
   page_background?: string
   blog_icon?: string
   blog_title?: string
@@ -106,6 +147,23 @@ export interface UpdateThemeMarketConfigReq {
 /** 公共配置下发（免鉴权，默认值由后端控制） */
 export interface PublicConfigRes {
   market_base_url: string
+}
+
+// ---- 地图服务配置 ----
+
+/** 地图服务配置（管理端；安全密钥返回解密后明文，供选点器注入 _AMapSecurityConfig） */
+export interface MapConfigRes {
+  amap_key: string
+  amap_security_code: string
+  google_key: string
+  updated_at: string
+}
+
+export interface UpdateMapConfigReq {
+  amap_key: string
+  /** 留空 = 保持后端原值（后端加密存储） */
+  amap_security_code: string
+  google_key: string
 }
 
 export interface FrameConfig {

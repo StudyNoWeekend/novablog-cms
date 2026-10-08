@@ -225,6 +225,8 @@ export interface TravelAttraction {
   location?: string
   latitude?: number
   longitude?: number
+  /** 选点来源坐标系：高德为 gcj02，Google 为 wgs84；旧数据可能缺失 */
+  coordType?: 'gcj02' | 'wgs84'
 }
 
 export interface TravelItineraryDay {

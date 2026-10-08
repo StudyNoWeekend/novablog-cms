@@ -1,6 +1,10 @@
 package controller
 
 import (
+	"net/http"
+	"strings"
+
+	"novablog/assets/platformlogos"
 	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
@@ -84,4 +88,17 @@ func (c *PlaylistController) Delete(ctx *gin.Context) {
 		return
 	}
 	response.Success(ctx, nil)
+}
+
+// GetPlatformLogo 下发第三方平台品牌 Logo GET /api/v1/public/platform-logos/:filename
+// 仅按内嵌白名单返回（如 netease.svg），无文件系统访问，未知平台返回 404。
+func (c *PlaylistController) GetPlatformLogo(ctx *gin.Context) {
+	platform := strings.TrimSuffix(ctx.Param("filename"), ".svg")
+	data, ok := platformlogos.Get(platform)
+	if !ok {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+	ctx.Header("Cache-Control", "public, max-age=31536000, immutable")
+	ctx.Data(http.StatusOK, "image/svg+xml", data)
 }

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>旅行攻略地图 - NovaBlog</title>
+<link rel="stylesheet" href="/map-embed/assets/leaflet.css">
+<style>
+  :root { --line: #e2e8f0; --text: #1e293b; --text2: #64748b; --brand: #4a6cf7; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #f8f9fb; }
+  body { font: 14px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; color: var(--text); }
+  .wrap { padding: 12px; }
+  #map { height: 300px; border-radius: 10px; border: 1px solid var(--line); background: #e8eaed; z-index: 0; }
+  .state { padding: 48px 12px; text-align: center; color: var(--text2); }
+  .section-title { margin: 14px 2px 8px; font-size: 13px; font-weight: 600; color: var(--text2); }
+  .poi-list { display: flex; flex-direction: column; gap: 8px; }
+  .poi { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+  .poi-dot { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+  .poi-dot.has-coord { background: var(--brand); }
+  .poi-dot.no-coord { background: #cbd5e1; }
+  .poi-main { flex: 1; min-width: 0; }
+  .poi-name { font-weight: 600; }
+  .poi-meta { font-size: 12px; color: var(--text2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .poi-links { flex-shrink: 0; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .poi-link { font-size: 12px; color: var(--brand); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+  .poi-link:hover { background: #eef1fe; }
+  /* Leaflet 圆点 marker（divIcon，不依赖图片资源） */
+  .nb-marker { background: transparent; }
+  .nb-marker i { display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--brand); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .leaflet-container { font: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="state" class="state">地图加载中…</div>
+  <div id="map" style="display:none"></div>
+  <div id="list-section" style="display:none">
+    <div class="section-title">景点列表</div>
+    <div id="poi-list" class="poi-list"></div>
+  </div>
+</div>
+
+<script src="/map-embed/assets/leaflet.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var stateEl = document.getElementById('state');
+  var mapEl = document.getElementById('map');
+  var listSectionEl = document.getElementById('list-section');
+  var poiListEl = document.getElementById('poi-list');
+
+  // 解析路径中的攻略 ID：/map-embed/travel/:id
+  var guideId = (function () {
+    var parts = location.pathname.split('/').filter(Boolean);
+    return parts.length >= 3 ? decodeURIComponent(parts[2]) : '';
+  })();
+
+  // 查询参数：h 为嵌入高度提示（px），lang 预留
+  var params = new URLSearchParams(location.search);
+  var heightHint = parseInt(params.get('h'), 10);
+  if (!heightHint || heightHint < 200 || heightHint > 2000) heightHint = 420;
+
+  function showState(text) {
+    stateEl.style.display = 'block';
+    stateEl.textContent = text;
+    mapEl.style.display = 'none';
+    listSectionEl.style.display = 'none';
+  }
+
+  function escapeText(s) { return String(s == null ? '' : s); }
+
+  function firstKey(obj, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var v = obj[keys[i]];
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return undefined;
+  }
+
+  function num(v) { var n = typeof v === 'number' ? v : parseFloat(v); return isFinite(n) ? n : null; }
+
+  /* ---------- GCJ-02 → WGS-84 近似纠偏（公开算法，纯数学变换，误差约 1-2m） ---------- */
+  function outOfChina(lng, lat) {
+    return lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271;
+  }
+  function gcjOffset(lng, lat) {
+    var a = 6378245.0, ee = 0.00669342162296594323;
+    var dLat = -100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat + 0.2 * Math.sqrt(Math.abs(lng));
+    dLat += (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0 / 3.0;
+    dLat += (20.0 * Math.sin(lat * Math.PI) + 40.0 * Math.sin(lat / 3.0 * Math.PI)) * 2.0 / 3.0;
+    dLat += (160.0 * Math.sin(lat / 12.0 * Math.PI) + 320 * Math.sin(lat * Math.PI / 30.0)) * 2.0 / 3.0;
+    var dLng = 300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1 * Math.sqrt(Math.abs(lng));
+    dLng += (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0 / 3.0;
+    dLng += (20.0 * Math.sin(lng * Math.PI) + 40.0 * Math.sin(lng / 3.0 * Math.PI)) * 2.0 / 3.0;
+    dLng += (150.0 * Math.sin(lng / 12.0 * Math.PI) + 300.0 * Math.sin(lng / 30.0 * Math.PI)) * 2.0 / 3.0;
+    var radLat = lat / 180.0 * Math.PI;
+    var magic = Math.sin(radLat);
+    magic = 1 - ee * magic * magic;
+    var sqrtMagic = Math.sqrt(magic);
+    dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+    dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+    return { dLng: dLng, dLat: dLat };
+  }
+  function wgs84FromGcj02(lng, lat) {
+    if (outOfChina(lng, lat)) return { lng: lng, lat: lat };
+    var wLng = lng, wLat = lat;
+    for (var i = 0; i < 3; i++) {
+      var d = gcjOffset(wLng, wLat);
+      wLng = lng - d.dLng;
+      wLat = lat - d.dLat;
+    }
+    return { lng: wLng, lat: wLat };
+  }
+
+  /* ---------- 跳转外链：按坐标系自动选平台（使用原始存储坐标，不做纠偏） ---------- */
+  function jumpUrls(attr) {
+    var name = escapeText(attr.name || attr.location || '');
+    var lat = num(firstKey(attr, ['latitude', 'lat']));
+    var lng = num(firstKey(attr, ['longitude', 'lng']));
+    var coordType = firstKey(attr, ['coordType', 'coord_type']);
+    if (lat !== null && lng !== null) {
+      if (coordType === 'gcj02') {
+        return [{
+          label: '在高德地图打开',
+          url: 'https://uri.amap.com/marker?position=' + lng + ',' + lat +
+            '&name=' + encodeURIComponent(name) + '&src=novablog&callnative=1'
+        }];
+      }
+      return [{
+        label: '在 Google 地图打开',
+        url: 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng
+      }];
+    }
+    var keyword = escapeText(attr.location || attr.name || '');
+    if (!keyword) return [];
+    var links = [{
+      label: '高德搜索',
+      url: 'https://uri.amap.com/search?keyword=' + encodeURIComponent(keyword) + '&src=novablog'
+    }];
+    links.push({
+      label: 'Google 搜索',
+      url: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(keyword)
+    });
+    return links;
+  }
+
+  function buildLinks(links) {
+    var wrap = document.createElement('span');
+    wrap.className = 'poi-links';
+    links.forEach(function (l) {
+      var a = document.createElement('a');
+      a.className = 'poi-link';
+      a.href = l.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = l.label;
+      wrap.appendChild(a);
+    });
+    return wrap;
+  }
+
+  function buildPoi(attr, hasCoord) {
+    var row = document.createElement('div');
+    row.className = 'poi';
+    var dot = document.createElement('span');
+    dot.className = 'poi-dot ' + (hasCoord ? 'has-coord' : 'no-coord');
+    var main = document.createElement('div');
+    main.className = 'poi-main';
+    var nameEl = document.createElement('div');
+    nameEl.className = 'poi-name';
+    nameEl.textContent = escapeText(attr.name || '未命名景点');
+    main.appendChild(nameEl);
+    var meta = [attr.duration, attr.location].filter(function (v) { return v; }).join(' · ');
+    if (meta) {
+      var metaEl = document.createElement('div');
+      metaEl.className = 'poi-meta';
+      metaEl.textContent = meta;
+      main.appendChild(metaEl);
+    }
+    row.appendChild(dot);
+    row.appendChild(main);
+    var links = jumpUrls(attr);
+    if (links.length) row.appendChild(buildLinks(links));
+    return row;
+  }
+
+  function postHeight() {
+    var h = Math.max(heightHint, document.documentElement.scrollHeight);
+    window.parent.postMessage({ type: 'novablog-map-embed:height', height: h }, '*');
+  }
+
+  function render(data) {
+    var attractions = Array.isArray(data.attractions) ? data.attractions : [];
+    var pois = [];
+    attractions.forEach(function (a) {
+      if (!a || typeof a !== 'object') return;
+      var lat = num(firstKey(a, ['latitude', 'lat']));
+      var lng = num(firstKey(a, ['longitude', 'lng']));
+      if (lat !== null && lng !== null) pois.push({ attr: a, lat: lat, lng: lng });
+    });
+
+    // 景点列表（含无坐标项）
+    if (attractions.length) {
+      listSectionEl.style.display = 'block';
+      attractions.forEach(function (a) {
+        if (!a || typeof a !== 'object') return;
+        var hasCoord = num(firstKey(a, ['latitude', 'lat'])) !== null &&
+          num(firstKey(a, ['longitude', 'lng'])) !== null;
+        poiListEl.appendChild(buildPoi(a, hasCoord));
+      });
+    }
+
+    if (!pois.length) {
+      stateEl.style.display = 'block';
+      stateEl.textContent = attractions.length
+        ? '该攻略暂无带坐标的景点，可从下方列表跳转地图平台查看'
+        : '该攻略暂未添加景点';
+      mapEl.style.display = 'none';
+      postHeight();
+      return;
+    }
+
+    stateEl.style.display = 'none';
+    mapEl.style.display = 'block';
+    mapEl.style.height = Math.min(420, Math.max(220, Math.round(heightHint * 0.62))) + 'px';
+
+    var map = L.map(mapEl, { scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var bounds = [];
+    pois.forEach(function (p) {
+      var coordType = firstKey(p.attr, ['coordType', 'coord_type']);
+      // OSM 底图为 WGS-84：gcj02 点需纠偏后上图；跳转链接使用原始坐标
+      var display = coordType === 'gcj02' ? wgs84FromGcj02(p.lng, p.lat) : { lng: p.lng, lat: p.lat };
+      var icon = L.divIcon({ className: 'nb-marker', html: '<i></i>', iconSize: [14, 14], iconAnchor: [7, 7] });
+      var marker = L.marker([display.lat, display.lng], { icon: icon }).addTo(map);
+      var popup = document.createElement('div');
+      var title = document.createElement('div');
+      title.style.fontWeight = '600';
+      title.textContent = escapeText(p.attr.name || '未命名景点');
+      popup.appendChild(title);
+      var loc = escapeText(p.attr.location || '');
+      if (loc) {
+        var locEl = document.createElement('div');
+        locEl.style.cssText = 'font-size:12px;color:#64748b;margin:2px 0 6px;max-width:220px;';
+        locEl.textContent = loc;
+        popup.appendChild(locEl);
+      }
+      var links = jumpUrls(p.attr);
+      if (links.length) popup.appendChild(buildLinks(links));
+      marker.bindPopup(popup);
+      bounds.push([display.lat, display.lng]);
+    });
+
+    map.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
+    setTimeout(postHeight, 300);
+    setTimeout(postHeight, 1200);
+    window.addEventListener('resize', postHeight);
+  }
+
+  function load() {
+    if (!guideId) { showState('缺少攻略 ID'); postHeight(); return; }
+    fetch('/api/v1/public/travels/' + encodeURIComponent(guideId), { credentials: 'omit' })
+      .then(function (res) { return res.json(); })
+      .then(function (body) {
+        if (body && body.code === 0 && body.data) {
+          render(body.data);
+        } else {
+          showState((body && body.msg) ? body.msg : '攻略加载失败');
+          postHeight();
+        }
+      })
+      .catch(function () {
+        showState('攻略加载失败，请稍后重试');
+        postHeight();
+      });
+  }
+
+  if (typeof L === 'undefined') {
+    showState('地图组件加载失败');
+    postHeight();
+  } else {
+    load();
+  }
+  postHeight();
+})();
+</script>
+</body>
+</html>

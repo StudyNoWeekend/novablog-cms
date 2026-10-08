@@ -1,17 +1,15 @@
 <template>
   <a-modal
     v-model:open="visible"
-    title="选择你的创作方向"
+    :title="modalTitle"
     :width="760"
     :confirm-loading="saving"
     ok-text="保存"
-    cancel-text="稍后再选"
+    :cancel-text="hasRole ? '取消' : '稍后再选'"
     :ok-button-props="{ disabled: selected.length === 0 }"
     @ok="handleSave"
   >
-    <p class="role-modal__desc">
-      检测到你还没有选择创作方向。选择爱好（可多选）后，系统将按方向定制左侧菜单模块，之后可在「模块管理」中随时调整。
-    </p>
+    <p class="role-modal__desc">{{ modalDesc }}</p>
 
     <div class="role-modal__picker">
       <RolePickerCards v-model:selected="selected" />
@@ -46,7 +44,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useModuleStore } from '@/stores/module'
 import { pathModuleMap } from '@/router/guards'
 import { MODULE_DEFS, COMMON_MODULE_KEYS } from '@/constants/modules'
-import { computeModulePreset, type RoleKey } from '@/constants/setupRoles'
+import { ALL_ROLES, computeModulePreset, type RoleKey } from '@/constants/setupRoles'
 
 const props = defineProps<{
   open: boolean
@@ -68,11 +66,31 @@ const moduleStore = useModuleStore()
 const selected = ref<RoleKey[]>([])
 const saving = ref(false)
 
-// 每次打开重置选择（弹窗仅在服务端 role 为空时出现，不记忆上次关闭时的选择）
+// 是否已选过创作方向：已选（编辑模式）与未选（首装跳过/旧版本用户）用不同标题与文案
+const hasRole = computed(() => !!authStore.user?.role)
+
+const modalTitle = computed(() => (hasRole.value ? '修改创作方向' : '选择你的创作方向'))
+
+const modalDesc = computed(() =>
+  hasRole.value
+    ? '重新选择你的创作方向（可多选），保存后系统将按新方向更新左侧菜单模块，之后可在「模块管理」中随时调整。'
+    : '检测到你还没有选择创作方向。选择爱好（可多选）后，系统将按方向定制左侧菜单模块，之后可在「模块管理」中随时调整。',
+)
+
+// 解析服务端逗号分隔的 role 为合法角色 key 数组（未选过或含失效 key 时自动过滤）
+function parseUserRole(role?: string): RoleKey[] {
+  if (!role) return []
+  return role
+    .split(',')
+    .map((key) => key.trim())
+    .filter((key): key is RoleKey => ALL_ROLES.some((r) => r.key === key))
+}
+
+// 打开时预填当前已选方向：编辑模式带上现有选择，未选过则为空
 watch(
   () => props.open,
   (open) => {
-    if (open) selected.value = []
+    if (open) selected.value = parseUserRole(authStore.user?.role)
   },
 )
 

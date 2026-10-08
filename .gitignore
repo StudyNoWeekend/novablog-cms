@@ -24,6 +24,10 @@ bin/
 backend/config/config.yaml
 # 本地上传目录（运行时数据）
 backend/uploads/
+backend/uploads_local/
+
+# GUI 测试截图（开发产物）
+gui-test-screenshots/
 
 # ===== 前端 (backend-web) =====
 frontend/node_modules/

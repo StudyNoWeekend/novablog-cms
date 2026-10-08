@@ -35,9 +35,13 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	// 文件服务路由（公开访问，无需认证）
 	r.Static("/files", uploadDir)
 
+	// 地图嵌入页路由（公开访问，供博客主题 iframe 嵌入展示攻略景点地图）
+	RegisterMapEmbedRoutes(r)
+
 	// 初始化依赖
 	authController := controller.NewAuthController()
 	publicController := controller.NewPublicController(storageMgr, cryptoKey, uploadDir)
+	playlistController := controller.NewPlaylistController()
 	mediaLogic := logic.NewMediaLogic(storageMgr, uploadDir)
 	mediaController := controller.NewMediaController(mediaLogic)
 	mediaFolderController := controller.NewMediaFolderController(logic.NewMediaFolderLogic())
@@ -83,7 +87,7 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册公开路由（无需认证）
 	public := api.Group("/public")
-	RegisterPublicRoutes(public, publicController)
+	RegisterPublicRoutes(public, publicController, playlistController)
 
 	// 注册认证路由
 	RegisterAuthRoutes(api, authController, authMiddleware)
@@ -174,8 +178,11 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	themeMarketConfigController := controller.NewThemeMarketConfigController()
 	RegisterThemeMarketConfigRoutes(api, themeMarketConfigController, authMiddleware)
 
+	// 注册地图服务配置管理路由
+	mapConfigController := controller.NewMapConfigController(cryptoKey)
+	RegisterMapConfigRoutes(api, mapConfigController, authMiddleware)
+
 	// 注册第三方歌单管理路由
-	playlistController := controller.NewPlaylistController()
 	RegisterPlaylistRoutes(api, playlistController, authMiddleware)
 
 	// 博客主题预览路由（以指定主题响应托管逻辑，激活前即可预览真实效果）

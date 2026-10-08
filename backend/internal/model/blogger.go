@@ -25,6 +25,12 @@ type Blogger struct {
 	Bio             string         `gorm:"type:text"`                             // 个人简介
 	Email           string         `gorm:"type:varchar(100)"`                     // 邮箱
 	City            string         `gorm:"type:varchar(100)"`                     // 所在城市（省/市）
+	Personality     string         `gorm:"type:varchar(20);default:''"`           // 性格（MBTI key，如 INTJ；空串表示未设置）
+	Zodiac          string         `gorm:"type:varchar(20);default:''"`           // 星座（key，如 aries；空串表示未设置）
+	ShowEmail       bool           `gorm:"type:boolean;default:true"`             // 邮箱是否对外展示
+	ShowCity        bool           `gorm:"type:boolean;default:true"`             // 城市是否对外展示
+	ShowZodiac      bool           `gorm:"type:boolean;default:true"`             // 星座是否对外展示
+	ShowPersonality bool           `gorm:"type:boolean;default:true"`             // 性格是否对外展示
 	BlogTitle       string         `gorm:"type:varchar(100)"`                     // 博客标题
 	BlogDescription string         `gorm:"type:text"`                             // 博客描述
 	BlogIcon        string         `gorm:"type:varchar(500)"`                     // 博客 icon 图 URL

@@ -52,6 +52,7 @@ export const marketStorage = {
 
 // sidebarStorage 侧边栏 UI 偏好存储（分组折叠状态，与登录态无关）。
 const SIDEBAR_COLLAPSED_KEY = 'novablog_sidebar_group_collapsed'
+const SIDEBAR_SUBMENU_KEY = 'novablog_sidebar_submenu_expanded'
 
 export const sidebarStorage = {
   getCollapsedGroups(): Record<string, boolean> {
@@ -65,6 +66,21 @@ export const sidebarStorage = {
   setCollapsedGroups(map: Record<string, boolean>) {
     try {
       localStorage.setItem(SIDEBAR_COLLAPSED_KEY, JSON.stringify(map))
+    } catch {
+      // 持久化失败不影响交互（如隐私模式下的存储配额限制）
+    }
+  },
+  getExpandedSubmenus(): Record<string, boolean> {
+    try {
+      const v = localStorage.getItem(SIDEBAR_SUBMENU_KEY)
+      return v ? JSON.parse(v) : {}
+    } catch {
+      return {}
+    }
+  },
+  setExpandedSubmenus(map: Record<string, boolean>) {
+    try {
+      localStorage.setItem(SIDEBAR_SUBMENU_KEY, JSON.stringify(map))
     } catch {
       // 持久化失败不影响交互（如隐私模式下的存储配额限制）
     }
