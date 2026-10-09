@@ -1,13 +1,10 @@
 package controller
 
 import (
-	"context"
 	"errors"
 	"strconv"
-	"time"
 
 	"novablog/enum"
-	"novablog/internal/cache"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
 	"novablog/internal/storage"
@@ -740,63 +737,13 @@ func (ctrl *PublicController) GetPlaylists(ctx *gin.Context) {
 	response.Success(ctx, result)
 }
 
-// viewDedupWindow 浏览去重窗口：同一 IP 对同一内容在窗口内只计一次浏览。
-const viewDedupWindow = 5 * time.Minute
-
-// recordArticleView 记录文章浏览：依赖 Redis SETNX 去重，Redis 不可用时降级为直接计数（不阻塞响应）。
+// recordArticleView 记录文章浏览：统一走访问统计管道（IP 去重 + 明细落库 + 浏览量自增），
+// 与其他模块共用 content_view_logs，保证工作台趋势图 / 今日 / 7日口径一致。
 func (ctrl *PublicController) recordArticleView(ctx *gin.Context, articleID, slug, ip string) {
-	doIncrement := func() {
-		if err := ctrl.articleLogic.IncrementViewByID(ctx.Request.Context(), articleID); err != nil {
-			// 计数失败不阻塞响应，浏览统计可容忍少量丢失
-			return
-		}
-	}
-
-	if cache.RedisClient == nil {
-		// 未配置 Redis：直接计数
-		doIncrement()
-		return
-	}
-
-	key := "view:article:" + articleID + ":" + ip
-	dedupCtx, cancel := context.WithTimeout(ctx.Request.Context(), 2*time.Second)
-	defer cancel()
-	ok, err := cache.RedisClient.SetNX(dedupCtx, key, "1", viewDedupWindow).Result()
-	if err != nil {
-		// Redis 异常：降级为直接计数，保证浏览量仍能累计
-		doIncrement()
-		return
-	}
-	if !ok {
-		return // 去重窗口内已计过，跳过
-	}
-	doIncrement()
+	_, _ = ctrl.viewStats.RecordView(ctx.Request.Context(), "article", articleID, ip)
 }
 
-// recordTravelView 记录旅行攻略浏览：依赖 Redis SETNX 去重，Redis 不可用时降级为直接计数（不阻塞响应）。
+// recordTravelView 记录旅行攻略浏览：统一走访问统计管道（同上）。
 func (ctrl *PublicController) recordTravelView(ctx *gin.Context, travelID, ip string) {
-	doIncrement := func() {
-		if err := ctrl.travelLogic.IncrementView(ctx.Request.Context(), travelID); err != nil {
-			// 计数失败不阻塞响应，浏览统计可容忍少量丢失
-			return
-		}
-	}
-
-	if cache.RedisClient == nil {
-		doIncrement()
-		return
-	}
-
-	key := "view:travel:" + travelID + ":" + ip
-	dedupCtx, cancel := context.WithTimeout(ctx.Request.Context(), 2*time.Second)
-	defer cancel()
-	ok, err := cache.RedisClient.SetNX(dedupCtx, key, "1", viewDedupWindow).Result()
-	if err != nil {
-		doIncrement()
-		return
-	}
-	if !ok {
-		return
-	}
-	doIncrement()
+	_, _ = ctrl.viewStats.RecordView(ctx.Request.Context(), "travel", travelID, ip)
 }
