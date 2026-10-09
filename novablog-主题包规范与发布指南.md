@@ -185,6 +185,8 @@ export async function generateStaticParams() {
 
 **API 层必须容错**：每个取数函数 catch 异常后回退空数据/`null`（参考 `lens-life-template/lib/api/*`），保证任何一处后端不可达都不会让 `pnpm build` 失败——构建期失败只允许降级（少预渲染几个页面），不允许中断。
 
+**浏览量计数（v1.2.0 起）**：CMS 在各模块公开详情接口被调用时**自动按 IP 去重计数**（同 IP 同内容 5 分钟窗口只计一次），音乐播放复用 `GET /public/music/audio-url/:song_id` 计为播放量——主题**无需任何上报代码**即可获得准确浏览量。各模块公开列表/详情响应已带 `view_count` 字段，可直接展示「xx 次浏览」。如需显式上报（无详情页的模块如 `fitness` / `tech-stacks`，或 SPA 补报场景），使用通用端点 `POST /api/v1/public/views/track`，请求体 `{ "type": "...", "id": "..." }`，`type` 取值：`article` / `travel` / `portfolio` / `video` / `song` / `equipment` / `project` / `open_source` / `recipe` / `book` / `game` / `fitness` / `tech_stack`；内容不存在或未发布时后端静默忽略。上报失败按取数函数同样容错，静默忽略即可。
+
 ### 3.6 工程一致性要求
 
 - **版本三处一致**：tag = theme.json = package.json（Release CI 强制校验）；
