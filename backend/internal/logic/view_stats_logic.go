@@ -44,11 +44,18 @@ func (l *ViewStatsLogic) RecordView(ctx context.Context, contentType, contentID,
 		return false, fmt.Errorf("未知的内容类型: %s", contentType)
 	}
 
-	dedupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	ok, err := cache.RedisClient.SetNX(dedupCtx, "view:"+contentType+":"+contentID+":"+ip, "1", viewDedupWindow).Result()
-	cancel()
-	if err != nil {
+	var ok bool
+	if cache.RedisClient == nil {
+		// 未配置 Redis：降级为直接计数
 		ok = true
+	} else {
+		dedupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		var err error
+		ok, err = cache.RedisClient.SetNX(dedupCtx, "view:"+contentType+":"+contentID+":"+ip, "1", viewDedupWindow).Result()
+		cancel()
+		if err != nil {
+			ok = true
+		}
 	}
 	if !ok {
 		return false, nil
