@@ -1144,7 +1144,12 @@ do_upgrade_one() { # $1=博客名称 $2=目标版本
   done
 
   c_info "拉取镜像并重建容器 ..."
-  run_compose pull --quiet || c_warn "镜像拉取失败（将使用本地已有镜像继续）。"
+  if ! run_compose pull --quiet; then
+    c_err "镜像拉取失败：为避免本地旧镜像被当作新版本，本次升级终止。"
+    c_err "请检查网络与 GHCR 登录状态（私有镜像需先 docker login ghcr.io）后重试。"
+    return 1
+  fi
+  print_image_digest
   if ! run_compose up -d; then
     c_err "容器重建失败：$name"
     return 1
@@ -1297,6 +1302,20 @@ run_compose() {
   ensure_compose_files "${args[@]}"
   # --env-file 指向博客自己的 .env，-p 用博客名称作项目名：容器/网络按博客隔离
   docker compose --env-file "$ENV_FILE" -p "$NAME" "${args[@]}" "$@"
+}
+
+# print_image_digest 打印 compose 服务实际解析到的镜像远端摘要，
+# 用于重推同名 tag 后确认拉取到了新构建（摘要变化 = 拉到了新版本）。
+print_image_digest() {
+  local image_ref digest
+  image_ref="$(run_compose config --images 2>/dev/null | head -n1 || true)"
+  [ -z "$image_ref" ] && return 0
+  digest="$(docker image inspect --format '{{index .RepoDigests 0}}' "$image_ref" 2>/dev/null || true)"
+  if [ -n "$digest" ]; then
+    c_info "已使用镜像：$digest"
+  else
+    c_info "已使用镜像：$image_ref（本地构建，无远端摘要）"
+  fi
 }
 
 run_compose_from_env() {
@@ -1734,7 +1753,11 @@ EOF
   if [ "$BUILD" = 1 ]; then
     run_compose up -d --build || compose_up_failed
   else
-    run_compose pull --quiet || c_warn "镜像拉取失败（将使用本地已有镜像继续）"
+    if ! run_compose pull --quiet; then
+      c_err "镜像 ${IMAGE_REPO}:${VERSION} 拉取失败：为避免本地旧镜像被当作目标版本，本次部署终止。"
+      die "请检查网络与 GHCR 登录状态（私有镜像需先 docker login ghcr.io）后重试。"
+    fi
+    print_image_digest
     run_compose up -d || compose_up_failed
   fi
 
