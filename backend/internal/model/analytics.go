@@ -3,16 +3,41 @@ package model
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"gorm.io/gorm"
 )
 
-// TrendRow 内容产出趋势单日数据行。
+// TrendRow 内容产出趋势单日数据行，Counts 按内容类型（article/travel/...）统计当日新增数。
 type TrendRow struct {
-	Date         time.Time
-	ArticleCount int64
-	TravelCount  int64
+	Date   time.Time
+	Counts map[string]int64
+}
+
+// trendSource 趋势统计的内容表配置，key 与前端内容类型标识一致。
+type trendSource struct {
+	key   string
+	table string
+	// where 附加过滤条件；songs 表无软删除字段，不传 where
+	where string
+}
+
+// trendSources 参与内容产出趋势统计的模块表，新增模块时在此维护。
+var trendSources = []trendSource{
+	{key: "article", table: "articles", where: "deleted_at IS NULL"},
+	{key: "travel", table: "travel_guides", where: "deleted_at IS NULL"},
+	{key: "portfolio", table: "portfolios", where: "deleted_at IS NULL"},
+	{key: "video", table: "video_works", where: "deleted_at IS NULL"},
+	{key: "song", table: "songs"},
+	{key: "equipment", table: "photo_equipment", where: "deleted_at IS NULL"},
+	{key: "project", table: "projects", where: "deleted_at IS NULL"},
+	{key: "open_source", table: "open_source_works", where: "deleted_at IS NULL"},
+	{key: "recipe", table: "recipes", where: "deleted_at IS NULL"},
+	{key: "book", table: "books", where: "deleted_at IS NULL"},
+	{key: "game", table: "games", where: "deleted_at IS NULL"},
+	{key: "fitness", table: "fitness_records", where: "deleted_at IS NULL"},
+	{key: "tech_stack", table: "tech_stack_items", where: "deleted_at IS NULL"},
 }
 
 // TopArticleRow 热门文章排行数据行。
@@ -145,6 +170,76 @@ func (m *AnalyticsModel) CountSongs(ctx context.Context) (total int64, err error
 	return row.Total, nil
 }
 
+// countWithStatus 通用计数 helper：统计指定表的总数和已发布数（status=1），表需有 status 和 deleted_at 字段。
+func (m *AnalyticsModel) countWithStatus(ctx context.Context, table, label string) (total, published int64, err error) {
+	type countRow struct {
+		Total     int64 `gorm:"column:total"`
+		Published int64 `gorm:"column:published"`
+	}
+	var row countRow
+	err = m.db.WithContext(ctx).
+		Table(table).
+		Select("COUNT(*) AS total, COUNT(*) FILTER (WHERE status = 1) AS published").
+		Where("deleted_at IS NULL").
+		Scan(&row).Error
+	if err != nil {
+		return 0, 0, fmt.Errorf("统计%s数量失败: %w", label, err)
+	}
+	return row.Total, row.Published, nil
+}
+
+// CountProjects 统计项目总数和已发布数(status=1)。
+func (m *AnalyticsModel) CountProjects(ctx context.Context) (total, published int64, err error) {
+	return m.countWithStatus(ctx, "projects", "项目")
+}
+
+// CountOpenSourceWorks 统计开源作品总数和已发布数(status=1)。
+func (m *AnalyticsModel) CountOpenSourceWorks(ctx context.Context) (total, published int64, err error) {
+	return m.countWithStatus(ctx, "open_source_works", "开源作品")
+}
+
+// CountRecipes 统计菜谱总数和已发布数(status=1)。
+func (m *AnalyticsModel) CountRecipes(ctx context.Context) (total, published int64, err error) {
+	return m.countWithStatus(ctx, "recipes", "菜谱")
+}
+
+// CountBooks 统计读书总数和已发布数(status=1)。
+func (m *AnalyticsModel) CountBooks(ctx context.Context) (total, published int64, err error) {
+	return m.countWithStatus(ctx, "books", "读书")
+}
+
+// CountGames 统计游戏总数和已发布数(status=1)。
+func (m *AnalyticsModel) CountGames(ctx context.Context) (total, published int64, err error) {
+	return m.countWithStatus(ctx, "games", "游戏")
+}
+
+// CountFitnessRecords 统计健身训练记录总数和已发布数(status=1)。
+func (m *AnalyticsModel) CountFitnessRecords(ctx context.Context) (total, published int64, err error) {
+	return m.countWithStatus(ctx, "fitness_records", "健身训练")
+}
+
+// CountTechStackItems 统计技术栈条目总数和已发布数(status=1)。
+func (m *AnalyticsModel) CountTechStackItems(ctx context.Context) (total, published int64, err error) {
+	return m.countWithStatus(ctx, "tech_stack_items", "技术栈")
+}
+
+// CountEquipment 统计个人设备总数（photo_equipment 表无状态字段）。
+func (m *AnalyticsModel) CountEquipment(ctx context.Context) (total int64, err error) {
+	type countRow struct {
+		Total int64 `gorm:"column:total"`
+	}
+	var row countRow
+	err = m.db.WithContext(ctx).
+		Table("photo_equipment").
+		Select("COUNT(*) AS total").
+		Where("deleted_at IS NULL").
+		Scan(&row).Error
+	if err != nil {
+		return 0, fmt.Errorf("统计个人设备数量失败: %w", err)
+	}
+	return row.Total, nil
+}
+
 // CountComments 统计评论总数。
 func (m *AnalyticsModel) CountComments(ctx context.Context) (total int64, err error) {
 	err = m.db.WithContext(ctx).
@@ -210,7 +305,7 @@ func (m *AnalyticsModel) GetLastPublishDate(ctx context.Context) (*time.Time, er
 	return row.PublishedAt, nil
 }
 
-// GetContentTrend 按日统计指定天数内的文章和旅行攻略发布趋势，补全无数据的日期为 0。
+// GetContentTrend 按日统计指定天数内各内容模块表的新增数量，补全无数据的日期为 0。
 func (m *AnalyticsModel) GetContentTrend(ctx context.Context, days int) ([]TrendRow, error) {
 	now := time.Now()
 	startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -(days - 1))
@@ -220,49 +315,58 @@ func (m *AnalyticsModel) GetContentTrend(ctx context.Context, days int) ([]Trend
 		Count int64     `gorm:"column:count"`
 	}
 
-	// 查询文章日趋势
-	var articleRows []dateCountRow
-	if err := m.db.WithContext(ctx).
-		Table("articles").
-		Select("date_trunc('day', created_at) as date, COUNT(*) as count").
-		Where("created_at >= ? AND deleted_at IS NULL", startDate).
-		Group("date_trunc('day', created_at)").
-		Order("date").
-		Scan(&articleRows).Error; err != nil {
-		return nil, fmt.Errorf("查询文章趋势失败: %w", err)
+	// 并行查询各内容表的日增量，countsMap: 内容类型 → 日期 → 数量
+	var (
+		wg       sync.WaitGroup
+		mu       sync.Mutex
+		firstErr error
+	)
+	countsMap := make(map[string]map[string]int64, len(trendSources))
+
+	for _, src := range trendSources {
+		wg.Add(1)
+		go func(src trendSource) {
+			defer wg.Done()
+			query := m.db.WithContext(ctx).
+				Table(src.table).
+				Select("date_trunc('day', created_at) as date, COUNT(*) as count").
+				Where("created_at >= ?", startDate)
+			if src.where != "" {
+				query = query.Where(src.where)
+			}
+			var rows []dateCountRow
+			if err := query.Group("date_trunc('day', created_at)").Order("date").Scan(&rows).Error; err != nil {
+				mu.Lock()
+				if firstErr == nil {
+					firstErr = fmt.Errorf("查询%s趋势失败: %w", src.key, err)
+				}
+				mu.Unlock()
+				return
+			}
+			dateCounts := make(map[string]int64, len(rows))
+			for _, r := range rows {
+				dateCounts[r.Date.Format("2006-01-02")] = r.Count
+			}
+			mu.Lock()
+			countsMap[src.key] = dateCounts
+			mu.Unlock()
+		}(src)
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return nil, firstErr
 	}
 
-	// 查询旅行攻略日趋势
-	var travelRows []dateCountRow
-	if err := m.db.WithContext(ctx).
-		Table("travel_guides").
-		Select("date_trunc('day', created_at) as date, COUNT(*) as count").
-		Where("created_at >= ? AND deleted_at IS NULL", startDate).
-		Group("date_trunc('day', created_at)").
-		Order("date").
-		Scan(&travelRows).Error; err != nil {
-		return nil, fmt.Errorf("查询旅行攻略趋势失败: %w", err)
-	}
-
-	// 合并到完整日期序列
-	articleMap := make(map[string]int64, len(articleRows))
-	for _, r := range articleRows {
-		articleMap[r.Date.Format("2006-01-02")] = r.Count
-	}
-	travelMap := make(map[string]int64, len(travelRows))
-	for _, r := range travelRows {
-		travelMap[r.Date.Format("2006-01-02")] = r.Count
-	}
-
+	// 合并到完整日期序列，无数据的类型与日期补 0
 	rows := make([]TrendRow, 0, days)
 	for i := 0; i < days; i++ {
 		date := startDate.AddDate(0, 0, i)
 		dateStr := date.Format("2006-01-02")
-		rows = append(rows, TrendRow{
-			Date:         date,
-			ArticleCount: articleMap[dateStr],
-			TravelCount:  travelMap[dateStr],
-		})
+		counts := make(map[string]int64, len(trendSources))
+		for _, src := range trendSources {
+			counts[src.key] = countsMap[src.key][dateStr]
+		}
+		rows = append(rows, TrendRow{Date: date, Counts: counts})
 	}
 	return rows, nil
 }

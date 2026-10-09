@@ -293,6 +293,7 @@ func (l *OpenSourceLogic) toOpenSourceRes(w *model.OpenSourceWork) *res.OpenSour
 		Status:          w.Status,
 		SortOrder:       w.SortOrder,
 		ReadmeUpdatedAt: w.ReadmeUpdatedAt,
+		ViewCount:       int64(w.ViewCount),
 		CreatedAt:       w.CreatedAt,
 		UpdatedAt:       w.UpdatedAt,
 	}
@@ -311,6 +312,7 @@ func (l *OpenSourceLogic) toOpenSourceCard(w *model.OpenSourceWork) res.OpenSour
 		Homepage:  w.Homepage,
 		Status:    w.Status,
 		SortOrder: w.SortOrder,
+		ViewCount: int64(w.ViewCount),
 		CreatedAt: w.CreatedAt,
 		UpdatedAt: w.UpdatedAt,
 	}

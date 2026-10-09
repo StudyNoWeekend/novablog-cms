@@ -784,7 +784,7 @@ function handleClose() {
 
 .panel {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   padding: 16px;
   overflow-y: auto;
@@ -798,7 +798,7 @@ function handleClose() {
 .section-title {
   font-weight: 600;
   margin-bottom: 10px;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
 }
 
 .template-group {
@@ -817,7 +817,7 @@ function handleClose() {
   align-items: center;
   margin-bottom: 6px;
   font-size: 13px;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
 }
 
 .placeholder-tip {
@@ -838,7 +838,7 @@ function handleClose() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
   border-radius: 8px;
   overflow: auto;
   min-height: 480px;
@@ -852,7 +852,7 @@ function handleClose() {
 
 .preset-bar {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   padding: 12px;
 }
@@ -879,7 +879,7 @@ function handleClose() {
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
 }
 
 .preset-thumb img {
@@ -915,7 +915,7 @@ function handleClose() {
 }
 
 .exif-list {
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 12px;
@@ -929,11 +929,11 @@ function handleClose() {
 }
 
 .exif-label {
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
 }
 
 .exif-value {
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
   max-width: 60%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -947,7 +947,7 @@ function handleClose() {
 }
 
 .exif-card {
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
   border-radius: 8px;
   padding: 10px;
   text-align: center;
@@ -955,13 +955,13 @@ function handleClose() {
 
 .exif-card-label {
   font-size: 11px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
   margin-bottom: 4px;
 }
 
 .exif-card-value {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
 }
 </style>

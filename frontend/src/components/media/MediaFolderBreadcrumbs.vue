@@ -34,16 +34,16 @@ const emit = defineEmits<{
 }
 
 .folder-breadcrumbs :deep(.ant-breadcrumb-link a) {
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
   cursor: pointer;
 }
 
 .folder-breadcrumbs :deep(.ant-breadcrumb-link a:hover) {
-  color: var(--primary, #4a6cf7);
+  color: var(--primary, #526FE8);
 }
 
 .folder-breadcrumbs :deep(a.current) {
-  color: var(--primary, #4a6cf7);
+  color: var(--primary, #526FE8);
   font-weight: 500;
 }
 </style>

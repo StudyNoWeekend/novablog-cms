@@ -3,7 +3,7 @@
     <div class="page-header">
       <h1 class="page-title">API 文档</h1>
       <a-button type="primary" :icon="h(DownloadOutlined)" :loading="downloading" @click="downloadDoc">
-        下载文档
+        下载skill
       </a-button>
     </div>
 
@@ -232,7 +232,7 @@ onMounted(() => {
 .page-title {
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0;
 }
 
@@ -261,7 +261,7 @@ onMounted(() => {
   top: 16px;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
-  background: var(--bg-subtle, #f8fafc);
+  background: var(--bg-subtle, #F5F7FC);
   border-radius: var(--border-radius-lg, 12px);
   padding: 12px 0;
 }
@@ -269,7 +269,7 @@ onMounted(() => {
 .sider-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 8px 16px 12px;
@@ -284,7 +284,7 @@ onMounted(() => {
 .module-item {
   padding: 8px 16px;
   font-size: 13px;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   cursor: pointer;
   transition: all 0.15s ease;
   border-left: 3px solid transparent;
@@ -292,13 +292,13 @@ onMounted(() => {
 }
 
 .module-item:hover {
-  background: var(--bg-hover, #e2e8f0);
+  background: var(--bg-hover, #E5E9F2);
 }
 
 .module-item.active {
-  background: var(--bg-active, #dbeafe);
-  color: var(--color-primary, #3b82f6);
-  border-left-color: var(--color-primary, #3b82f6);
+  background: var(--bg-active, #EEF1FF);
+  color: var(--color-primary, #526FE8);
+  border-left-color: var(--color-primary, #526FE8);
   font-weight: 600;
 }
 
@@ -373,15 +373,15 @@ onMounted(() => {
 .doc-path {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 14px;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   font-weight: 500;
   word-break: break-all;
 }
 
 .doc-module {
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
-  background: var(--bg-subtle, #f1f5f9);
+  color: var(--text-secondary, #667085);
+  background: var(--bg-subtle, #F5F7FC);
   border-radius: 999px;
   padding: 2px 10px;
   cursor: default;
@@ -389,7 +389,7 @@ onMounted(() => {
 
 .doc-desc {
   font-size: 14px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   margin: 0 0 16px 0;
   line-height: 1.6;
 }
@@ -401,7 +401,7 @@ onMounted(() => {
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0 0 12px 0;
 }
 

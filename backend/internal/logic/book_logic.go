@@ -167,6 +167,7 @@ func (l *BookLogic) toRes(m *model.Book) *res.BookRes {
 		FinishedAt:    m.FinishedAt,
 		Status:        m.Status,
 		SortOrder:     m.SortOrder,
+		ViewCount:     int64(m.ViewCount),
 		CreatedAt:     m.CreatedAt,
 		UpdatedAt:     m.UpdatedAt,
 	}
@@ -183,6 +184,7 @@ func (l *BookLogic) toCard(m *model.Book) res.BookCardRes {
 		ReadingStatus: m.ReadingStatus,
 		Status:        m.Status,
 		SortOrder:     m.SortOrder,
+		ViewCount:     int64(m.ViewCount),
 		CreatedAt:     m.CreatedAt,
 		UpdatedAt:     m.UpdatedAt,
 	}

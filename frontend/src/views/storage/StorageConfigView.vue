@@ -120,7 +120,7 @@
               :data-source="analyzeResult.existing"
               :pagination="false"
               row-key="id"
-              style="margin-bottom: 16px; background: #f5f5f5"
+              style="margin-bottom: 16px; background: #F5F7FC"
               :row-class="() => 'existing-row'"
               bordered
             />
@@ -903,6 +903,6 @@ function formatDateTime(time?: string): string {
 }
 
 :deep(.existing-row) {
-  background-color: #fafafa;
+  background-color: #F9FAFC;
 }
 </style>

@@ -11,12 +11,16 @@ import (
 
 // AnalyticsController 工作台统计控制器结构体。
 type AnalyticsController struct {
-	logic *logic.AnalyticsLogic
+	logic     *logic.AnalyticsLogic
+	viewStats *logic.ViewStatsLogic
 }
 
 // NewAnalyticsController 创建 AnalyticsController 实例。
 func NewAnalyticsController() *AnalyticsController {
-	return &AnalyticsController{logic: logic.NewAnalyticsLogic()}
+	return &AnalyticsController{
+		logic:     logic.NewAnalyticsLogic(),
+		viewStats: logic.NewViewStatsLogic(),
+	}
 }
 
 // GetOverview 获取工作台概览统计 GET /api/v1/analytics/overview
@@ -77,6 +81,41 @@ func (ctl *AnalyticsController) GetRecentComments(ctx *gin.Context) {
 		return
 	}
 	result, err := ctl.logic.GetRecentComments(ctx.Request.Context(), r)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetTrafficSummary 获取访问概览 GET /api/v1/analytics/traffic/summary
+func (ctl *AnalyticsController) GetTrafficSummary(ctx *gin.Context) {
+	result, err := ctl.viewStats.GetTrafficSummary(ctx.Request.Context())
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetTrafficTrend 获取访问趋势 GET /api/v1/analytics/traffic/trend
+func (ctl *AnalyticsController) GetTrafficTrend(ctx *gin.Context) {
+	var r req.ContentTrendReq
+	if err := ctx.ShouldBindQuery(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	result, err := ctl.viewStats.GetTrafficTrend(ctx.Request.Context(), r.GetRange())
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, result)
+}
+
+// GetModuleStats 获取模块数据表 GET /api/v1/analytics/module-stats
+func (ctl *AnalyticsController) GetModuleStats(ctx *gin.Context) {
+	result, err := ctl.viewStats.GetModuleStats(ctx.Request.Context())
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

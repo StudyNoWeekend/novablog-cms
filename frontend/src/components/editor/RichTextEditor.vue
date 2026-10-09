@@ -87,13 +87,13 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
   overflow: hidden;
 }
 
 .toolbar {
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 1px solid var(--border-color, #E5E9F2);
 }
 
 .editor-content-area {

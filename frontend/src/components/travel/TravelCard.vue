@@ -197,7 +197,7 @@ function handleStatusChange(status: TTravelStatus) {
 }
 
 .travel-card:focus-visible {
-  outline: 2px solid var(--color-primary, #4a6cf7);
+  outline: 2px solid var(--color-primary, #526FE8);
   outline-offset: 2px;
 }
 
@@ -205,7 +205,7 @@ function handleStatusChange(status: TTravelStatus) {
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 .travel-card-cover img {
@@ -227,7 +227,7 @@ function handleStatusChange(status: TTravelStatus) {
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: #cbd5e1;
+  color: #8A93A8;
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -268,7 +268,7 @@ function handleStatusChange(status: TTravelStatus) {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.4;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -279,7 +279,7 @@ function handleStatusChange(status: TTravelStatus) {
   margin: 0 0 12px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -291,7 +291,7 @@ function handleStatusChange(status: TTravelStatus) {
   flex-wrap: wrap;
   gap: 10px;
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .travel-card-meta-item {
@@ -309,7 +309,7 @@ function handleStatusChange(status: TTravelStatus) {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
 }
 
 .travel-card-rating {
@@ -317,22 +317,22 @@ function handleStatusChange(status: TTravelStatus) {
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .travel-card-rating-score {
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .travel-card-rating-icon {
-  color: #f59e0b;
+  color: #B7791F;
   font-size: 12px;
 }
 
 .travel-card-review-count {
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .travel-card-actions {

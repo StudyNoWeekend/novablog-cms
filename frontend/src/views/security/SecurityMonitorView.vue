@@ -7,6 +7,7 @@
         刷新
       </a-button>
     </div>
+    <p class="page-desc">统计博客前台（公开接口）的访客 IP 访问情况，不包含管理端操作；日志保留 7 天。</p>
 
     <a-card class="table-card">
       <div class="toolbar">
@@ -207,8 +208,14 @@ onMounted(() => {
 .page-title {
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0;
+}
+
+.page-desc {
+  font-size: 13px;
+  color: var(--text-secondary, #667085);
+  margin: -16px 0 16px 0;
 }
 
 .table-card {
@@ -224,7 +231,7 @@ onMounted(() => {
 }
 
 .text-muted {
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted, #8A93A8);
 }
 
 :deep(.ant-btn-primary) {

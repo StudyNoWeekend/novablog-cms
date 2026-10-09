@@ -411,14 +411,14 @@ onUnmounted(() => {
   justify-content: space-between;
   flex-shrink: 0;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 1px solid var(--border-color, #E5E9F2);
   background: var(--bg-card, #ffffff);
 }
 
 .travel-editor-preview-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .travel-editor-preview-updating {
@@ -426,7 +426,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--color-primary, #4a6cf7);
+  color: var(--color-primary, #526FE8);
 }
 
 .travel-editor-preview-body {
@@ -449,7 +449,7 @@ onUnmounted(() => {
 .travel-editor-preview-cover {
   width: 100%;
   height: 180px;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 .travel-editor-preview-cover img {
@@ -465,7 +465,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 40px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .travel-editor-preview-cover-body {
@@ -475,7 +475,7 @@ onUnmounted(() => {
 .travel-editor-preview-title-text {
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0 0 10px 0;
   line-height: 1.4;
 }
@@ -486,26 +486,26 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .travel-editor-preview-rating {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #f59e0b;
+  color: #B7791F;
   font-weight: 600;
 }
 
 .travel-editor-preview-rating-icon {
-  color: #f59e0b;
+  color: #B7791F;
 }
 
 .travel-editor-preview-stats {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .travel-editor-preview-section {
@@ -518,10 +518,10 @@ onUnmounted(() => {
 .travel-editor-preview-section-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0 0 14px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 1px solid var(--border-color, #E5E9F2);
 }
 
 .travel-editor-preview-day {
@@ -532,8 +532,8 @@ onUnmounted(() => {
   display: inline-block;
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-primary, #4a6cf7);
-  background: var(--color-primary-light, rgba(74, 108, 247, 0.08));
+  color: var(--color-primary, #526FE8);
+  background: var(--color-primary-light, rgba(82, 111, 232, 0.08));
   padding: 2px 8px;
   border-radius: 999px;
   margin-bottom: 6px;
@@ -542,13 +542,13 @@ onUnmounted(() => {
 .travel-editor-preview-day-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin-bottom: 4px;
 }
 
 .travel-editor-preview-day-desc {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   line-height: 1.6;
   margin-bottom: 10px;
 }
@@ -563,7 +563,7 @@ onUnmounted(() => {
   display: flex;
   gap: 10px;
   padding: 8px;
-  background: var(--bg-secondary, #f8fafc);
+  background: var(--bg-secondary, #F5F7FC);
   border-radius: var(--border-radius, 8px);
 }
 
@@ -573,7 +573,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   border-radius: var(--border-radius, 8px);
   overflow: hidden;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 .travel-editor-preview-day-attraction-cover img {
@@ -594,13 +594,13 @@ onUnmounted(() => {
 .travel-editor-preview-day-attraction-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .travel-editor-preview-day-attraction-location,
 .travel-editor-preview-day-attraction-duration {
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -613,7 +613,7 @@ onUnmounted(() => {
 }
 
 .travel-editor-preview-attraction-card {
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
   overflow: hidden;
   transition: box-shadow var(--transition-base, 250ms);
@@ -626,7 +626,7 @@ onUnmounted(() => {
 .travel-editor-preview-attraction-cover {
   width: 100%;
   height: 90px;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 .travel-editor-preview-attraction-cover img {
@@ -642,13 +642,13 @@ onUnmounted(() => {
 .travel-editor-preview-attraction-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0 0 6px 0;
 }
 
 .travel-editor-preview-attraction-desc {
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   margin: 0 0 8px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -662,7 +662,7 @@ onUnmounted(() => {
   flex-wrap: wrap;
   gap: 8px;
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .travel-editor-preview-attraction-location,
@@ -678,8 +678,8 @@ onUnmounted(() => {
   justify-content: center;
   height: 100px;
   font-size: 13px;
-  color: var(--text-tertiary, #94a3b8);
-  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-tertiary, #8A93A8);
+  background: var(--bg-secondary, #F5F7FC);
   border-radius: var(--border-radius, 8px);
 }
 

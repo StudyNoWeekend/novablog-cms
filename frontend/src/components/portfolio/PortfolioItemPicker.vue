@@ -336,15 +336,15 @@ function resetState() {
   overflow: hidden;
   border: 2px solid transparent;
   transition: border-color 0.2s;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
 }
 
 .picker-item:hover {
-  border-color: var(--primary, #4a6cf7);
+  border-color: var(--primary, #526FE8);
 }
 
 .picker-item.selected {
-  border-color: var(--primary, #4a6cf7);
+  border-color: var(--primary, #526FE8);
 }
 
 .picker-item img {
@@ -358,7 +358,7 @@ function resetState() {
   font-size: 12px;
   line-height: 1.4;
   padding: 4px 8px;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -367,12 +367,12 @@ function resetState() {
 .selected-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(74, 108, 247, 0.2);
+  background: rgba(82, 111, 232, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 32px;
-  color: var(--primary, #4a6cf7);
+  color: var(--primary, #526FE8);
 }
 
 .picker-pagination {
@@ -399,7 +399,7 @@ function resetState() {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
   border-radius: 8px;
 }
 
@@ -412,6 +412,6 @@ function resetState() {
 
 .confirm-preview-name {
   font-size: 14px;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
 }
 </style>

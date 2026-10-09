@@ -225,6 +225,7 @@ func (l *ProjectLogic) toProjectRes(p *model.Project) *res.ProjectRes {
 		RepoURL:     p.RepoURL,
 		Status:      p.Status,
 		SortOrder:   p.SortOrder,
+		ViewCount:   int64(p.ViewCount),
 		CreatedAt:   p.CreatedAt,
 		UpdatedAt:   p.UpdatedAt,
 	}

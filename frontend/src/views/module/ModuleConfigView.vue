@@ -19,15 +19,11 @@
                   v-model:checked="formState[item.key]"
                   :checked-children="'开启'"
                   :un-checked-children="'关闭'"
+                  :loading="pendingKey === item.key"
+                  @change="handleToggle(item)"
                 />
               </div>
             </div>
-          </div>
-
-          <div class="form-actions">
-            <a-button type="primary" :loading="saving" @click="handleSave">
-              保存设置
-            </a-button>
           </div>
         </a-form>
       </a-skeleton>
@@ -37,7 +33,6 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
 import { moduleApi } from '@/api/module'
 import { useModuleStore } from '@/stores/module'
 import { MODULE_DEFS } from '@/constants/modules'
@@ -46,7 +41,7 @@ import type { UpdateModuleConfigReq } from '@/types/module'
 const modules = MODULE_DEFS
 
 const loading = ref(true)
-const saving = ref(false)
+const pendingKey = ref<string | null>(null)
 const moduleStore = useModuleStore()
 
 const formState = reactive<Record<string, boolean>>(
@@ -69,22 +64,19 @@ async function fetchConfig() {
   }
 }
 
-async function handleSave() {
-  // Only send changed fields (partial update pattern)
-  const diff: UpdateModuleConfigReq = {}
-  for (const item of modules) {
-    diff[item.key] = formState[item.key] as boolean
-  }
-  saving.value = true
+async function handleToggle(item: (typeof modules)[number]) {
+  const enabled = formState[item.key]
+  pendingKey.value = item.key
   try {
-    await moduleApi.updateConfig(diff)
+    // 只提交这一个模块的字段，后端支持部分更新，其余开关不受影响
+    await moduleApi.updateConfig({ [item.key]: enabled } as UpdateModuleConfigReq)
     // 强制刷新全局模块配置，让侧边栏菜单与路由拦截立即生效
     await moduleStore.fetchConfig(true)
-    message.success('模块配置已更新')
   } catch {
-    // Error handled by interceptor
+    // 保存失败时回滚开关状态，错误提示由拦截器统一弹出
+    formState[item.key] = !enabled
   } finally {
-    saving.value = false
+    pendingKey.value = null
   }
 }
 
@@ -95,23 +87,25 @@ onMounted(() => {
 
 <style scoped>
 .module-config-page {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
 .page-header {
+  /* 显式块级布局，避免全局 .page-header flex 规则把标题与描述排成一行 */
+  display: block;
   margin-bottom: 24px;
 }
 
 .page-header h1 {
   font-size: 24px;
   font-weight: 600;
-  color: #1e293b;
+  color: #29365C;
   margin: 0 0 8px 0;
 }
 
 .page-desc {
-  color: #64748b;
+  color: #667085;
   font-size: 14px;
   margin: 0;
 }
@@ -122,9 +116,9 @@ onMounted(() => {
 }
 
 .module-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .module-item {
@@ -137,11 +131,13 @@ onMounted(() => {
 }
 
 .module-item:hover {
-  background: #f8fafc;
+  background: #F5F7FC;
 }
 
-.module-item:not(:last-child) {
-  border-bottom: 1px solid #f1f5f9;
+@media (max-width: 768px) {
+  .module-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .module-info {
@@ -152,25 +148,17 @@ onMounted(() => {
 .module-name {
   font-size: 15px;
   font-weight: 500;
-  color: #1e293b;
+  color: #29365C;
 }
 
 .module-desc {
   font-size: 13px;
-  color: #94a3b8;
+  color: #8A93A8;
   margin-top: 2px;
 }
 
 .module-switch {
   flex-shrink: 0;
   margin-left: 24px;
-}
-
-.form-actions {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
-  display: flex;
-  justify-content: flex-end;
 }
 </style>

@@ -4,7 +4,7 @@
       <div class="player-side">
         <div class="player-info">
           <img
-            :src="coverUrl || '/favicon.svg'"
+            :src="coverUrl || fallbackCover"
             :alt="currentSong.title"
             referrerpolicy="no-referrer"
             class="player-cover"
@@ -71,6 +71,7 @@ import { musicApi } from '@/api/music'
 import type { Song } from '@/types/music'
 import { getThumbUrl } from '@/utils/image'
 import { message } from 'ant-design-vue'
+import fallbackCover from '@/assets/brand/novablog-logo-mark.png'
 
 const props = defineProps<{
   currentSong: Song | null

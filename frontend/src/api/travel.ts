@@ -1,5 +1,5 @@
 import request from './request'
-import type { TravelGuide, TravelGuideFormData } from '@/types/travel'
+import type { TravelGuide, TravelGuideFormData, TravelAttraction, TravelItineraryDay } from '@/types/travel'
 import type { PaginatedData } from '@/types/api'
 
 export interface TravelGuideListParams {
@@ -35,7 +35,57 @@ function toUpdateReq(data: TravelGuideFormData) {
   return toCreateReq(data)
 }
 
+// 景点内容指纹：用于给缺 id 的老数据生成稳定 id（内容不变则 id 跨刷新不变）
+function attractionKey(a: any): string {
+  return [a?.name ?? '', a?.location ?? '', a?.latitude ?? '', a?.longitude ?? ''].join('|')
+}
+
+// 保证每个景点有唯一且稳定的 id：老数据（无 id）按内容哈希生成 nb-xxx 形式 id
+function ensureAttractionId(a: any): string {
+  if (a && typeof a.id === 'string' && a.id) return a.id
+  const key = attractionKey(a)
+  let h = 2166136261
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return 'nb-' + (h >>> 0).toString(36)
+}
+
+// 对齐行程：老数据行程内嵌景点无 id、attractionIds 为空，按内容映射到景点池 id；
+// 仅保留池中存在的景点，并同步重建内嵌 attractions
+function normalizeItinerary(rawItinerary: any[], pool: any[]): any[] {
+  const byKey = new Map<string, any>()
+  for (const item of pool) byKey.set(attractionKey(item), item)
+
+  return (rawItinerary || [])
+    .map((day) => {
+      const embedded: any[] = Array.isArray(day?.attractions) ? day.attractions : []
+      let ids: string[] = Array.isArray(day?.attractionIds)
+        ? day.attractionIds.filter((id: unknown): id is string => typeof id === 'string' && id !== '')
+        : []
+      if (ids.length === 0 && embedded.length > 0) {
+        ids = embedded
+          .map((e) => byKey.get(attractionKey(e))?.id)
+          .filter((id: string | undefined): id is string => !!id)
+      }
+      const resolved = ids
+        .map((id) => pool.find((p) => p.id === id))
+        .filter((item) => item !== undefined)
+      return {
+        ...(day ?? {}),
+        attractions: resolved,
+        attractionIds: resolved.map((p) => p.id),
+      }
+    })
+    .flat()
+}
+
 function toTravelGuide(raw: any): TravelGuide {
+  const attractions: TravelAttraction[] = (raw.attractions || []).map((a: any) => ({
+    ...a,
+    id: ensureAttractionId(a),
+  }))
   return {
     id: raw.id,
     title: raw.title,
@@ -53,8 +103,8 @@ function toTravelGuide(raw: any): TravelGuide {
     rating: raw.rating,
     reviewCount: raw.review_count,
     createdAt: raw.created_at,
-    attractions: raw.attractions || [],
-    itinerary: raw.itinerary || [],
+    attractions,
+    itinerary: normalizeItinerary(raw.itinerary, attractions) as TravelItineraryDay[],
     reviews: raw.reviews || [],
   }
 }

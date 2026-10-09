@@ -253,7 +253,7 @@
               @keyup.enter="handleInputConfirm"
               @blur="handleInputConfirm"
             />
-            <a-tag v-else style="background: #fafafa; border: 1px dashed #d9d9d9; cursor: pointer" @click="showInput">
+            <a-tag v-else style="background: #F9FAFC; border: 1px dashed #E5E9F2; cursor: pointer" @click="showInput">
               + 添加标签
             </a-tag>
           </div>
@@ -696,7 +696,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(41, 54, 92, 0.45);
   color: #fff;
   font-size: 12px;
   opacity: 0;

@@ -16,6 +16,7 @@ type RecipeRes struct {
 	Tags        string           `json:"tags"`
 	Status      int              `json:"status"`
 	SortOrder   int              `json:"sort_order"`
+	ViewCount   int64            `json:"view_count"` // 浏览量
 	CreatedAt   time.Time        `json:"created_at"`
 	UpdatedAt   time.Time        `json:"updated_at"`
 }
@@ -32,6 +33,7 @@ type RecipeCardRes struct {
 	Tags       string    `json:"tags"`
 	Status     int       `json:"status"`
 	SortOrder  int       `json:"sort_order"`
+	ViewCount  int64     `json:"view_count"` // 浏览量
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

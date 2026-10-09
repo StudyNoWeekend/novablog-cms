@@ -87,7 +87,7 @@ watch(
   display: flex;
   flex-direction: column;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
   overflow: hidden;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
@@ -95,7 +95,7 @@ watch(
 }
 
 .playlist-card:hover {
-  border-color: var(--primary-color, #1677ff);
+  border-color: var(--primary-color, #526FE8);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
@@ -199,7 +199,7 @@ watch(
 .playlist-card__platform-label {
   font-size: 12px;
   color: var(--text-color-tertiary, rgba(0, 0, 0, 0.45));
-  background: var(--bg-elevated, #f5f5f5);
+  background: var(--bg-elevated, #F5F7FC);
   padding: 1px 8px;
   border-radius: 4px;
 }
@@ -213,7 +213,7 @@ watch(
   display: flex;
   gap: 8px;
   padding: 8px 14px;
-  border-top: 1px solid var(--border-color, #f0f0f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
 }
 
 .playlist-card__actions .ant-btn {

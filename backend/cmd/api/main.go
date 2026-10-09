@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"novablog/bootstrap"
+	"novablog/internal/logic"
 	"novablog/internal/middleware"
 	"novablog/internal/model"
 	"novablog/internal/router"
@@ -42,6 +43,30 @@ func startAccessLogCleanup(cfg *viper.Viper, logger *zap.Logger) {
 
 	for range ticker.C {
 		cleanupAccessLogs(accessLogModel, days, logger)
+	}
+}
+
+// startViewStatsMaintenance 启动访问统计维护定时任务：
+// 每小时将最近 48 小时明细聚合进按日统计表（幂等覆盖），并清理超过 180 天的明细。
+func startViewStatsMaintenance(logger *zap.Logger) {
+	viewStats := logic.NewViewStatsLogic()
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
+
+	run := func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := viewStats.RunMaintenance(ctx); err != nil {
+			logger.Error("访问统计维护失败", zap.Error(err))
+		} else {
+			logger.Info("访问统计维护完成")
+		}
+	}
+
+	// 启动时立即执行一次
+	run()
+	for range ticker.C {
+		run()
 	}
 }
 
@@ -140,6 +165,9 @@ func main() {
 
 	// 启动访问日志清理定时任务
 	go startAccessLogCleanup(app.Config, app.Logger)
+
+	// 启动访问统计维护定时任务（按日聚合 + 明细清理）
+	go startViewStatsMaintenance(app.Logger)
 
 	// 等待中断信号
 	quit := make(chan os.Signal, 1)

@@ -55,52 +55,19 @@
             />
           </button>
           <template v-if="isGroupExpanded(group.title)">
-            <template v-for="item in group.items" :key="item.label">
-              <!-- 二级子菜单 -->
-              <template v-if="item.children">
-                <button
-                  type="button"
-                  class="submenu-title"
-                  :aria-expanded="isSubmenuExpanded(item.label)"
-                  @click="toggleSubmenu(item.label)"
-                >
-                  <span class="nav-icon">
-                    <component :is="item.icon" />
-                  </span>
-                  <span class="nav-text">{{ item.label }}</span>
-                  <CaretRightOutlined
-                    class="submenu-arrow"
-                    :class="{ expanded: isSubmenuExpanded(item.label) }"
-                  />
-                </button>
-                <template v-if="isSubmenuExpanded(item.label)">
-                  <router-link
-                    v-for="child in item.children"
-                    :key="child.path"
-                    :to="child.path"
-                    class="nav-item submenu-item"
-                    :class="{ active: route.path === child.path }"
-                  >
-                    <span class="nav-icon">
-                      <component :is="child.icon" />
-                    </span>
-                    <span class="nav-text">{{ child.label }}</span>
-                  </router-link>
-                </template>
-              </template>
-              <!-- 普通菜单项 -->
-              <router-link
-                v-else
-                :to="item.path"
-                class="nav-item"
-                :class="{ active: isMenuActive(item.path) }"
-              >
-                <span class="nav-icon">
-                  <component :is="item.icon" />
-                </span>
-                <span class="nav-text">{{ item.label }}</span>
-              </router-link>
-            </template>
+          <!-- 普通菜单项 -->
+          <router-link
+            v-for="item in group.items"
+            :key="item.label"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <span class="nav-icon">
+              <component :is="item.icon" />
+            </span>
+            <span class="nav-text">{{ item.label }}</span>
+          </router-link>
           </template>
         </div>
       </nav>
@@ -131,7 +98,6 @@ import {
   CloseOutlined,
   CaretRightOutlined,
   BookOutlined,
-  SafetyCertificateOutlined,
   GithubOutlined,
   CoffeeOutlined,
   ReadOutlined,
@@ -140,11 +106,7 @@ import {
   CodeOutlined,
   EyeOutlined,
   UserOutlined,
-  CloudServerOutlined,
   SettingOutlined,
-  AppstoreOutlined,
-  ApiOutlined,
-  KeyOutlined,
 } from '@ant-design/icons-vue'
 import AppLogo from '@/components/common/AppLogo.vue'
 import { sidebarStorage } from '@/utils/storage'
@@ -162,15 +124,9 @@ interface SidebarMenuBase {
 
 interface SidebarMenuLink extends SidebarMenuBase {
   path: string
-  children?: undefined
 }
 
-interface SidebarMenuSub extends SidebarMenuBase {
-  /** 有 children 时渲染为二级子菜单（子项不做模块开关过滤） */
-  children: { path: string; label: string; icon: Component }[]
-}
-
-type SidebarMenuItem = SidebarMenuLink | SidebarMenuSub
+type SidebarMenuItem = SidebarMenuLink
 
 const menuGroupDefs: { title: string; items: SidebarMenuItem[] }[] = [
   {
@@ -199,28 +155,16 @@ const menuGroupDefs: { title: string; items: SidebarMenuItem[] }[] = [
     ],
   },
   {
-    title: '安全',
+    title: '系统与安全',
     items: [
-      { path: '/api-doc', label: 'API 文档', icon: BookOutlined },
-      { path: '/security/config', label: '黑名单管理', icon: SafetyCertificateOutlined },
+      { path: '/themes', label: '主题市场', icon: SkinOutlined },
+      { path: '/system-config', label: '系统配置', icon: SettingOutlined },
       { path: '/security/monitor', label: '访问统计', icon: EyeOutlined },
     ],
   },
   {
-    title: '系统',
-    items: [
-      { path: '/themes', label: '主题市场', icon: SkinOutlined },
-      {
-        label: '系统配置',
-        icon: SettingOutlined,
-        children: [
-          { path: '/module-config', label: '模块管理', icon: AppstoreOutlined },
-          { path: '/profile/storage', label: '对象存储', icon: CloudServerOutlined },
-          { path: '/profile/cors', label: '跨域配置', icon: ApiOutlined },
-          { path: '/map-config', label: '地图配置', icon: KeyOutlined },
-        ],
-      },
-    ],
+    title: 'AI',
+    items: [{ path: '/api-doc', label: 'API 文档', icon: BookOutlined }],
   },
 ]
 
@@ -262,20 +206,6 @@ function toggleGroup(title: string) {
   sidebarStorage.setCollapsedGroups(collapsedGroups.value)
 }
 
-// ---- 二级子菜单折叠 ----
-const expandedSubmenus = ref<Record<string, boolean>>(sidebarStorage.getExpandedSubmenus())
-
-function isSubmenuExpanded(label: string): boolean {
-  // 侧边栏收窄为图标栏时隐藏子项，展开侧边栏后恢复折叠状态
-  if (!isMobile.value && appStore.sidebarCollapsed) return false
-  return !!expandedSubmenus.value[label]
-}
-
-function toggleSubmenu(label: string) {
-  expandedSubmenus.value = { ...expandedSubmenus.value, [label]: !expandedSubmenus.value[label] }
-  sidebarStorage.setExpandedSubmenus(expandedSubmenus.value)
-}
-
 function handleResize() {
   const mobile = window.innerWidth <= 768
   if (mobile && !isMobile.value) {
@@ -303,14 +233,14 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   bottom: 0;
-  width: 220px;
-  background: #f0f2f5;
+  width: var(--sidebar-width);
+  background: var(--bg-sidebar);
   display: flex;
   flex-direction: column;
   z-index: 100;
   overflow: hidden;
   transition: width var(--transition-slow);
-  border-right: 1px solid #e8e8e8;
+  border-right: 1px solid #E5E9F2;
 }
 
 .app-sidebar.collapsed {
@@ -346,7 +276,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 0 16px;
   gap: 12px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid #E5E9F2;
   flex-shrink: 0;
 }
 
@@ -355,14 +285,14 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  color: #64748b;
+  color: #667085;
   cursor: pointer;
   transition: color var(--transition-fast);
   flex-shrink: 0;
 }
 
 .collapse-btn:hover {
-  color: #4a6cf7;
+  color: #526FE8;
 }
 
 .close-btn {
@@ -370,14 +300,14 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  color: #64748b;
+  color: #667085;
   cursor: pointer;
   transition: color var(--transition-fast);
   flex-shrink: 0;
 }
 
 .close-btn:hover {
-  color: #4a6cf7;
+  color: #526FE8;
 }
 
 .sidebar-nav {
@@ -399,7 +329,7 @@ onUnmounted(() => {
   padding: 8px 16px 8px 20px;
   font-size: 12px;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8A93A8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: none;
@@ -410,18 +340,18 @@ onUnmounted(() => {
 }
 
 .menu-group-title:hover {
-  color: #4a6cf7;
+  color: #526FE8;
 }
 
 .menu-group-title:focus-visible {
-  outline: 2px solid #4a6cf7;
+  outline: 2px solid #526FE8;
   outline-offset: -2px;
   border-radius: 6px;
 }
 
 .menu-group-title__arrow {
   font-size: 10px;
-  color: #cbd5e1;
+  color: #8A93A8;
   transition: transform var(--transition-fast);
 }
 
@@ -433,49 +363,6 @@ onUnmounted(() => {
   transform: rotate(90deg);
 }
 
-/* ---- 二级子菜单 ---- */
-.submenu-title {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 42px;
-  margin: 2px 12px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 6px;
-  background: none;
-  color: #1e293b;
-  text-align: left;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.submenu-title:hover {
-  background: #e8ecf1;
-}
-
-.submenu-title:focus-visible {
-  outline: 2px solid #4a6cf7;
-  outline-offset: -2px;
-}
-
-.submenu-arrow {
-  margin-left: auto;
-  font-size: 10px;
-  color: #94a3b8;
-  transition: transform var(--transition-fast);
-}
-
-.submenu-arrow.expanded {
-  transform: rotate(90deg);
-}
-
-.submenu-item {
-  margin: 2px 12px 2px 26px;
-}
-
 .nav-item {
   display: flex;
   align-items: center;
@@ -483,7 +370,7 @@ onUnmounted(() => {
   margin: 2px 12px;
   padding: 0 16px;
   border-radius: 6px;
-  color: #1e293b;
+  color: #29365C;
   text-decoration: none;
   transition: all var(--transition-fast);
   white-space: nowrap;
@@ -492,13 +379,13 @@ onUnmounted(() => {
 }
 
 .nav-item:hover {
-  background: #e8ecf1;
+  background: var(--bg-sidebar-hover);
 }
 
 .nav-item.active {
-  color: #4a6cf7;
-  background: rgba(74, 108, 247, 0.08);
-  box-shadow: inset 3px 0 0 #4a6cf7;
+  color: #526FE8;
+  background: var(--color-primary-soft);
+  box-shadow: inset 3px 0 0 #526FE8;
 }
 
 .nav-icon {

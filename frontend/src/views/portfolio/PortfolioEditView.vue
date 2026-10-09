@@ -467,7 +467,7 @@ async function persistSort() {
 
 .edit-header {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   padding: 16px 20px;
   margin-bottom: 20px;
@@ -505,7 +505,7 @@ async function persistSort() {
 .cover-label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
 }
 
 .cover-custom {
@@ -524,7 +524,7 @@ async function persistSort() {
   height: 64px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
 }
 
 .cover-preview-actions {
@@ -534,7 +534,7 @@ async function persistSort() {
 
 .cover-tip {
   font-size: 13px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
 }
 
 .items-toolbar {
@@ -547,13 +547,13 @@ async function persistSort() {
 .items-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
 }
 
 .items-count {
   font-size: 13px;
   font-weight: normal;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
 }
 
 .items-list {
@@ -567,7 +567,7 @@ async function persistSort() {
   align-items: center;
   gap: 16px;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   padding: 12px 16px;
   transition: box-shadow 0.2s, border-color 0.2s, opacity 0.2s;
@@ -582,13 +582,13 @@ async function persistSort() {
 }
 
 .item-card.drag-over {
-  border-color: var(--primary, #4a6cf7);
+  border-color: var(--primary, #526FE8);
   border-style: dashed;
 }
 
 .drag-handle {
   cursor: grab;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
   font-size: 18px;
   display: flex;
   align-items: center;
@@ -603,7 +603,7 @@ async function persistSort() {
   text-align: center;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
 }
 
 .item-preview {
@@ -612,7 +612,7 @@ async function persistSort() {
   flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
 }
 
 .item-preview img {
@@ -630,7 +630,7 @@ async function persistSort() {
   justify-content: center;
   gap: 4px;
   font-size: 11px;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
 }
 
 .preset-deleted .anticon {
@@ -648,7 +648,7 @@ async function persistSort() {
 .item-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -656,7 +656,7 @@ async function persistSort() {
 
 .item-desc {
   font-size: 13px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -676,7 +676,7 @@ async function persistSort() {
   align-items: center;
   gap: 12px;
   padding: 8px;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
   border-radius: 6px;
 }
 
@@ -690,7 +690,7 @@ async function persistSort() {
 .preset-preview span {
   flex: 1;
   font-size: 13px;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
 }
 
 .preset-preview-placeholder {
@@ -701,7 +701,7 @@ async function persistSort() {
   justify-content: center;
   background: var(--bg-card, #fff);
   border-radius: 4px;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
   font-size: 24px;
 }
 </style>

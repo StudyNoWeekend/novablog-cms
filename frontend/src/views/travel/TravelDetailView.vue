@@ -9,7 +9,7 @@
     <a-card>
       <a-empty description="攻略详情页开发中">
         <template #image>
-          <CompassOutlined style="font-size: 64px; color: #bfbfbf;" />
+          <CompassOutlined style="font-size: 64px; color: #8A93A8;" />
         </template>
       </a-empty>
     </a-card>

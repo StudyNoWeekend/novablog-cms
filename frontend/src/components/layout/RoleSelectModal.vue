@@ -142,7 +142,7 @@ async function handleSave() {
 <style scoped>
 .role-modal__desc {
   font-size: 13px;
-  color: #64748b;
+  color: #667085;
   line-height: 1.6;
   margin: 0 0 12px;
 }
@@ -156,15 +156,15 @@ async function handleSave() {
 .role-preset {
   margin-top: 14px;
   padding: 12px 14px;
-  background: #f8f9fb;
-  border: 1px solid #e2e8f0;
+  background: #F5F7FC;
+  border: 1px solid #E5E9F2;
   border-radius: 8px;
 }
 
 .role-preset__title {
   font-size: 13px;
   font-weight: 500;
-  color: #1e293b;
+  color: #29365C;
   margin-bottom: 8px;
 }
 
@@ -181,14 +181,14 @@ async function handleSave() {
   padding: 3px 10px;
   font-size: 12px;
   border-radius: 999px;
-  background: rgba(74, 108, 247, 0.08);
-  color: #4a6cf7;
+  background: rgba(82, 111, 232, 0.08);
+  color: #526FE8;
   transition: opacity 0.2s;
 }
 
 .module-chip--off {
-  background: #eef1f5;
-  color: #94a3b8;
+  background: #F5F7FC;
+  color: #8A93A8;
 }
 
 .module-chip__check {
@@ -198,6 +198,6 @@ async function handleSave() {
 .module-chip__badge {
   font-style: normal;
   font-size: 10px;
-  color: #94a3b8;
+  color: #8A93A8;
 }
 </style>

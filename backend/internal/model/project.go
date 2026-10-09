@@ -19,12 +19,13 @@ type Project struct {
 	Summary     string         `gorm:"type:varchar(500);default:''"` // 一句话简介
 	Description string         `gorm:"type:text"`
 	TechStack   string         `gorm:"type:varchar(500);default:''"` // 技能/工具标签，逗号分隔
-	StartDate   *time.Time     `gorm:"type:date"` // 开始时间（按月粒度，存当月 1 号）
-	EndDate     *time.Time     `gorm:"type:date"` // 结束时间，null 表示至今
+	StartDate   *time.Time     `gorm:"type:date"`                    // 开始时间（按月粒度，存当月 1 号）
+	EndDate     *time.Time     `gorm:"type:date"`                    // 结束时间，null 表示至今
 	ProjectURL  string         `gorm:"column:project_url;type:varchar(1024)"`
 	RepoURL     string         `gorm:"column:repo_url;type:varchar(1024)"`
 	Status      int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
 	SortOrder   int            `gorm:"column:sort_order;type:int;default:0"`
+	ViewCount   int            `gorm:"column:view_count;type:int;default:0"`
 	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

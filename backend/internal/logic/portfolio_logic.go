@@ -374,6 +374,7 @@ func (l *PortfolioLogic) toPortfolioRes(p *model.Portfolio, count int64, coverUR
 		CategoryID:    categoryID,
 		CategoryName:  categoryName,
 		ItemCount:     count,
+		ViewCount:     int64(p.ViewCount),
 		CreatedAt:     p.CreatedAt,
 		UpdatedAt:     p.UpdatedAt,
 	}

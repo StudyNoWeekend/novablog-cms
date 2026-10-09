@@ -244,6 +244,7 @@ func (l *VideoLogic) toVideoWorkRes(v *model.VideoWork, links []model.VideoPlatf
 		Status:      v.Status,
 		SortOrder:   v.SortOrder,
 		Platforms:   platforms,
+		ViewCount:   int64(v.ViewCount),
 		CreatedAt:   v.CreatedAt,
 		UpdatedAt:   v.UpdatedAt,
 	}

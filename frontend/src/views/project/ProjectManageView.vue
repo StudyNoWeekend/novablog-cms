@@ -554,7 +554,7 @@ function handleDelete(item: Project) {
 
 .project-card {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -571,7 +571,7 @@ function handleDelete(item: Project) {
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
 }
 
 .project-cover img {
@@ -592,7 +592,7 @@ function handleDelete(item: Project) {
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
 }
 
 .category-tag {
@@ -620,7 +620,7 @@ function handleDelete(item: Project) {
 .project-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -636,12 +636,12 @@ function handleDelete(item: Project) {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
 }
 
 .project-summary {
   font-size: 13px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -666,7 +666,7 @@ function handleDelete(item: Project) {
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
   margin-top: 4px;
 }
 
@@ -684,19 +684,19 @@ function handleDelete(item: Project) {
 }
 
 .meta-links a {
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
   transition: color 0.2s;
 }
 
 .meta-links a:hover {
-  color: #1890ff;
+  color: #526FE8;
 }
 
 .project-actions {
   display: flex;
   justify-content: flex-end;
   gap: 4px;
-  border-top: 1px solid var(--border-color, #f0f0f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
   margin-top: 4px;
   padding-top: 4px;
 }
@@ -724,6 +724,6 @@ function handleDelete(item: Project) {
   height: 68px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
 }
 </style>

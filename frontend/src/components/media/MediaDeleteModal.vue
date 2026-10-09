@@ -138,7 +138,7 @@ function handleCancel() {
   height: 48px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   flex-shrink: 0;
 }
 
@@ -148,7 +148,7 @@ function handleCancel() {
   justify-content: center;
   font-size: 22px;
   color: var(--text-secondary, #999);
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
 }
 
 .delete-filename {

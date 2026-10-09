@@ -85,7 +85,7 @@
         <div class="batch-list">
           <div v-for="(item, index) in parseResults" :key="index" class="batch-item">
             <a-checkbox v-model:checked="item.selected" />
-            <img :src="item.cover_url ? item.cover_url.replace(/^http:\/\//, 'https://') : '/favicon.svg'" :alt="item.title" referrerpolicy="no-referrer" class="batch-cover" />
+            <img :src="item.cover_url ? item.cover_url.replace(/^http:\/\//, 'https://') : fallbackCover" :alt="item.title" referrerpolicy="no-referrer" class="batch-cover" />
             <div class="batch-fields">
               <a-input v-model:value="item.title" placeholder="歌曲名称" size="small" />
               <a-input v-model:value="item.artist" placeholder="歌手" size="small" />
@@ -121,6 +121,7 @@ import { musicApi } from '@/api/music'
 import type { Song, SongCreateReq, ParseResult, BatchCreateSongReq } from '@/types/music'
 import type { Category } from '@/types/category'
 import MediaPicker from '@/components/media/MediaPicker.vue'
+import fallbackCover from '@/assets/brand/novablog-logo-mark.png'
 
 const props = defineProps<{
   open: boolean
@@ -498,12 +499,12 @@ function handleCancel() {
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
-  background: #f8fafc;
-  border: 1px dashed var(--border-color, #cbd5e1);
+  background: #F5F7FC;
+  border: 1px dashed var(--border-color, #E5E9F2);
   transition: all 0.2s;
 }
 .cover-preview:hover {
-  border-color: var(--primary, #3b82f6);
+  border-color: var(--primary, #526FE8);
 }
 .cover-preview-img {
   width: 100%;
@@ -534,11 +535,11 @@ function handleCancel() {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   gap: 2px;
 }
 .cover-placeholder:hover {
-  color: var(--primary, #3b82f6);
+  color: var(--primary, #526FE8);
 }
 .cover-input {
   flex: 1;
@@ -549,6 +550,6 @@ function handleCancel() {
 }
 .cover-input-hint {
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 </style>

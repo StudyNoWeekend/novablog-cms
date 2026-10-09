@@ -5,6 +5,7 @@
 
     <div class="setup-card">
       <!-- Logo -->
+      <img :src="logoMark" alt="Novablog" class="setup-logo-img" />
       <div class="setup-logo">Novablog</div>
 
       <!-- 标题 -->
@@ -257,19 +258,19 @@
         <h2 class="theme-step__title">初始化博客外观</h2>
         <p class="theme-step__desc">输入 NovaBlog 官方主题市场地址并登录官方账号，将自动获取并启用默认主题</p>
 
-        <a-form ref="marketFormRef" layout="vertical" class="setup-form" autocomplete="off">
-          <a-form-item label="官方市场地址" name="marketBaseURL" :rules="marketURLRules">
-            <a-input v-model:value="marketBaseURL" :placeholder="defaultMarketURL || '请输入官方市场地址'" allow-clear size="large">
+        <a-form ref="marketFormRef" :model="marketForm" layout="vertical" class="setup-form" autocomplete="off">
+          <a-form-item label="官方市场地址" name="baseURL" :rules="marketURLRules">
+            <a-input v-model:value="marketForm.baseURL" :placeholder="defaultMarketURL || '请输入官方市场地址'" allow-clear size="large">
               <template #prefix><LinkOutlined /></template>
             </a-input>
           </a-form-item>
-          <a-form-item label="官方账号" name="marketEmail" :rules="marketAccountRules">
-            <a-input v-model:value="marketAccount.email" placeholder="官方市场登录邮箱" allow-clear size="large">
+          <a-form-item label="官方账号" name="email" :rules="marketAccountRules">
+            <a-input v-model:value="marketForm.email" placeholder="官方市场登录邮箱" allow-clear size="large">
               <template #prefix><UserOutlined /></template>
             </a-input>
           </a-form-item>
-          <a-form-item label="官方密码" name="marketPassword" :rules="marketAccountRules">
-            <a-input-password v-model:value="marketAccount.password" placeholder="官方市场登录密码" size="large">
+          <a-form-item label="官方密码" name="password" :rules="marketAccountRules">
+            <a-input-password v-model:value="marketForm.password" placeholder="官方市场登录密码" size="large">
               <template #prefix><LockOutlined /></template>
             </a-input-password>
           </a-form-item>
@@ -349,6 +350,7 @@ import type { FormInstance } from 'ant-design-vue'
 import { MODULE_DEFS, COMMON_MODULE_KEYS, type ModuleKey } from '@/constants/modules'
 import { computeModulePreset, type RoleKey } from '@/constants/setupRoles'
 import RolePickerCards from '@/components/common/RolePickerCards.vue'
+import logoMark from '@/assets/brand/novablog-logo-mark.png'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
@@ -429,20 +431,32 @@ const storageTesting = ref(false)
 // 云存储必填校验规则
 const cloudRequiredRules = [{ required: true, message: '此项为必填', trigger: 'blur' }]
 
-// 官方市场地址（向导输入）；默认值由后端下发，本地缓存（上次向导输入）优先
-const marketBaseURL = ref(marketStorage.getBaseURL() || '')
+// 官方市场表单（向导输入）；地址默认值由后端下发，本地缓存（上次向导输入）优先
+const marketForm = reactive({
+  baseURL: marketStorage.getBaseURL() || '',
+  email: '',
+  password: '',
+})
 const defaultMarketURL = ref('')
 
 // 官方市场账号（必填）：官方代理下载要求登录态，由后端临时换取 Token，不落库
-const marketAccount = reactive({ email: '', password: '' })
 const marketAccountRules = [{ required: true, message: '官方市场下载需要先登录官方账号', trigger: 'blur' }]
 
 onMounted(async () => {
   try {
+    // 账号/存储等前序步骤已完成时（如热更新后组件重挂载），直接回到外观步骤
+    const status = await setupApi.getStatus()
+    if (status.initialized) {
+      phase.value = 'theme'
+    }
+  } catch {
+    // 查询失败按首次安装处理
+  }
+  try {
     const config = await configApi.getPublicConfig()
     defaultMarketURL.value = config.market_base_url || ''
-    if (!marketBaseURL.value && defaultMarketURL.value) {
-      marketBaseURL.value = defaultMarketURL.value
+    if (!marketForm.baseURL && defaultMarketURL.value) {
+      marketForm.baseURL = defaultMarketURL.value
     }
   } catch {
     // 下发失败保持为空，允许手动输入
@@ -668,9 +682,9 @@ async function startThemeInit() {
   }
   themeStarting.value = true
   try {
-    themeStatus.value = await setupApi.initTheme(marketBaseURL.value || undefined, {
-      email: marketAccount.email.trim(),
-      password: marketAccount.password,
+    themeStatus.value = await setupApi.initTheme(marketForm.baseURL || undefined, {
+      email: marketForm.email.trim(),
+      password: marketForm.password,
     })
     if (themeStatus.value.status === 'running' && !pollTimer) {
       pollTimer = setInterval(pollThemeStatus, 1500)
@@ -690,8 +704,8 @@ async function pollThemeStatus() {
       stopPolling()
       if (status.status === 'success') {
         // 持久化官方市场地址，主题页登录弹窗自动填入
-        if (marketBaseURL.value) {
-          marketStorage.setBaseURL(marketBaseURL.value)
+        if (marketForm.baseURL) {
+          marketStorage.setBaseURL(marketForm.baseURL)
         }
         message.success(`主题「${status.theme_name}」已启用，博客即将上线`)
       }
@@ -723,7 +737,7 @@ onUnmounted(stopPolling)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: var(--bg-page, #F5F7FC);
   overflow: hidden;
 }
 
@@ -732,8 +746,8 @@ onUnmounted(stopPolling)
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(41, 54, 92, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(41, 54, 92, 0.035) 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
 }
@@ -746,7 +760,7 @@ onUnmounted(stopPolling)
   right: -120px;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(74, 108, 247, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(82, 111, 232, 0.12) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -757,7 +771,7 @@ onUnmounted(stopPolling)
   left: -100px;
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(142, 165, 255, 0.1) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -776,12 +790,20 @@ onUnmounted(stopPolling)
 }
 
 /* Logo */
+.setup-logo-img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  user-select: none;
+}
+
 .setup-logo {
   text-align: center;
   font-size: 36px;
   font-weight: 800;
   letter-spacing: 2px;
-  color: var(--color-primary, #4a6cf7);
+  color: var(--color-primary, #526FE8);
   margin-bottom: 4px;
   user-select: none;
 }
@@ -791,7 +813,7 @@ onUnmounted(stopPolling)
   text-align: center;
   font-size: 22px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0 0 8px;
   letter-spacing: 1px;
 }
@@ -800,14 +822,14 @@ onUnmounted(stopPolling)
 .setup-welcome {
   text-align: center;
   font-size: 16px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   margin: 0 0 4px;
 }
 
 .setup-desc {
   text-align: center;
   font-size: 14px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   margin: 0 0 28px;
 }
 
@@ -843,26 +865,26 @@ onUnmounted(stopPolling)
 /* 输入框增强 */
 .setup-input :deep(.ant-input),
 .setup-input :deep(.ant-input-affix-wrapper) {
-  border-color: var(--border-color, #e2e8f0);
+  border-color: var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
   transition: border-color var(--transition-fast, 150ms), box-shadow var(--transition-fast, 150ms);
 }
 
 .setup-input :deep(.ant-input-affix-wrapper):hover,
 .setup-input :deep(.ant-input):hover {
-  border-color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
 }
 
 .setup-input :deep(.ant-input-affix-wrapper):focus,
 .setup-input :deep(.ant-input-affix-wrapper)-focused,
 .setup-input :deep(.ant-input):focus {
-  border-color: var(--color-primary, #4a6cf7);
-  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.15);
+  border-color: var(--color-primary, #526FE8);
+  box-shadow: 0 0 0 2px rgba(82, 111, 232, 0.15);
 }
 
 .setup-input :deep(.ant-input-prefix) {
   margin-right: 10px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 /* 提交按钮 */
@@ -877,14 +899,14 @@ onUnmounted(stopPolling)
   font-weight: 500;
   letter-spacing: 2px;
   border-radius: var(--border-radius, 8px);
-  background: var(--color-primary, #4a6cf7);
-  border-color: var(--color-primary, #4a6cf7);
+  background: var(--color-primary, #526FE8);
+  border-color: var(--color-primary, #526FE8);
   transition: all var(--transition-fast, 150ms);
 }
 
 .submit-item :deep(.ant-btn):hover {
-  background: var(--color-primary-hover, #3b5de7);
-  border-color: var(--color-primary-hover, #3b5de7);
+  background: var(--color-primary-hover, #435FD0);
+  border-color: var(--color-primary-hover, #435FD0);
 }
 
 /* 加载时的脉冲动画 */
@@ -894,10 +916,10 @@ onUnmounted(stopPolling)
 
 @keyframes btn-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.4);
+    box-shadow: 0 0 0 0 rgba(82, 111, 232, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 12px rgba(74, 108, 247, 0);
+    box-shadow: 0 0 0 12px rgba(82, 111, 232, 0);
   }
 }
 
@@ -907,7 +929,7 @@ onUnmounted(stopPolling)
 }
 
 .setup-divider :deep(.ant-divider-inner-text) {
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 /* ===== 第 2 步：配置对象存储 ===== */
@@ -923,7 +945,7 @@ onUnmounted(stopPolling)
   height: 56px;
   margin-bottom: 12px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  background: linear-gradient(135deg, #B7791F 0%, #C2414B 100%);
   color: #fff;
   font-size: 26px;
 }
@@ -933,7 +955,7 @@ onUnmounted(stopPolling)
   margin: 0 0 6px;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .storage-step__desc {
@@ -941,7 +963,7 @@ onUnmounted(stopPolling)
   margin: 0 0 20px;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .storage-step__actions {
@@ -951,7 +973,7 @@ onUnmounted(stopPolling)
 /* 存储步骤表单标签 */
 .storage-step :deep(.ant-form-item-label > label) {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 /* ===== 第 3 步：初始化博客外观 ===== */
@@ -967,7 +989,7 @@ onUnmounted(stopPolling)
   height: 56px;
   margin-bottom: 12px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #4a6cf7 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #526FE8 0%, #8EA5FF 100%);
   color: #fff;
   font-size: 26px;
 }
@@ -976,41 +998,41 @@ onUnmounted(stopPolling)
   margin: 0 0 6px;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .theme-step__desc {
   margin: 0 0 20px;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .theme-step__progress {
   padding: 16px;
   margin-bottom: 20px;
-  border: 1px dashed var(--border-color, #e2e8f0);
+  border: 1px dashed var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
-  background: var(--bg-layout, rgba(74, 108, 247, 0.04));
+  background: var(--bg-layout, rgba(82, 111, 232, 0.04));
 }
 
 .theme-step__stage {
   font-size: 14px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   word-break: break-all;
 }
 
 .theme-step__stage--active {
-  color: var(--color-primary, #4a6cf7);
+  color: var(--color-primary, #526FE8);
 }
 
 .theme-step__ok {
-  color: #52c41a;
+  color: #16805D;
   margin-right: 6px;
 }
 
 .theme-step__err {
-  color: #ff4d4f;
+  color: #C2414B;
   margin-right: 6px;
 }
 
@@ -1024,7 +1046,7 @@ onUnmounted(stopPolling)
 .setup-slogan {
   text-align: center;
   font-size: 14px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   margin: 0;
   letter-spacing: 1px;
   user-select: none;
@@ -1043,14 +1065,14 @@ onUnmounted(stopPolling)
 .role-step__title {
   font-size: 18px;
   font-weight: 600;
-  color: #1e293b;
+  color: #29365C;
   text-align: center;
   margin: 0 0 6px;
 }
 
 .role-step__desc {
   font-size: 13px;
-  color: #64748b;
+  color: #667085;
   text-align: center;
   margin: 0 0 16px;
   line-height: 1.6;
@@ -1066,8 +1088,8 @@ onUnmounted(stopPolling)
 .role-preset {
   margin-top: 14px;
   padding: 12px 14px;
-  background: #f8f9fb;
-  border: 1px solid #e2e8f0;
+  background: #F5F7FC;
+  border: 1px solid #E5E9F2;
   border-radius: 8px;
 }
 
@@ -1081,7 +1103,7 @@ onUnmounted(stopPolling)
 .role-preset__title {
   font-size: 13px;
   font-weight: 500;
-  color: #1e293b;
+  color: #29365C;
 }
 
 .role-preset__chips {
@@ -1097,14 +1119,14 @@ onUnmounted(stopPolling)
   padding: 3px 10px;
   font-size: 12px;
   border-radius: 999px;
-  background: rgba(74, 108, 247, 0.08);
-  color: #4a6cf7;
+  background: rgba(82, 111, 232, 0.08);
+  color: #526FE8;
   transition: opacity 0.2s;
 }
 
 .module-chip--off {
-  background: #eef1f5;
-  color: #94a3b8;
+  background: #F5F7FC;
+  color: #8A93A8;
 }
 
 .module-chip__check {
@@ -1114,13 +1136,13 @@ onUnmounted(stopPolling)
 .module-chip__badge {
   font-style: normal;
   font-size: 10px;
-  color: #94a3b8;
+  color: #8A93A8;
 }
 
 .role-preset__customize {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed #E5E9F2;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px 16px;
@@ -1135,7 +1157,7 @@ onUnmounted(stopPolling)
 
 .customize-row__label {
   font-size: 13px;
-  color: #475569;
+  color: #667085;
 }
 
 .role-step__actions {

@@ -112,7 +112,7 @@ function toggleRole(key: RoleKey) {
 .role-group__title {
   font-size: 12px;
   font-weight: 500;
-  color: #94a3b8;
+  color: #8A93A8;
   margin-bottom: 6px;
 }
 
@@ -134,8 +134,8 @@ function toggleRole(key: RoleKey) {
   gap: 2px;
   padding: 10px 12px;
   min-height: 44px;
-  background: #f8f9fb;
-  border: 1px solid #e2e8f0;
+  background: #F5F7FC;
+  border: 1px solid #E5E9F2;
   border-radius: 8px;
   cursor: pointer;
   text-align: left;
@@ -143,39 +143,39 @@ function toggleRole(key: RoleKey) {
 }
 
 .role-card:hover {
-  border-color: #4a6cf7;
+  border-color: #526FE8;
 }
 
 .role-card:focus-visible {
-  outline: 2px solid #4a6cf7;
+  outline: 2px solid #526FE8;
   outline-offset: 2px;
 }
 
 .role-card.selected {
-  background: rgba(74, 108, 247, 0.06);
-  border-color: #4a6cf7;
-  box-shadow: 0 0 0 1px #4a6cf7 inset;
+  background: rgba(82, 111, 232, 0.06);
+  border-color: #526FE8;
+  box-shadow: 0 0 0 1px #526FE8 inset;
 }
 
 .role-card__icon {
   font-size: 18px;
-  color: #64748b;
+  color: #667085;
   line-height: 1.2;
 }
 
 .role-card.selected .role-card__icon {
-  color: #4a6cf7;
+  color: #526FE8;
 }
 
 .role-card__label {
   font-size: 13px;
   font-weight: 500;
-  color: #1e293b;
+  color: #29365C;
 }
 
 .role-card__desc {
   font-size: 11px;
-  color: #94a3b8;
+  color: #8A93A8;
   line-height: 1.4;
 }
 
@@ -186,7 +186,7 @@ function toggleRole(key: RoleKey) {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #4a6cf7;
+  background: #526FE8;
   color: #fff;
   font-size: 10px;
   display: flex;

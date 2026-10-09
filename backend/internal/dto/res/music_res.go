@@ -15,6 +15,7 @@ type SongRes struct {
 	CategoryID *string   `json:"category_id"`
 	Duration   int       `json:"duration"`
 	SortOrder  int       `json:"sort_order"`
+	ViewCount  int64     `json:"view_count"` // 浏览量（兼作播放量）
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

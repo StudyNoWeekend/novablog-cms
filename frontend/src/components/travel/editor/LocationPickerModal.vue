@@ -322,7 +322,7 @@ watch(
 
 .map-service-hint {
   font-size: 13px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .search-bar {
@@ -332,7 +332,7 @@ watch(
 .search-results {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
   background: var(--bg-card, #ffffff);
 }
@@ -347,17 +347,17 @@ watch(
 }
 
 .search-result-item:hover {
-  background: var(--bg-hover, #f1f5f9);
+  background: var(--bg-hover, #F5F7FC);
 }
 
 .search-result-item + .search-result-item {
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
 }
 
 .result-icon {
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--color-primary, #4a6cf7);
+  color: var(--color-primary, #526FE8);
 }
 
 .result-info {
@@ -368,7 +368,7 @@ watch(
 .result-name {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -376,7 +376,7 @@ watch(
 
 .result-address {
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -388,15 +388,15 @@ watch(
   height: 350px;
   border-radius: var(--border-radius, 8px);
   overflow: hidden;
-  border: 1px solid var(--border-color, #e2e8f0);
-  background: #e8eaed;
+  border: 1px solid var(--border-color, #E5E9F2);
+  background: #E5E9F2;
 }
 
 .selected-info {
   padding: 10px 12px;
-  background: var(--bg-hover, #f8fafc);
+  background: var(--bg-hover, #F5F7FC);
   border-radius: var(--border-radius, 8px);
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color, #E5E9F2);
 }
 
 .selected-address {
@@ -404,7 +404,7 @@ watch(
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   font-weight: 500;
 }
 
@@ -419,7 +419,7 @@ watch(
 .selected-coords {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .actions {

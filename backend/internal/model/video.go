@@ -15,6 +15,7 @@ type VideoWork struct {
 	Description string         `gorm:"type:text"`
 	Status      int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
 	SortOrder   int            `gorm:"column:sort_order;type:int;default:0"`
+	ViewCount   int            `gorm:"column:view_count;type:int;default:0"`
 	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

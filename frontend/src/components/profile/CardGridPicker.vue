@@ -182,7 +182,7 @@ function elementColor(element: string): string {
   align-items: flex-start;
   gap: 3px;
   padding: 10px;
-  background: #f8f9fb;
+  background: #F5F7FC;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   cursor: pointer;

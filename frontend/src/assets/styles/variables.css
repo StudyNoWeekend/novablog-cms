@@ -1,32 +1,52 @@
 :root {
-  --color-primary: #4a6cf7;
-  --color-primary-hover: #3b5de7;
-  --color-primary-light: rgba(74, 108, 247, 0.08);
-  --color-accent: #7c3aed;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --bg-page: #f8f9fb;
+  /* Brand —— NovaBlog 品牌色（蓝紫主色 + 暖金点缀） */
+  --color-primary: #526FE8;
+  --color-primary-hover: #435FD0;
+  --color-primary-light: rgba(82, 111, 232, 0.08);
+  --color-primary-soft: #EEF1FF;
+  --color-accent: #8EA5FF;
+  --color-gold: #FFBC68;
+
+  /* Semantic states —— 语义状态色，不使用品牌色表达状态 */
+  --color-success: #16805D;
+  --color-warning: #B7791F;
+  --color-error: #C2414B;
+  --color-info: #3569C8;
+
+  /* Surfaces —— 浅色工作台 */
+  --bg-page: #F5F7FC;
   --bg-card: #ffffff;
-  --bg-sidebar: #111827;
-  --bg-sidebar-hover: #1e293b;
-  --bg-sidebar-active: rgba(74, 108, 247, 0.15);
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-tertiary: #94a3b8;
-  --text-sidebar: #cbd5e1;
-  --text-sidebar-active: #ffffff;
-  --border-color: #e2e8f0;
+  --bg-sidebar: #ffffff;
+  --bg-sidebar-hover: #F5F7FC;
+  --bg-sidebar-active: #EEF1FF;
+
+  /* Text */
+  --text-primary: #29365C;
+  --text-secondary: #667085;
+  --text-tertiary: #8A93A8;
+  --text-sidebar: #29365C;
+  --text-sidebar-active: #526FE8;
+
+  /* Border */
+  --border-color: #E5E9F2;
+
+  /* Shape */
   --border-radius: 8px;
   --border-radius-lg: 12px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.12);
+
+  /* Shadows —— 阴影克制，仅用于浮层 */
+  --shadow-sm: 0 1px 2px rgba(41, 54, 92, 0.04);
+  --shadow-card: 0 1px 3px rgba(41, 54, 92, 0.05);
+  --shadow-dropdown: 0 4px 16px rgba(41, 54, 92, 0.10);
+  --shadow-modal: 0 20px 60px rgba(41, 54, 92, 0.14);
+
+  /* Layout */
   --sidebar-width: 240px;
   --sidebar-collapsed: 72px;
-  --header-height: 56px;
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --header-height: 64px;
+
+  /* Motion —— 轻量、快速、以反馈为主 */
+  --transition-fast: 160ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
 }

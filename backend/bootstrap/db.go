@@ -146,6 +146,8 @@ func autoMigrate(db *gorm.DB) error {
 		&model.ThirdPartyPlaylist{},
 		&model.ThemeMarketConfig{},
 		&model.MapConfig{},
+		&model.ContentViewLog{},
+		&model.DailyViewStat{},
 	)
 }
 

@@ -19,6 +19,7 @@ type ProjectRes struct {
 	RepoURL     string    `json:"repo_url"`
 	Status      int       `json:"status"`
 	SortOrder   int       `json:"sort_order"`
+	ViewCount   int64     `json:"view_count"` // 浏览量
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

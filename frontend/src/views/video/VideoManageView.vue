@@ -191,7 +191,7 @@
             checked-children="发布"
             un-checked-children="草稿"
           />
-          <span style="margin-left: 8px; color: var(--text-secondary, #8c8c8c); font-size: 13px;">
+          <span style="margin-left: 8px; color: var(--text-secondary, #667085); font-size: 13px;">
             {{ form.published ? '发布后将在博客前台公开显示' : '仅后台可见，博客前台不显示' }}
           </span>
         </a-form-item>
@@ -446,7 +446,7 @@ function formatDateTime(time?: string): string {
 
 .video-card {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -463,7 +463,7 @@ function formatDateTime(time?: string): string {
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
 }
 
 .video-cover img {
@@ -484,7 +484,7 @@ function formatDateTime(time?: string): string {
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
 }
 
 .status-tag {
@@ -505,7 +505,7 @@ function formatDateTime(time?: string): string {
 .video-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -513,7 +513,7 @@ function formatDateTime(time?: string): string {
 
 .video-desc {
   font-size: 13px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -537,14 +537,14 @@ function formatDateTime(time?: string): string {
 
 .no-platform {
   font-size: 12px;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
 }
 
 .video-meta {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: var(--text-secondary, #bfbfbf);
+  color: var(--text-secondary, #8A93A8);
   margin-top: 4px;
 }
 
@@ -558,7 +558,7 @@ function formatDateTime(time?: string): string {
   display: flex;
   justify-content: flex-end;
   gap: 4px;
-  border-top: 1px solid var(--border-color, #f0f0f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
   margin-top: 4px;
   padding-top: 4px;
 }
@@ -580,20 +580,20 @@ function formatDateTime(time?: string): string {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  border: 1px solid var(--border-color, #d9d9d9);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
   transition: all 0.2s;
 }
 
 .platform-toggle:hover {
-  border-color: var(--primary-color, #40a9ff);
+  border-color: var(--primary-color, #526FE8);
 }
 
 .platform-toggle.active {
-  background: rgba(24, 144, 255, 0.06);
+  background: rgba(82, 111, 232, 0.06);
 }
 
 .platform-toggle-name {
@@ -618,7 +618,7 @@ function formatDateTime(time?: string): string {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
 }
 
 .platform-url-input-group {

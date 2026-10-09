@@ -8,6 +8,9 @@ import type {
   DistributionData,
   RecentCommentsData,
   RecentCommentsParams,
+  TrafficSummaryData,
+  TrafficTrendData,
+  ModuleStatsData,
 } from '@/types/analytics'
 
 export const analyticsApi = {
@@ -25,5 +28,14 @@ export const analyticsApi = {
   },
   getRecentComments(params: RecentCommentsParams) {
     return request.get<RecentCommentsData>('/analytics/recent-comments', { params })
+  },
+  getTrafficSummary() {
+    return request.get<TrafficSummaryData>('/analytics/traffic/summary')
+  },
+  getTrafficTrend(params: ContentTrendParams) {
+    return request.get<TrafficTrendData>('/analytics/traffic/trend', { params })
+  },
+  getModuleStats() {
+    return request.get<ModuleStatsData>('/analytics/module-stats')
   },
 }

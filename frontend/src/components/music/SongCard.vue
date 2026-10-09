@@ -44,6 +44,7 @@
 import { computed } from 'vue'
 import type { Song } from '@/types/music'
 import { getThumbUrl } from '@/utils/image'
+import fallbackCover from '@/assets/brand/novablog-logo-mark.png'
 
 const props = defineProps<{
   song: Song
@@ -56,7 +57,7 @@ const emit = defineEmits<{
 // B站封面 http -> https，避免混合内容拦截；COS 封面生成缩略图节省流量
 const coverUrl = computed(() => {
   const url = props.song.cover_url
-  if (!url) return '/favicon.svg'
+  if (!url) return fallbackCover
   return getThumbUrl(url.replace(/^http:\/\//, 'https://'), 160)
 })
 
@@ -114,7 +115,7 @@ function formatDuration(seconds: number): string {
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 /* 标题 */

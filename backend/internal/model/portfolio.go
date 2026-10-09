@@ -16,6 +16,7 @@ type Portfolio struct {
 	CoverPresetID *string        `gorm:"column:cover_preset_id;type:uuid"`
 	Status        int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
 	SortOrder     int            `gorm:"column:sort_order;type:int;default:0"`
+	ViewCount     int            `gorm:"column:view_count;type:int;default:0"`
 	CategoryID    *string        `gorm:"type:uuid;column:category_id" json:"category_id"`
 	Category      *Category      `gorm:"foreignKey:CategoryID" json:"-"`
 	CreatedAt     time.Time      `gorm:"type:timestamptz;autoCreateTime"`

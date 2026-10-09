@@ -181,6 +181,7 @@ func (l *RecipeLogic) toRes(m *model.Recipe) *res.RecipeRes {
 		Tags:        m.Tags,
 		Status:      m.Status,
 		SortOrder:   m.SortOrder,
+		ViewCount:   int64(m.ViewCount),
 		CreatedAt:   m.CreatedAt,
 		UpdatedAt:   m.UpdatedAt,
 	}
@@ -199,6 +200,7 @@ func (l *RecipeLogic) toCard(m *model.Recipe) res.RecipeCardRes {
 		Tags:       m.Tags,
 		Status:     m.Status,
 		SortOrder:  m.SortOrder,
+		ViewCount:  int64(m.ViewCount),
 		CreatedAt:  m.CreatedAt,
 		UpdatedAt:  m.UpdatedAt,
 	}

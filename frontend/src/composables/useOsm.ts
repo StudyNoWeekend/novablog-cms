@@ -71,7 +71,7 @@ export function useOsm() {
     if (!mapInstance) return
     const icon = L.divIcon({
       className: 'osm-marker',
-      html: '<span style="display:block;width:14px;height:14px;border-radius:50%;background:#4a6cf7;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>',
+      html: '<span style="display:block;width:14px;height:14px;border-radius:50%;background:#526FE8;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>',
       iconSize: [14, 14],
       iconAnchor: [7, 7],
     })

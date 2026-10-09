@@ -460,20 +460,20 @@ function locationTitle(attraction: TravelAttraction): string {
   width: 4px;
   height: 20px;
   border-radius: 2px;
-  background: var(--color-primary, #4a6cf7);
+  background: var(--color-primary, #526FE8);
 }
 
 .section-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .section-subtitle {
   margin: 0;
   font-size: 13px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .add-button {
@@ -495,7 +495,7 @@ function locationTitle(attraction: TravelAttraction): string {
   gap: 12px;
   padding: 12px;
   background: var(--bg-card, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
   box-shadow: var(--shadow-card, 0 1px 3px rgba(0, 0, 0, 0.06));
   cursor: grab;
@@ -510,7 +510,7 @@ function locationTitle(attraction: TravelAttraction): string {
 }
 
 .attraction-card:focus-visible {
-  outline: 2px solid var(--color-primary, #4a6cf7);
+  outline: 2px solid var(--color-primary, #526FE8);
   outline-offset: 2px;
 }
 
@@ -524,7 +524,7 @@ function locationTitle(attraction: TravelAttraction): string {
   height: 60px;
   border-radius: var(--border-radius, 8px);
   overflow: hidden;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 .attraction-thumbnail img {
@@ -540,7 +540,7 @@ function locationTitle(attraction: TravelAttraction): string {
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #cbd5e1;
+  color: #8A93A8;
 }
 
 .attraction-content {
@@ -555,7 +555,7 @@ function locationTitle(attraction: TravelAttraction): string {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -573,7 +573,7 @@ function locationTitle(attraction: TravelAttraction): string {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: var(--color-accent, #7c3aed);
+  background: var(--color-primary, #526FE8);
   color: #ffffff;
   border-color: transparent;
 }
@@ -583,7 +583,7 @@ function locationTitle(attraction: TravelAttraction): string {
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .attraction-refs {
@@ -610,16 +610,16 @@ function locationTitle(attraction: TravelAttraction): string {
   justify-content: center;
   gap: 12px;
   padding: 48px 16px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   font-size: 14px;
   background: var(--bg-card, #ffffff);
-  border: 1px dashed var(--border-color, #e2e8f0);
+  border: 1px dashed var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
 }
 
 .empty-icon {
   font-size: 48px;
-  color: #cbd5e1;
+  color: #8A93A8;
 }
 
 .location-selected {
@@ -647,14 +647,14 @@ function locationTitle(attraction: TravelAttraction): string {
   height: 120px;
   border-radius: var(--border-radius, 8px);
   overflow: hidden;
-  border: 1px dashed var(--border-color, #e2e8f0);
+  border: 1px dashed var(--border-color, #E5E9F2);
   cursor: pointer;
-  background: #f1f5f9;
+  background: #F5F7FC;
   transition: border-color var(--transition-fast, 150ms);
 }
 
 .image-card:hover {
-  border-color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
 }
 
 .image-card img {
@@ -697,7 +697,7 @@ function locationTitle(attraction: TravelAttraction): string {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .image-placeholder-icon {

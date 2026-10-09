@@ -355,8 +355,8 @@ function handleDelete(record: Game) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  color: #bfbfbf;
+  background: #F5F7FC;
+  color: #8A93A8;
   font-size: 20px;
 }
 
@@ -366,7 +366,7 @@ function handleDelete(record: Game) {
 
 .sub-text {
   font-size: 12px;
-  color: #94a3b8;
+  color: #8A93A8;
 }
 
 .form-row {
@@ -386,6 +386,6 @@ function handleDelete(record: Game) {
   height: 80px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #E5E9F2;
 }
 </style>

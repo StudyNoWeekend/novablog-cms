@@ -294,7 +294,7 @@ onUnmounted(() => {
   margin-bottom: 20px;
   padding: 24px;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
 }
 
@@ -322,7 +322,7 @@ onUnmounted(() => {
 .detail-card {
   padding: 20px;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
 }
 
@@ -409,7 +409,7 @@ onUnmounted(() => {
 
 .release-item {
   padding: 14px 0;
-  border-bottom: 1px solid var(--border-color, #f0f0f0);
+  border-bottom: 1px solid var(--border-color, #E5E9F2);
 }
 
 .release-item:last-child {

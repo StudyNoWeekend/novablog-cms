@@ -15,15 +15,17 @@ import (
 
 // AnalyticsLogic 工作台统计业务逻辑结构体。
 type AnalyticsLogic struct {
-	model *model.AnalyticsModel
-	cache *cache.AnalyticsCache
+	model     *model.AnalyticsModel
+	viewStats *model.ViewStatsModel
+	cache     *cache.AnalyticsCache
 }
 
 // NewAnalyticsLogic 创建 AnalyticsLogic 实例。
 func NewAnalyticsLogic() *AnalyticsLogic {
 	return &AnalyticsLogic{
-		model: model.NewAnalytics(),
-		cache: cache.NewAnalyticsCache(),
+		model:     model.NewAnalytics(),
+		viewStats: model.NewViewStats(),
+		cache:     cache.NewAnalyticsCache(),
 	}
 }
 
@@ -52,6 +54,15 @@ func (l *AnalyticsLogic) GetOverview(ctx context.Context) (*res.OverviewRes, err
 		commentTotal               int64
 		travelViews                int64
 		lastPublishAt              *time.Time
+
+		equipTotal                   int64
+		projTotal, projPub           int64
+		osTotal, osPub               int64
+		recipeTotal, recipePub       int64
+		bookTotal, bookPub           int64
+		gameTotal, gamePub           int64
+		fitnessTotal, fitnessPub     int64
+		techStackTotal, techStackPub int64
 	)
 
 	// 文章统计
@@ -182,6 +193,134 @@ func (l *AnalyticsLogic) GetOverview(ctx context.Context) (*res.OverviewRes, err
 		lastPublishAt = t
 	}()
 
+	// 个人设备统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, e := l.model.CountEquipment(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		equipTotal = t
+	}()
+
+	// 项目经历统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, p, e := l.model.CountProjects(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		projTotal, projPub = t, p
+	}()
+
+	// 开源作品统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, p, e := l.model.CountOpenSourceWorks(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		osTotal, osPub = t, p
+	}()
+
+	// 菜谱统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, p, e := l.model.CountRecipes(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		recipeTotal, recipePub = t, p
+	}()
+
+	// 读书统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, p, e := l.model.CountBooks(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		bookTotal, bookPub = t, p
+	}()
+
+	// 游戏统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, p, e := l.model.CountGames(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		gameTotal, gamePub = t, p
+	}()
+
+	// 健身训练统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, p, e := l.model.CountFitnessRecords(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		fitnessTotal, fitnessPub = t, p
+	}()
+
+	// 技术栈统计
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		t, p, e := l.model.CountTechStackItems(ctx)
+		if e != nil {
+			mu.Lock()
+			if firstErr == nil {
+				firstErr = e
+			}
+			mu.Unlock()
+			return
+		}
+		techStackTotal, techStackPub = t, p
+	}()
+
 	wg.Wait()
 	if firstErr != nil {
 		return nil, firstErr
@@ -204,6 +343,21 @@ func (l *AnalyticsLogic) GetOverview(ctx context.Context) (*res.OverviewRes, err
 		TravelTotal:          travelTotal,
 		TravelPublished:      travelPub,
 		SongTotal:            songTotal,
+		EquipmentTotal:       equipTotal,
+		ProjectTotal:         projTotal,
+		ProjectPublished:     projPub,
+		OpenSourceTotal:      osTotal,
+		OpenSourcePublished:  osPub,
+		RecipeTotal:          recipeTotal,
+		RecipePublished:      recipePub,
+		BookTotal:            bookTotal,
+		BookPublished:        bookPub,
+		GameTotal:            gameTotal,
+		GamePublished:        gamePub,
+		FitnessTotal:         fitnessTotal,
+		FitnessPublished:     fitnessPub,
+		TechStackTotal:       techStackTotal,
+		TechStackPublished:   techStackPub,
 		CommentTotal:         commentTotal,
 		TravelViews:          travelViews,
 		LastPublishAt:        lastPublishAt,
@@ -237,9 +391,8 @@ func (l *AnalyticsLogic) GetContentTrend(ctx context.Context, r req.ContentTrend
 	items := make([]res.ContentTrendItem, 0, len(rows))
 	for _, row := range rows {
 		items = append(items, res.ContentTrendItem{
-			Date:         row.Date.Format("2006-01-02"),
-			ArticleCount: row.ArticleCount,
-			TravelCount:  row.TravelCount,
+			Date:   row.Date.Format("2006-01-02"),
+			Counts: row.Counts,
 		})
 	}
 
@@ -258,6 +411,21 @@ func (l *AnalyticsLogic) GetTopContent(ctx context.Context, r req.TopContentReq)
 	var items []res.TopContentItem
 
 	switch contentType {
+	case "all":
+		rows, err := l.viewStats.GetTopAllContent(ctx, limit)
+		if err != nil {
+			return nil, fmt.Errorf("查询全模块热门内容失败: %w", err)
+		}
+		items = make([]res.TopContentItem, 0, len(rows))
+		for _, row := range rows {
+			items = append(items, res.TopContentItem{
+				ID:           row.ID,
+				Type:         row.Type,
+				Title:        row.Title,
+				ViewCount:    row.ViewCount,
+				CommentCount: row.CommentCount,
+			})
+		}
 	case "travel":
 		rows, err := l.model.GetTopTravelGuides(ctx, sort, limit)
 		if err != nil {
@@ -267,6 +435,7 @@ func (l *AnalyticsLogic) GetTopContent(ctx context.Context, r req.TopContentReq)
 		for _, row := range rows {
 			items = append(items, res.TopContentItem{
 				ID:           row.ID,
+				Type:         "travel",
 				Title:        row.Title,
 				ViewCount:    row.ViewCount,
 				CommentCount: row.CommentCount,
@@ -282,6 +451,7 @@ func (l *AnalyticsLogic) GetTopContent(ctx context.Context, r req.TopContentReq)
 		for _, row := range rows {
 			items = append(items, res.TopContentItem{
 				ID:           row.ID,
+				Type:         "article",
 				Title:        row.Title,
 				Slug:         row.Slug,
 				ViewCount:    row.ViewCount,
@@ -309,112 +479,64 @@ func (l *AnalyticsLogic) GetDistribution(ctx context.Context) (*res.Distribution
 		return cached, nil
 	}
 
-	// 缓存未命中，并行查询各内容类型总数
+	// 参与内容分布统计的模块，新增模块时在此维护
+	type distSource struct {
+		typ   string
+		name  string
+		count func(ctx context.Context) (int64, error)
+	}
+	sources := []distSource{
+		{"article", "文章", func(ctx context.Context) (int64, error) { t, _, _, e := l.model.CountArticles(ctx); return t, e }},
+		{"portfolio", "摄影作品", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountPortfolios(ctx); return t, e }},
+		{"video", "视频作品", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountVideos(ctx); return t, e }},
+		{"travel", "旅行攻略", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountTravelGuides(ctx); return t, e }},
+		{"song", "音乐", func(ctx context.Context) (int64, error) { return l.model.CountSongs(ctx) }},
+		{"equipment", "个人设备", func(ctx context.Context) (int64, error) { return l.model.CountEquipment(ctx) }},
+		{"project", "项目经历", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountProjects(ctx); return t, e }},
+		{"open_source", "开源作品", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountOpenSourceWorks(ctx); return t, e }},
+		{"recipe", "美食菜谱", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountRecipes(ctx); return t, e }},
+		{"book", "读书书架", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountBooks(ctx); return t, e }},
+		{"game", "游戏库", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountGames(ctx); return t, e }},
+		{"fitness", "健身训练", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountFitnessRecords(ctx); return t, e }},
+		{"tech_stack", "技术栈", func(ctx context.Context) (int64, error) { t, _, e := l.model.CountTechStackItems(ctx); return t, e }},
+	}
+
+	// 并行查询各内容类型总数
 	var (
 		wg       sync.WaitGroup
 		mu       sync.Mutex
 		firstErr error
-
-		artTotal    int64
-		portTotal   int64
-		videoTotal  int64
-		travelTotal int64
-		songTotal   int64
 	)
-
-	// 文章总数
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		t, _, _, e := l.model.CountArticles(ctx)
-		if e != nil {
-			mu.Lock()
-			if firstErr == nil {
-				firstErr = e
+	counts := make(map[string]int64, len(sources))
+	for _, s := range sources {
+		wg.Add(1)
+		go func(s distSource) {
+			defer wg.Done()
+			t, e := s.count(ctx)
+			if e != nil {
+				mu.Lock()
+				if firstErr == nil {
+					firstErr = e
+				}
+				mu.Unlock()
+				return
 			}
-			mu.Unlock()
-			return
-		}
-		artTotal = t
-	}()
-
-	// 作品集总数
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		t, _, e := l.model.CountPortfolios(ctx)
-		if e != nil {
 			mu.Lock()
-			if firstErr == nil {
-				firstErr = e
-			}
+			counts[s.typ] = t
 			mu.Unlock()
-			return
-		}
-		portTotal = t
-	}()
-
-	// 视频总数
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		t, _, e := l.model.CountVideos(ctx)
-		if e != nil {
-			mu.Lock()
-			if firstErr == nil {
-				firstErr = e
-			}
-			mu.Unlock()
-			return
-		}
-		videoTotal = t
-	}()
-
-	// 旅行攻略总数
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		t, _, e := l.model.CountTravelGuides(ctx)
-		if e != nil {
-			mu.Lock()
-			if firstErr == nil {
-				firstErr = e
-			}
-			mu.Unlock()
-			return
-		}
-		travelTotal = t
-	}()
-
-	// 歌曲总数
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		t, e := l.model.CountSongs(ctx)
-		if e != nil {
-			mu.Lock()
-			if firstErr == nil {
-				firstErr = e
-			}
-			mu.Unlock()
-			return
-		}
-		songTotal = t
-	}()
+		}(s)
+	}
 
 	wg.Wait()
 	if firstErr != nil {
 		return nil, firstErr
 	}
 
-	total := artTotal + portTotal + videoTotal + travelTotal + songTotal
-
-	items := []res.DistributionItem{
-		{Type: "article", Name: "文章", Count: artTotal},
-		{Type: "portfolio", Name: "摄影作品", Count: portTotal},
-		{Type: "video", Name: "视频作品", Count: videoTotal},
-		{Type: "travel", Name: "旅行攻略", Count: travelTotal},
-		{Type: "song", Name: "音乐", Count: songTotal},
+	items := make([]res.DistributionItem, 0, len(sources))
+	total := int64(0)
+	for _, s := range sources {
+		total += counts[s.typ]
+		items = append(items, res.DistributionItem{Type: s.typ, Name: s.name, Count: counts[s.typ]})
 	}
 
 	// 计算百分比
