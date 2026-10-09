@@ -166,29 +166,29 @@ const statItems = computed(() => [
     label: '攻略总数',
     value: stats.value.total,
     icon: FileTextOutlined,
-    iconBg: 'rgba(74, 108, 247, 0.1)',
-    iconColor: '#4a6cf7',
+    iconBg: 'rgba(82, 111, 232, 0.1)',
+    iconColor: '#526FE8',
   },
   {
     label: '本月新增',
     value: stats.value.thisMonth,
     icon: CalendarOutlined,
-    iconBg: 'rgba(16, 185, 129, 0.1)',
-    iconColor: '#10b981',
+    iconBg: 'rgba(22, 128, 93, 0.1)',
+    iconColor: '#16805D',
   },
   {
     label: '总浏览量',
     value: stats.value.totalViews.toLocaleString('zh-CN'),
     icon: EyeOutlined,
-    iconBg: 'rgba(245, 158, 11, 0.1)',
-    iconColor: '#f59e0b',
+    iconBg: 'rgba(183, 121, 31, 0.1)',
+    iconColor: '#B7791F',
   },
   {
     label: '平均评分',
     value: stats.value.avgRating,
     icon: StarOutlined,
-    iconBg: 'rgba(239, 68, 68, 0.1)',
-    iconColor: '#ef4444',
+    iconBg: 'rgba(194, 65, 75, 0.1)',
+    iconColor: '#C2414B',
   },
 ])
 
@@ -308,7 +308,7 @@ function handleDrawerClose() {
 .page-title {
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0;
 }
 
@@ -357,13 +357,13 @@ function handleDrawerClose() {
 .stat-value {
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   line-height: 1.3;
 }
 
 .stat-label {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   margin-top: 2px;
 }
 

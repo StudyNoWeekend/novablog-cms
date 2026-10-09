@@ -21,14 +21,17 @@
       </div>
     </div>
     <div class="header-right">
-      <div class="search-box">
-        <SearchOutlined class="search-icon" />
-        <input type="text" placeholder="输入内容查询" class="search-input" />
-      </div>
-      <span class="action-icon">
-        <MailOutlined />
-      </span>
-      <a-badge dot color="#ef4444" class="action-icon-badge">
+      <a
+        class="action-icon github-link"
+        href="https://github.com/StudyNoWeekend/novablog-cms"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Novablog CMS 仓库"
+        aria-label="GitHub 仓库"
+      >
+        <GithubOutlined />
+      </a>
+      <a-badge dot color="#C2414B" class="action-icon-badge">
         <span class="action-icon">
           <BellOutlined />
         </span>
@@ -42,7 +45,7 @@
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
-import { SearchOutlined, MailOutlined, BellOutlined, MenuOutlined } from '@ant-design/icons-vue'
+import { BellOutlined, MenuOutlined, GithubOutlined } from '@ant-design/icons-vue'
 import AppAvatar from '@/components/common/AppAvatar.vue'
 import { ALL_ROLES } from '@/constants/setupRoles'
 
@@ -70,13 +73,13 @@ const roleDisplay = computed(() => {
 
 <style scoped>
 .app-header {
-  height: 72px;
+  height: var(--header-height);
   background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #E5E9F2;
   flex-shrink: 0;
   z-index: 10;
   position: relative;
@@ -112,7 +115,7 @@ const roleDisplay = computed(() => {
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #64748b;
+  color: #667085;
   cursor: pointer;
   padding: 4px;
 }
@@ -120,14 +123,14 @@ const roleDisplay = computed(() => {
 .greeting {
   font-size: 24px;
   font-weight: 700;
-  color: #1e293b;
+  color: #29365C;
   margin: 0;
   line-height: 1.3;
 }
 
 .subtitle {
   font-size: 14px;
-  color: #94a3b8;
+  color: #8A93A8;
   margin: 0;
   line-height: 1.4;
 }
@@ -138,54 +141,23 @@ const roleDisplay = computed(() => {
   gap: 20px;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  background: #f5f7fa;
-  border-radius: 20px;
-  padding: 0 14px;
-  height: 38px;
-  min-width: 200px;
-  transition: background var(--transition-fast);
-}
-
-.search-box:hover {
-  background: #eef0f4;
-}
-
-.search-icon {
-  font-size: 16px;
-  color: #94a3b8;
-  margin-right: 8px;
-  flex-shrink: 0;
-}
-
-.search-input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 14px;
-  color: #1e293b;
-  width: 100%;
-}
-
-.search-input::placeholder {
-  color: #94a3b8;
-}
-
 .action-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #64748b;
+  color: #667085;
   cursor: pointer;
   transition: color var(--transition-fast);
   padding: 4px;
 }
 
 .action-icon:hover {
-  color: #4a6cf7;
+  color: #526FE8;
+}
+
+.github-link {
+  text-decoration: none;
 }
 
 .action-icon-badge :deep(.ant-badge-dot) {
@@ -201,10 +173,6 @@ const roleDisplay = computed(() => {
 
   .hamburger-btn {
     display: inline-flex;
-  }
-
-  .search-box {
-    display: none;
   }
 
   .greeting {

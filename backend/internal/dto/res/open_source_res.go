@@ -16,6 +16,7 @@ type OpenSourceRes struct {
 	Status          int        `json:"status"`
 	SortOrder       int        `json:"sort_order"`
 	ReadmeUpdatedAt *time.Time `json:"readme_updated_at"` // README 最近拉取时间，null 表示尚未拉取
+	ViewCount       int64      `json:"view_count"`        // 浏览量
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
 }
@@ -32,6 +33,7 @@ type OpenSourceCardRes struct {
 	Homepage  string    `json:"homepage"`
 	Status    int       `json:"status"`
 	SortOrder int       `json:"sort_order"`
+	ViewCount int64     `json:"view_count"` // 浏览量
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

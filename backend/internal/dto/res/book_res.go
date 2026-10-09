@@ -15,6 +15,7 @@ type BookRes struct {
 	FinishedAt    *time.Time `json:"finished_at"`
 	Status        int        `json:"status"`
 	SortOrder     int        `json:"sort_order"`
+	ViewCount     int64      `json:"view_count"` // 浏览量
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
 }
@@ -29,6 +30,7 @@ type BookCardRes struct {
 	ReadingStatus string    `json:"reading_status"`
 	Status        int       `json:"status"`
 	SortOrder     int       `json:"sort_order"`
+	ViewCount     int64     `json:"view_count"` // 浏览量
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

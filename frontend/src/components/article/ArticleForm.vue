@@ -199,18 +199,18 @@ function handleMediaSelected(media: { url: string }) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
-  border: 1px dashed var(--border-color, #cbd5e1);
+  background: #F5F7FC;
+  border: 1px dashed var(--border-color, #E5E9F2);
   border-radius: 6px;
   font-size: 11px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   gap: 2px;
   transition: all 0.2s;
 }
 .cover-placeholder-compact:hover {
-  border-color: var(--primary, #3b82f6);
-  color: var(--primary, #3b82f6);
-  background: #f0f7ff;
+  border-color: var(--primary, #526FE8);
+  color: var(--primary, #526FE8);
+  background: #EEF1FF;
 }
 .cover-overlay-compact {
   position: absolute;
@@ -232,7 +232,7 @@ function handleMediaSelected(media: { url: string }) {
 }
 .switch-label {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   white-space: nowrap;
 }
 </style>

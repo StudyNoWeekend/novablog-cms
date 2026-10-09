@@ -278,7 +278,7 @@ function handleBack() {
   z-index: 100;
   display: flex;
   flex-direction: column;
-  background: var(--bg-page, #f8f9fb);
+  background: var(--bg-page, #F5F7FC);
   overflow-x: hidden;
 }
 
@@ -298,7 +298,7 @@ function handleBack() {
   gap: 16px;
   padding: 0 24px;
   background: var(--bg-card, #ffffff);
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 1px solid var(--border-color, #E5E9F2);
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
@@ -313,7 +313,7 @@ function handleBack() {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

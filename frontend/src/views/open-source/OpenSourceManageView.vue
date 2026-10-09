@@ -492,7 +492,7 @@ function handleDelete(item: OpenSourceWork) {
   gap: 8px;
   padding: 16px;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   transition: box-shadow 0.2s;
 }
@@ -509,7 +509,7 @@ function handleDelete(item: OpenSourceWork) {
 
 .repo-icon {
   font-size: 18px;
-  color: #4a6cf7;
+  color: #526FE8;
   flex-shrink: 0;
 }
 
@@ -518,7 +518,7 @@ function handleDelete(item: OpenSourceWork) {
   min-width: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -531,7 +531,7 @@ function handleDelete(item: OpenSourceWork) {
 
 .repo-summary {
   font-size: 13px;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
   line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -557,7 +557,7 @@ function handleDelete(item: OpenSourceWork) {
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
 }
 
 .meta-item {
@@ -574,19 +574,19 @@ function handleDelete(item: OpenSourceWork) {
 }
 
 .meta-links a {
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
   transition: color 0.2s;
 }
 
 .meta-links a:hover {
-  color: #1890ff;
+  color: #526FE8;
 }
 
 .repo-actions {
   display: flex;
   justify-content: flex-end;
   gap: 4px;
-  border-top: 1px solid var(--border-color, #f0f0f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
   padding-top: 4px;
 }
 
@@ -603,6 +603,6 @@ function handleDelete(item: OpenSourceWork) {
 .readme-meta {
   margin-bottom: 12px;
   font-size: 12px;
-  color: var(--text-secondary, #8c8c8c);
+  color: var(--text-secondary, #667085);
 }
 </style>

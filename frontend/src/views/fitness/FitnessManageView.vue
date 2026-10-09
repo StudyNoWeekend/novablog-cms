@@ -336,7 +336,7 @@ function handleDelete(record: FitnessRecord) {
 
 .sub-text {
   font-size: 12px;
-  color: #94a3b8;
+  color: #8A93A8;
 }
 
 .form-row {

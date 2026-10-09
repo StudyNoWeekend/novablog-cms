@@ -166,7 +166,7 @@ onBeforeUnmount(destroyCropper)
 .crop-container {
   height: 300px;
   overflow: hidden;
-  background: var(--bg-card, #f5f5f5);
+  background: var(--bg-card, #F5F7FC);
 }
 
 .crop-container :deep(img) {

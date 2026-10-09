@@ -133,7 +133,7 @@ async function handleOk() {
 
 <style scoped>
 .move-hint {
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
   margin-bottom: 12px;
 }
 
@@ -144,11 +144,11 @@ async function handleOk() {
 }
 
 .tree-folder :deep(.anticon) {
-  color: #faad14;
+  color: #B7791F;
 }
 
 .tree-count {
-  color: var(--text-tertiary, #bfbfbf);
+  color: var(--text-tertiary, #8A93A8);
   font-size: 12px;
 }
 </style>

@@ -15,6 +15,7 @@ type PhotoEquipment struct {
 	Brand       string         `gorm:"type:varchar(255)"`
 	Description string         `gorm:"type:text"`
 	SortOrder   int            `gorm:"column:sort_order;type:int;default:0"`
+	ViewCount   int            `gorm:"column:view_count;type:int;default:0"`
 	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

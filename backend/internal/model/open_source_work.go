@@ -21,6 +21,7 @@ type OpenSourceWork struct {
 	Homepage        string         `gorm:"column:homepage;type:varchar(1024)"`          // 主页/演示地址
 	Status          int            `gorm:"type:int;default:0"`                          // 0=草稿, 1=已发布
 	SortOrder       int            `gorm:"column:sort_order;type:int;default:0"`
+	ViewCount       int            `gorm:"column:view_count;type:int;default:0"`
 	ReadmeUpdatedAt *time.Time     `gorm:"column:readme_updated_at;type:timestamptz"` // README 最近拉取时间
 	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt       time.Time      `gorm:"type:timestamptz;autoUpdateTime"`

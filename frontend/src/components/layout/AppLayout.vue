@@ -4,7 +4,7 @@
     <div
       class="app-main"
       :style="{
-        marginLeft: isMobile ? '0' : (appStore.sidebarCollapsed ? '72px' : '220px')
+        marginLeft: isMobile ? '0' : (appStore.sidebarCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)')
       }"
     >
       <AppHeader />
@@ -57,7 +57,7 @@ onUnmounted(() => {
 .app-layout {
   display: flex;
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--bg-page);
 }
 
 .app-main {

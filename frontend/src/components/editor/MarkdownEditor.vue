@@ -62,7 +62,7 @@ async function handleUploadImage(files: File[]): Promise<{ title: string; url: s
 :deep(.bytemd) {
   height: 100%;
   min-height: 400px;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
 }
 </style>

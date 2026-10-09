@@ -15,6 +15,7 @@ type GameRes struct {
 	ShortReview string    `json:"short_review"`
 	Status      int       `json:"status"`
 	SortOrder   int       `json:"sort_order"`
+	ViewCount   int64     `json:"view_count"` // 浏览量
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -31,6 +32,7 @@ type GameCardRes struct {
 	Rating     int       `json:"rating"`
 	Status     int       `json:"status"`
 	SortOrder  int       `json:"sort_order"`
+	ViewCount  int64     `json:"view_count"` // 浏览量
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

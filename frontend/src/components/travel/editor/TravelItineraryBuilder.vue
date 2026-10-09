@@ -490,14 +490,14 @@ function attractionDuration(id: string) {
   width: 4px;
   height: 20px;
   border-radius: 2px;
-  background: var(--color-primary, #4a6cf7);
+  background: var(--color-primary, #526FE8);
 }
 
 .section-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .itinerary-timeline {
@@ -511,7 +511,7 @@ function attractionDuration(id: string) {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--color-primary, #4a6cf7);
+  background: var(--color-primary, #526FE8);
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
@@ -531,7 +531,7 @@ function attractionDuration(id: string) {
 }
 
 .day-card.drag-over {
-  box-shadow: 0 0 0 2px var(--color-primary, #4a6cf7),
+  box-shadow: 0 0 0 2px var(--color-primary, #526FE8),
     var(--shadow-card, 0 1px 3px rgba(0, 0, 0, 0.06));
 }
 
@@ -544,7 +544,7 @@ function attractionDuration(id: string) {
 .day-label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .day-attractions {
@@ -561,16 +561,16 @@ function attractionDuration(id: string) {
 
 .attractions-count {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .empty-state {
   padding: 24px 16px;
   text-align: center;
   font-size: 13px;
-  color: var(--text-tertiary, #94a3b8);
-  background: var(--bg-page, #f8f9fb);
-  border: 1px dashed var(--border-color, #e2e8f0);
+  color: var(--text-tertiary, #8A93A8);
+  background: var(--bg-page, #F5F7FC);
+  border: 1px dashed var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
 }
 
@@ -585,8 +585,8 @@ function attractionDuration(id: string) {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: var(--bg-page, #f8f9fb);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-page, #F5F7FC);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
   cursor: grab;
   transition:
@@ -595,13 +595,13 @@ function attractionDuration(id: string) {
 }
 
 .attraction-mini-card:hover {
-  border-color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
 }
 
 .attraction-mini-card.drag-over {
-  border-color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
   border-style: dashed;
-  box-shadow: 0 0 0 2px var(--color-primary-light, rgba(74, 108, 247, 0.08));
+  box-shadow: 0 0 0 2px var(--color-primary-light, rgba(82, 111, 232, 0.08));
 }
 
 .attraction-mini-card:active {
@@ -614,7 +614,7 @@ function attractionDuration(id: string) {
   height: 56px;
   border-radius: 6px;
   object-fit: cover;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 .attraction-image-placeholder {
@@ -622,7 +622,7 @@ function attractionDuration(id: string) {
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #cbd5e1;
+  color: #8A93A8;
 }
 
 .attraction-info {
@@ -636,7 +636,7 @@ function attractionDuration(id: string) {
 .attraction-name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -654,7 +654,7 @@ function attractionDuration(id: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: var(--color-accent, #7c3aed);
+  background: var(--color-primary, #526FE8);
   color: #ffffff;
   border-color: transparent;
 }
@@ -664,7 +664,7 @@ function attractionDuration(id: string) {
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .attraction-actions {
@@ -687,15 +687,15 @@ function attractionDuration(id: string) {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  background: var(--bg-page, #f8f9fb);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-page, #F5F7FC);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
   cursor: pointer;
   transition: border-color var(--transition-fast, 150ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .modal-attraction-item:hover {
-  border-color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
 }
 
 .modal-attraction-image {
@@ -704,7 +704,7 @@ function attractionDuration(id: string) {
   height: 48px;
   border-radius: 6px;
   object-fit: cover;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 
 .modal-attraction-image-placeholder {
@@ -712,7 +712,7 @@ function attractionDuration(id: string) {
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #cbd5e1;
+  color: #8A93A8;
 }
 
 .modal-attraction-info {
@@ -726,7 +726,7 @@ function attractionDuration(id: string) {
 .modal-attraction-name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -734,7 +734,7 @@ function attractionDuration(id: string) {
 
 .modal-attraction-location {
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -16,5 +16,8 @@ func RegisterAnalyticsRoutes(r *gin.RouterGroup, analyticsController *controller
 		analytics.GET("/top-content", analyticsController.GetTopContent)
 		analytics.GET("/distribution", analyticsController.GetDistribution)
 		analytics.GET("/recent-comments", analyticsController.GetRecentComments)
+		analytics.GET("/traffic/summary", analyticsController.GetTrafficSummary)
+		analytics.GET("/traffic/trend", analyticsController.GetTrafficTrend)
+		analytics.GET("/module-stats", analyticsController.GetModuleStats)
 	}
 }

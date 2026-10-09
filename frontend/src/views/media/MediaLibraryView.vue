@@ -695,7 +695,7 @@ function formatDateTime(time?: string): string {
 .folder-card {
   position: relative;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   padding: 16px 12px 10px;
   text-align: center;
@@ -705,7 +705,7 @@ function formatDateTime(time?: string): string {
 
 .folder-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: var(--primary, #4a6cf7);
+  border-color: var(--primary, #526FE8);
 }
 
 .folder-body {
@@ -717,19 +717,19 @@ function formatDateTime(time?: string): string {
 
 .folder-icon {
   font-size: 52px;
-  color: #faad14;
+  color: #B7791F;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.15));
 }
 
 .folder-count {
   font-size: 12px;
-  color: var(--text-tertiary, #bfbfbf);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 .folder-name {
   margin-top: 6px;
   font-size: 13px;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -769,21 +769,21 @@ function formatDateTime(time?: string): string {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
   cursor: pointer;
 }
 
 .folder-cell:hover {
-  color: var(--primary, #4a6cf7);
+  color: var(--primary, #526FE8);
 }
 
 .folder-cell-icon {
   font-size: 18px;
-  color: #faad14;
+  color: #B7791F;
 }
 
 .media-cell {
-  color: var(--text-primary, #262626);
+  color: var(--text-primary, #29365C);
 }
 
 /* 媒体网格（图标视图） */
@@ -799,7 +799,7 @@ function formatDateTime(time?: string): string {
 
 .media-card {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -849,7 +849,7 @@ function formatDateTime(time?: string): string {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary, #f5f5f5);
+  background: var(--bg-secondary, #F5F7FC);
   color: var(--text-secondary, #666);
   padding: 16px;
 }
@@ -863,20 +863,20 @@ function formatDateTime(time?: string): string {
   line-height: 1.4;
   padding: 6px 8px;
   text-align: center;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .media-folder-tag {
-  color: var(--primary, #4a6cf7);
+  color: var(--primary, #526FE8);
   margin-left: 4px;
 }
 
 .folder-modal-hint {
   font-size: 12px;
-  color: var(--text-tertiary, #bfbfbf);
+  color: var(--text-tertiary, #8A93A8);
   margin: 0;
 }
 

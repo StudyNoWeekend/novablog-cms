@@ -355,6 +355,7 @@ func (l *MusicLogic) toSongRes(s *model.Song) *res.SongRes {
 		CategoryID: s.CategoryID,
 		Duration:   s.Duration,
 		SortOrder:  s.SortOrder,
+		ViewCount:  int64(s.ViewCount),
 		CreatedAt:  s.CreatedAt,
 		UpdatedAt:  s.UpdatedAt,
 	}

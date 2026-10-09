@@ -15,6 +15,7 @@ type PortfolioRes struct {
 	CategoryID    string    `json:"category_id"`
 	CategoryName  string    `json:"category_name"`
 	ItemCount     int64     `json:"item_count"`
+	ViewCount     int64     `json:"view_count"` // 浏览量
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

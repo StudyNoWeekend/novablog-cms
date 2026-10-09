@@ -20,6 +20,7 @@ type Song struct {
 	CategoryID *string   `gorm:"type:uuid;column:category_id" json:"category_id"`
 	Duration   int       `gorm:"default:0" json:"duration"`
 	SortOrder  int       `gorm:"column:sort_order;default:0" json:"sort_order"`
+	ViewCount  int       `gorm:"column:view_count;default:0" json:"view_count"`
 	CreatedAt  time.Time `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt  time.Time `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 }

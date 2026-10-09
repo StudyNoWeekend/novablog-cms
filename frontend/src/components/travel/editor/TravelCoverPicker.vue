@@ -347,7 +347,7 @@ function handleClose() {
 .selected-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(74, 108, 247, 0.2);
+  background: rgba(82, 111, 232, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;

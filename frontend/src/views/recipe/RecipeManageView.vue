@@ -367,8 +367,8 @@ function handleDelete(record: Recipe) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  color: #bfbfbf;
+  background: #F5F7FC;
+  color: #8A93A8;
   font-size: 20px;
 }
 
@@ -393,7 +393,7 @@ function handleDelete(record: Recipe) {
   height: 80px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #E5E9F2;
 }
 
 .dynamic-list {
@@ -412,8 +412,8 @@ function handleDelete(record: Recipe) {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #f0f2f5;
-  color: #64748b;
+  background: #F5F7FC;
+  color: #667085;
   font-size: 12px;
   display: flex;
   align-items: center;

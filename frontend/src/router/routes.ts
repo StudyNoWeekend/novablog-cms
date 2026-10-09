@@ -149,6 +149,12 @@ export default [
         component: () => import('@/views/comment/CommentManageView.vue'),
       },
       {
+        path: 'system-config',
+        name: 'SystemConfig',
+        meta: { title: '系统配置', icon: 'SettingOutlined' },
+        component: () => import('@/views/system/SystemConfigView.vue'),
+      },
+      {
         path: 'api-doc',
         name: 'ApiDoc',
         meta: { title: 'API 文档', icon: 'BookOutlined' },

@@ -116,7 +116,7 @@ watch(
   display: flex;
   flex-direction: column;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
   overflow: hidden;
   cursor: pointer;
@@ -124,7 +124,7 @@ watch(
 }
 
 .theme-card:hover {
-  border-color: var(--primary-color, #1677ff);
+  border-color: var(--primary-color, #526FE8);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
@@ -164,13 +164,13 @@ watch(
   height: 22px;
   line-height: 22px;
   border-radius: 4px;
-  background: rgba(82, 196, 26, 0.92);
+  background: rgba(22, 128, 93, 0.92);
   color: #fff;
   font-size: 12px;
 }
 
 .theme-card__price--paid {
-  background: rgba(250, 140, 22, 0.92);
+  background: rgba(183, 121, 31, 0.92);
 }
 
 .theme-card__status {
@@ -277,7 +277,7 @@ watch(
   display: flex;
   gap: 8px;
   padding: 10px 14px;
-  border-top: 1px solid var(--border-color, #f0f0f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
 }
 
 .theme-card__actions .ant-btn {

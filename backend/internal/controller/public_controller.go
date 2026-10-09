@@ -40,6 +40,7 @@ type PublicController struct {
 	moduleConfigLogic      *logic.ModuleConfigLogic
 	playlistLogic          *logic.ThirdPartyPlaylistLogic
 	themeMarketConfigLogic *logic.ThemeMarketConfigLogic
+	viewStats              *logic.ViewStatsLogic
 }
 
 // NewPublicController 创建 PublicController 实例。
@@ -66,7 +67,38 @@ func NewPublicController(manager *storage.Manager, cryptoKey, uploadDir string) 
 		moduleConfigLogic:      logic.NewModuleConfigLogic(),
 		playlistLogic:          logic.NewThirdPartyPlaylistLogic(),
 		themeMarketConfigLogic: logic.NewThemeMarketConfigLogic(),
+		viewStats:              logic.NewViewStatsLogic(),
 	}
+}
+
+// recordContentView 公开详情请求触发的浏览计数（内容已确认存在，内部完成 IP 去重与异步落库）。
+func (ctrl *PublicController) recordContentView(ctx *gin.Context, contentType, contentID string) {
+	_, _ = ctrl.viewStats.RecordView(ctx.Request.Context(), contentType, contentID, ctx.ClientIP())
+}
+
+// TrackView 通用浏览量上报 POST /api/v1/public/views/track
+// 供主题显式上报使用（如无详情接口的 fitness/tech_stack 模块）；内容不存在或未发布时静默忽略。
+func (ctrl *PublicController) TrackView(ctx *gin.Context) {
+	var r req.TrackViewReq
+	if err := ctx.ShouldBindJSON(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	if !ctrl.viewStats.IsValidViewType(r.Type) {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	exists, err := ctrl.viewStats.ContentViewExists(ctx.Request.Context(), r.Type, r.ID)
+	if err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	if !exists {
+		response.Success(ctx, nil)
+		return
+	}
+	ctrl.recordContentView(ctx, r.Type, r.ID)
+	response.Success(ctx, nil)
 }
 
 // GetStatus 获取系统初始化状态。
@@ -429,6 +461,7 @@ func (ctrl *PublicController) GetPortfolioDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "portfolio", id)
 	response.Success(ctx, result)
 }
 
@@ -455,6 +488,7 @@ func (ctrl *PublicController) GetVideoDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "video", id)
 	response.Success(ctx, result)
 }
 
@@ -481,6 +515,7 @@ func (ctrl *PublicController) GetSongDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "song", id)
 	response.Success(ctx, result)
 }
 
@@ -492,6 +527,7 @@ func (ctrl *PublicController) GetAudioURL(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "song", songID)
 	response.Success(ctx, gin.H{"url": url})
 }
 
@@ -518,6 +554,7 @@ func (ctrl *PublicController) GetEquipmentDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "equipment", id)
 	response.Success(ctx, result)
 }
 
@@ -544,6 +581,7 @@ func (ctrl *PublicController) GetProjectDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "project", id)
 	response.Success(ctx, result)
 }
 
@@ -570,6 +608,7 @@ func (ctrl *PublicController) GetOpenSourceDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "open_source", id)
 	response.Success(ctx, result)
 }
 
@@ -605,6 +644,7 @@ func (ctrl *PublicController) GetRecipeDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "recipe", ctx.Param("id"))
 	response.Success(ctx, result)
 }
 
@@ -630,6 +670,7 @@ func (ctrl *PublicController) GetBookDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "book", ctx.Param("id"))
 	response.Success(ctx, result)
 }
 
@@ -655,6 +696,7 @@ func (ctrl *PublicController) GetGameDetail(ctx *gin.Context) {
 		response.HandleError(ctx, err)
 		return
 	}
+	ctrl.recordContentView(ctx, "game", ctx.Param("id"))
 	response.Success(ctx, result)
 }
 

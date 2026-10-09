@@ -172,7 +172,7 @@ function handleCancel() {
 
 .picker-folder-name {
   font-size: 13px;
-  color: var(--text-secondary, #595959);
+  color: var(--text-secondary, #667085);
 }
 
 .picker-folders {
@@ -187,18 +187,18 @@ function handleCancel() {
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: 6px;
   cursor: pointer;
   transition: border-color 0.2s;
 }
 
 .picker-folder-item:hover {
-  border-color: var(--primary, #4a6cf7);
+  border-color: var(--primary, #526FE8);
 }
 
 .picker-folder-icon {
-  color: #faad14;
+  color: #B7791F;
   font-size: 18px;
   flex-shrink: 0;
 }
@@ -226,8 +226,8 @@ function handleCancel() {
   border: 2px solid transparent;
   transition: border-color 0.2s;
 }
-.media-picker-item:hover { border-color: var(--primary, #4a6cf7); }
-.media-picker-item.selected { border-color: var(--primary, #4a6cf7); }
+.media-picker-item:hover { border-color: var(--primary, #526FE8); }
+.media-picker-item.selected { border-color: var(--primary, #526FE8); }
 .media-picker-item img {
   width: 100%;
   height: 100%;
@@ -236,12 +236,12 @@ function handleCancel() {
 .selected-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(74, 108, 247, 0.2);
+  background: rgba(82, 111, 232, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 32px;
-  color: var(--primary, #4a6cf7);
+  color: var(--primary, #526FE8);
 }
 .media-picker-footer {
   margin-top: 16px;

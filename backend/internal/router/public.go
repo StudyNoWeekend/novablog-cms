@@ -52,6 +52,9 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController, p
 		public.GET("/comments", pc.GetComments)
 		public.POST("/comments", pc.CreateComment)
 
+		// 通用浏览量上报（详情接口已自动计数，此端点供主题显式上报与无详情页模块使用）
+		public.POST("/views/track", pc.TrackView)
+
 		// 旅行攻略（静态路由必须在参数路由之前注册）
 		public.GET("/travels", pc.GetTravels)
 		public.GET("/travels/hot", pc.GetHotTravels)

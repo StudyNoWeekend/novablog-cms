@@ -19,6 +19,7 @@ type FitnessRecord struct {
 	Notes       string           `gorm:"type:text" json:"notes"`
 	Status      int              `gorm:"type:int;default:0" json:"status"` // 0=草稿, 1=已发布
 	SortOrder   int              `gorm:"column:sort_order;type:int;default:0" json:"sort_order"`
+	ViewCount   int              `gorm:"column:view_count;type:int;default:0" json:"view_count"`
 	CreatedAt   time.Time        `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time        `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"-"`

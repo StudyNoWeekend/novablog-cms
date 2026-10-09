@@ -1,21 +1,7 @@
 <template>
   <router-link to="/dashboard" class="app-logo">
     <span class="logo-icon">
-      <svg width="28" height="28" viewBox="0 0 30 30" fill="none">
-        <path
-          d="M2 15L15 2L28 15L15 28L2 15Z"
-          fill="#4a6cf7"
-          stroke="#4a6cf7"
-          stroke-width="2"
-        />
-        <path
-          d="M10 15L13.5 18.5L20 12"
-          stroke="white"
-          stroke-width="2.2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
+      <img :src="logoMark" alt="Novablog" class="logo-img" />
     </span>
     <transition name="logo-text-fade">
       <div v-if="!collapsed" class="logo-brand">
@@ -29,6 +15,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
+import logoMark from '@/assets/brand/novablog-logo-mark.png'
 
 defineProps<{
   collapsed?: boolean
@@ -56,6 +43,12 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
+.logo-img {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
 .logo-brand {
   display: flex;
   flex-direction: column;
@@ -69,7 +62,7 @@ onMounted(() => {
 .logo-text {
   font-size: 18px;
   font-weight: 700;
-  color: #1e293b;
+  color: #29365C;
   letter-spacing: 0.5px;
   white-space: nowrap;
   overflow: hidden;
@@ -77,7 +70,7 @@ onMounted(() => {
 
 .logo-version {
   font-size: 11px;
-  color: #94a3b8;
+  color: #8A93A8;
   white-space: nowrap;
   overflow: hidden;
 }

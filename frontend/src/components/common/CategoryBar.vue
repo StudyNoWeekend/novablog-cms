@@ -201,21 +201,21 @@ async function handleDelete() {
   font-size: 13px;
   cursor: pointer;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #e8e8e8);
-  color: var(--text-secondary, #64748b);
+  border: 1px solid var(--border-color, #E5E9F2);
+  color: var(--text-secondary, #667085);
   transition: all 0.2s;
   user-select: none;
   white-space: nowrap;
 }
 
 .category-chip:hover {
-  border-color: var(--primary, #4a6cf7);
-  color: var(--primary, #4a6cf7);
+  border-color: var(--primary, #526FE8);
+  color: var(--primary, #526FE8);
 }
 
 .category-chip.active {
-  background: var(--primary, #4a6cf7);
-  border-color: var(--primary, #4a6cf7);
+  background: var(--primary, #526FE8);
+  border-color: var(--primary, #526FE8);
   color: #fff;
 }
 

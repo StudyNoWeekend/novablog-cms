@@ -120,20 +120,20 @@ onMounted(() => {
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: #29365C;
   margin: 0 0 8px;
 }
 
 .section-desc {
   font-size: 14px;
-  color: #64748b;
+  color: #667085;
   margin: 0 0 20px;
   line-height: 1.6;
 }
 
 .origins-input-wrapper {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #F5F7FC;
+  border: 1px solid #E5E9F2;
   border-radius: 8px;
   padding: 12px;
   min-height: 100px;
@@ -163,6 +163,6 @@ onMounted(() => {
 
 .actions {
   padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #E5E9F2;
 }
 </style>

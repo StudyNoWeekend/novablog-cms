@@ -48,13 +48,18 @@ type IPAccessStats struct {
 	LastAccessAt time.Time
 }
 
-// GetIPAccessStatistics 按 IP 聚合访问日志统计，支持分页、IP 前缀搜索与地区模糊搜索。
+// publicAPIPathPrefix 前台公开接口路径前缀。
+// 访问统计只聚合前台（web）公开接口流量，管理端请求仍会写入日志但不出现在统计中。
+const publicAPIPathPrefix = "/api/v1/public/"
+
+// GetIPAccessStatistics 按 IP 聚合访问日志统计（仅前台公开接口流量），支持分页、IP 前缀搜索与地区模糊搜索。
 // 地区取该 IP 最近写入的非空归属地区（同一 IP 的所在地通常一致）。
 func (m *AccessLogModel) GetIPAccessStatistics(ctx context.Context, ipKeyword, region string, page, pageSize int) ([]*IPAccessStats, int64, error) {
 	var list []*IPAccessStats
 	var total int64
 
-	db := DB.WithContext(ctx).Model(&AccessLog{})
+	db := DB.WithContext(ctx).Model(&AccessLog{}).
+		Where("path LIKE ?", publicAPIPathPrefix+"%")
 	if ipKeyword != "" {
 		db = db.Where("ip ILIKE ?", ipKeyword+"%")
 	}
@@ -92,10 +97,10 @@ func (m *AccessLogModel) GetIPAccessStatistics(ctx context.Context, ipKeyword, r
 	return list, total, nil
 }
 
-// accessStatsWhere 组装访问统计筛选条件（IP 前缀 + 地区模糊），返回 SQL 片段与参数。
+// accessStatsWhere 组装访问统计筛选条件（前台路径过滤 + IP 前缀 + 地区模糊），返回 SQL 片段与参数。
 func accessStatsWhere(ipKeyword, region string) (string, []any) {
-	var conds []string
-	var args []any
+	conds := []string{"path LIKE ?"}
+	args := []any{publicAPIPathPrefix + "%"}
 	if ipKeyword != "" {
 		conds = append(conds, "ip ILIKE ?")
 		args = append(args, ipKeyword+"%")
@@ -103,9 +108,6 @@ func accessStatsWhere(ipKeyword, region string) (string, []any) {
 	if region != "" {
 		conds = append(conds, "region ILIKE ?")
 		args = append(args, "%"+region+"%")
-	}
-	if len(conds) == 0 {
-		return "", nil
 	}
 	return " WHERE " + strings.Join(conds, " AND "), args
 }

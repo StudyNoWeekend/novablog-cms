@@ -667,7 +667,7 @@ onUnmounted(() => {
   height: 56px;
   margin-bottom: 12px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  background: linear-gradient(135deg, #526FE8 0%, #8EA5FF 100%);
   color: #fff;
   font-size: 26px;
 }
@@ -752,7 +752,7 @@ onUnmounted(() => {
   gap: 2px;
   padding: 14px 18px;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
 }
 
@@ -796,7 +796,7 @@ onUnmounted(() => {
 
 .skeleton-card {
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
   padding: 16px;
 }

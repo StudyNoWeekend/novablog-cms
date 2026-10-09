@@ -32,7 +32,7 @@ const routeTitle = computed(() => {
 .page-title {
   font-size: 24px;
   font-weight: 600;
-  color: #1e293b;
+  color: #29365C;
   margin: 0;
 }
 

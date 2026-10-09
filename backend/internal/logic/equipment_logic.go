@@ -120,6 +120,7 @@ func (l *EquipmentLogic) toEquipmentRes(e *model.PhotoEquipment) *res.EquipmentR
 		Brand:       e.Brand,
 		Description: e.Description,
 		SortOrder:   e.SortOrder,
+		ViewCount:   int64(e.ViewCount),
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
 	}

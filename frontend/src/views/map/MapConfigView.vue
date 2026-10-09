@@ -117,12 +117,12 @@ onMounted(() => {
 .page-header h1 {
   font-size: 24px;
   font-weight: 600;
-  color: #1e293b;
+  color: #29365C;
   margin: 0 0 8px 0;
 }
 
 .page-desc {
-  color: #64748b;
+  color: #667085;
   font-size: 14px;
   margin: 0;
   line-height: 1.6;
@@ -135,19 +135,19 @@ onMounted(() => {
 
 .field-tip {
   font-size: 12px;
-  color: #94a3b8;
+  color: #8A93A8;
   margin-top: 4px;
   line-height: 1.5;
 }
 
 .field-tip a {
-  color: #4a6cf7;
+  color: #526FE8;
 }
 
 .form-actions {
   margin-top: 8px;
   padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #F5F7FC;
   display: flex;
   justify-content: flex-end;
 }

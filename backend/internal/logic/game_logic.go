@@ -169,6 +169,7 @@ func (l *GameLogic) toRes(m *model.Game) *res.GameRes {
 		ShortReview: m.ShortReview,
 		Status:      m.Status,
 		SortOrder:   m.SortOrder,
+		ViewCount:   int64(m.ViewCount),
 		CreatedAt:   m.CreatedAt,
 		UpdatedAt:   m.UpdatedAt,
 	}
@@ -187,6 +188,7 @@ func (l *GameLogic) toCard(m *model.Game) res.GameCardRes {
 		Rating:     m.Rating,
 		Status:     m.Status,
 		SortOrder:  m.SortOrder,
+		ViewCount:  int64(m.ViewCount),
 		CreatedAt:  m.CreatedAt,
 		UpdatedAt:  m.UpdatedAt,
 	}

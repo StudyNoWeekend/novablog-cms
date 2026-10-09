@@ -1,7 +1,7 @@
 <template>
   <a-dropdown :trigger="['click']">
     <span class="avatar-trigger">
-      <a-avatar :size="32" :style="{ backgroundColor: '#4a6cf7' }">
+      <a-avatar :size="32" :style="{ backgroundColor: '#526FE8' }">
         {{ avatarText }}
       </a-avatar>
       <span class="avatar-name">{{ authStore.username }}</span>

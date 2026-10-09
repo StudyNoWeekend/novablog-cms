@@ -299,7 +299,7 @@ defineExpose({ isValid })
 .title-bar {
   width: 4px;
   height: 20px;
-  background: var(--color-primary, #4a6cf7);
+  background: var(--color-primary, #526FE8);
   border-radius: 2px;
 }
 
@@ -307,7 +307,7 @@ defineExpose({ isValid })
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
 }
 
 .basic-form {
@@ -336,7 +336,7 @@ defineExpose({ isValid })
 .region-path {
   margin-top: 8px;
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
 }
 
 .days-input {
@@ -355,8 +355,8 @@ defineExpose({ isValid })
   border-radius: var(--border-radius-lg, 12px);
   overflow: hidden;
   cursor: pointer;
-  background: var(--bg-secondary, #f8fafc);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-secondary, #F5F7FC);
+  border: 1px solid var(--border-color, #E5E9F2);
   transition: border-color 0.2s ease;
 }
 
@@ -366,7 +366,7 @@ defineExpose({ isValid })
 
 .cover-card:not(.has-image):hover,
 .cover-card:not(.has-image):focus-visible {
-  border-color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
 }
 
 .cover-card img {
@@ -383,16 +383,16 @@ defineExpose({ isValid })
   justify-content: center;
   width: 100%;
   height: 100%;
-  border: 2px dashed var(--border-color, #e2e8f0);
+  border: 2px dashed var(--border-color, #E5E9F2);
   border-radius: inherit;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .cover-card:hover .cover-placeholder,
 .cover-card:focus-visible .cover-placeholder {
-  border-color: var(--color-primary, #4a6cf7);
-  color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
+  color: var(--color-primary, #526FE8);
 }
 
 .cover-placeholder-icon {
@@ -435,7 +435,7 @@ defineExpose({ isValid })
 .cover-url-readonly {
   margin-top: 8px;
   font-size: 12px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   word-break: break-all;
 }
 

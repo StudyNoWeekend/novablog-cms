@@ -126,7 +126,7 @@ function handleDelete() { emit('delete', props.article.id) }
   position: relative;
   height: 160px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: #F5F7FC;
 }
 .article-card-cover img {
   width: 100%;
@@ -140,7 +140,7 @@ function handleDelete() { emit('delete', props.article.id) }
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: #cbd5e1;
+  color: #8A93A8;
 }
 .article-card-status {
   position: absolute;
@@ -167,7 +167,7 @@ function handleDelete() { emit('delete', props.article.id) }
 }
 .article-card-summary {
   font-size: 13px;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -178,7 +178,7 @@ function handleDelete() { emit('delete', props.article.id) }
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   margin-bottom: 12px;
 }
 .article-card-footer {
@@ -186,11 +186,11 @@ function handleDelete() { emit('delete', props.article.id) }
   justify-content: space-between;
   align-items: center;
   padding-top: 12px;
-  border-top: 1px solid var(--border-color, #f1f5f9);
+  border-top: 1px solid var(--border-color, #F5F7FC);
 }
 .article-card-stats {
   font-size: 12px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   display: flex;
   gap: 12px;
 }

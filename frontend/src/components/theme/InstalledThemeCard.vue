@@ -150,14 +150,14 @@ const installedTime = computed(() => {
   display: flex;
   flex-direction: column;
   background: var(--bg-card, #fff);
-  border: 1px solid var(--border-color, #f0f0f0);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
   overflow: hidden;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .installed-card:hover {
-  border-color: var(--primary-color, #1677ff);
+  border-color: var(--primary-color, #526FE8);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
@@ -226,7 +226,7 @@ const installedTime = computed(() => {
 }
 
 .installed-card__version--update {
-  color: #fa8c16;
+  color: #B7791F;
   font-weight: 600;
 }
 
@@ -265,7 +265,7 @@ const installedTime = computed(() => {
   display: flex;
   gap: 8px;
   padding: 10px 14px;
-  border-top: 1px solid var(--border-color, #f0f0f0);
+  border-top: 1px solid var(--border-color, #E5E9F2);
 }
 
 .installed-card__actions .ant-btn {

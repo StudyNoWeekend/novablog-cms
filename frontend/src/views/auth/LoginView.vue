@@ -5,6 +5,7 @@
 
     <div class="login-card">
       <!-- Logo -->
+      <img :src="logoMark" alt="Novablog" class="login-logo-img" />
       <div class="login-logo">Novablog</div>
 
       <!-- 标题 -->
@@ -83,6 +84,7 @@ import { message } from 'ant-design-vue'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import type { FormInstance } from 'ant-design-vue'
+import logoMark from '@/assets/brand/novablog-logo-mark.png'
 
 const authStore = useAuthStore()
 const formRef = ref<FormInstance>()
@@ -125,7 +127,7 @@ function handleForgotPassword() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: var(--bg-page, #F5F7FC);
   overflow: hidden;
 }
 
@@ -134,8 +136,8 @@ function handleForgotPassword() {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(41, 54, 92, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(41, 54, 92, 0.035) 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
 }
@@ -148,7 +150,7 @@ function handleForgotPassword() {
   right: -120px;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(74, 108, 247, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(82, 111, 232, 0.12) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -159,7 +161,7 @@ function handleForgotPassword() {
   left: -100px;
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(142, 165, 255, 0.1) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -171,19 +173,26 @@ function handleForgotPassword() {
   width: 90%;
   padding: 48px 40px 40px;
   background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #E5E9F2);
   border-radius: var(--border-radius-lg, 12px);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 24px rgba(41, 54, 92, 0.08);
 }
 
 /* Logo */
+.login-logo-img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  user-select: none;
+}
+
 .login-logo {
   text-align: center;
-  font-size: 36px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: var(--color-primary, #4a6cf7);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-primary, #29365C);
   margin-bottom: 4px;
   user-select: none;
 }
@@ -193,7 +202,7 @@ function handleForgotPassword() {
   text-align: center;
   font-size: 22px;
   font-weight: 600;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary, #29365C);
   margin: 0 0 36px;
   letter-spacing: 1px;
 }
@@ -222,26 +231,26 @@ function handleForgotPassword() {
 /* 输入框增强 */
 .login-input :deep(.ant-input),
 .login-input :deep(.ant-input-affix-wrapper) {
-  border-color: var(--border-color, #e2e8f0);
+  border-color: var(--border-color, #E5E9F2);
   border-radius: var(--border-radius, 8px);
   transition: border-color var(--transition-fast, 150ms), box-shadow var(--transition-fast, 150ms);
 }
 
 .login-input :deep(.ant-input-affix-wrapper):hover,
 .login-input :deep(.ant-input):hover {
-  border-color: var(--color-primary, #4a6cf7);
+  border-color: var(--color-primary, #526FE8);
 }
 
 .login-input :deep(.ant-input-affix-wrapper):focus,
 .login-input :deep(.ant-input-affix-wrapper)-focused,
 .login-input :deep(.ant-input):focus {
-  border-color: var(--color-primary, #4a6cf7);
-  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.15);
+  border-color: var(--color-primary, #526FE8);
+  box-shadow: 0 0 0 2px rgba(82, 111, 232, 0.15);
 }
 
 .login-input :deep(.ant-input-prefix) {
   margin-right: 10px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 /* 记住我 + 忘记密码 */
@@ -254,19 +263,19 @@ function handleForgotPassword() {
 }
 
 .form-extra :deep(.ant-checkbox-wrapper) {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #667085);
   font-size: 14px;
 }
 
 .forgot-link {
   font-size: 14px;
-  color: var(--color-primary, #4a6cf7);
+  color: var(--color-primary, #526FE8);
   cursor: pointer;
   transition: color var(--transition-fast, 150ms);
 }
 
 .forgot-link:hover {
-  color: var(--color-primary-hover, #3b5de7);
+  color: var(--color-primary-hover, #435FD0);
 }
 
 /* 提交按钮 */
@@ -280,14 +289,14 @@ function handleForgotPassword() {
   font-weight: 500;
   letter-spacing: 4px;
   border-radius: var(--border-radius, 8px);
-  background: var(--color-primary, #4a6cf7);
-  border-color: var(--color-primary, #4a6cf7);
+  background: var(--color-primary, #526FE8);
+  border-color: var(--color-primary, #526FE8);
   transition: all var(--transition-fast, 150ms);
 }
 
 .submit-item :deep(.ant-btn):hover {
-  background: var(--color-primary-hover, #3b5de7);
-  border-color: var(--color-primary-hover, #3b5de7);
+  background: var(--color-primary-hover, #435FD0);
+  border-color: var(--color-primary-hover, #435FD0);
 }
 
 /* 加载时的脉冲动画 */
@@ -297,10 +306,10 @@ function handleForgotPassword() {
 
 @keyframes btn-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(74, 108, 247, 0.4);
+    box-shadow: 0 0 0 0 rgba(82, 111, 232, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 12px rgba(74, 108, 247, 0);
+    box-shadow: 0 0 0 12px rgba(82, 111, 232, 0);
   }
 }
 
@@ -310,14 +319,14 @@ function handleForgotPassword() {
 }
 
 .login-divider :deep(.ant-divider-inner-text) {
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
 }
 
 /* 底部标语 */
 .login-slogan {
   text-align: center;
   font-size: 14px;
-  color: var(--text-tertiary, #94a3b8);
+  color: var(--text-tertiary, #8A93A8);
   margin: 0;
   letter-spacing: 1px;
   user-select: none;
