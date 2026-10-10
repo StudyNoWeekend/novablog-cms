@@ -16,7 +16,6 @@ const (
 // ModuleConfigCacheData 模块开关配置缓存数据结构体，用于 Redis 缓存序列化。
 type ModuleConfigCacheData struct {
 	ArticleEnabled    bool `json:"article_enabled"`
-	MediaEnabled      bool `json:"media_enabled"`
 	MusicEnabled      bool `json:"music_enabled"`
 	VideoEnabled      bool `json:"video_enabled"`
 	TravelEnabled     bool `json:"travel_enabled"`

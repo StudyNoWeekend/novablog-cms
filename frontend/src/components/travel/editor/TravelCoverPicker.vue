@@ -108,6 +108,13 @@
           </a-button>
         </div>
       </div>
+
+      <MediaPresetChooser
+        v-model:visible="chooserVisible"
+        :media-id="selectedId"
+        :original-url="selectedUrl"
+        @confirm="handleChooserConfirm"
+      />
     </div>
   </a-modal>
 </template>
@@ -123,6 +130,7 @@ import {
 } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
+import MediaPresetChooser from '@/components/media/MediaPresetChooser.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -146,6 +154,7 @@ const selectedPresetId = ref<string | undefined>(undefined)
 const uploading = ref(false)
 const uploadPercent = ref(0)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const chooserVisible = ref(false)
 
 let keywordDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let skipNextKeywordFetch = false
@@ -258,6 +267,23 @@ async function handleFileChange(e: Event) {
 }
 
 function handleConfirm() {
+  if (!selectedId.value || !selectedUrl.value) return
+  // 上传流程已确定预设，直接回传；从列表选的图先经预设选择层（无预设时直接回传原图）
+  if (selectedPresetId.value) {
+    emitSelected()
+    return
+  }
+  chooserVisible.value = true
+}
+
+function handleChooserConfirm(payload: { url: string; presetId?: string; presetName?: string }) {
+  chooserVisible.value = false
+  selectedUrl.value = payload.url
+  selectedPresetId.value = payload.presetId
+  emitSelected()
+}
+
+function emitSelected() {
   if (!selectedId.value || !selectedUrl.value) return
   emit('selected', {
     mediaId: selectedId.value,

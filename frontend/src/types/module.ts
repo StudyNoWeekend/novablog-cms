@@ -1,6 +1,5 @@
 export interface ModuleConfig {
   article_enabled: boolean
-  media_enabled: boolean
   music_enabled: boolean
   video_enabled: boolean
   travel_enabled: boolean
@@ -18,7 +17,6 @@ export interface ModuleConfig {
 
 export interface UpdateModuleConfigReq {
   article_enabled?: boolean
-  media_enabled?: boolean
   music_enabled?: boolean
   video_enabled?: boolean
   travel_enabled?: boolean

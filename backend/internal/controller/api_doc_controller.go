@@ -851,7 +851,6 @@ var apiDocs = []APIDocItem{
 		Params:      []APIDocParam{},
 		Response: []APIDocField{
 			{Name: "article_enabled", Type: "bool", Desc: "文章管理模块是否开启"},
-			{Name: "media_enabled", Type: "bool", Desc: "媒体管理模块是否开启"},
 			{Name: "music_enabled", Type: "bool", Desc: "音乐管理模块是否开启"},
 			{Name: "video_enabled", Type: "bool", Desc: "视频管理模块是否开启"},
 			{Name: "travel_enabled", Type: "bool", Desc: "旅行管理模块是否开启"},

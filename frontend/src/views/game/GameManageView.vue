@@ -102,7 +102,7 @@
         </div>
         <a-form-item label="封面图">
           <MediaPicker v-model:visible="mediaPickerVisible" module="game" @selected="handleMediaSelected" />
-          <ImageField v-model="form.cover" type="game" :search-keyword="form.title" placeholder="或直接粘贴封面地址">
+          <ImageField v-model="form.cover" type="game" with-preset :search-keyword="form.title" placeholder="或直接粘贴封面地址">
             <template #extra>
               <a-button size="small" @click="mediaPickerVisible = true">
                 <PictureOutlined /> 媒体库

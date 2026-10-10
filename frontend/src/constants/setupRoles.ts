@@ -85,11 +85,11 @@ export const ALL_ROLES: RoleDef[] = [...ROLE_GROUPS.flatMap((g) => g.roles), ...
 /**
  * 根据所选角色集合计算最终模块开关（通用模块恒开）：
  * 所选角色预置模块取并集，未选任何角色时全部开启（与现状一致）。
+ * 媒体库为基础设施、恒可用，不在模块开关中。
  */
 export function computeModulePreset(selectedRoles: RoleKey[]): Record<ModuleKey, boolean> {
   const preset = {
     article_enabled: true,
-    media_enabled: true,
     music_enabled: false,
     video_enabled: false,
     travel_enabled: false,

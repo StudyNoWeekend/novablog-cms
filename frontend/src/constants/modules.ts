@@ -12,7 +12,6 @@ export interface ModuleDef {
 
 export const MODULE_DEFS: ModuleDef[] = [
   { key: 'article_enabled', label: '文章管理', description: '博客前台的文章列表、详情展示' },
-  { key: 'media_enabled', label: '媒体管理', description: '博客前台的图片展示、媒体资源' },
   { key: 'music_enabled', label: '音乐管理', description: '博客前台的音乐播放器展示' },
   { key: 'video_enabled', label: '视频管理', description: '博客前台的视频作品展示' },
   { key: 'travel_enabled', label: '旅行管理', description: '博客前台的旅行攻略展示' },
@@ -27,5 +26,5 @@ export const MODULE_DEFS: ModuleDef[] = [
   { key: 'tech_stack_enabled', label: '技术栈', description: '博客前台的技术栈展示' },
 ]
 
-/** 通用模块：所有角色恒开（媒体库为基础设施），不参与角色预设计算 */
-export const COMMON_MODULE_KEYS: ModuleKey[] = ['article_enabled', 'media_enabled']
+/** 通用模块：所有角色恒开（媒体库为基础设施，不参与角色与模块管理） */
+export const COMMON_MODULE_KEYS: ModuleKey[] = ['article_enabled']

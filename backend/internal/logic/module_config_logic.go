@@ -30,9 +30,9 @@ func NewModuleConfigLogic() *ModuleConfigLogic {
 
 // moduleKeySetters 模块开关 key 白名单到模型字段的映射。
 // 首装角色预设与模块配置更新共用，新增模块开关时同步维护。
+// 媒体库为基础设施，不参与模块开关，不在白名单内。
 var moduleKeySetters = map[string]func(c *model.ModuleConfig, v bool){
 	"article_enabled":     func(c *model.ModuleConfig, v bool) { c.ArticleEnabled = v },
-	"media_enabled":       func(c *model.ModuleConfig, v bool) { c.MediaEnabled = v },
 	"music_enabled":       func(c *model.ModuleConfig, v bool) { c.MusicEnabled = v },
 	"video_enabled":       func(c *model.ModuleConfig, v bool) { c.VideoEnabled = v },
 	"travel_enabled":      func(c *model.ModuleConfig, v bool) { c.TravelEnabled = v },
@@ -57,7 +57,6 @@ func IsValidModuleKey(key string) bool {
 func moduleConfigToCache(m *model.ModuleConfig) *cache.ModuleConfigCacheData {
 	return &cache.ModuleConfigCacheData{
 		ArticleEnabled:    m.ArticleEnabled,
-		MediaEnabled:      m.MediaEnabled,
 		MusicEnabled:      m.MusicEnabled,
 		VideoEnabled:      m.VideoEnabled,
 		TravelEnabled:     m.TravelEnabled,
@@ -77,7 +76,6 @@ func moduleConfigToCache(m *model.ModuleConfig) *cache.ModuleConfigCacheData {
 func moduleConfigCacheToRes(c *cache.ModuleConfigCacheData) *res.ModuleConfigRes {
 	return &res.ModuleConfigRes{
 		ArticleEnabled:    c.ArticleEnabled,
-		MediaEnabled:      c.MediaEnabled,
 		MusicEnabled:      c.MusicEnabled,
 		VideoEnabled:      c.VideoEnabled,
 		TravelEnabled:     c.TravelEnabled,
@@ -97,7 +95,6 @@ func moduleConfigCacheToRes(c *cache.ModuleConfigCacheData) *res.ModuleConfigRes
 func moduleConfigToRes(m *model.ModuleConfig) *res.ModuleConfigRes {
 	return &res.ModuleConfigRes{
 		ArticleEnabled:    m.ArticleEnabled,
-		MediaEnabled:      m.MediaEnabled,
 		MusicEnabled:      m.MusicEnabled,
 		VideoEnabled:      m.VideoEnabled,
 		TravelEnabled:     m.TravelEnabled,
@@ -149,9 +146,6 @@ func (l *ModuleConfigLogic) UpdateConfig(ctx context.Context, r *req.UpdateModul
 	// 仅更新提供的字段
 	if r.ArticleEnabled != nil {
 		config.ArticleEnabled = *r.ArticleEnabled
-	}
-	if r.MediaEnabled != nil {
-		config.MediaEnabled = *r.MediaEnabled
 	}
 	if r.MusicEnabled != nil {
 		config.MusicEnabled = *r.MusicEnabled

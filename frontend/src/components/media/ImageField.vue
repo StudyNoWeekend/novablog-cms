@@ -69,6 +69,8 @@ const props = defineProps<{
   searchKeyword?: string
   /** URL 输入框占位文案 */
   placeholder?: string
+  /** 本地上传时是否同时生成"默认无 EXIF"预设并回填成品图（默认关闭；注意成品为 JPEG，透明 PNG 不适用） */
+  withPreset?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -119,10 +121,19 @@ async function handleFileChange(e: Event) {
 
   uploading.value = true
   try {
-    const res = await mediaApi.upload(file, { module: moduleKey.value })
-    if (res?.url) {
-      emit('update:modelValue', res.url)
-      message.success('上传成功')
+    if (props.withPreset) {
+      const res = await mediaApi.uploadWithPreset(file, '默认无 EXIF', { module: moduleKey.value })
+      const url = res?.preset?.output_url || res?.media?.url
+      if (url) {
+        emit('update:modelValue', url)
+        message.success('上传成功')
+      }
+    } else {
+      const res = await mediaApi.upload(file, { module: moduleKey.value })
+      if (res?.url) {
+        emit('update:modelValue', res.url)
+        message.success('上传成功')
+      }
     }
   } catch {
     // 错误提示已由 axios 拦截器统一弹出

@@ -38,6 +38,14 @@
             <span class="nav-icon"><MessageOutlined /></span>
             <span class="nav-text">评论管理</span>
           </router-link>
+          <router-link
+            to="/media"
+            class="nav-item"
+            :class="{ active: isActive('/media') }"
+          >
+            <span class="nav-icon"><PictureOutlined /></span>
+            <span class="nav-text">媒体库</span>
+          </router-link>
         </div>
 
         <!-- 分组菜单（点击标题折叠/展开） -->
@@ -143,7 +151,6 @@ const menuGroupDefs: { title: string; items: SidebarMenuItem[] }[] = [
     title: '内容创作',
     items: [
       { path: '/articles', label: '文章管理', icon: FileTextOutlined, moduleKey: 'article_enabled' },
-      { path: '/media', label: '媒体库', icon: PictureOutlined, moduleKey: 'media_enabled' },
       { path: '/playlists', label: '音乐播放列表', icon: CustomerServiceOutlined, moduleKey: 'music_enabled' },
       { path: '/videos', label: '视频作品', icon: PlaySquareOutlined, moduleKey: 'video_enabled' },
       { path: '/travels', label: '旅行攻略', icon: CompassOutlined, moduleKey: 'travel_enabled' },

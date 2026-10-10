@@ -8,7 +8,6 @@ import { storage } from '@/utils/storage'
 // 导出供补选爱好弹窗在保存后判断当前路由对应模块是否被关闭。
 export const pathModuleMap: Record<string, ModuleKey> = {
   articles: 'article_enabled',
-  media: 'media_enabled',
   playlists: 'music_enabled',
   videos: 'video_enabled',
   travels: 'travel_enabled',
