@@ -106,6 +106,7 @@ import {
   CloseOutlined,
   CaretRightOutlined,
   BookOutlined,
+  ApiOutlined,
   GithubOutlined,
   CoffeeOutlined,
   ReadOutlined,
@@ -171,7 +172,10 @@ const menuGroupDefs: { title: string; items: SidebarMenuItem[] }[] = [
   },
   {
     title: 'AI',
-    items: [{ path: '/api-doc', label: 'API 文档', icon: BookOutlined }],
+    items: [
+      { path: '/api-doc', label: 'API 文档', icon: BookOutlined },
+      { path: '/mcp', label: 'MCP 服务', icon: ApiOutlined },
+    ],
   },
 ]
 

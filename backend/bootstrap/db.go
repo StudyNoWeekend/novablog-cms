@@ -148,6 +148,7 @@ func autoMigrate(db *gorm.DB) error {
 		&model.MapConfig{},
 		&model.ContentViewLog{},
 		&model.DailyViewStat{},
+		&model.MCPAPIKey{},
 	)
 }
 

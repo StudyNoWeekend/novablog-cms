@@ -8,6 +8,7 @@ import (
 	"novablog/internal/cache"
 	"novablog/internal/controller"
 	"novablog/internal/logic"
+	"novablog/internal/mcp"
 	"novablog/internal/middleware"
 	"novablog/internal/model"
 	"novablog/internal/storage"
@@ -184,6 +185,13 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册第三方歌单管理路由
 	RegisterPlaylistRoutes(api, playlistController, authMiddleware)
+
+	// 注册 MCP 密钥管理路由（管理后台，需登录）
+	RegisterMCPKeyRoutes(api, controller.NewMCPKeyController(), authMiddleware)
+
+	// 注册 MCP Streamable HTTP 端点（外部 AI 客户端，MCP Key 鉴权）
+	mcpService := mcp.NewService(Version, mediaLogic, logger)
+	RegisterMCPRoutes(api, mcpService)
 
 	// 博客主题预览路由（以指定主题响应托管逻辑，激活前即可预览真实效果）
 	themeLogic := logic.NewThemeLogic()
