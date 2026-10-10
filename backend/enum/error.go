@@ -74,6 +74,18 @@ var (
 	ErrThemeInstallRunning = NewBizError(400209, "已有主题安装任务在进行中，请稍候", 400)
 	// ErrAlreadyLatestTheme 该主题已是最新版本
 	ErrAlreadyLatestTheme = NewBizError(400210, "当前已是最新版本", 400)
+	// ErrMCPKeyNotFound MCP 密钥不存在
+	ErrMCPKeyNotFound = NewBizError(404003, "MCP 密钥不存在", 404)
+	// ErrMCPKeyInvalid MCP 密钥无效
+	ErrMCPKeyInvalid = NewBizError(401004, "MCP 密钥无效", 401)
+	// ErrMCPKeyDisabled MCP 密钥已禁用
+	ErrMCPKeyDisabled = NewBizError(401005, "MCP 密钥已禁用", 401)
+	// ErrMCPKeyExpired MCP 密钥已过期
+	ErrMCPKeyExpired = NewBizError(401006, "MCP 密钥已过期", 401)
+	// ErrMCPKeyNameExists MCP 密钥名称已存在
+	ErrMCPKeyNameExists = NewBizError(400301, "MCP 密钥名称已存在", 400)
+	// ErrMCPKeyLimit MCP 密钥数量达到上限
+	ErrMCPKeyLimit = NewBizError(400302, "MCP 密钥数量已达上限（20 把），请先删除不再使用的密钥", 400)
 	// ErrInternalServer 系统内部错误
 	ErrInternalServer = NewBizError(500001, "系统内部错误", 500)
 )

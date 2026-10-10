@@ -161,6 +161,12 @@ export default [
         component: () => import('@/views/api-doc/ApiDocView.vue'),
       },
       {
+        path: 'mcp',
+        name: 'McpManage',
+        meta: { title: 'MCP 服务', icon: 'ApiOutlined' },
+        component: () => import('@/views/mcp/McpManageView.vue'),
+      },
+      {
         path: 'security/config',
         name: 'SecurityConfig',
         meta: { title: '黑名单管理' },
