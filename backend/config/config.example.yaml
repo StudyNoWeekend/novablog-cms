@@ -46,6 +46,11 @@ jwt:
 crypto:
   secret_key: "<a-random-32-char-secret-key>"
 
+# 官方部署安装码：非空时，首装初始化必须携带该密钥（防止知道地址的人恶意抢先初始化）；
+# 自部署留空即不启用校验。官方部署由 deploy.sh --install-code 自动生成写入，随邮件发给用户
+install:
+  init_code: ""
+
 security:
   enabled: true
   blacklist_ttl_minutes: 60

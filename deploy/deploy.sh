@@ -66,6 +66,7 @@ CONFIG_DIR="" UPLOADS_DIR="" THEMES_DIR="" LOGS_DIR="" FRONTEND_DIR="" FRONTEND_
 PGDATA_DIR="" REDISDATA_DIR=""
 EXTRA_MOUNTS=""           # 升级补写的新增挂载（宿主机路径:容器路径，分号分隔；.env 持久化）
 MARKET_URL=""
+INSTALL_CODE=""           # 官方部署首装安装码（--install-code；空=不启用校验，自部署默认）
 
 NGINX_MODE=""            # ""=未指定(自动检测) / 1=启用 --host-nginx / 0=禁用 --no-host-nginx
 NGINX_CONF_DIR="/etc/nginx/conf.d"
@@ -132,6 +133,9 @@ NovaBlog 部署脚本
 
 其他
   --market-url <地址>    官方主题市场地址（首装拉取默认主题用，可留空）
+  --install-code <值|auto> 官方部署首装安装码：auto=自动生成随机码。写入 config.yaml
+                         (install.init_code) 后首装必须携带，防止恶意抢先初始化；
+                         部署完成后在摘要中展示，请随邮件发给用户。不传则不启用（自部署）
   --host-nginx           启用宿主机 nginx 反代：自动生成 <博客名>.conf 到 conf.d
                          并 systemctl reload nginx（域名须为裸域名，详见下方说明）
   --no-host-nginx        禁用宿主机 nginx 反代（默认：自动检测，交互时询问）
@@ -179,6 +183,7 @@ while [ $# -gt 0 ]; do
     --pgdata-dir) PGDATA_DIR="${2:?--pgdata-dir 需要一个值}"; shift 2 ;;
     --redisdata-dir) REDISDATA_DIR="${2:?--redisdata-dir 需要一个值}"; shift 2 ;;
     --market-url) MARKET_URL="${2:?--market-url 需要一个值}"; shift 2 ;;
+    --install-code) INSTALL_CODE="${2:?--install-code 需要一个值}"; shift 2 ;;
     --host-nginx) NGINX_MODE=1; shift ;;
     --no-host-nginx) NGINX_MODE=0; shift ;;
     --nginx-conf-dir) NGINX_CONF_DIR_INPUT="${2:?--nginx-conf-dir 需要一个值}"; NGINX_CONF_DIR="$NGINX_CONF_DIR_INPUT"; shift 2 ;;
@@ -1509,6 +1514,13 @@ deploy_blog() {
     REDISDATA_DIR="$(abs_dir "${REDISDATA_DIR:-./$NAME/data/redis}")"
   fi
   [ -n "$MARKET_URL" ] || MARKET_URL="$(env_get NOVABLOG_MARKET_URL)"
+  # 官方部署安装码：先从 .env 沿用，--install-code auto 现场生成 32 位随机码（仅全新安装时生效，
+  # 沿用旧配置的场景下若配置中已有安装码会以配置为准）
+  [ -n "$INSTALL_CODE" ] || INSTALL_CODE="$(env_get NOVABLOG_INSTALL_CODE)"
+  if [ "$INSTALL_CODE" = "auto" ]; then
+    INSTALL_CODE="$(gen_secret 16)"
+    c_info "已自动生成首装安装码（部署完成后随摘要展示，请随邮件发给用户）"
+  fi
 
   echo
   c_info "===== 镜像 ====="
@@ -1646,6 +1658,14 @@ themes:
 cors:
   allowed_origins: "$(yaml_quote "$CORS_ORIGINS")"
 YAML
+    # 官方部署安装码段：仅在显式启用（--install-code）时追加，自部署 config.yaml 保持原样
+    if [ -n "$INSTALL_CODE" ]; then
+      {
+        echo
+        echo "# 官方部署首装安装码（随邮件发给用户，首装向导第一步需填写）"
+        printf 'install:\n  init_code: "%s"\n' "$(yaml_quote "$INSTALL_CODE")"
+      } >> "$CONFIG_FILE"
+    fi
     chmod 600 "$CONFIG_FILE"
   else
     # 沿用旧配置；若缺 geoip 段则追加补写（不覆盖其它内容），并备份一份
@@ -1666,6 +1686,26 @@ GEOIP_BLOCK
       c_info "已补写 geoip 段到 ${CONFIG_FILE}（原文件保留为 ${CONFIG_FILE}.old）"
     fi
     c_info "沿用现有配置：$CONFIG_FILE"
+  fi
+
+  # 沿用旧配置时对齐安装码：配置中已有则以配置为准（升级重跑不覆盖已生效的码），
+  # 缺段且本次启用（--install-code / .env 记录）时补写
+  if [ "$WRITE_CONFIG" = 0 ] && [ -f "$CONFIG_FILE" ]; then
+    existing_code="$(yaml_key "$CONFIG_FILE" install init_code)"
+    if [ -n "$existing_code" ]; then
+      if [ "$existing_code" != "$INSTALL_CODE" ]; then
+        INSTALL_CODE="$existing_code"
+        c_info "沿用现有配置中的首装安装码（如需更换请编辑 ${CONFIG_FILE} 的 install.init_code 后重启容器）"
+      fi
+    elif [ -n "$INSTALL_CODE" ]; then
+      {
+        echo
+        echo "# 官方部署首装安装码（随邮件发给用户，首装向导第一步需填写）"
+        printf 'install:\n  init_code: "%s"\n' "$(yaml_quote "$INSTALL_CODE")"
+      } >> "$CONFIG_FILE"
+      chmod 600 "$CONFIG_FILE"
+      c_info "已补写首装安装码到 ${CONFIG_FILE}"
+    fi
   fi
 
   # ============================== 生成 .env ==============================
@@ -1709,6 +1749,7 @@ REDIS_PASSWORD=$REDIS_PASSWORD
 # ---- 其他 ----
 NOVABLOG_PUBLIC_URL=$PUBLIC_URL
 NOVABLOG_MARKET_URL=$MARKET_URL
+NOVABLOG_INSTALL_CODE=$INSTALL_CODE
 NOVABLOG_EXTRA_MOUNTS=$EXTRA_MOUNTS
 ENV
   chmod 600 "$ENV_FILE"
@@ -1787,6 +1828,11 @@ EOF
   fi
   FRONTEND_NOTE="（空目录，使用后台安装的主题）"
   [ -n "$FRONTEND_DIR_INPUT" ] && FRONTEND_NOTE="（自备前端，已启用 themes.frontend_dir）"
+  if [ -n "$INSTALL_CODE" ]; then
+    INSTALL_CODE_NOTE="$INSTALL_CODE（官方部署专用，请随邮件发给用户，仅首次初始化需要）"
+  else
+    INSTALL_CODE_NOTE="未启用（自部署）"
+  fi
 
   cat <<EOF
 
@@ -1797,6 +1843,7 @@ $(c_info '部署完成')
   博客入口     $BLOG_URL
   后台入口     $ADMIN_URL
   首装向导     $SETUP_URL
+  首装安装码   $INSTALL_CODE_NOTE
   本机端口     ${BLOG_PORT}（博客）/ ${ADMIN_PORT}（后台）—— 外层反代目标，访客无需带端口
   镜像版本     $IMAGE_REPO:$VERSION
   前端目录     $FRONTEND_DIR $FRONTEND_NOTE

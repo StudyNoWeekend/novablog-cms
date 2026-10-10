@@ -74,6 +74,8 @@ func NewApp(cfgPath string) (*App, error) {
 	logic.RefreshSecret = cfg.GetString("jwt.refresh_secret")
 	logic.AccessExpire = cfg.GetDuration("jwt.access_expire")
 	logic.RefreshExpire = cfg.GetDuration("jwt.refresh_expire")
+	// 官方部署安装码：非空时首装初始化必须携带（防恶意抢先初始化），自部署留空不启用
+	logic.InstallInitCode = cfg.GetString("install.init_code")
 	logic.AuthLogger = logger
 	logic.SetupLogger = logger
 	logic.MusicLogger = logger

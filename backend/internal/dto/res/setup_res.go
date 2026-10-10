@@ -6,6 +6,8 @@ import "time"
 // StatusRes 初始化状态响应。
 type StatusRes struct {
 	Initialized bool `json:"initialized"` // 是否已初始化
+	// RequireInitCode 是否要求部署密钥（config.yaml 配置了 install.init_code 的官方部署）
+	RequireInitCode bool `json:"require_init_code"`
 }
 
 // InitRes 初始化结果响应。

@@ -78,12 +78,14 @@ func (l *SetupLogic) CheckStatus(ctx context.Context) (*res.StatusRes, error) {
 	}
 
 	return &res.StatusRes{
-		Initialized: count > 0,
+		Initialized:     count > 0,
+		RequireInitCode: InstallInitCode != "",
 	}, nil
 }
 
 // InitBlogger 初始化博主账号。
-func (l *SetupLogic) InitBlogger(ctx context.Context, r *req.InitReq) (*res.InitRes, error) {
+// clientIP 为发起初始化的来源 IP（controller 传入），用于安装码防爆破计数。
+func (l *SetupLogic) InitBlogger(ctx context.Context, r *req.InitReq, clientIP string) (*res.InitRes, error) {
 	// 检查是否已初始化
 	count, err := l.bloggerModel.Count(ctx)
 	if err != nil {
@@ -93,6 +95,14 @@ func (l *SetupLogic) InitBlogger(ctx context.Context, r *req.InitReq) (*res.Init
 	if count > 0 {
 		SetupLogger.Warn("系统已初始化，无法重复创建")
 		return nil, enum.ErrAlreadyInitialized
+	}
+
+	// 官方部署安装码校验（自部署未配置时直接放行）
+	if err := EnforceInstallCode(ctx, r.InitCode, clientIP); err != nil {
+		if errors.Is(err, enum.ErrInstallCodeInvalid) {
+			SetupLogger.Warn("首装安装码校验失败", zap.String("ip", clientIP))
+		}
+		return nil, err
 	}
 
 	// 校验创作方向角色与模块开关 key
@@ -183,6 +193,15 @@ func (l *SetupLogic) applyModulePreset(ctx context.Context, r *req.InitReq) erro
 // provider 为空或 "local" 时创建本地存储配置记录（IsActive=true）。
 // 非 local 时创建激活状态的对象存储记录并热重载 storage.Manager。
 func (l *SetupLogic) SetupStorage(ctx context.Context, r *req.SetupStorageReq) (*res.InitRes, error) {
+	// 必须先完成博主账号初始化（防止未初始化阶段被预写存储配置，如指向攻击者自己的 OSS）
+	count, err := l.bloggerModel.Count(ctx)
+	if err != nil {
+		return nil, enum.ErrInternalServer
+	}
+	if count == 0 {
+		return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "请先完成博主账号初始化", enum.ErrInvalidParam.HttpCode)
+	}
+
 	// provider 为空或 local → 创建本地存储配置记录并激活
 	if r.Provider == "" || r.Provider == "local" {
 		config := &model.StorageConfig{

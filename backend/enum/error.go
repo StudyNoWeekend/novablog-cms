@@ -42,6 +42,10 @@ var (
 	ErrAlreadyInitialized = NewBizError(403001, "系统已初始化，无法重复创建", 403)
 	// ErrIPBlocked IP 已被暂时限制访问
 	ErrIPBlocked = NewBizError(403002, "您已被暂时限制访问，请稍后再试", 403)
+	// ErrInstallCodeInvalid 官方部署初始化密钥错误
+	ErrInstallCodeInvalid = NewBizError(403003, "部署密钥错误，请输入官方邮件中的安装密钥", 403)
+	// ErrInstallCodeRateLimited 初始化密钥尝试过于频繁（防爆破）
+	ErrInstallCodeRateLimited = NewBizError(429001, "尝试次数过多，请一小时后再试", 429)
 	// ErrNotFound 资源不存在
 	ErrNotFound = NewBizError(404001, "资源不存在", 404)
 	// ErrMarketAuthFailed 官方主题市场登录状态已失效（注意：不复用 HTTP 401，避免与后台自身认证刷新流程冲突）

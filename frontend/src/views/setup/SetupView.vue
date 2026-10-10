@@ -28,6 +28,20 @@
         autocomplete="off"
         @finish="goRoleStep"
       >
+        <!-- 部署密钥（仅官方部署显示，后端 status.require_init_code 控制） -->
+        <a-form-item v-if="needInstallCode" name="init_code" :rules="installCodeRules">
+          <a-input-password
+            v-model:value="form.init_code"
+            placeholder="请输入官方邮件中的部署密钥"
+            size="large"
+            class="setup-input"
+          >
+            <template #prefix>
+              <key-outlined />
+            </template>
+          </a-input-password>
+        </a-form-item>
+
         <!-- 用户名 -->
         <a-form-item name="username" :rules="usernameRules">
           <a-input
@@ -333,6 +347,7 @@ import {
   CheckOutlined,
   CloseCircleOutlined,
   CloudServerOutlined,
+  KeyOutlined,
   LinkOutlined,
   LoadingOutlined,
   LockOutlined,
@@ -449,6 +464,8 @@ onMounted(async () => {
     if (status.initialized) {
       phase.value = 'theme'
     }
+    // 官方部署下发 require_init_code 时，账号步骤渲染部署密钥输入框
+    needInstallCode.value = !!status.require_init_code
   } catch {
     // 查询失败按首次安装处理
   }
@@ -472,7 +489,12 @@ const form = reactive({
   password: '',
   confirmPassword: '',
   nickname: '',
+  init_code: '',
 })
+
+// 官方部署需先输入邮件中的安装码（后端 status.require_init_code 下发）；自部署不渲染该输入框
+const needInstallCode = ref(false)
+const installCodeRules = [{ required: true, message: '官方部署实例需要填写邮件中的部署密钥', trigger: 'blur' }]
 
 const stageText = computed(() => {
   switch (themeStatus.value?.stage) {
@@ -528,6 +550,10 @@ async function handleInit() {
       username: form.username,
       password: form.password,
       nickname: form.nickname || undefined,
+    }
+    // 官方部署安装码：随创建账号一起提交，由后端常量时间比对
+    if (needInstallCode.value) {
+      payload.init_code = form.init_code
     }
     if (selectedRoles.value.length > 0) {
       payload.role = selectedRoles.value.join(',')
