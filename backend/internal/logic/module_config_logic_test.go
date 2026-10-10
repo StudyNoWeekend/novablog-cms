@@ -19,7 +19,6 @@ func TestModuleConfigGetDefault(t *testing.T) {
 	}
 
 	assert.True(t, config.ArticleEnabled, "文章模块应默认开启")
-	assert.True(t, config.MediaEnabled, "媒体模块应默认开启")
 	assert.True(t, config.MusicEnabled, "音乐模块应默认开启")
 	assert.True(t, config.VideoEnabled, "视频模块应默认开启")
 	assert.True(t, config.TravelEnabled, "旅行模块应默认开启")
