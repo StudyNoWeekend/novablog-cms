@@ -3,12 +3,16 @@ import type { ThemeInstallStatus } from '@/types/theme'
 
 export interface StatusRes {
   initialized: boolean
+  /** 是否要求部署密钥（官方部署配置了 install.init_code，首装需先输入邮件中的安装码） */
+  require_init_code?: boolean
 }
 
 export interface InitReq {
   username: string
   password: string
   nickname?: string
+  /** 官方部署安装码（require_init_code=true 时必填），自部署无需传 */
+  init_code?: string
   /** 创作方向角色 key（如 tech/travel），与后端 rolePresetModules 白名单对应 */
   role?: string
   /** 模块开关覆盖（key 为 module_configs 开关名），非空时以此为准 */

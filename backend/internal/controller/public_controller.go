@@ -133,7 +133,8 @@ func (ctrl *PublicController) Init(c *gin.Context) {
 		return
 	}
 
-	initRes, err := ctrl.setupLogic.InitBlogger(c.Request.Context(), &initReq)
+	// 传入来源 IP：官方部署安装码校验失败时按 IP 计数防爆破
+	initRes, err := ctrl.setupLogic.InitBlogger(c.Request.Context(), &initReq, c.ClientIP())
 	if err != nil {
 		var bizErr *enum.BizError
 		if errors.As(err, &bizErr) {

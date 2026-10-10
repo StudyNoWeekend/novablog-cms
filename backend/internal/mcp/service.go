@@ -71,7 +71,15 @@ func (s *Service) Handler() http.Handler {
 	s.registerTools(server)
 	return sdk.NewStreamableHTTPHandler(func(*http.Request) *sdk.Server {
 		return server
-	}, &sdk.StreamableHTTPOptions{Stateless: true})
+	}, &sdk.StreamableHTTPOptions{
+		Stateless: true,
+		// 关闭 SDK 的 DNS 重绑定防护：其判定条件是「连接本地地址为回环 + Host 头非回环」。
+		// 本服务在单容器部署下由容器内 nginx 经 127.0.0.1 反代到 Go，Host 为公网域名，
+		// 必然被误拦（403 invalid Host header）。该防护针对的是浏览器借 Cookie 等环境
+		// 凭据攻击本地 MCP 服务的场景；本端点每次请求都需携带 Bearer Key（无环境凭据），
+		// 且有外层 nginx 隔离与 IP 黑名单，防护所针对的风险不存在。
+		DisableLocalhostProtection: true,
+	})
 }
 
 // registerTools 注册全部 MCP 工具。
