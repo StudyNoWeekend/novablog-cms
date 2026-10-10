@@ -9,10 +9,10 @@ import (
 )
 
 // ModuleConfig 模块开关配置模型，对应 module_configs 数据表（单行模式）。
+// 媒体库为基础设施（恒可用、不参与模块开关，亦无对应列/开关字段）。
 type ModuleConfig struct {
 	ID                string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	ArticleEnabled    bool      `gorm:"not null;default:true"`
-	MediaEnabled      bool      `gorm:"not null;default:true"`
 	MusicEnabled      bool      `gorm:"not null;default:true"`
 	VideoEnabled      bool      `gorm:"not null;default:true"`
 	TravelEnabled     bool      `gorm:"not null;default:true"`
@@ -58,7 +58,6 @@ func (m *ModuleConfigModel) GetConfig(ctx context.Context) (*ModuleConfig, error
 	config = ModuleConfig{
 		ID:                uuid.New().String(),
 		ArticleEnabled:    true,
-		MediaEnabled:      true,
 		MusicEnabled:      true,
 		VideoEnabled:      true,
 		TravelEnabled:     true,

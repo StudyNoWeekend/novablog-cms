@@ -128,8 +128,14 @@
         <a-form-item label="封面 URL">
           <a-input
             v-model:value="form.cover_url"
-            placeholder="请输入封面图片地址（可选）"
-          />
+            placeholder="请输入封面图片地址（可选），或点击右侧按钮从媒体库选择"
+          >
+            <template #addonAfter>
+              <a aria-label="从媒体库选择封面" @click.prevent="mediaPickerVisible = true">
+                <PictureOutlined /> 媒体库
+              </a>
+            </template>
+          </a-input>
         </a-form-item>
         <a-form-item label="介绍">
           <a-textarea
@@ -197,6 +203,12 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <MediaPicker
+      v-model:visible="mediaPickerVisible"
+      module="video"
+      @selected="handleMediaSelected"
+    />
   </div>
 </template>
 
@@ -209,9 +221,11 @@ import {
   DeleteOutlined,
   PlaySquareOutlined,
   LinkOutlined,
+  PictureOutlined,
 } from '@ant-design/icons-vue'
 import { videoApi } from '@/api/video'
 import type { VideoWork, ParseVideoReq } from '@/types/video'
+import MediaPicker from '@/components/media/MediaPicker.vue'
 import { getThumbUrl } from '@/utils/image'
 import PlatformIcon from '@/components/video/PlatformIcon.vue'
 import { PLATFORMS, PLATFORM_MAP } from '@/components/video/platforms'
@@ -231,6 +245,7 @@ const modalVisible = ref(false)
 const modalLoading = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
 const editingId = ref('')
+const mediaPickerVisible = ref(false)
 
 const form = reactive({
   title: '',
@@ -297,6 +312,10 @@ function openCreateModal() {
   editingId.value = ''
   resetForm()
   modalVisible.value = true
+}
+
+function handleMediaSelected(media: { url: string }) {
+  form.cover_url = media.url
 }
 
 function handleEdit(item: VideoWork) {

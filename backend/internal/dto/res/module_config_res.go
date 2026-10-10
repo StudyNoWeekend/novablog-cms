@@ -3,9 +3,9 @@ package res
 import "time"
 
 // ModuleConfigRes 模块开关配置响应结构体。
+// 媒体库为基础设施、恒可用，不在此响应中下发开关字段。
 type ModuleConfigRes struct {
 	ArticleEnabled    bool      `json:"article_enabled"`
-	MediaEnabled      bool      `json:"media_enabled"`
 	MusicEnabled      bool      `json:"music_enabled"`
 	VideoEnabled      bool      `json:"video_enabled"`
 	TravelEnabled     bool      `json:"travel_enabled"`

@@ -58,6 +58,13 @@
     <div v-if="selectedId" class="media-picker-footer">
       <a-button type="primary" @click="handleConfirm">确认选择</a-button>
     </div>
+
+    <MediaPresetChooser
+      v-model:visible="chooserVisible"
+      :media-id="pendingItem?.id || null"
+      :original-url="pendingItem?.url || ''"
+      @confirm="handleChooserConfirm"
+    />
   </a-modal>
 </template>
 
@@ -68,16 +75,30 @@ import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
 import { getThumbUrl } from '@/utils/image'
 import { useMediaFolders } from '@/composables/useMediaFolders'
+import MediaPresetChooser from './MediaPresetChooser.vue'
 
-const props = defineProps<{
-  visible: boolean
-  /** 业务模块 key：打开时自动定位到对应模块文件夹（如 recipe/game/book） */
-  module?: string
-}>()
+/** 选图结果：选中预设时 url 为成品图 URL，presetId/presetName 标记来源预设 */
+export interface MediaPickerSelected {
+  id: string
+  url: string
+  presetId?: string
+  presetName?: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    visible: boolean
+    /** 业务模块 key：打开时自动定位到对应模块文件夹（如 recipe/game/book） */
+    module?: string
+    /** 是否启用图片预设工作台/版本选择：确认时弹出（默认开启） */
+    preset?: boolean
+  }>(),
+  { preset: true }
+)
 
 const emit = defineEmits<{
   (e: 'update:visible', v: boolean): void
-  (e: 'selected', media: { id: string; url: string }): void
+  (e: 'selected', media: MediaPickerSelected): void
 }>()
 
 const { folderTree, fetchFolderTree, findFolderPath, findFolder, findModuleFolder } = useMediaFolders()
@@ -89,6 +110,8 @@ const page = ref(1)
 const total = ref(0)
 const selectedId = ref<string | null>(null)
 const currentFolderId = ref<string | null>(null)
+const chooserVisible = ref(false)
+const pendingItem = ref<MediaItem | null>(null)
 
 const currentFolder = computed(() =>
   currentFolderId.value ? findFolder(folderTree.value, currentFolderId.value) : null
@@ -151,9 +174,30 @@ function handlePageChange(p: number) {
 
 function handleConfirm() {
   const item = mediaList.value.find(m => m.id === selectedId.value)
-  if (item) {
+  if (!item) return
+  // 非图片（视频等）或关闭预设能力时：保持原行为直接回传
+  if (!props.preset || item.file_type !== 1) {
     emit('selected', { id: item.id, url: item.url })
+    open.value = false
+    return
   }
+  // 图片：弹出版本选择层（层内可点图片直接打开预设工作台制作/编辑）
+  pendingItem.value = item
+  chooserVisible.value = true
+}
+
+function handleChooserConfirm(payload: { url: string; presetId?: string; presetName?: string }) {
+  chooserVisible.value = false
+  const item = pendingItem.value
+  if (item) {
+    emit('selected', {
+      id: item.id,
+      url: payload.url,
+      presetId: payload.presetId,
+      presetName: payload.presetName,
+    })
+  }
+  pendingItem.value = null
   open.value = false
 }
 

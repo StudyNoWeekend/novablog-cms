@@ -43,7 +43,7 @@ func NewSetupLogic(manager *storage.Manager, cryptoKey string) *SetupLogic {
 	}
 }
 
-// rolePresetModules 创作方向角色白名单与模块预设（通用模块 article/media 恒开，不含在此表中）。
+// rolePresetModules 创作方向角色白名单与模块预设（通用模块 article 恒开；媒体库为基础设施、恒可用，不含在此表中）。
 // 首装向导只传 Role 时按此预设应用 module_configs；与前端 constants/setupRoles.ts 保持一致。
 var rolePresetModules = map[string][]string{
 	"tech":       {"project_enabled", "open_source_enabled", "tech_stack_enabled"},

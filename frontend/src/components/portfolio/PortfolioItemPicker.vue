@@ -15,12 +15,25 @@
 
     <!-- 步骤一：媒体库图片列表 -->
     <div v-if="currentStep === 0">
-      <a-input-search
-        v-model:value="mediaKeyword"
-        placeholder="搜索文件名..."
-        style="width: 240px; margin-bottom: 12px"
-        allow-clear
-      />
+      <div class="step1-toolbar">
+        <a-input-search
+          v-model:value="mediaKeyword"
+          placeholder="搜索文件名..."
+          style="width: 240px"
+          allow-clear
+        />
+        <input
+          ref="uploadInputRef"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          aria-hidden="true"
+          @change="handleUploadFile"
+        />
+        <a-button :loading="uploading" aria-label="本地上传" @click="uploadInputRef?.click()">
+          <UploadOutlined /> 本地上传
+        </a-button>
+      </div>
       <a-spin :spinning="mediaLoading">
         <a-empty
           v-if="!mediaLoading && mediaList.length === 0"
@@ -56,12 +69,19 @@
 
     <!-- 步骤二：预设列表 -->
     <div v-else-if="currentStep === 1">
+      <div class="step2-toolbar">
+        <span class="step2-hint">选择要使用的预设版本，点击「制作预设」可现场制作新成品图</span>
+        <a-button size="small" aria-label="制作预设" @click="workbenchVisible = true">
+          <EditOutlined /> 制作预设
+        </a-button>
+      </div>
       <a-spin :spinning="presetLoading">
-        <a-empty
-          v-if="!presetLoading && presetList.length === 0"
-          description="该图片暂无预设，请先在媒体库创建预设"
-          style="margin-top: 32px"
-        />
+        <div v-if="!presetLoading && presetList.length === 0" class="preset-empty">
+          <a-empty description="该图片暂无预设" />
+          <a-button type="primary" aria-label="制作预设" @click="workbenchVisible = true">
+            <EditOutlined /> 去制作预设
+          </a-button>
+        </div>
         <div v-else class="picker-grid">
           <div
             v-for="preset in presetList"
@@ -130,16 +150,26 @@
         </a-button>
       </div>
     </div>
+    <MediaPresetWorkbench
+      v-if="selectedMediaId"
+      v-model:visible="workbenchVisible"
+      :media-id="selectedMediaId"
+      :original-url="selectedMedia?.url || ''"
+      @saved="fetchPresets"
+    />
   </a-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { CheckCircleFilled } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { CheckCircleFilled, EditOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
 import type { MediaPreset } from '@/types/api'
 import { useDebounce } from '@/composables/useDebounce'
+import { validateImageFile } from '@/utils/upload'
+import MediaPresetWorkbench from '@/components/media/MediaPresetWorkbench.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -174,11 +204,14 @@ const mediaPageSize = 20
 const mediaTotal = ref(0)
 const selectedMediaId = ref<string | null>(null)
 const selectedMedia = ref<MediaItem | null>(null)
+const uploading = ref(false)
+const uploadInputRef = ref<HTMLInputElement | null>(null)
 
 // 步骤二
 const presetList = ref<MediaPreset[]>([])
 const presetLoading = ref(false)
 const selectedPresetId = ref<string | null>(null)
+const workbenchVisible = ref(false)
 
 // 步骤三
 const itemTitle = ref('')
@@ -243,6 +276,42 @@ function handleMediaPageChange(p: number) {
 function handleSelectMedia(item: MediaItem) {
   selectedMediaId.value = item.id
   selectedMedia.value = item
+}
+
+/** 本地上传：同步生成"默认无 EXIF"预设，成功后自动选中并进入选预设步骤 */
+async function handleUploadFile(e: Event) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  const error = validateImageFile(file, ['jpg', 'jpeg', 'png', 'webp'])
+  if (error) {
+    message.error(error)
+    target.value = ''
+    return
+  }
+
+  uploading.value = true
+  try {
+    const res = await mediaApi.uploadWithPreset(file, '默认无 EXIF', { module: 'portfolio' })
+    if (res.media && res.preset) {
+      mediaList.value = [res.media, ...mediaList.value]
+      mediaTotal.value += 1
+      selectedMediaId.value = res.media.id
+      selectedMedia.value = res.media
+      currentStep.value = 1
+      selectedPresetId.value = null
+      await fetchPresets()
+      message.success('上传成功，请选择预设')
+    }
+  } catch {
+    message.error('上传失败，请重试')
+  } finally {
+    uploading.value = false
+    if (uploadInputRef.value) {
+      uploadInputRef.value.value = ''
+    }
+  }
 }
 
 async function fetchPresets() {
@@ -313,12 +382,42 @@ function resetState() {
   selectedPresetId.value = null
   itemTitle.value = ''
   itemDescription.value = ''
+  workbenchVisible.value = false
 }
 </script>
 
 <style scoped>
 .picker-steps {
   margin-bottom: 24px;
+}
+
+.step1-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.step2-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.step2-hint {
+  font-size: 13px;
+  color: var(--text-secondary, #667085);
+}
+
+.preset-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
 }
 
 .picker-grid {
