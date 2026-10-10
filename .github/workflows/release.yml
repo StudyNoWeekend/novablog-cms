@@ -91,8 +91,10 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           build-args: |
             VERSION=${{ steps.meta.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # v1.2.3 发布时 buildx GHA 缓存导入两次导致构建步骤无输出挂起（runner 日志 blob 均未生成），
+          # 临时移除缓存导入/导出以完成发布；如后续恢复缓存，需先观察一次发布构建
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
 
       - name: 创建 GitHub Release
         uses: softprops/action-gh-release@v2
