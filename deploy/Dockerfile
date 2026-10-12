@@ -9,7 +9,9 @@
 ARG VERSION=dev
 
 # ---------- ① 管理后台前端构建 ----------
-FROM node:20-alpine AS frontend-builder
+# --platform=$BUILDPLATFORM：vite 产物与 CPU 架构无关，构建阶段直接跑在构建机本机架构，
+# 避免 arm64 产物依赖 QEMU 模拟执行（模拟层一但劣化，整条发布构建会被拖慢数倍）
+FROM --platform=$BUILDPLATFORM node:20-alpine AS frontend-builder
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
@@ -20,14 +22,17 @@ ENV VITE_BASE_PATH=$VITE_BASE_PATH
 RUN npx vite build
 
 # ---------- ② Go 后端构建 ----------
-FROM golang:1.26-alpine AS backend-builder
+# --platform=$BUILDPLATFORM + TARGETARCH 交叉编译：Go 原生支持交叉编译，在构建机本机架构
+# 编译目标架构产物，彻底去掉 QEMU 模拟（此前 arm64 腿的 go build 在模拟下超过 8 分钟）
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS backend-builder
 WORKDIR /src/backend
 ENV GOPROXY=https://goproxy.cn,direct
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend/ ./
 ARG VERSION
-RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/novablog ./cmd/api
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/novablog ./cmd/api
 
 # ---------- ③ 运行层（nginx 入口 + Go 后端） ----------
 FROM nginx:1.27-alpine
