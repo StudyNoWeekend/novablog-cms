@@ -22,11 +22,9 @@ const LONG_TASK_TIMEOUT = 10 * 60 * 1000
 // MARKET_AUTH_EXPIRED_EVENT 官方登录失效事件名（由主题页面监听并弹回登录遮罩）
 export const MARKET_AUTH_EXPIRED_EVENT = 'novablog:market-auth-expired'
 
-// buildMarketHeaders 构造官方转发所需请求头：官方地址必带，官方 Token 有则带。
-function buildMarketHeaders(baseURL?: string): Record<string, string> {
+// buildMarketHeaders 构造官方转发所需请求头：官方 Token 有则带（官方地址由后端统一配置，无需携带）。
+function buildMarketHeaders(): Record<string, string> {
   const headers: Record<string, string> = {}
-  const url = baseURL || marketStorage.getBaseURL()
-  if (url) headers['X-Market-Base-URL'] = url
   const token = marketStorage.getToken()
   if (token) headers['X-Market-Token'] = token
   return headers
@@ -91,10 +89,10 @@ async function withMarketAuth<T>(fn: () => Promise<T>): Promise<T> {
 
 // themeMarketApi 官方主题市场接口封装（经后台 /themes/market 无状态代理转发）。
 export const themeMarketApi = {
-  /** 登录官方主题市场（baseURL 来自登录弹窗输入） */
-  login(baseURL: string, data: { email: string; password: string }) {
+  /** 登录官方主题市场（官方地址由后端统一配置下发） */
+  login(data: { email: string; password: string }) {
     return request.post<MarketLoginRes>('/themes/market/auth/login', data, {
-      headers: buildMarketHeaders(baseURL),
+      headers: buildMarketHeaders(),
     })
   },
 

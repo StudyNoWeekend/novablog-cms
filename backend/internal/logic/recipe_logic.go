@@ -52,6 +52,7 @@ func (l *RecipeLogic) Create(ctx context.Context, r *req.CreateRecipeReq) (*res.
 	if err := l.recipeModel.Create(ctx, m); err != nil {
 		return nil, fmt.Errorf("创建菜谱失败: %w", err)
 	}
+	SyncOnUpdatedAsync(TargetTypeRecipe, m.ID)
 	return l.toRes(m), nil
 }
 
@@ -128,6 +129,7 @@ func (l *RecipeLogic) Update(ctx context.Context, id string, r *req.UpdateRecipe
 	if err := l.recipeModel.Update(ctx, m); err != nil {
 		return nil, fmt.Errorf("更新菜谱失败: %w", err)
 	}
+	SyncOnUpdatedAsync(TargetTypeRecipe, m.ID)
 	return l.toRes(m), nil
 }
 
@@ -139,6 +141,7 @@ func (l *RecipeLogic) Delete(ctx context.Context, id string) error {
 	if err := l.recipeModel.SoftDelete(ctx, id); err != nil {
 		return fmt.Errorf("删除菜谱失败: %w", err)
 	}
+	SyncOnDeletedAsync(TargetTypeRecipe, id)
 	return nil
 }
 

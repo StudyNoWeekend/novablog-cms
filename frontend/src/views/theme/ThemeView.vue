@@ -14,12 +14,15 @@
         <div class="market-login__icon"><SkinOutlined /></div>
         <h2 class="market-login__title">登录 NovaBlog 官方账号</h2>
         <p class="market-login__desc">连接官方主题市场后，可浏览主题并进行点赞、收藏、评分与下载</p>
+        <div class="market-login__official">
+          <GlobalOutlined />
+          <span class="market-login__official-url" :title="store.defaultBaseURL || ''">
+            {{ store.defaultBaseURL === null ? '官方地址加载中…' : store.defaultBaseURL || '尚未配置官方地址' }}
+          </span>
+          <a @click="goOfficialConfig">去修改</a>
+        </div>
+        <p class="market-login__official-hint">官方地址在「系统配置 → 社区推送」统一维护，社区推送与主题市场共用</p>
         <a-form :model="loginForm" layout="vertical" autocomplete="off" @finish="handleLogin">
-          <a-form-item label="官方地址" name="baseURL" :rules="baseURLRules">
-            <a-input v-model:value="loginForm.baseURL" :placeholder="store.defaultBaseURL || '请输入官方市场地址'" allow-clear>
-              <template #prefix><LinkOutlined /></template>
-            </a-input>
-          </a-form-item>
           <a-form-item label="邮箱" name="email" :rules="emailRules">
             <a-input v-model:value="loginForm.email" placeholder="请输入官方账号邮箱" allow-clear>
               <template #prefix><UserOutlined /></template>
@@ -39,27 +42,22 @@
       </div>
     </a-modal>
 
-    <!-- 服务地址设置弹窗 -->
+    <!-- 博客 API 地址设置弹窗（官方站点地址统一在「系统设置 → 社区推送配置」维护） -->
     <a-modal
       v-model:open="marketConfigOpen"
-      title="官方地址与博客 API"
+      title="博客 API 地址"
       :confirm-loading="marketConfigSaving"
       ok-text="保存"
       cancel-text="取消"
       @ok="handleSaveMarketConfig"
     >
       <a-form layout="vertical" autocomplete="off">
-        <a-form-item label="官方市场地址" :validate-status="marketConfigError ? 'error' : ''" :help="marketConfigError">
-          <a-input v-model:value="marketConfigURL" :placeholder="store.defaultBaseURL || '请输入官方市场地址'" allow-clear>
-            <template #prefix><LinkOutlined /></template>
-          </a-input>
-        </a-form-item>
         <a-form-item label="博客 API 地址（可选）" :validate-status="apiURLError ? 'error' : ''" :help="apiURLError">
           <a-input v-model:value="marketAPIURL" placeholder="https://api.example.com（留空 = 主题同域取数）" allow-clear>
             <template #prefix><GlobalOutlined /></template>
           </a-input>
         </a-form-item>
-        <p class="market-config-tip">官方市场地址决定主题市场与主题安装的取数来源；博客 API 地址用于主题前台访问公开接口——填写独立 API 域名后保存，已安装主题会立即重新注入取数地址，无需重装主题；留空则同域相对路径取数</p>
+        <p class="market-config-tip">博客 API 地址用于主题前台访问公开接口——填写独立 API 域名后保存，已安装主题会立即重新注入取数地址，无需重装主题；留空则同域相对路径取数。<a @click="goOfficialConfig">官方站点地址（社区推送与主题市场共用）请前往「系统配置 → 社区推送」修改</a></p>
       </a-form>
     </a-modal>
 
@@ -306,7 +304,6 @@ import { useRouter } from 'vue-router'
 import { Modal, message } from 'ant-design-vue'
 import {
   GlobalOutlined,
-  LinkOutlined,
   LockOutlined,
   LogoutOutlined,
   SettingOutlined,
@@ -315,7 +312,6 @@ import {
 } from '@ant-design/icons-vue'
 import { MARKET_AUTH_EXPIRED_EVENT, abortMarketRetries, themeApi, themeMarketApi } from '@/api/theme'
 import { configApi } from '@/api/config'
-import { marketStorage } from '@/utils/storage'
 import { THEME_TYPE_LABELS, themeDisplayName } from '@/utils/themeDisplay'
 import type { InstalledTheme, ThemeItem } from '@/types/theme'
 import { useThemeMarketStore } from '@/stores/themeMarket'
@@ -479,15 +475,10 @@ const loginModalDismissed = ref(false)
 const OFFICIAL_REGISTER_URL = 'http://novablog.ditancafebar.cn/register'
 const loginLoading = ref(false)
 const loginForm = reactive({
-  baseURL: marketStorage.getBaseURL() || '',
   email: '',
   password: '',
 })
 
-const baseURLRules = [
-  { required: true, message: '请输入官方地址', trigger: 'blur' },
-  { pattern: /^https?:\/\//, message: '官方地址需以 http:// 或 https:// 开头', trigger: 'blur' },
-]
 const emailRules = [
   { required: true, message: '请输入邮箱', trigger: 'blur' },
   { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '邮箱格式不正确', trigger: 'blur' },
@@ -497,7 +488,7 @@ const passwordRules = [{ required: true, message: '请输入密码', trigger: 'b
 async function handleLogin() {
   loginLoading.value = true
   try {
-    await store.login(loginForm.baseURL.trim(), loginForm.email.trim(), loginForm.password)
+    await store.login(loginForm.email.trim(), loginForm.password)
     loginForm.password = ''
     message.success('已连接官方主题市场')
     // 登录后补拉已安装列表，市场卡片的"已安装"状态立即可用
@@ -512,6 +503,11 @@ async function handleLogin() {
 /** 去注册：新标签页打开官方站点注册页 */
 function handleGoRegister() {
   window.open(OFFICIAL_REGISTER_URL, '_blank', 'noopener')
+}
+
+/** 前往系统配置的社区推送页修改官方地址（社区推送与主题市场共用，深链直达对应标签页） */
+function goOfficialConfig() {
+  router.push({ path: '/system-config', query: { tab: 'community' } })
 }
 
 /** 关闭官方登录弹窗：因登录失效挂起的请求直接拒绝，避免安装/更新按钮无限 loading */
@@ -530,36 +526,26 @@ function handleLogout() {
   })
 }
 
-// ===== 服务地址设置（官方市场地址 + 博客公开 API 地址）=====
+// ===== 博客 API 地址设置（官方站点地址统一在社区推送配置页维护）=====
 const marketConfigOpen = ref(false)
-const marketConfigURL = ref('')
 const marketAPIURL = ref('')
 const marketConfigSaving = ref(false)
-const marketConfigError = ref('')
 const apiURLError = ref('')
 
 async function openMarketConfig() {
-  marketConfigURL.value = store.defaultBaseURL
   marketAPIURL.value = ''
-  marketConfigError.value = ''
   apiURLError.value = ''
   marketConfigOpen.value = true
-  // 回显后端持久化值（两个地址）
+  // 回显后端持久化的博客 API 地址
   try {
     const cfg = await configApi.getThemeMarketConfig()
-    if (cfg.market_base_url) marketConfigURL.value = cfg.market_base_url
     marketAPIURL.value = cfg.public_api_base || ''
   } catch {
-    // 回显失败时保留本地默认值
+    // 回显失败时保留空值
   }
 }
 
 async function handleSaveMarketConfig() {
-  const url = marketConfigURL.value.trim()
-  if (!/^https?:\/\//.test(url)) {
-    marketConfigError.value = '官方地址需以 http:// 或 https:// 开头'
-    return
-  }
   const apiURL = marketAPIURL.value.trim()
   if (apiURL && !/^https?:\/\//.test(apiURL)) {
     apiURLError.value = 'API 地址需以 http:// 或 https:// 开头，留空表示同域取数'
@@ -567,13 +553,9 @@ async function handleSaveMarketConfig() {
   }
   marketConfigSaving.value = true
   try {
-    await configApi.updateThemeMarketConfig({ market_base_url: url, public_api_base: apiURL })
-    store.defaultBaseURL = url
-    store.marketBaseURL = url
-    // 本浏览器后续安装/更新请求头同步使用新地址
-    marketStorage.setBaseURL(url)
+    await configApi.updateThemeMarketConfig({ public_api_base: apiURL })
     marketConfigOpen.value = false
-    message.success('服务地址已保存并全局生效')
+    message.success('博客 API 地址已保存并全局生效')
   } catch {
     // 错误由拦截器统一提示
   } finally {
@@ -633,9 +615,8 @@ function handleFavPageSizeChange(_page: number, size: number) {
 
 onMounted(async () => {
   window.addEventListener(MARKET_AUTH_EXPIRED_EVENT, handleAuthExpiredEvent)
-  // 官方地址默认值由后端下发，登录弹窗预填
+  // 官方站点地址由后端统一配置，仅拉取用于展示
   await store.fetchDefaultBaseURL()
-  if (!loginForm.baseURL && store.defaultBaseURL) loginForm.baseURL = store.defaultBaseURL
   if (store.loggedIn) {
     // 页面刷新后恢复数据（登录态持久于 localStorage）
     if (!store.list.length) store.fetchList()
@@ -680,10 +661,38 @@ onUnmounted(() => {
 }
 
 .market-login__desc {
-  margin: 0 0 20px;
+  margin: 0 0 12px;
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-color-secondary, rgba(0, 0, 0, 0.65));
+}
+
+.market-login__official {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding: 7px 10px;
+  background: #F5F7FB;
+  border: 1px solid #E5E9F2;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-color-secondary, rgba(0, 0, 0, 0.65));
+}
+
+.market-login__official-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.market-login__official-hint {
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-color-tertiary, rgba(0, 0, 0, 0.45));
 }
 
 .market-login :deep(.ant-form) {

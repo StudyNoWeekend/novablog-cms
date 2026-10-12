@@ -82,6 +82,12 @@
               <a-button type="link" size="small" @click="handleEdit(item)">
                 <EditOutlined /> 编辑
               </a-button>
+              <PushSyncButton
+                target-type="open_source"
+                :target-id="item.id"
+                :published="item.status === 1"
+                @updated="fetchList"
+              />
               <a-button type="link" size="small" danger @click="handleDelete(item)">
                 <DeleteOutlined /> 删除
               </a-button>
@@ -227,6 +233,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,

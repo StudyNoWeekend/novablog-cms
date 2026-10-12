@@ -27,7 +27,7 @@ import (
 // 集成测试使用本地 PostgreSQL/Redis（brew 默认安装即可），不可达时自动跳过。
 // 数据库独立命名（novablog_cors_test），不会触碰开发/生产数据。
 const (
-	corsTestDBName = "novablog_cors_test"
+	corsTestDBName  = "novablog_cors_test"
 	corsTestRedisDB = 15
 )
 

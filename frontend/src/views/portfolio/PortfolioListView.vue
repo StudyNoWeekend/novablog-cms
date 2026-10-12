@@ -59,6 +59,12 @@
                 <a-button type="link" size="small" @click="handleEdit(item.id)">
                   <EditOutlined /> 编辑
                 </a-button>
+                <PushSyncButton
+                  target-type="portfolio"
+                  :target-id="item.id"
+                  :published="item.status === 1"
+                  @updated="fetchList"
+                />
                 <a-button type="link" size="small" danger @click="handleDelete(item)">
                   <DeleteOutlined /> 删除
                 </a-button>
@@ -146,6 +152,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import {

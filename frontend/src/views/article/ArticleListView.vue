@@ -85,6 +85,7 @@
         :article="article"
         @edit="handleEdit"
         @delete="handleDelete"
+        @pushUpdated="fetchList"
         @status-change="handleStatusChange"
       />
     </div>

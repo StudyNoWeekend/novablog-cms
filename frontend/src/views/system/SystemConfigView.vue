@@ -33,18 +33,21 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { Component } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   AppstoreOutlined,
   CloudServerOutlined,
   ApiOutlined,
   KeyOutlined,
   SafetyCertificateOutlined,
+  SendOutlined,
 } from '@ant-design/icons-vue'
 import ModuleConfigView from '@/views/module/ModuleConfigView.vue'
 import StorageConfigView from '@/views/storage/StorageConfigView.vue'
 import CorsConfigView from '@/views/user/CorsConfigView.vue'
 import MapConfigView from '@/views/map/MapConfigView.vue'
 import SecurityConfigView from '@/views/security/SecurityConfigView.vue'
+import CommunityPushConfigView from '@/views/system/CommunityPushConfigView.vue'
 
 const ACTIVE_KEY_STORAGE = 'novablog_system_config_active'
 
@@ -61,6 +64,7 @@ const navItems: NavItem[] = [
   { key: 'cors', label: '跨域配置', icon: ApiOutlined, component: CorsConfigView },
   { key: 'map', label: '地图配置', icon: KeyOutlined, component: MapConfigView },
   { key: 'security', label: '黑名单管理', icon: SafetyCertificateOutlined, component: SecurityConfigView },
+  { key: 'community', label: '社区推送', icon: SendOutlined, component: CommunityPushConfigView },
 ]
 
 function readStoredKey(): string {
@@ -73,7 +77,15 @@ function readStoredKey(): string {
   return navItems[0].key
 }
 
+const route = useRoute()
+
 const activeKey = ref(readStoredKey())
+
+// 支持 ?tab= 深链定位（如主题页登录弹窗的官方地址修改引导），合法时优先于本地记忆
+const queryTab = typeof route.query.tab === 'string' ? route.query.tab : ''
+if (navItems.some((item) => item.key === queryTab)) {
+  activeKey.value = queryTab
+}
 
 watch(activeKey, (key) => {
   try {

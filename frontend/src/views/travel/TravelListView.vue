@@ -65,6 +65,7 @@
           @edit="handleEdit"
           @delete="handleDelete"
           @statusChange="handleStatusChange"
+          @pushUpdated="fetchGuides"
         />
       </div>
 

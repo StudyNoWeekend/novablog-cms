@@ -14,8 +14,8 @@ const (
 )
 
 // ThemeMarketConfigCacheData 主题模块运行配置缓存数据结构体，用于 Redis 缓存序列化。
+// 官方站点地址统一由社区推送配置托管，不再进入本缓存。
 type ThemeMarketConfigCacheData struct {
-	MarketBaseURL string    `json:"market_base_url"`
 	PublicAPIBase string    `json:"public_api_base"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

@@ -131,20 +131,18 @@ export interface UpdateCorsConfigReq {
 
 // ---- 官方主题市场配置 ----
 
-/** 主题模块运行配置（管理端：官方市场地址 + 博客公开 API 地址） */
+/** 主题模块运行配置（管理端；官方站点地址统一在社区推送配置页维护，经 GET /public/config 下发） */
 export interface ThemeMarketConfigRes {
-  market_base_url: string
   public_api_base: string
   updated_at: string
 }
 
 export interface UpdateThemeMarketConfigReq {
-  market_base_url: string
   /** 博客公开 API 地址；空串/缺省 = 清除，主题回退同域相对路径取数 */
   public_api_base?: string
 }
 
-/** 公共配置下发（免鉴权，默认值由后端控制） */
+/** 公共配置下发（免鉴权，默认值由后端控制）；market_base_url 语义为统一托管的官方站点地址 */
 export interface PublicConfigRes {
   market_base_url: string
 }

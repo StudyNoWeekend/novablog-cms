@@ -3,10 +3,10 @@ package logic
 import "go.uber.org/zap"
 
 // ThemeSettings 主题模块配置，由 bootstrap 阶段从 config.yaml 注入。
+// 官方站点地址统一由 official_site_settings 托管（与社区推送共用），本结构不再持有。
 type ThemeSettings struct {
 	DataDir       string // 主题制品解压根目录
 	FrontendDir   string // 自备博客前端目录（含 theme.json 与 dist/）；非空时优先于已安装主题
-	MarketBaseURL string // 官方主题市场地址（服务端直连；空=禁用首装拉取）
 	GithubToken   string // 可选 GitHub PAT（提升 Release 查询限流额度）
 	PublicAPIBase string // 跨域部署时注入 theme-config.js 的 apiBase；空=同域相对路径
 	ProxyURL      string // 主题下载与 GitHub API 的 HTTP 代理（空=直连；代理不可用自动降级直连）
@@ -20,13 +20,6 @@ var themeSettings = &ThemeSettings{DataDir: "./data/themes", MaxArtifactMB: 100}
 func SetThemeSettings(s *ThemeSettings) {
 	if s != nil {
 		themeSettings = s
-	}
-}
-
-// SetThemeMarketBaseURL 运行时覆盖官方市场地址（DB 持久化值启动注入 / 修改后热更新）。
-func SetThemeMarketBaseURL(base string) {
-	if base != "" {
-		themeSettings.MarketBaseURL = base
 	}
 }
 

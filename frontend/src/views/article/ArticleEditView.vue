@@ -30,6 +30,11 @@
         <a-button type="primary" @click="handlePublish" :loading="saving">
           <SendOutlined /> 发布
         </a-button>
+        <PushSyncButton
+          v-if="isEdit"
+          target-type="article"
+          :target-id="String(route.params.id)"
+        />
       </div>
     </div>
 
@@ -48,6 +53,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted, watchEffect } from 'vue'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeftOutlined, SendOutlined, FileMarkdownOutlined, FileTextOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
