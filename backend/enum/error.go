@@ -90,6 +90,14 @@ var (
 	ErrMCPKeyNameExists = NewBizError(400301, "MCP 密钥名称已存在", 400)
 	// ErrMCPKeyLimit MCP 密钥数量达到上限
 	ErrMCPKeyLimit = NewBizError(400302, "MCP 密钥数量已达上限（20 把），请先删除不再使用的密钥", 400)
+	// ErrCommunityPushNotConfigured 未配置社区推送（地址或密钥缺失）
+	ErrCommunityPushNotConfigured = NewBizError(400401, "尚未配置社区推送地址或推送密钥，请先在系统设置中完成配置", 400)
+	// ErrCommunityPushBaseURLInvalid 社区地址不合法
+	ErrCommunityPushBaseURLInvalid = NewBizError(400402, "社区地址不合法，请检查输入", 400)
+	// ErrCommunityPushUpstream 社区推送服务不可用
+	ErrCommunityPushUpstream = NewBizError(400403, "社区服务暂不可用，请稍后再试", 400)
+	// ErrCommunityPushTargetInvalid 目标内容不存在或不支持推送
+	ErrCommunityPushTargetInvalid = NewBizError(404004, "目标内容不存在或不支持推送", 404)
 	// ErrInternalServer 系统内部错误
 	ErrInternalServer = NewBizError(500001, "系统内部错误", 500)
 )

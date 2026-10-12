@@ -46,6 +46,30 @@ func startAccessLogCleanup(cfg *viper.Viper, logger *zap.Logger) {
 	}
 }
 
+// startCommunityPushRetryWorker 启动社区推送失败重试定时任务：
+// 每 5 分钟扫描同步失败的记录重推最新内容（单条失败不影响后续，重试上限见 logic 层）。
+func startCommunityPushRetryWorker(logger *zap.Logger) {
+	pushLogic := logic.NewCommunityPushLogic()
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	run := func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
+		retried, err := pushLogic.RetryFailed(ctx)
+		if err != nil {
+			logger.Error("社区推送重试任务执行失败", zap.Error(err))
+		} else if retried > 0 {
+			logger.Info("社区推送重试完成", zap.Int("retried", retried))
+		}
+	}
+
+	// 启动时不立即执行（避免启动期网络抖动误判失败），仅按周期执行
+	for range ticker.C {
+		run()
+	}
+}
+
 // startViewStatsMaintenance 启动访问统计维护定时任务：
 // 每小时将最近 48 小时明细聚合进按日统计表（幂等覆盖），并清理超过 180 天的明细。
 func startViewStatsMaintenance(logger *zap.Logger) {
@@ -168,6 +192,7 @@ func main() {
 
 	// 启动访问统计维护定时任务（按日聚合 + 明细清理）
 	go startViewStatsMaintenance(app.Logger)
+	go startCommunityPushRetryWorker(app.Logger)
 
 	// 等待中断信号
 	quit := make(chan os.Signal, 1)

@@ -46,6 +46,12 @@
               {{ record.status === 1 ? '下架' : '发布' }}
             </a-button>
             <a-button type="link" size="small" @click="handleEdit(record)">编辑</a-button>
+            <PushSyncButton
+              target-type="recipe"
+              :target-id="record.id"
+              :published="record.status === 1"
+              @updated="fetchList"
+            />
             <a-button type="link" size="small" danger @click="handleDelete(record)">删除</a-button>
           </template>
         </template>
@@ -138,6 +144,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,

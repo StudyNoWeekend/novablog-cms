@@ -61,6 +61,12 @@
         <span class="travel-card-review-count">({{ guide.reviewCount }}条评价)</span>
       </div>
       <div class="travel-card-actions" @click.stop>
+        <PushSyncButton
+          target-type="travel"
+          :target-id="guide.id"
+          :published="guide.status === TravelStatus.Published"
+          @updated="emit('pushUpdated')"
+        />
         <a-button
           size="small"
           type="text"
@@ -107,6 +113,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import {
   CompassOutlined,
   EnvironmentOutlined,
@@ -141,6 +148,7 @@ const emit = defineEmits<{
   (e: 'edit', id: string): void
   (e: 'delete', id: string): void
   (e: 'statusChange', id: string, status: TTravelStatus): void
+  (e: 'pushUpdated'): void
 }>()
 
 const statusMap: Record<TTravelStatus, { text: string; color: string }> = {

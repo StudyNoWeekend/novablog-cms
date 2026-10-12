@@ -83,11 +83,10 @@ func (l *ThemeLogic) Install(ctx context.Context, marketID int64, version string
 // 市场未配置、不可达或无默认主题时抛明确错误（显示官方地址不可达），无兜底。
 // marketToken 为官方账号 Token，官方代理下载地址必需。
 func (l *ThemeLogic) InstallDefault(ctx context.Context, marketToken string) (*model.Theme, error) {
-	settings := getThemeSettings()
-	if settings.MarketBaseURL == "" {
+	if OfficialSiteBaseURL() == "" {
 		return nil, enum.ErrThemeMarketNotConfigured
 	}
-	base, err := novablogapi.NormalizeBaseURL(settings.MarketBaseURL)
+	base, err := novablogapi.NormalizeBaseURL(OfficialSiteBaseURL())
 	if err != nil {
 		return nil, enum.ErrThemeMarketNotConfigured
 	}
@@ -377,7 +376,7 @@ func sign(x int) int {
 	return 0
 }
 
-// resolveMarketBaseURL 解析官方市场地址：优先使用传入值，为空时回退 config。
+// resolveMarketBaseURL 解析官方市场地址：优先使用传入值，为空时回退统一托管的官方站点地址。
 // 返回归一化后的 baseURL（含 /api/v1 前缀），或 ErrThemeMarketNotConfigured。
 func resolveMarketBaseURL(marketBaseURL string) (string, error) {
 	if marketBaseURL != "" {
@@ -386,11 +385,10 @@ func resolveMarketBaseURL(marketBaseURL string) (string, error) {
 			return base, nil
 		}
 	}
-	settings := getThemeSettings()
-	if settings.MarketBaseURL == "" {
+	if OfficialSiteBaseURL() == "" {
 		return "", enum.ErrThemeMarketNotConfigured
 	}
-	base, err := novablogapi.NormalizeBaseURL(settings.MarketBaseURL)
+	base, err := novablogapi.NormalizeBaseURL(OfficialSiteBaseURL())
 	if err != nil {
 		return "", enum.ErrThemeMarketNotConfigured
 	}

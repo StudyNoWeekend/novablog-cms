@@ -12,6 +12,11 @@
           </a-button>
           <div class="header-actions">
             <a-button :loading="saving" @click="handleSave">保存信息</a-button>
+            <PushSyncButton
+              v-if="portfolioId"
+              target-type="portfolio"
+              :target-id="portfolioId"
+            />
           </div>
         </div>
         <div class="header-form">
@@ -189,6 +194,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import {

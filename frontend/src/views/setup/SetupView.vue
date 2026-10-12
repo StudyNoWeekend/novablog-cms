@@ -270,11 +270,11 @@
       <div v-if="phase === 'theme'" class="theme-step">
         <div class="theme-step__icon"><SkinOutlined /></div>
         <h2 class="theme-step__title">初始化博客外观</h2>
-        <p class="theme-step__desc">输入 NovaBlog 官方主题市场地址并登录官方账号，将自动获取并启用默认主题</p>
+        <p class="theme-step__desc">输入 NovaBlog 官方地址并登录官方账号，将自动获取并启用默认主题（该地址为社区推送与主题市场的统一入口）</p>
 
         <a-form ref="marketFormRef" :model="marketForm" layout="vertical" class="setup-form" autocomplete="off">
-          <a-form-item label="官方市场地址" name="baseURL" :rules="marketURLRules">
-            <a-input v-model:value="marketForm.baseURL" :placeholder="defaultMarketURL || '请输入官方市场地址'" allow-clear size="large">
+          <a-form-item label="NovaBlog 官方地址" name="baseURL" :rules="marketURLRules">
+            <a-input v-model:value="marketForm.baseURL" :placeholder="defaultMarketURL || '请输入官方地址'" allow-clear size="large">
               <template #prefix><LinkOutlined /></template>
             </a-input>
           </a-form-item>
@@ -358,7 +358,6 @@ import {
 import { setupApi } from '@/api/setup'
 import { configApi } from '@/api/config'
 import { storageApi } from '@/api/storage'
-import { marketStorage } from '@/utils/storage'
 import { storage } from '@/utils/storage'
 import type { ThemeInstallStatus } from '@/types/theme'
 import type { FormInstance } from 'ant-design-vue'
@@ -446,9 +445,10 @@ const storageTesting = ref(false)
 // 云存储必填校验规则
 const cloudRequiredRules = [{ required: true, message: '此项为必填', trigger: 'blur' }]
 
-// 官方市场表单（向导输入）；地址默认值由后端下发，本地缓存（上次向导输入）优先
+// 官方市场表单（向导输入）；地址默认值由后端统一配置下发（见 onMounted 预填），
+// 修改后会写入社区推送配置并全局生效
 const marketForm = reactive({
-  baseURL: marketStorage.getBaseURL() || '',
+  baseURL: '',
   email: '',
   password: '',
 })
@@ -729,10 +729,6 @@ async function pollThemeStatus() {
     if (status.status !== 'running') {
       stopPolling()
       if (status.status === 'success') {
-        // 持久化官方市场地址，主题页登录弹窗自动填入
-        if (marketForm.baseURL) {
-          marketStorage.setBaseURL(marketForm.baseURL)
-        }
         message.success(`主题「${status.theme_name}」已启用，博客即将上线`)
       }
     }

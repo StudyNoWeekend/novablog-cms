@@ -61,6 +61,8 @@ func (l *PortfolioLogic) Create(ctx context.Context, r *req.CreatePortfolioReq) 
 		return nil, fmt.Errorf("创建作品集失败: %w", err)
 	}
 
+	SyncOnUpdatedAsync(TargetTypePortfolio, portfolio.ID)
+
 	coverMap, _ := l.portfolioModel.ResolveCoverURLs(ctx, []model.Portfolio{*portfolio})
 	return l.toPortfolioRes(portfolio, 0, coverMap[portfolio.ID]), nil
 }
@@ -192,6 +194,8 @@ func (l *PortfolioLogic) Update(ctx context.Context, id string, r *req.UpdatePor
 		return nil, fmt.Errorf("更新作品集失败: %w", err)
 	}
 
+	SyncOnUpdatedAsync(TargetTypePortfolio, id)
+
 	countMap, _ := l.portfolioModel.CountItems(ctx, []string{id})
 	coverMap, _ := l.portfolioModel.ResolveCoverURLs(ctx, []model.Portfolio{*portfolio})
 	return l.toPortfolioRes(portfolio, countMap[id], coverMap[portfolio.ID]), nil
@@ -203,7 +207,7 @@ func (l *PortfolioLogic) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("作品集不存在")
 	}
 
-	return l.portfolioItemModel.Transaction(ctx, func(tx *gorm.DB) error {
+	err := l.portfolioItemModel.Transaction(ctx, func(tx *gorm.DB) error {
 		// 级联软删除作品项
 		if err := tx.Where("portfolio_id = ?", id).Delete(&model.PortfolioItem{}).Error; err != nil {
 			return fmt.Errorf("软删除作品项失败: %w", err)
@@ -214,6 +218,10 @@ func (l *PortfolioLogic) Delete(ctx context.Context, id string) error {
 		}
 		return nil
 	})
+	if err == nil {
+		SyncOnDeletedAsync(TargetTypePortfolio, id)
+	}
+	return err
 }
 
 // AddItem 添加作品项，校验作品集与预设存在，sort_order 自增。

@@ -158,6 +158,7 @@ func (l *ArticleLogic) Update(ctx context.Context, id string, r *req.UpdateArtic
 		return nil, err
 	}
 
+	SyncOnUpdatedAsync(TargetTypeArticle, id)
 	return l.GetDetail(ctx, id)
 }
 
@@ -204,7 +205,11 @@ func (l *ArticleLogic) UpdateStatus(ctx context.Context, id string, r *req.Updat
 	if err != nil {
 		return fmt.Errorf("文章不存在")
 	}
-	return l.model.UpdateStatus(ctx, id, r.Status)
+	if err := l.model.UpdateStatus(ctx, id, r.Status); err != nil {
+		return err
+	}
+	SyncOnUpdatedAsync(TargetTypeArticle, id)
+	return nil
 }
 
 // Delete 软删除文章
@@ -213,7 +218,11 @@ func (l *ArticleLogic) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return fmt.Errorf("文章不存在")
 	}
-	return l.model.SoftDelete(ctx, id)
+	if err := l.model.SoftDelete(ctx, id); err != nil {
+		return err
+	}
+	SyncOnDeletedAsync(TargetTypeArticle, id)
+	return nil
 }
 
 // GetHotList 获取热门文章列表。

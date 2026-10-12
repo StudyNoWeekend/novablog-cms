@@ -1,5 +1,3 @@
-const MARKET_BASE_URL_KEY = 'novablog_market_base_url'
-
 // createStorage 创建基于指定后端存储与 key 前缀的存取集合。
 function createStorage(backend: Storage, prefix: string) {
   const TOKEN_KEY = `${prefix}token`
@@ -39,14 +37,11 @@ export const storageSession = createStorage(sessionStorage, 'novablog_')
 const marketBase = createStorage(localStorage, 'novablog_market_')
 
 // marketStorage 官方主题市场账号凭据存储（与后台管理员凭据相互隔离）。
+// 官方站点地址由后端统一配置下发，前端不再持久化。
 export const marketStorage = {
   ...marketBase,
-  getBaseURL(): string | null { return localStorage.getItem(MARKET_BASE_URL_KEY) },
-  setBaseURL(url: string) { localStorage.setItem(MARKET_BASE_URL_KEY, url) },
-  removeBaseURL() { localStorage.removeItem(MARKET_BASE_URL_KEY) },
   clear() {
     marketBase.clear()
-    localStorage.removeItem(MARKET_BASE_URL_KEY)
   },
 }
 

@@ -90,6 +90,7 @@ func (l *OpenSourceLogic) Create(ctx context.Context, r *req.CreateOpenSourceReq
 		return nil, fmt.Errorf("创建开源作品失败: %w", err)
 	}
 
+	SyncOnUpdatedAsync(TargetTypeOpenSource, w.ID)
 	return l.toOpenSourceRes(w), nil
 }
 
@@ -173,6 +174,7 @@ func (l *OpenSourceLogic) Update(ctx context.Context, id string, r *req.UpdateOp
 		return nil, fmt.Errorf("更新开源作品失败: %w", err)
 	}
 
+	SyncOnUpdatedAsync(TargetTypeOpenSource, w.ID)
 	return l.toOpenSourceRes(w), nil
 }
 
@@ -210,6 +212,7 @@ func (l *OpenSourceLogic) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("删除开源作品失败: %w", err)
 	}
 
+	SyncOnDeletedAsync(TargetTypeOpenSource, id)
 	return nil
 }
 

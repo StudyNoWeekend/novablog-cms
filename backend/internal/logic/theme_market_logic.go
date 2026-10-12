@@ -5,8 +5,6 @@ import (
 	"errors"
 	"strings"
 
-	"go.uber.org/zap"
-
 	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
@@ -15,8 +13,8 @@ import (
 
 // ThemeMarketLogic 官方主题市场转发逻辑。
 //
-// 官方地址与 Token 由控制器从请求头读出后传入（请求头为空时回退后端配置）；
-// 登录成功后官方地址持久化为全局默认，其余官方信息不落库、不缓存。
+// 官方地址与 Token 由控制器从请求头读出后传入（请求头为空时回退后端统一配置的官方站点地址，
+// 见 official_site_settings）；官方地址的持久化统一由社区推送配置托管，登录不再落库。
 type ThemeMarketLogic struct{}
 
 // NewThemeMarketLogic 创建 ThemeMarketLogic 实例。
@@ -25,10 +23,10 @@ func NewThemeMarketLogic() *ThemeMarketLogic {
 }
 
 // normalizeBaseURL 归一化官方地址，失败时转为业务错误。
-// 请求头未携带地址时回退后端配置（DB 持久化值优先，出厂值为 config.yaml）。
+// 请求头未携带地址时回退后端统一配置（DB 持久化值优先，出厂值为 config.yaml community 段）。
 func normalizeBaseURL(raw string) (string, error) {
 	if strings.TrimSpace(raw) == "" {
-		raw = getThemeSettings().MarketBaseURL
+		raw = OfficialSiteBaseURL()
 	}
 	base, err := novablogapi.NormalizeBaseURL(raw)
 	if err != nil {
@@ -110,10 +108,7 @@ func (l *ThemeMarketLogic) MarketLogin(ctx context.Context, baseURL string, r *r
 		return nil, mapUpstreamError(err)
 	}
 
-	// 登录成功后将官方地址持久化为全局默认（后台模板市场页可修改），失败不影响登录结果
-	if err := NewThemeMarketConfigLogic().SyncMarketBaseURL(ctx, base); err != nil {
-		themeLog().Warn("官方地址持久化失败", zap.Error(err))
-	}
+	// 官方地址统一由社区推送配置托管，登录成功后无需再持久化地址
 
 	return &res.MarketLoginRes{
 		AccessToken: pair.AccessToken,

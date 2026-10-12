@@ -53,6 +53,13 @@
           <SendOutlined />
           发布
         </a-button>
+
+        <PushSyncButton
+          v-if="guide.id"
+          target-type="travel"
+          :target-id="guide.id"
+          :published="guide.status === TravelStatus.Published"
+        />
       </div>
     </header>
 
@@ -126,6 +133,7 @@ import { createEmptyGuide } from '@/mocks/travel'
 import { travelApi } from '@/api/travel'
 import { TravelStatus, toFormData } from '@/types/travel'
 import type { TravelAttraction, TravelGuideFormData } from '@/types/travel'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 
 const route = useRoute()
 const router = useRouter()

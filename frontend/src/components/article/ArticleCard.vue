@@ -25,6 +25,12 @@
           <MessageOutlined /> {{ article.comment_count }}
         </span>
         <div class="article-card-actions" @click.stop>
+          <PushSyncButton
+            target-type="article"
+            :target-id="article.id"
+            :published="article.status === 2"
+            @updated="emit('pushUpdated')"
+          />
           <a-button size="small" type="text" @click="handleEdit">
             <EditOutlined />
           </a-button>
@@ -56,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import {
   FileTextOutlined, TagsOutlined, ClockCircleOutlined,
   EyeOutlined, MessageOutlined, EditOutlined, MoreOutlined,
@@ -72,6 +79,7 @@ const emit = defineEmits<{
   (e: 'edit', id: string): void
   (e: 'delete', id: string): void
   (e: 'statusChange', id: string, status: number): void
+  (e: 'pushUpdated'): void
 }>()
 
 const statusMap: Record<number, { text: string; color: string }> = {

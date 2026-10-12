@@ -9,9 +9,11 @@ import (
 )
 
 // ThemeMarketConfig 主题模块运行配置模型，对应 theme_market_configs 数据表（单行模式）。
+// MarketBaseURL 为旧版遗留列：官方站点地址已统一托管到 community_push_configs，
+// 本字段不再写入，仅 bootstrap 启动时读取一次作存量迁移兜底（AutoMigrate 不删列）。
 type ThemeMarketConfig struct {
 	ID            string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	MarketBaseURL string    `gorm:"type:varchar(500);not null;default:''"`
+	MarketBaseURL string    `gorm:"type:varchar(500);not null;default:''"` // deprecated：仅存量读取
 	PublicAPIBase string    `gorm:"type:varchar(500);not null;default:''"`
 	CreatedAt     time.Time `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt     time.Time `gorm:"type:timestamptz;autoUpdateTime"`

@@ -7,6 +7,7 @@ import (
 
 	"novablog/internal/logic"
 	"novablog/internal/middleware"
+	"novablog/internal/model"
 	"novablog/utils/response"
 
 	"github.com/go-redis/redis/v8"
@@ -82,11 +83,10 @@ func NewApp(cfgPath string) (*App, error) {
 	logic.CommentLogger = logger
 	logic.MediaLogger = logger
 
-	// 注入主题模块配置
+	// 注入主题模块配置（官方站点地址统一由 official_site_settings 托管，见下方解析）
 	logic.SetThemeSettings(&logic.ThemeSettings{
 		DataDir:       cfg.GetString("themes.data_dir"),
 		FrontendDir:   cfg.GetString("themes.frontend_dir"),
-		MarketBaseURL: cfg.GetString("themes.market_base_url"),
 		GithubToken:   cfg.GetString("themes.github_token"),
 		PublicAPIBase: cfg.GetString("themes.public_api_base"),
 		ProxyURL:      cfg.GetString("themes.proxy_url"),
@@ -105,13 +105,44 @@ func NewApp(cfgPath string) (*App, error) {
 		ProxyURL: cfg.GetString("image_search.proxy_url"),
 	})
 
-	// 主题模块运行配置：DB 持久化值（后台修改）优先于 config.yaml 出厂值
-	if marketConfig, err := logic.NewThemeMarketConfigLogic().GetConfig(context.Background()); err == nil {
-		logic.SetThemeMarketBaseURL(marketConfig.MarketBaseURL)
-		logic.SetThemePublicAPIBase(marketConfig.PublicAPIBase)
+	// 注入社区推送模块配置（官方站点地址统一由 official_site_settings 托管，见下方解析）
+	logic.SetCommunityPushSettings(&logic.CommunityPushSettings{
+		SiteURL: cfg.GetString("community.site_url"),
+	})
+	logic.CommunityPushLogger = logger
+
+	// 主题模块运行配置：DB 持久化值（后台修改）优先于 config.yaml 出厂值；
+	// 旧版主题市场地址仅作官方站点地址的存量兜底，不再写入
+	var legacyThemeBase string
+	if themeConfig, err := model.NewThemeMarketConfig().GetConfig(context.Background()); err == nil {
+		logic.SetThemePublicAPIBase(themeConfig.PublicAPIBase)
+		legacyThemeBase = themeConfig.MarketBaseURL
 	} else {
 		logger.Warn("读取主题运行配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
 	}
+
+	// 社区推送配置：DB 持久化值优先（后台修改），config.yaml 出厂值兜底
+	officialBase := ""
+	if pushConfig, err := model.NewCommunityPushConfig().GetConfig(context.Background()); err == nil {
+		officialBase = pushConfig.BaseURL
+		logic.SetCommunitySiteURL(pushConfig.SiteURL)
+		logic.SetCommunityPushKey(pushConfig.PushKey)
+	} else {
+		logger.Warn("读取社区推送配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
+	}
+
+	// 官方站点地址统一解析（社区推送与主题市场共用，后台「社区推送配置」页为唯一维护入口）：
+	// 社区推送 DB 权威值 → community.base_url 出厂值 → 旧版主题市场 DB 值 → 旧版 themes 出厂值
+	if officialBase == "" {
+		officialBase = cfg.GetString("community.base_url")
+	}
+	if officialBase == "" {
+		officialBase = legacyThemeBase
+	}
+	if officialBase == "" {
+		officialBase = cfg.GetString("themes.market_base_url")
+	}
+	logic.SetOfficialSiteBaseURL(officialBase)
 
 	// 注入跨域配置：DB 是唯一权威（后台保存的值不被任何来源覆盖）；
 	// config.yaml 仅在 DB 无有效数据时作为初始值播种，环境变量不再参与

@@ -58,6 +58,7 @@ func (l *TravelGuideLogic) Create(ctx context.Context, r *req.CreateTravelGuideR
 		return nil, fmt.Errorf("创建旅行攻略失败: %w", err)
 	}
 
+	SyncOnUpdatedAsync(TargetTypeTravel, guide.ID)
 	return l.GetDetail(ctx, guide.ID)
 }
 
@@ -109,6 +110,7 @@ func (l *TravelGuideLogic) Update(ctx context.Context, id string, r *req.UpdateT
 		return nil, fmt.Errorf("更新旅行攻略失败: %w", err)
 	}
 
+	SyncOnUpdatedAsync(TargetTypeTravel, id)
 	return l.GetDetail(ctx, id)
 }
 
@@ -150,7 +152,11 @@ func (l *TravelGuideLogic) UpdateStatus(ctx context.Context, id string, r *req.U
 	if err != nil {
 		return fmt.Errorf("旅行攻略不存在")
 	}
-	return l.model.UpdateStatus(ctx, id, r.Status)
+	if err := l.model.UpdateStatus(ctx, id, r.Status); err != nil {
+		return err
+	}
+	SyncOnUpdatedAsync(TargetTypeTravel, id)
+	return nil
 }
 
 // Delete 软删除旅行攻略。
@@ -159,7 +165,11 @@ func (l *TravelGuideLogic) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return fmt.Errorf("旅行攻略不存在")
 	}
-	return l.model.SoftDelete(ctx, id)
+	if err := l.model.SoftDelete(ctx, id); err != nil {
+		return err
+	}
+	SyncOnDeletedAsync(TargetTypeTravel, id)
+	return nil
 }
 
 // GetPublicList 获取已发布旅行攻略列表（强制 status=2）。

@@ -14,15 +14,14 @@ import (
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
-	"novablog/pkg/novablogapi"
 )
 
 // themeMarketConfigCacheTTL 主题模块运行配置缓存过期时间。
 const themeMarketConfigCacheTTL = 10 * time.Minute
 
 // ThemeMarketConfigLogic 主题模块运行配置业务逻辑结构体。
-// 官方市场地址与博客公开 API 地址的持久化统一入口：首装向导 / 市场登录 / 后台修改
-// 均落到 DB 单行表并同步内存单例热更新；config.yaml 的对应字段仅作出厂默认值。
+// 官方站点地址已统一由社区推送配置托管（见 official_site_settings），本逻辑只负责
+// 博客公开 API 地址的持久化与热更新；config.yaml 的对应字段仅作出厂默认值。
 type ThemeMarketConfigLogic struct {
 	configModel *model.ThemeMarketConfigModel
 	configCache *cache.ThemeMarketConfigCache
@@ -45,7 +44,6 @@ func (l *ThemeMarketConfigLogic) GetConfig(ctx context.Context) (*res.ThemeMarke
 	}
 	if cached != nil {
 		return &res.ThemeMarketConfigRes{
-			MarketBaseURL: cached.MarketBaseURL,
 			PublicAPIBase: cached.PublicAPIBase,
 			UpdatedAt:     cached.UpdatedAt,
 		}, nil
@@ -57,58 +55,18 @@ func (l *ThemeMarketConfigLogic) GetConfig(ctx context.Context) (*res.ThemeMarke
 	}
 
 	_ = l.configCache.SetConfig(ctx, &cache.ThemeMarketConfigCacheData{
-		MarketBaseURL: config.MarketBaseURL,
 		PublicAPIBase: config.PublicAPIBase,
 	}, themeMarketConfigCacheTTL)
 
 	return &res.ThemeMarketConfigRes{
-		MarketBaseURL: config.MarketBaseURL,
 		PublicAPIBase: config.PublicAPIBase,
 		UpdatedAt:     config.UpdatedAt,
 	}, nil
 }
 
-// GetPublicConfig 公共下发配置：返回当前生效的官方地址（DB 自定义值优先，回退出厂值）。
+// GetPublicConfig 公共下发配置：返回统一托管的官方站点地址（社区推送配置页维护）。
 func (l *ThemeMarketConfigLogic) GetPublicConfig(ctx context.Context) (*res.PublicConfigRes, error) {
-	config, err := l.GetConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if config.MarketBaseURL != "" {
-		return &res.PublicConfigRes{MarketBaseURL: config.MarketBaseURL}, nil
-	}
-	return &res.PublicConfigRes{MarketBaseURL: getThemeSettings().MarketBaseURL}, nil
-}
-
-// SyncMarketBaseURL 持久化官方地址并热更新内存单例（首装向导 / 市场登录 / 后台修改共用入口）。
-// raw 为空时跳过；地址归一化（自动补 /api/v1）后落库。
-func (l *ThemeMarketConfigLogic) SyncMarketBaseURL(ctx context.Context, raw string) error {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return nil
-	}
-	base, err := novablogapi.NormalizeBaseURL(raw)
-	if err != nil {
-		return enum.NewBizError(enum.ErrMarketBaseURLInvalid.Code, err.Error(), enum.ErrMarketBaseURLInvalid.HttpCode)
-	}
-
-	config, err := l.configModel.GetConfig(ctx)
-	if err != nil {
-		return fmt.Errorf("查询主题运行配置失败: %w", err)
-	}
-	config.MarketBaseURL = base
-	if err := l.configModel.UpdateConfig(ctx, config); err != nil {
-		return fmt.Errorf("更新主题运行配置失败: %w", err)
-	}
-	_ = l.configCache.SetConfig(ctx, &cache.ThemeMarketConfigCacheData{
-		MarketBaseURL: base,
-		PublicAPIBase: config.PublicAPIBase,
-		UpdatedAt:     time.Now(),
-	}, themeMarketConfigCacheTTL)
-
-	// 同步内存单例，市场代理与首装拉取立即生效
-	getThemeSettings().MarketBaseURL = base
-	return nil
+	return &res.PublicConfigRes{MarketBaseURL: OfficialSiteBaseURL()}, nil
 }
 
 // syncPublicAPIBase 持久化博客公开 API 地址并热更新内存单例，随后对已安装主题重注入。
@@ -128,7 +86,6 @@ func (l *ThemeMarketConfigLogic) syncPublicAPIBase(ctx context.Context, raw stri
 		return fmt.Errorf("更新主题运行配置失败: %w", err)
 	}
 	_ = l.configCache.SetConfig(ctx, &cache.ThemeMarketConfigCacheData{
-		MarketBaseURL: config.MarketBaseURL,
 		PublicAPIBase: base,
 		UpdatedAt:     time.Now(),
 	}, themeMarketConfigCacheTTL)
@@ -159,17 +116,10 @@ func (l *ThemeMarketConfigLogic) reinjectInstalledThemes(ctx context.Context, ap
 	}
 }
 
-// UpdateConfig 后台更新主题模块运行配置（两个字段均可选，仅更新提供的字段）。
-// market_base_url 必须非空且合法；public_api_base 允许空（清除，回退同域取数）。
+// UpdateConfig 后台更新主题模块运行配置（public_api_base 可选，仅更新提供的字段）。
+// 官方站点地址统一在社区推送配置页维护，本接口不再受理。
+// public_api_base 允许空（清除，回退同域取数）。
 func (l *ThemeMarketConfigLogic) UpdateConfig(ctx context.Context, r *req.UpdateThemeMarketConfigReq) error {
-	if r.MarketBaseURL != nil && strings.TrimSpace(*r.MarketBaseURL) == "" {
-		return enum.NewBizError(enum.ErrInvalidParam.Code, "官方地址不能为空", enum.ErrInvalidParam.HttpCode)
-	}
-	if r.MarketBaseURL != nil {
-		if err := l.SyncMarketBaseURL(ctx, *r.MarketBaseURL); err != nil {
-			return err
-		}
-	}
 	if r.PublicAPIBase != nil {
 		if err := l.syncPublicAPIBase(ctx, *r.PublicAPIBase); err != nil {
 			return err

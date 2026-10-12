@@ -300,7 +300,7 @@ var (
 )
 
 // StartThemeInstall 启动首装主题安装任务：登录官方账号后拉取默认主题并激活；
-// marketBaseURL 为首装向导输入的官方地址（覆盖 config.yaml 的 themes.market_base_url），
+// marketBaseURL 为首装向导输入的官方地址（统一写入社区推送配置并热更新，覆盖 config.yaml 出厂值），
 // marketEmail/marketPassword 为官方市场账号（官方代理下载要求登录态，密码仅瞬时使用不落库）。
 // 重复触发时若任务进行中则返回当前状态，已有激活主题时幂等成功。
 func (l *SetupLogic) StartThemeInstall(ctx context.Context, marketBaseURL, marketEmail, marketPassword string) (*res.ThemeInstallStatusRes, error) {
@@ -313,9 +313,9 @@ func (l *SetupLogic) StartThemeInstall(ctx context.Context, marketBaseURL, marke
 		return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "请先完成博主账号初始化", enum.ErrInvalidParam.HttpCode)
 	}
 
-	// 用向导传入的地址覆盖配置并持久化（如非空），重启后依然生效
+	// 用向导传入的官方地址覆盖统一配置并持久化（如非空），重启后依然生效
 	if marketBaseURL != "" {
-		if err := NewThemeMarketConfigLogic().SyncMarketBaseURL(ctx, marketBaseURL); err != nil {
+		if _, err := NewCommunityPushLogic().UpdatePushConfig(ctx, &UpdatePushConfigRequest{BaseURL: marketBaseURL}); err != nil {
 			return nil, err
 		}
 	}
@@ -347,7 +347,7 @@ func (l *SetupLogic) StartThemeInstall(ctx context.Context, marketBaseURL, marke
 	themeInstallJob = job
 	themeInstallMu.Unlock()
 
-	go l.runThemeInstall(job, marketBaseURL, marketEmail, marketPassword)
+	go l.runThemeInstall(job, marketEmail, marketPassword)
 	return themeInstallStatusRes(job), nil
 }
 
@@ -363,7 +363,7 @@ func (l *SetupLogic) GetThemeInstallStatus(ctx context.Context) (*res.ThemeInsta
 }
 
 // runThemeInstall 执行安装任务：登录官方账号后从官方市场拉取默认主题并激活。
-func (l *SetupLogic) runThemeInstall(job *ThemeInstallJob, marketBaseURL, marketEmail, marketPassword string) {
+func (l *SetupLogic) runThemeInstall(job *ThemeInstallJob, marketEmail, marketPassword string) {
 	// 统一的任务状态更新入口（避免跨协程数据竞争）
 	setJob := func(mutate func(*ThemeInstallJob)) {
 		themeInstallMu.Lock()
@@ -386,17 +386,14 @@ func (l *SetupLogic) runThemeInstall(job *ThemeInstallJob, marketBaseURL, market
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	// 向导传入的地址覆盖配置
-	if marketBaseURL != "" {
-		getThemeSettings().MarketBaseURL = marketBaseURL
-	}
+	// 官方地址已在 StartThemeInstall 中持久化并热更新，此处直接读取统一配置
 
 	themeLogic := NewThemeLogic()
 
 	// 官方代理下载要求登录态：先用向导填写的官方账号换取 Token（密码仅瞬时使用，不落库）
 	marketToken := ""
 	if marketEmail != "" && marketPassword != "" {
-		if base, berr := novablogapi.NormalizeBaseURL(getThemeSettings().MarketBaseURL); berr == nil {
+		if base, berr := novablogapi.NormalizeBaseURL(OfficialSiteBaseURL()); berr == nil {
 			pair, _, loginErr := novablogapi.Login(ctx, base, marketEmail, marketPassword)
 			if loginErr != nil {
 				msg := loginErr.Error()

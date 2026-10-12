@@ -149,6 +149,8 @@ func autoMigrate(db *gorm.DB) error {
 		&model.ContentViewLog{},
 		&model.DailyViewStat{},
 		&model.MCPAPIKey{},
+		&model.CommunityPushConfig{},
+		&model.CommunitySyncRecord{},
 	)
 }
 
