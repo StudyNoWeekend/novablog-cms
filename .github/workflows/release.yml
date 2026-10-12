@@ -52,6 +52,14 @@ jobs:
 
       - name: 准备 Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # v1.2.4 发布时构建步骤两次零输出挂起（runner 日志 blob 均未生成），与 v1.2.3 时症状一致；
+          # 两次故障均发生在 buildx/BuildKit 浮动版本更新后的窗口期（2026-10-07 发布 buildx v0.38.0
+          # 与 BuildKit v0.34.0），而 v1.2.3 成功构建用的是 buildx v0.37.2 + BuildKit v0.33.1，
+          # 故将两者钉回该组合。如需升级，先在发布分支观察一次完整构建
+          version: v0.37.2
+          driver-opts: |
+            image=moby/buildkit:v0.33.1
 
       - name: 登录 GHCR
         uses: docker/login-action@v3
