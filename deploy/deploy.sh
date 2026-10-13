@@ -730,7 +730,7 @@ menu_install() {
     c_info "已取消。"
     return 0
   fi
-  input_name="$(printf '%s' "$input_name" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+  input_name="$(printf '%s' "$input_name" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9_-')"
   [ -n "$input_name" ] || { c_info "已取消。"; return 0; }
   if ! name_valid "$input_name"; then
     c_err "博客名称不合法：${input_name}（仅允许小写字母、数字、中划线、下划线，且以字母或数字开头）"
@@ -820,11 +820,12 @@ menu_upgrade() {
       local blogs name target
       blogs="$(list_blogs | paste -sd'|' -)"
       name="$(ask "要升级的博客（${blogs}）" "$(list_blogs | head -1)")"
-      name="$(printf '%s' "$name" | tr 'A-Z' 'a-z' | tr -d '[:space:]')"
-      if ! list_blogs | grep -qx "$name"; then
-        c_err "博客 $name 无部署记录。"
-        return 0
-      fi
+      # 严格归一化同 menu_redeploy：剔除输入法混入的全角/不可见字符
+      name="$(printf '%s' "$name" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9_-')"
+      case "|${blogs}|" in
+        *"|${name}|"*) ;;
+        *) c_err "博客 [${name}] 无部署记录。"; return 0 ;;
+      esac
       target="$(ask "目标版本号（回车=最新 ${LATEST_VERSION}）" "$LATEST_VERSION")"
       do_upgrade_one "$name" "$target" || c_err "$name 升级失败，可重试或查看 ./deploy.sh --name $name --logs"
       ;;
@@ -961,11 +962,13 @@ menu_redeploy() {
   local blogs name
   blogs="$(list_blogs | paste -sd'|' -)"
   name="$(ask "要重新部署的博客（${blogs}）" "$(list_blogs | head -1)")"
-  name="$(printf '%s' "$name" | tr 'A-Z' 'a-z' | tr -d '[:space:]')"
-  if ! list_blogs | grep -qx "$name"; then
-    c_err "博客 $name 无部署记录。"
-    return 0
-  fi
+  # 严格归一化：只保留合法字符（小写/数字/-/_）。输入法混入的全角空格、零宽字符等
+  # 非 ASCII 字节无法被 tr -d '[:space:]' 删除，会让精确匹配悄悄失败，这里直接剔除
+  name="$(printf '%s' "$name" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9_-')"
+  case "|${blogs}|" in
+    *"|${name}|"*) ;;
+    *) c_err "博客 [${name}] 无部署记录。"; return 0 ;;
+  esac
   redeploy_one "$name"
 }
 
