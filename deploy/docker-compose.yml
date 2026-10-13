@@ -14,6 +14,18 @@ services:
   novablog:
     image: ${NOVABLOG_IMAGE_REPO:-ghcr.io/studynoweekend/novablog-cms}:${NOVABLOG_VERSION:-latest}
     restart: unless-stopped
+    extra_hosts:
+      # host.docker.internal → 宿主机：Docker Desktop 原生支持；Linux 依赖 host-gateway 映射（Docker 20.10+），
+      # 使后端可通过该域名连接宿主机上的 PG/Redis 实例（目标服务须监听 0.0.0.0，仅 127.0.0.1 连不入）
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      # 应用级探针：/health 由后端在 DB/Redis 初始化完成后才可访问（路由注册晚于初始化），200 即初始化成功。
+      # start_period 宽限期覆盖首次启动 geoip 库联网下载（国内较慢），期内失败不计入 retries
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8111/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
     environment:
       TZ: ${TZ:-Asia/Shanghai}
       # 入口 server_name（本地/IP 访问用 _）

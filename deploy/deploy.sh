@@ -40,6 +40,53 @@ tcp_reachable() {
   fi
 }
 
+# ===== 外部服务（PostgreSQL/Redis）共用组件：守卫 + 连通性检测；每项信息收集完立即调用、当场报错 =====
+
+# 宿主机侧域名解析检测（Linux 用 getent；macOS 无 getent 回退 dscacheutil）。纯数字点分地址直接视为可解析。
+dns_resolves() {
+  local host="$1"
+  case "$host" in
+    *[!0-9.]*) ;;
+    *) return 0 ;;
+  esac
+  if command -v getent >/dev/null 2>&1; then
+    getent hosts "$host" >/dev/null 2>&1
+  elif command -v dscacheutil >/dev/null 2>&1; then
+    dscacheutil -q host -a name "$host" 2>/dev/null | grep -q 'ip_address'
+  else
+    nslookup "$host" >/dev/null 2>&1 || host "$host" >/dev/null 2>&1
+  fi
+}
+
+# 内置自动部署已移除：容器网络内 loopback 指向容器自身，localhost/127.0.0.1 必然连不通，直接拒绝
+guard_external_host() {
+  local label="$1" host="$2" flag="$3"
+  case "$host" in
+    ""|localhost|127.0.0.1)
+      die "已移除内置 $label 自动部署：请填写外部 $label 地址（宿主机实例可填 host.docker.internal 或宿主机 IP；--yes 全默认安装须加 ${flag}）"
+      ;;
+  esac
+}
+
+# 连通性检测：能解析则测 TCP，不通即报错。host.docker.internal 属容器内部 DNS 名
+# （Docker Desktop 原生提供，Linux 由 compose 注入 host-gateway 映射），宿主机侧无法验证，降级为警告
+check_external_service() {
+  local label="$1" host="$2" port="$3"
+  if [ "$host" = "host.docker.internal" ]; then
+    c_warn "host.docker.internal 属容器内部 DNS 名，宿主机侧无法验证，跳过预检"
+    c_warn "容器内经 host-gateway 映射访问宿主机：目标服务必须监听 0.0.0.0 或容器网段可达地址（仅监听 127.0.0.1 时容器连入不了）"
+    return 0
+  fi
+  if ! dns_resolves "$host"; then
+    die "无法解析 $host —— 请核对地址拼写；宿主机实例请填宿主机 IP"
+  fi
+  if tcp_reachable "$host" "$port"; then
+    c_info "$label $host:$port 可达"
+  else
+    die "无法连接 $label $host:$port —— 请核对地址/端口是否填对、实例是否放行本机 IP"
+  fi
+}
+
 # ============================== 默认值 ==============================
 IMAGE_REPO="ghcr.io/studynoweekend/novablog-cms"
 VERSION=""
@@ -107,18 +154,18 @@ NovaBlog 部署脚本
   重复部署覆盖该文件，--down 时删除并 reload。域名必须是裸域名（不带 http://）；
   博客域名为 _ 时表示直连任意 IP，无法做反代路由，须先填具体域名再启用。
 
-数据库（PostgreSQL）
-  --db-host <主机>     PostgreSQL 地址；留空或 localhost/127.0.0.1 时自动部署内置容器
+数据库（PostgreSQL，外部实例；容器网络内勿用 localhost/127.0.0.1）
+  --db-host <主机>     PostgreSQL 地址（宿主机实例填宿主机 IP 或 host.docker.internal）
   --db-port <端口>       默认 5432
   --db-user <用户>       默认 postgres
-  --db-password <密码>   必填（内置模式下自动生成）
+  --db-password <密码>   必填
   --db-name <库名>       默认与博客名称相同（多博客共用同一 PG 时天然分库）
   --db-sslmode <模式>    默认 disable
 
-缓存（Redis）
-  --redis-host <主机>    Redis 地址；留空或 localhost/127.0.0.1 时自动部署内置容器
+缓存（Redis，外部实例；容器网络内勿用 localhost/127.0.0.1）
+  --redis-host <主机>    Redis 地址（宿主机实例填宿主机 IP 或 host.docker.internal）
   --redis-port <端口>    默认 6379
-  --redis-password <密码> 无密码可留空（内置模式下自动生成）
+  --redis-password <密码> 无密码可留空
   --redis-db <编号>      默认 3（多博客共用同一 Redis 时请为每个博客分配不同编号）
 
 挂载目录（默认全部收拢在脚本同级 <名称>/ 下；相对路径以脚本所在目录为基准）
@@ -192,7 +239,7 @@ while [ $# -gt 0 ]; do
     --logs) ACTION="logs"; shift ;;
     --down) ACTION="down"; shift ;;
     -h|--help) usage; exit 0 ;;
-    *) die "未知参数：$1（使用 --help 查看用法）" ;;
+    *) die "未知参数：${1}（使用 --help 查看用法）" ;;
   esac
 done
 
@@ -547,7 +594,7 @@ host_nginx_print_info() {
 
 # ============================== 交互管理菜单（零参数入口）==============================
 # 零参数运行 ./deploy.sh 时进入：先获取最新版本号并扫描本地部署，
-# 再由用户选择全新安装 / 容器升级 / 退出；带参数运行则走原有部署流程。
+# 再由用户选择全新安装 / 容器升级 / 同配置重新部署 / 退出；带参数运行则走原有部署流程。
 
 # fetch_latest_version 获取最新发布版本号 → 全局 LATEST_VERSION
 # 顺序：GitHub Releases API → git ls-remote --tags 本地排序 → 兜底 latest
@@ -798,6 +845,128 @@ menu_upgrade() {
       ;;
   esac
   return 0
+}
+
+# ============================== 同配置重新部署 ==============================
+# 读回 .env 全部配置原样重建容器：不重问参数、不拉新镜像（拉新走「容器升级」）。
+# 适用：容器异常自愈、修改 config.yaml 后生效、补注宿主机反代；数据目录与卷不动。
+
+# redeploy_one 同配置重建单博客（须先就绪 NAME/ENV_FILE 的场景由本函数自行设置）
+redeploy_one() { # $1=博客名称
+  local name="$1"
+  ENV_FILE="$SCRIPT_DIR/$name/.env"
+  if [ ! -f "$ENV_FILE" ]; then
+    c_err "博客 $name 无部署记录（缺 ${ENV_FILE}）。"
+    return 1
+  fi
+  NAME="$name"
+  BLOG_DIR="$SCRIPT_DIR/$name"
+
+  local ver blog_port admin_port domain admin_domain image_repo host_nginx frontend_enabled install_code
+  ver="$(env_get NOVABLOG_VERSION)"
+  blog_port="$(env_get NOVABLOG_HTTP_PORT)"
+  admin_port="$(env_get NOVABLOG_ADMIN_HTTP_PORT)"
+  domain="$(env_get NOVABLOG_DOMAIN)"
+  admin_domain="$(env_get NOVABLOG_ADMIN_DOMAIN)"
+  image_repo="$(env_get NOVABLOG_IMAGE_REPO)"
+  host_nginx="$(env_get NOVABLOG_HOST_NGINX)"
+  frontend_enabled="$(env_get NOVABLOG_FRONTEND_ENABLED)"
+  install_code="$(env_get NOVABLOG_INSTALL_CODE)"
+  # 还原部署模式全局：run_compose → compose_files 按 DB_MODE/REDIS_MODE 拼接 local overlay
+  DB_MODE="$(env_get NOVABLOG_DB_MODE)"
+  REDIS_MODE="$(env_get NOVABLOG_REDIS_MODE)"
+  BLOG_PORT="$blog_port"
+  ADMIN_PORT="$admin_port"
+  DOMAIN="$domain"
+  ADMIN_DOMAIN="$admin_domain"
+  IMAGE_REPO="${image_repo:-ghcr.io/studynoweekend/novablog-cms}"
+  VERSION="$ver"
+  FRONTEND_DIR="$(env_get NOVABLOG_BLOG_FRONTEND_DIR)"
+
+  echo
+  c_info "----- 同配置重新部署：$name -----"
+  printf '    版本 %s    端口 %s/%s    域名 %s / %s\n' "${ver:-?}" "$blog_port" "$admin_port" "${domain:-_}" "${admin_domain:-_}"
+  c_info "将按现有 .env 原样重建容器（不拉取镜像、不改动任何参数，数据目录保留；重建期间服务短暂中断）"
+  [ "$(ask_choice '确认重新部署？' 'y|n' 'n')" = "y" ] || { c_info "已取消。"; return 0; }
+
+  if ! run_compose up -d --force-recreate; then
+    c_err "容器重建失败：$name"
+    return 1
+  fi
+
+  if ! wait_healthy "$blog_port"; then
+    c_err "重新部署后服务未就绪，最近日志如下："
+    local cid
+    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+    if [ -n "$cid" ]; then
+      docker logs --tail 30 "$cid" 2>&1 | tail -30
+    fi
+    case "$WAIT_FAIL_REASON" in
+      unhealthy)
+        c_err "容器健康探针失败。请结合上方日志排查（外部数据库/Redis 连接异常、geoip 首次下载过久等）。" ;;
+      exited)
+        c_err "容器已退出，请结合上方日志排查。" ;;
+      *)
+        c_err "等待超时（120 秒）。常见原因：首次启动需联网下载 geoip 库（国内较慢，重试时已缓存会快很多）。" ;;
+    esac
+    c_err "完整日志：./deploy.sh --name $name --logs"
+    return 1
+  fi
+
+  # 宿主机反代重新注入：记录启用 → 直接按 .env 域名/端口重写；未记录 → 交互询问一次（域名 _ 无法路由，跳过）
+  if [ -n "$domain" ] && [ "$domain" != "_" ]; then
+    local inject=0
+    if [ "$host_nginx" = "1" ]; then
+      inject=1
+    elif [ "$INTERACTIVE" = 1 ]; then
+      [ "$(ask_choice "是否将反代配置写入宿主机 nginx（${domain} → 127.0.0.1:${blog_port}）？" 'y|n' 'n')" = "y" ] && inject=1
+    fi
+    if [ "$inject" = "1" ]; then
+      if host_nginx_available; then
+        host_nginx_write_conf || c_warn "反代配置未完成，容器本身已重建成功，可稍后重试。"
+        if [ "$host_nginx" != "1" ]; then
+          printf '\nNOVABLOG_HOST_NGINX=1\n' >> "$ENV_FILE"
+          chmod 600 "$ENV_FILE"
+        fi
+      else
+        c_warn "未检测到宿主机 nginx（缺 ${NGINX_CONF_DIR}），跳过注入。"
+      fi
+    fi
+  fi
+
+  local frontend_note install_code_note
+  if [ "$frontend_enabled" = "1" ] && [ -n "$(env_get NOVABLOG_BLOG_FRONTEND_DIR)" ]; then
+    frontend_note="（自备前端，已启用 themes.frontend_dir）"
+  else
+    frontend_note="（空目录，使用后台安装的主题）"
+  fi
+  if [ -n "$install_code" ]; then
+    install_code_note="已配置（沿用 .env 记录）"
+  else
+    install_code_note="未启用（自部署）"
+  fi
+  print_deploy_summary "$frontend_note" "$install_code_note"
+  return 0
+}
+
+# menu_redeploy 交互入口：扫描部署 → 选博客 → 同配置重建
+menu_redeploy() {
+  echo
+  c_info "===== 同配置重新部署 ====="
+  scan_deployments
+  if [ "$SCAN_RECORD_COUNT" -eq 0 ]; then
+    c_warn "没有可重新部署的记录。先完成部署：主菜单选 1（全新安装）。"
+    return 0
+  fi
+  local blogs name
+  blogs="$(list_blogs | paste -sd'|' -)"
+  name="$(ask "要重新部署的博客（${blogs}）" "$(list_blogs | head -1)")"
+  name="$(printf '%s' "$name" | tr 'A-Z' 'a-z' | tr -d '[:space:]')"
+  if ! list_blogs | grep -qx "$name"; then
+    c_err "博客 $name 无部署记录。"
+    return 0
+  fi
+  redeploy_one "$name"
 }
 
 # ============================== 配置差异对比（升级用）==============================
@@ -1160,21 +1329,41 @@ do_upgrade_one() { # $1=博客名称 $2=目标版本
     return 1
   fi
 
-  if ! wait_healthy; then
+  if ! wait_healthy "$blog_port"; then
     c_err "$name 升级后服务未就绪，最近日志如下："
     local cid
     cid="$(run_compose ps -q novablog 2>/dev/null || true)"
     if [ -n "$cid" ]; then
       docker logs --tail 30 "$cid" 2>&1 | tail -30
     fi
+    case "$WAIT_FAIL_REASON" in
+      unhealthy)
+        c_err "容器健康探针失败。请结合上方日志排查（新版本配置不兼容、外部数据库/Redis 连接异常等）。" ;;
+      exited)
+        c_err "容器已退出，请结合上方日志排查。" ;;
+      *)
+        c_err "等待超时（120 秒）。常见原因：首次启动需联网下载 geoip 库（国内较慢），或外部数据库/Redis 连接缓慢。" ;;
+    esac
     c_err "完整日志：./deploy.sh --name $name --logs"
     return 1
+  fi
+
+  # 反代配置自愈：记录启用但 conf 丢失（手工误删/换机）时按 .env 域名端口补写；升级本身不动既有 conf
+  if [ "$(blog_env_get "$ENV_FILE" NOVABLOG_HOST_NGINX)" = "1" ] && [ -n "$domain" ] && [ "$domain" != "_" ]; then
+    DOMAIN="$domain"
+    ADMIN_DOMAIN="$(blog_env_get "$ENV_FILE" NOVABLOG_ADMIN_DOMAIN)"
+    BLOG_PORT="$blog_port"
+    ADMIN_PORT="$admin_port"
+    if host_nginx_available && [ ! -f "$NGINX_CONF_DIR/$(host_nginx_conf_name)" ]; then
+      c_info "宿主机反代配置缺失，按 .env 重新生成 ..."
+      host_nginx_write_conf || c_warn "反代配置补写未完成，容器本身已升级成功。"
+    fi
   fi
   c_info "$name 升级完成：$target"
   return 0
 }
 
-# main_menu 零参数交互主菜单：先获取最新版本号，再循环提供安装/升级/退出
+# main_menu 零参数交互主菜单：先获取最新版本号，再循环提供安装/升级/同配置重新部署/退出
 main_menu() {
   fetch_latest_version
   while :; do
@@ -1185,9 +1374,10 @@ main_menu() {
     printf '  本地已部署：%s 个博客    最新版本：%s\n' "$SCAN_RECORD_COUNT" "$LATEST_VERSION"
     echo "  1. 全新安装"
     echo "  2. 容器升级"
-    echo "  3. 退出"
+    echo "  3. 同配置重新部署"
+    echo "  4. 退出"
     local choice=""
-    if ! read -r -p "请选择操作 [1/2/3]: " choice; then
+    if ! read -r -p "请选择操作 [1/2/3/4]: " choice; then
       echo
       c_info "已退出。"
       exit 0
@@ -1195,9 +1385,10 @@ main_menu() {
     case "$choice" in
       1) menu_install ;;
       2) menu_upgrade ;;
-      3|q|Q|quit|exit) c_info "已退出。"; exit 0 ;;
+      3) menu_redeploy ;;
+      4|q|Q|quit|exit) c_info "已退出。"; exit 0 ;;
       "") : ;;
-      *) c_warn "无效选项：${choice}（请输入 1/2/3）" ;;
+      *) c_warn "无效选项：${choice}（请输入 1/2/3/4）" ;;
     esac
   done
 }
@@ -1268,7 +1459,7 @@ name_valid() { printf '%s' "$1" | grep -qE '^[a-z0-9][a-z0-9_-]*$'; }
 
 validate_name() {
   [ -n "$1" ] || die "博客名称不能为空（交互输入，或使用 --name <名称>）"
-  name_valid "$1" || die "博客名称不合法：$1（仅允许小写字母、数字、中划线、下划线，且以字母或数字开头）"
+  name_valid "$1" || die "博客名称不合法：${1}（仅允许小写字母、数字、中划线、下划线，且以字母或数字开头）"
 }
 
 list_blogs() {
@@ -1319,7 +1510,7 @@ print_image_digest() {
   if [ -n "$digest" ]; then
     c_info "已使用镜像：$digest"
   else
-    c_info "已使用镜像：$image_ref（本地构建，无远端摘要）"
+    c_info "已使用镜像：${image_ref}（本地构建，无远端摘要）"
   fi
 }
 
@@ -1340,20 +1531,109 @@ port_conflicts() { # $1=端口
     | grep -v "^${NAME}-" || true
 }
 
-# wait_healthy 等待 novablog 容器进入 healthy（部署与升级共用）；0=就绪 1=未就绪
-wait_healthy() {
+# wait_http_ok 宿主机侧 HTTP 探测 /health（镜像未内置 HEALTHCHECK 时的兜底判定）
+wait_http_ok() { # $1=宿主机端口
+  local url="http://127.0.0.1:${1}/health"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsS -m 2 "$url" >/dev/null 2>&1
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -T 2 -O /dev/null "$url" 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+# wait_healthy 等待 novablog 容器就绪（部署/升级/重新部署共用）；0=就绪 1=未就绪
+# 判定：Health=healthy 成功；unhealthy/exited 立即失败（unhealthy 会打印最近探测输出）；
+# 容器无 Health 对象（旧镜像未内置 HEALTHCHECK）时用宿主机 HTTP /health 兜底；
+# 其余状态轮询等待，总窗口 120s，每 10s 打印一次进度。失败原因写入 WAIT_FAIL_REASON（unhealthy/exited/timeout）
+wait_healthy() { # $1=HTTP 兜底探测端口（宿主机博客端口，空则跳过兜底）
   c_info "等待服务就绪 ..."
-  local cid status
+  WAIT_FAIL_REASON="timeout"
+  local cid status elapsed=0 http_port="${1:-}"
   for _ in $(seq 1 60); do
     cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+    status=""
     if [ -n "$cid" ]; then
-      status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true)"
-      if [ "$status" = "healthy" ]; then return 0; fi
-      if [ "$status" = "unhealthy" ] || [ "$status" = "exited" ]; then return 1; fi
+      status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}nohealth:{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true)"
+      case "$status" in
+        healthy)
+          WAIT_FAIL_REASON="ready"
+          return 0
+          ;;
+        unhealthy|exited)
+          WAIT_FAIL_REASON="$status"
+          if [ "$status" = "unhealthy" ]; then
+            c_err "健康探针连续失败，最近探测输出："
+            docker inspect -f '{{range .State.Health.Log}}  [{{.ExitCode}}] {{.Output}}{{end}}' "$cid" 2>/dev/null | tail -4
+          fi
+          return 1
+          ;;
+        nohealth:running)
+          # /health 由后端在 DB/Redis 初始化完成后才可访问，200 即初始化成功
+          if [ -n "$http_port" ] && wait_http_ok "$http_port"; then
+            c_info "镜像未内置健康检查，HTTP /health 探测通过（127.0.0.1:${http_port}）"
+            WAIT_FAIL_REASON="ready"
+            return 0
+          fi
+          status="running（无健康检查，HTTP 兜底未通过）"
+          ;;
+      esac
+    else
+      status="容器尚未创建"
     fi
+    elapsed=$((elapsed + 2))
+    [ $((elapsed % 10)) -eq 0 ] && c_info "已等待 ${elapsed}s（状态：${status}）"
     sleep 2
   done
   return 1
+}
+
+# print_deploy_summary 部署/重新部署共用摘要块
+# 依赖全局：NAME/BLOG_DIR/BLOG_PORT/ADMIN_PORT/DOMAIN/ADMIN_DOMAIN/IMAGE_REPO/VERSION/FRONTEND_DIR/ENV_FILE；
+# $1=前端目录备注 $2=安装码备注
+print_deploy_summary() {
+  local frontend_note="$1" install_code_note="$2"
+  local blog_url admin_url setup_url nginx_line=""
+  if [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ]; then
+    blog_url="http://$DOMAIN/"
+  else
+    blog_url="http://localhost:$BLOG_PORT/"
+  fi
+  if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
+    admin_url="http://$ADMIN_DOMAIN/admin/"
+    setup_url="http://$ADMIN_DOMAIN/admin/setup"
+  else
+    admin_url="http://localhost:$ADMIN_PORT/admin/"
+    setup_url="http://localhost:$ADMIN_PORT/admin/setup"
+  fi
+  # 宿主机反代一行：.env 记录启用时展示（host_nginx_print_info 输出带前导空格与换行）
+  if [ "$(env_get NOVABLOG_HOST_NGINX)" = "1" ]; then
+    nginx_line="$(host_nginx_print_info)"
+  fi
+  cat <<EOF
+
+$(c_info '部署完成')
+
+  博客名称     $NAME
+  数据目录     ${BLOG_DIR}（.env、config.yaml 与全部挂载数据）
+  博客入口     $blog_url
+  后台入口     $admin_url
+  首装向导     $setup_url
+  首装安装码   $install_code_note
+  本机端口     ${BLOG_PORT}（博客）/ ${ADMIN_PORT}（后台）—— 外层反代目标，访客无需带端口
+  镜像版本     $IMAGE_REPO:$VERSION
+  前端目录     $FRONTEND_DIR $frontend_note
+${nginx_line}
+  常用命令：
+    ./deploy.sh --name $NAME --status             查看状态
+    ./deploy.sh --name $NAME --logs               查看日志
+    ./deploy.sh --name $NAME --down               停止容器（含反代配置清理）
+    ./deploy.sh --name $NAME --version <tag>      升级/切换版本（数据保留）
+
+  首次使用：打开后台入口完成安装向导（创建博主账号 → 存储 → 主题）。
+  若使用外部 PostgreSQL，请确认库已存在或该账号有建库权限（服务启动会自动建库与建表）。
+EOF
 }
 
 deploy_blog() {
@@ -1412,6 +1692,15 @@ deploy_blog() {
     CORS_ORIGINS="$CORS_ORIGINS,http://$ADMIN_DOMAIN"
   fi
 
+  # 宿主机 nginx 反代：未显式指定（--host-nginx/--no-host-nginx）且填了具体域名时交互询问一次；
+  # 域名填 _ 表示直连任意 IP，无法做反代路由
+  if [ "$NGINX_MODE" = "" ] && [ "$INTERACTIVE" = 1 ] && [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ]; then
+    [ "$(ask_choice "是否把 ${DOMAIN} 的反代配置写入宿主机 nginx（conf.d，写入后自动 nginx -t 校验并 reload）？" 'y|n' 'n')" = "y" ] && NGINX_MODE=1
+  fi
+  # 是否启用宿主机反代：写入 .env 供重新部署注入与 --down 清理联动
+  HOST_NGINX_ENABLED=0
+  [ "$NGINX_MODE" = "1" ] && [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ] && HOST_NGINX_ENABLED=1
+
   echo
   c_info "===== PostgreSQL ====="
   c_info "（外部实例；容器网络内勿用 localhost —— 宿主机实例可填 host.docker.internal 或宿主机 IP）"
@@ -1437,11 +1726,8 @@ deploy_blog() {
     :
   else
     DB_MODE="external"
-    case "$DB_HOST" in
-      ""|localhost|127.0.0.1)
-        die "已移除内置 PostgreSQL 自动部署：请填写外部 PostgreSQL 地址（宿主机实例可填 host.docker.internal 或宿主机 IP；--yes 全默认安装须加 --db-host）"
-        ;;
-    esac
+    guard_external_host 'PostgreSQL' "$DB_HOST" '--db-host'
+    check_external_service 'PostgreSQL' "$DB_HOST" "$DB_PORT"
   fi
 
   echo
@@ -1463,29 +1749,8 @@ deploy_blog() {
     :
   else
     REDIS_MODE="external"
-    case "$REDIS_HOST" in
-      ""|localhost|127.0.0.1)
-        die "已移除内置 Redis 自动部署：请填写外部 Redis 地址（宿主机实例可填 host.docker.internal 或宿主机 IP；--yes 全默认安装须加 --redis-host）"
-        ;;
-    esac
-  fi
-
-  # 外部服务连通性预检：地址填错若等到容器启动后才暴露，后端会反复崩溃重启且现象只有 502
-  echo
-  c_info "===== 外部服务连通性预检 ====="
-  if [ "$DB_MODE" = "external" ]; then
-    if tcp_reachable "$DB_HOST" "$DB_PORT"; then
-      c_info "PostgreSQL $DB_HOST:$DB_PORT 可达"
-    else
-      die "无法连接 PostgreSQL $DB_HOST:$DB_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
-    fi
-  fi
-  if [ "$REDIS_MODE" = "external" ]; then
-    if tcp_reachable "$REDIS_HOST" "$REDIS_PORT"; then
-      c_info "Redis $REDIS_HOST:$REDIS_PORT 可达"
-    else
-      die "无法连接 Redis $REDIS_HOST:$REDIS_PORT —— 请核对地址/端口是否填对、实例是否放行本机 IP"
-    fi
+    guard_external_host 'Redis' "$REDIS_HOST" '--redis-host'
+    check_external_service 'Redis' "$REDIS_HOST" "$REDIS_PORT"
   fi
 
   # ============================== 挂载目录 ==============================
@@ -1643,7 +1908,7 @@ security:
 
 geoip:
   data_dir: /app/data/geoip
-  download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
+  download_url: "https://cdn.jsdelivr.net/gh/lionsoul2014/ip2region@v3.18.0/data/ip2region_v4.xdb"
   proxy_url: ""
 
 themes:
@@ -1676,7 +1941,7 @@ YAML
         cat <<'GEOIP_BLOCK'
 geoip:
   data_dir: /app/data/geoip
-  download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
+  download_url: "https://cdn.jsdelivr.net/gh/lionsoul2014/ip2region@v3.18.0/data/ip2region_v4.xdb"
   proxy_url: ""
 GEOIP_BLOCK
       } > /tmp/novablog-config-merge.$$
@@ -1751,6 +2016,7 @@ NOVABLOG_PUBLIC_URL=$PUBLIC_URL
 NOVABLOG_MARKET_URL=$MARKET_URL
 NOVABLOG_INSTALL_CODE=$INSTALL_CODE
 NOVABLOG_EXTRA_MOUNTS=$EXTRA_MOUNTS
+NOVABLOG_HOST_NGINX=$HOST_NGINX_ENABLED
 ENV
   chmod 600 "$ENV_FILE"
 
@@ -1802,61 +2068,42 @@ EOF
     run_compose up -d || compose_up_failed
   fi
 
-  # 等待健康检查
-  if ! wait_healthy; then
-    c_err "服务未能就绪（容器未进入 healthy 状态），最近日志如下："
+  # 等待健康检查（老镜像无 HEALTHCHECK 时用 HTTP /health 兜底判定）
+  if ! wait_healthy "$BLOG_PORT"; then
+    c_err "服务未能就绪，最近日志如下："
     cid="$(run_compose ps -q novablog 2>/dev/null || true)"
     if [ -n "$cid" ]; then
       docker logs --tail 30 "$cid" 2>&1 | tail -30
     fi
-    c_err "请根据上方日志排查（典型原因：外部数据库/Redis 地址或密码填错），完整日志：./deploy.sh --name $NAME --logs"
+    case "$WAIT_FAIL_REASON" in
+      unhealthy)
+        c_err "容器健康探针失败。典型原因：外部数据库/Redis 地址或密码填错；首次启动下载 geoip 库过久（120 秒宽限仍不够）。" ;;
+      exited)
+        c_err "容器已退出。请结合上方日志排查（典型原因：外部数据库/Redis 地址或密码填错）。" ;;
+      *)
+        c_err "等待超时（120 秒）。常见原因：首次启动需联网下载 geoip 库（国内较慢，重试时已缓存会快很多）；外部数据库/Redis 地址或密码填错。" ;;
+    esac
+    c_err "完整日志：./deploy.sh --name $NAME --logs；排除问题后，可在主菜单选「同配置重新部署」按原配置重试。"
     exit 1
   fi
 
-  # 访客地址优先展示域名形态（走反代/标准端口时不带端口）；本机端口单独列出供反代与直连调试
-  if [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ]; then
-    BLOG_URL="http://$DOMAIN/"
-  else
-    BLOG_URL="http://localhost:$BLOG_PORT/"
+  # 宿主机 nginx 反代注入（尽力而为：任何 nginx 环节失败都只警告，不影响已成功的容器部署）
+  if [ "$HOST_NGINX_ENABLED" = "1" ]; then
+    if host_nginx_available; then
+      host_nginx_write_conf || c_warn "宿主机反代配置未完成，容器本身已部署成功；可在主菜单「同配置重新部署」中重试注入。"
+    else
+      c_warn "未检测到宿主机 nginx（缺 ${NGINX_CONF_DIR}），已跳过反代配置注入（直连端口不受影响）。"
+    fi
   fi
-  if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
-    ADMIN_URL="http://$ADMIN_DOMAIN/admin/"
-    SETUP_URL="http://$ADMIN_DOMAIN/admin/setup"
-  else
-    ADMIN_URL="http://localhost:$ADMIN_PORT/admin/"
-    SETUP_URL="http://localhost:$ADMIN_PORT/admin/setup"
-  fi
+
   FRONTEND_NOTE="（空目录，使用后台安装的主题）"
   [ -n "$FRONTEND_DIR_INPUT" ] && FRONTEND_NOTE="（自备前端，已启用 themes.frontend_dir）"
   if [ -n "$INSTALL_CODE" ]; then
-    INSTALL_CODE_NOTE="$INSTALL_CODE（官方部署专用，请随邮件发给用户，仅首次初始化需要）"
+    INSTALL_CODE_NOTE="${INSTALL_CODE}（官方部署专用，请随邮件发给用户，仅首次初始化需要）"
   else
     INSTALL_CODE_NOTE="未启用（自部署）"
   fi
-
-  cat <<EOF
-
-$(c_info '部署完成')
-
-  博客名称     $NAME
-  数据目录     ${BLOG_DIR}（.env、config.yaml 与全部挂载数据）
-  博客入口     $BLOG_URL
-  后台入口     $ADMIN_URL
-  首装向导     $SETUP_URL
-  首装安装码   $INSTALL_CODE_NOTE
-  本机端口     ${BLOG_PORT}（博客）/ ${ADMIN_PORT}（后台）—— 外层反代目标，访客无需带端口
-  镜像版本     $IMAGE_REPO:$VERSION
-  前端目录     $FRONTEND_DIR $FRONTEND_NOTE
-
-  常用命令：
-    ./deploy.sh --name $NAME --status             查看状态
-    ./deploy.sh --name $NAME --logs               查看日志
-    ./deploy.sh --name $NAME --down               停止容器
-    ./deploy.sh --name $NAME --version <tag>      升级/切换版本（数据保留）
-
-  首次使用：打开后台入口完成安装向导（创建博主账号 → 存储 → 主题）。
-  若使用外部 PostgreSQL，请确认库已存在或该账号有建库权限（服务启动会自动建库与建表）。
-EOF
+  print_deploy_summary "$FRONTEND_NOTE" "$INSTALL_CODE_NOTE"
 }
 
 # ============================== 入口分流 ==============================
@@ -1920,6 +2167,10 @@ case "$ACTION" in
     exit 0
     ;;
   down)
+    # 部署时注入过宿主机反代（NOVABLOG_HOST_NGINX=1）则一并清理，与 usage 承诺一致
+    if [ "$(env_get NOVABLOG_HOST_NGINX)" = "1" ] && host_nginx_available; then
+      host_nginx_remove_conf
+    fi
     c_info "停止并移除容器（挂载目录中的数据保留）..."
     run_compose_from_env down
     c_info "已停止。数据仍在 $ENV_FILE 配置的挂载目录里，重新部署执行 ./deploy.sh --name $NAME 即可。"
