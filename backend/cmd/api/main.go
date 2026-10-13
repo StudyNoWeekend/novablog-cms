@@ -130,6 +130,7 @@ func main() {
 	}
 
 	// 初始化 IP 归属地解析器（访问日志写入时记录地区）
+	// 数据文件缺失时转为后台下载，不阻塞启动；完成前 Lookup 返回空地区
 	{
 		geoipSearcher := geoip.New(geoip.Config{
 			DataDir:     app.Config.GetString("geoip.data_dir"),
