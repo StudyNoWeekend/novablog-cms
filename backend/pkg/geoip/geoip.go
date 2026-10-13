@@ -58,8 +58,9 @@ func New(cfg Config, log *zap.Logger) *Searcher {
 	return &Searcher{cfg: cfg, log: log}
 }
 
-// Load 加载 xdb 数据文件。数据文件不存在时自动下载；加载/下载失败
-// 返回 error，但调用方不应因此中断启动——Lookup 会自动降级返回空地区。
+// Load 加载 xdb 数据文件：文件有效时同步加载（载入内存，毫秒级）；缺失/损坏时
+// 转为后台下载并加载，立即返回不阻塞启动——下载完成前后 Lookup 自动降级返回空地区。
+// 同步加载失败仍返回 error，但调用方不应因此中断启动。
 func (s *Searcher) Load(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -76,7 +77,7 @@ func (s *Searcher) Load(ctx context.Context) error {
 		return s.load(full)
 	}
 
-	// 缺失/文件损坏 → 尝试下载
+	// 缺失/文件损坏 → 后台下载 + 加载，不阻塞启动
 	if s.cfg.DownloadURL == "" {
 		s.loaded = true
 		err := fmt.Errorf("geoip 数据文件缺失(%s)且未配置下载地址，地区解析已降级", full)
@@ -84,24 +85,39 @@ func (s *Searcher) Load(ctx context.Context) error {
 		return err
 	}
 
+	s.loaded = true
+	s.log.Info("geoip 数据文件缺失，已转后台下载（完成前访问日志不记录地区）")
+	go s.downloadAndLoad(ctx, full)
+	return nil
+}
+
+// downloadAndLoad 后台下载并加载 xdb；任何失败仅告警（Lookup 保持降级为空地区）。
+// 下载阶段不持锁：download 最长可达数分钟，若持写锁会阻塞所有 Lookup 的 RLock，
+// 把启动阻塞换成运行期阻塞；不持锁期间 s.region 保持 nil，Lookup 天然降级。
+// 仅最后 load 写入 s.region 时持有写锁（load 假定调用方已持锁）。
+func (s *Searcher) downloadAndLoad(ctx context.Context, full string) {
 	if err := os.MkdirAll(s.cfg.DataDir, 0o755); err != nil {
-		s.loaded = true
-		return fmt.Errorf("创建 geoip 数据目录失败: %w", err)
+		s.log.Warn("创建 geoip 数据目录失败，地区解析已降级", zap.Error(err))
+		return
 	}
 
 	tmp := full + ".tmp"
 	if err := s.download(ctx, tmp); err != nil {
-		s.loaded = true
 		s.log.Warn("geoip 数据文件下载失败，地区解析已降级", zap.Error(err))
-		return err
+		_ = os.Remove(tmp)
+		return
 	}
 	if err := os.Rename(tmp, full); err != nil {
-		s.loaded = true
+		s.log.Warn("geoip 数据文件保存失败，地区解析已降级", zap.Error(err))
 		_ = os.Remove(tmp)
-		return fmt.Errorf("geoip 数据文件保存失败: %w", err)
+		return
 	}
 
-	return s.load(full)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.load(full); err != nil {
+		s.log.Warn("geoip 数据文件加载失败，地区解析已降级", zap.Error(err))
+	}
 }
 
 // validDataFile 判断文件是否存在且大小超过最小阈值。

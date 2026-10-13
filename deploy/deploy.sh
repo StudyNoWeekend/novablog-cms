@@ -501,7 +501,7 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade_${map_var};
-        proxy_write_timeout 300s;
+        proxy_send_timeout 300s;
         proxy_read_timeout 300s;
     }
 }
