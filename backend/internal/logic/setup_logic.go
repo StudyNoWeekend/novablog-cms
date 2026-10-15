@@ -157,6 +157,38 @@ func (l *SetupLogic) InitBlogger(ctx context.Context, r *req.InitReq, clientIP s
 	}, nil
 }
 
+// VerifyInstallCode 部署密钥即时核验：复用 EnforceInstallCode 的常量时间比对与防爆破计数
+// （失败次数与 /install/init 共享），结果以内联 valid/message 返回（业务码恒为 0），供首装页失焦校验展示。
+func (l *SetupLogic) VerifyInstallCode(ctx context.Context, r *req.VerifyInstallCodeReq, clientIP string) (*res.VerifyInstallCodeRes, error) {
+	// 自部署未配置安装码：无需校验（前端此时不渲染输入框，防御性放行）
+	if InstallInitCode == "" {
+		return &res.VerifyInstallCodeRes{Valid: true}, nil
+	}
+
+	// 与 InitBlogger 一致：已初始化后不再提供核验能力
+	count, err := l.bloggerModel.Count(ctx)
+	if err != nil {
+		SetupLogger.Error("查询博主数量失败", zap.Error(err))
+		return nil, enum.ErrInternalServer
+	}
+	if count > 0 {
+		return &res.VerifyInstallCodeRes{Valid: false, Message: "系统已初始化，无需核验部署密钥"}, nil
+	}
+
+	if err := EnforceInstallCode(ctx, r.InitCode, clientIP); err != nil {
+		switch {
+		case errors.Is(err, enum.ErrInstallCodeRateLimited):
+			return &res.VerifyInstallCodeRes{Valid: false, Message: err.Error()}, nil
+		case errors.Is(err, enum.ErrInstallCodeInvalid):
+			SetupLogger.Warn("首装部署密钥核验失败", zap.String("ip", clientIP))
+			return &res.VerifyInstallCodeRes{Valid: false, Message: err.Error()}, nil
+		default:
+			return nil, err
+		}
+	}
+	return &res.VerifyInstallCodeRes{Valid: true}, nil
+}
+
 // rolePreset 解析角色 key（支持逗号分隔多选），返回所选角色预置模块开关的并集。
 func rolePreset(role string) (map[string]bool, error) {
 	modules := make(map[string]bool)

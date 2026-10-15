@@ -148,6 +148,30 @@ func (ctrl *PublicController) Init(c *gin.Context) {
 	response.Success(c, initRes)
 }
 
+// VerifyInstallCode 部署密钥即时核验（首装页失焦校验，密钥错误以内联 valid/message 返回，不弹全局错误）。
+func (ctrl *PublicController) VerifyInstallCode(c *gin.Context) {
+	var verifyReq req.VerifyInstallCodeReq
+	if err := c.ShouldBindJSON(&verifyReq); err != nil {
+		logic.SetupLogger.Warn("部署密钥核验请求参数错误", zap.Error(err))
+		response.Fail(c, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+
+	// 传入来源 IP：核验失败与 /install/init 共享按 IP 的防爆破计数
+	verifyRes, err := ctrl.setupLogic.VerifyInstallCode(c.Request.Context(), &verifyReq, c.ClientIP())
+	if err != nil {
+		var bizErr *enum.BizError
+		if errors.As(err, &bizErr) {
+			response.Fail(c, bizErr.Code, bizErr.Msg, bizErr.HttpCode)
+			return
+		}
+		response.Fail(c, enum.ErrInternalServer.Code, enum.ErrInternalServer.Msg, enum.ErrInternalServer.HttpCode)
+		return
+	}
+
+	response.Success(c, verifyRes)
+}
+
 // InitThemeReq 首装主题安装请求。
 type InitThemeReq struct {
 	MarketBaseURL  string `json:"market_base_url" binding:"omitempty"` // 官方市场地址（向导输入覆盖 config）

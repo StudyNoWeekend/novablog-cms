@@ -16,6 +16,12 @@ type InitRes struct {
 	Message string `json:"message"` // 响应消息
 }
 
+// VerifyInstallCodeRes 部署密钥核验结果响应（业务失败以内联 valid/message 表达，不走全局错误提示）。
+type VerifyInstallCodeRes struct {
+	Valid   bool   `json:"valid"`             // 密钥是否正确
+	Message string `json:"message,omitempty"` // 失败原因
+}
+
 // ThemeInstallStatusRes 首装主题安装任务状态。
 type ThemeInstallStatusRes struct {
 	Status       string     `json:"status"`        // not_started | running | success | failed

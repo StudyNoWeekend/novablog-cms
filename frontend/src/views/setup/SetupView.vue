@@ -28,13 +28,20 @@
         autocomplete="off"
         @finish="goRoleStep"
       >
-        <!-- 部署密钥（仅官方部署显示，后端 status.require_init_code 控制） -->
-        <a-form-item v-if="needInstallCode" name="init_code" :rules="installCodeRules">
+        <!-- 部署密钥（仅官方部署显示，后端 status.require_init_code 控制）；失焦即时核验，结果内联展示 -->
+        <a-form-item
+          v-if="needInstallCode"
+          name="init_code"
+          :rules="installCodeRules"
+          :validate-status="initCodeStatus || undefined"
+          :help="initCodeHelp || undefined"
+        >
           <a-input-password
             v-model:value="form.init_code"
             placeholder="请输入官方邮件中的部署密钥"
             size="large"
             class="setup-input"
+            @blur="handleInitCodeBlur"
           >
             <template #prefix>
               <key-outlined />
@@ -495,6 +502,51 @@ const form = reactive({
 // 官方部署需先输入邮件中的安装码（后端 status.require_init_code 下发）；自部署不渲染该输入框
 const needInstallCode = ref(false)
 const installCodeRules = [{ required: true, message: '官方部署实例需要填写邮件中的部署密钥', trigger: 'blur' }]
+
+// 部署密钥失焦即时核验：结果以 validate-status/help 内联展示，避免填完整个表单才发现密钥错误
+const initCodeChecking = ref(false)
+const initCodeStatus = ref<'' | 'validating' | 'success' | 'error'>('')
+const initCodeHelp = ref('')
+
+// 输入变化后清空旧核验结果，避免残留过期提示
+watch(
+  () => form.init_code,
+  () => {
+    if (initCodeStatus.value) {
+      initCodeStatus.value = ''
+      initCodeHelp.value = ''
+    }
+  },
+)
+
+/** 失焦时核验部署密钥；空值交由必填规则提示 */
+async function handleInitCodeBlur() {
+  if (!needInstallCode.value || initCodeChecking.value) return
+  const code = form.init_code.trim()
+  if (!code) return
+
+  initCodeChecking.value = true
+  initCodeStatus.value = 'validating'
+  initCodeHelp.value = '正在校验部署密钥…'
+  try {
+    const res = await setupApi.verifyInstallCode(code)
+    // 请求期间输入已变化时丢弃过期结果（输入变化本就会清空状态）
+    if (form.init_code.trim() !== code) return
+    if (res.valid) {
+      initCodeStatus.value = 'success'
+      initCodeHelp.value = '部署密钥正确'
+    } else {
+      initCodeStatus.value = 'error'
+      initCodeHelp.value = res.message || '部署密钥错误，请输入官方邮件中的安装密钥'
+    }
+  } catch {
+    // 网络等异常由拦截器统一提示，这里还原为常规校验状态
+    initCodeStatus.value = ''
+    initCodeHelp.value = ''
+  } finally {
+    initCodeChecking.value = false
+  }
+}
 
 const stageText = computed(() => {
   switch (themeStatus.value?.stage) {

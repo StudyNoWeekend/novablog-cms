@@ -24,6 +24,12 @@ export interface InitRes {
   message: string
 }
 
+/** 部署密钥即时核验结果（密钥错误以内联 valid/message 返回，不触发全局错误提示） */
+export interface VerifyInstallCodeRes {
+  valid: boolean
+  message?: string
+}
+
 /** 首装向导存储配置请求（与后端 SetupStorageReq 对应） */
 export interface SetupStorageReq {
   provider?: string
@@ -43,6 +49,10 @@ export const setupApi = {
   },
   init(data: InitReq): Promise<InitRes> {
     return request.post('/public/install/init', data) as Promise<InitRes>
+  },
+  /** 部署密钥即时核验（失焦触发）：复用后端常量时间比对与防爆破，结果内联展示 */
+  verifyInstallCode(initCode: string): Promise<VerifyInstallCodeRes> {
+    return request.post('/public/install/verify-code', { init_code: initCode }) as Promise<VerifyInstallCodeRes>
   },
   /**
    * 首装第 3 步：登录官方账号并拉取默认主题（官方代理下载要求登录态，账号由后端瞬时使用不落库）；
