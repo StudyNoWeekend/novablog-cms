@@ -507,6 +507,8 @@ const installCodeRules = [{ required: true, message: '官方部署实例需要�
 const initCodeChecking = ref(false)
 const initCodeStatus = ref<'' | 'validating' | 'success' | 'error'>('')
 const initCodeHelp = ref('')
+// 进行中的核验任务：失焦与「下一步」共用，避免并发重复请求
+let initCodeVerifyTask: Promise<boolean> | null = null
 
 // 输入变化后清空旧核验结果，避免残留过期提示
 watch(
@@ -519,33 +521,43 @@ watch(
   },
 )
 
-/** 失焦时核验部署密钥；空值交由必填规则提示 */
-async function handleInitCodeBlur() {
-  if (!needInstallCode.value || initCodeChecking.value) return
+/** 核验当前输入的部署密钥并写入内联状态；返回是否通过（进行中时复用同一任务） */
+function verifyInitCode(): Promise<boolean> {
+  if (initCodeVerifyTask) return initCodeVerifyTask
   const code = form.init_code.trim()
-  if (!code) return
-
   initCodeChecking.value = true
   initCodeStatus.value = 'validating'
   initCodeHelp.value = '正在校验部署密钥…'
-  try {
-    const res = await setupApi.verifyInstallCode(code)
-    // 请求期间输入已变化时丢弃过期结果（输入变化本就会清空状态）
-    if (form.init_code.trim() !== code) return
-    if (res.valid) {
-      initCodeStatus.value = 'success'
-      initCodeHelp.value = '部署密钥正确'
-    } else {
+  initCodeVerifyTask = (async () => {
+    try {
+      const res = await setupApi.verifyInstallCode(code)
+      // 请求期间输入已变化时丢弃过期结果（输入变化本就会清空状态）
+      if (form.init_code.trim() !== code) return false
+      if (res.valid) {
+        initCodeStatus.value = 'success'
+        initCodeHelp.value = '部署密钥正确'
+        return true
+      }
       initCodeStatus.value = 'error'
       initCodeHelp.value = res.message || '部署密钥错误，请输入官方邮件中的安装密钥'
+      return false
+    } catch {
+      // 网络等异常由拦截器统一提示，这里还原为常规校验状态
+      initCodeStatus.value = ''
+      initCodeHelp.value = ''
+      return false
+    } finally {
+      initCodeChecking.value = false
+      initCodeVerifyTask = null
     }
-  } catch {
-    // 网络等异常由拦截器统一提示，这里还原为常规校验状态
-    initCodeStatus.value = ''
-    initCodeHelp.value = ''
-  } finally {
-    initCodeChecking.value = false
-  }
+  })()
+  return initCodeVerifyTask
+}
+
+/** 失焦即时核验；空值交由必填规则提示 */
+function handleInitCodeBlur() {
+  if (!needInstallCode.value || initCodeChecking.value || !form.init_code.trim()) return
+  verifyInitCode()
 }
 
 const stageText = computed(() => {
@@ -584,12 +596,33 @@ const confirmPasswordRules = [
   },
 ]
 
-/** 账号步本地校验通过后进入创作方向选择步 */
+/** 账号步本地校验通过后进入创作方向选择步；官方部署需先通过部署密钥核验，未通过则拦截 */
 async function goRoleStep() {
+  if (loading.value) return
   try {
     await formRef.value?.validate()
   } catch {
     return
+  }
+  if (needInstallCode.value) {
+    // 已核验失败且输入未变（变化会清空状态）：直接拦截，不重复请求消耗防爆破额度
+    if (initCodeStatus.value === 'error') {
+      message.error(initCodeHelp.value || '部署密钥错误，请输入官方邮件中的安装密钥')
+      return
+    }
+    // 从未核验过或核验中断网：先核验再决定是否放行
+    if (initCodeStatus.value !== 'success') {
+      loading.value = true
+      try {
+        const passed = await verifyInitCode()
+        if (!passed) {
+          message.error(initCodeHelp.value || '部署密钥校验未通过，请检查后重试')
+          return
+        }
+      } finally {
+        loading.value = false
+      }
+    }
   }
   phase.value = 'role'
 }
