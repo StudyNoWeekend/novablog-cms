@@ -13,7 +13,7 @@
 #   ./deploy.sh --name llcms --yes                # 全部默认（内置 PG/Redis，端口 80/8080，latest）
 #   ./deploy.sh --name llcms --blog-port 9001 --admin-port 9002 --domain blog.example.com
 #   ./deploy.sh --name llcms --version v1.0.1     # 升级指定博客（数据保留）
-#   ./deploy.sh --name llcms --status | --logs | --down
+#   ./deploy.sh --name llcms --status | --logs | --down | --delete
 #   ./deploy.sh --name other --blog-port 9003 --admin-port 9004   # 再部署一个博客
 #
 set -euo pipefail
@@ -192,6 +192,7 @@ NovaBlog 部署脚本
   --status               查看容器状态（可 --name 指定博客，仅一个博客时自动选中）
   --logs                 跟踪应用日志
   --down                 停止并移除容器（挂载目录中的数据保留）
+  --delete               彻底删除指定博客：容器、反代配置与全部数据（须交互键入名称确认）
   -h, --help             显示本帮助
 EOF
 }
@@ -239,6 +240,7 @@ while [ $# -gt 0 ]; do
     --status) ACTION="status"; shift ;;
     --logs) ACTION="logs"; shift ;;
     --down) ACTION="down"; shift ;;
+    --delete) ACTION="delete"; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "未知参数：${1}（使用 --help 查看用法）" ;;
   esac
@@ -985,6 +987,73 @@ menu_redeploy() {
   redeploy_one "$name"
 }
 
+# menu_delete 交互入口：扫描部署 → 选博客 → 键名确认 → 彻底删除（容器/反代/数据）
+menu_delete() {
+  echo
+  c_info "===== 删除博客 ====="
+  scan_deployments
+  if [ "$SCAN_RECORD_COUNT" -eq 0 ]; then
+    c_warn "没有可删除的部署记录。"
+    return 0
+  fi
+  local blogs name
+  blogs="$(list_blogs | paste -sd'|' -)"
+  name="$(ask "要删除的博客（${blogs}）" "$(list_blogs | head -1)")"
+  # 严格归一化同 menu_redeploy：剔除输入法混入的全角/不可见字符，防止精确匹配悄悄失败
+  name="$(printf '%s' "$name" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9_-')"
+  case "|${blogs}|" in
+    *"|${name}|"*) ;;
+    *) c_err "博客 [${name}] 无部署记录。"; return 0 ;;
+  esac
+  delete_one "$name"
+}
+
+# delete_one 彻底删除单个博客：容器与网络、宿主机反代配置、<名称>/ 全部数据。
+# 全脚本最危险的路径：必须键入博客名称确认，输入不匹配或 EOF 一律取消且不动任何数据；
+# --yes 不绕过此确认（数据销毁不允许被非交互误触）。
+delete_one() { # $1=博客名称
+  local name="$1"
+  NAME="$name"
+  BLOG_DIR="$SCRIPT_DIR/$name"
+  ENV_FILE="$BLOG_DIR/.env"
+  if [ ! -f "$ENV_FILE" ]; then
+    c_err "博客 $name 无部署记录（缺 ${ENV_FILE}）。"
+    return 1
+  fi
+
+  echo
+  c_warn "即将彻底删除博客 [${name}]，内容包括："
+  echo "    1) 容器与 compose 网络（前缀 ${name}-）"
+  if [ "$(env_get NOVABLOG_HOST_NGINX)" = "1" ]; then
+    echo "    2) 宿主机 nginx 反代配置 ${NGINX_CONF_DIR}/${name}.conf"
+  fi
+  echo "    3) 数据目录 ${BLOG_DIR}（.env、config.yaml、uploads/themes/logs 与数据库数据）"
+  echo
+  local confirm=""
+  if ! read -r -p "此操作不可恢复！输入博客名称 ${name} 确认删除，其它输入取消: " confirm; then
+    confirm=""
+  fi
+  if [ "$confirm" != "$name" ]; then
+    c_info "已取消，未删除任何数据。"
+    return 0
+  fi
+
+  # 1) 容器与网络：--remove-orphans 顺带清掉本项目的游离容器；失败仅警告，继续清理数据
+  c_info "停止并移除容器与网络（${name}）..."
+  run_compose_from_env down --remove-orphans || c_warn "compose down 未完全成功，继续清理数据目录"
+
+  # 2) 宿主机反代 conf：与 --down 的清理条件一致（记录启用且本机 nginx 可用）
+  if [ "$(env_get NOVABLOG_HOST_NGINX)" = "1" ] && host_nginx_available; then
+    host_nginx_remove_conf
+  fi
+
+  # 3) 数据目录：config.yaml/.env 与 uploads/themes/logs/pg/redis 数据全在此目录，整目录移除
+  c_info "删除数据目录 ${BLOG_DIR} ..."
+  rm -rf "$BLOG_DIR"
+
+  c_info "博客 ${name} 已彻底删除。镜像未动（多博客共用）；同名可随时重新部署：./deploy.sh --name ${name}"
+}
+
 # ============================== 配置差异对比（升级用）==============================
 
 # yaml_top_keys 列出 YAML 顶层键（每行一个）
@@ -1379,7 +1448,7 @@ do_upgrade_one() { # $1=博客名称 $2=目标版本
   return 0
 }
 
-# main_menu 零参数交互主菜单：先获取最新版本号，再循环提供安装/升级/同配置重新部署/退出
+# main_menu 零参数交互主菜单：先获取最新版本号，再循环提供安装/升级/同配置重新部署/删除/退出
 main_menu() {
   fetch_latest_version
   while :; do
@@ -1391,9 +1460,10 @@ main_menu() {
     echo "  1. 全新安装"
     echo "  2. 容器升级"
     echo "  3. 同配置重新部署"
-    echo "  4. 退出"
+    echo "  4. 删除博客"
+    echo "  5. 退出"
     local choice=""
-    if ! read -r -p "请选择操作 [1/2/3/4]: " choice; then
+    if ! read -r -p "请选择操作 [1/2/3/4/5]: " choice; then
       echo
       c_info "已退出。"
       exit 0
@@ -1402,9 +1472,10 @@ main_menu() {
       1) menu_install ;;
       2) menu_upgrade ;;
       3) menu_redeploy ;;
-      4|q|Q|quit|exit) c_info "已退出。"; exit 0 ;;
+      4) menu_delete ;;
+      5|q|Q|quit|exit) c_info "已退出。"; exit 0 ;;
       "") : ;;
-      *) c_warn "无效选项：${choice}（请输入 1/2/3/4）" ;;
+      *) c_warn "无效选项：${choice}（请输入 1/2/3/4/5）" ;;
     esac
   done
 }
@@ -2201,6 +2272,11 @@ case "$ACTION" in
     c_info "停止并移除容器（挂载目录中的数据保留）..."
     run_compose_from_env down
     c_info "已停止。数据仍在 $ENV_FILE 配置的挂载目录里，重新部署执行 ./deploy.sh --name $NAME 即可。"
+    exit 0
+    ;;
+  delete)
+    # 彻底删除：容器/网络、反代配置与 <名称>/ 全部数据；键名确认在 delete_one 内强制执行
+    delete_one "$NAME"
     exit 0
     ;;
 esac
