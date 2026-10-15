@@ -14,6 +14,8 @@ func RegisterPublicRoutes(r *gin.RouterGroup, pc *controller.PublicController, p
 	{
 		install.GET("/status", pc.GetStatus)
 		install.POST("/init", pc.Init)
+		// 部署密钥即时核验（首装页失焦校验；失败计数与 /init 共享防爆破）
+		install.POST("/verify-code", pc.VerifyInstallCode)
 		// 首装初始化对象存储配置（可选，本地存储可跳过）
 		install.POST("/storage", pc.SetupStorage)
 		// 首装初始化博客外观：拉取官方默认主题（失败回退内置兜底）并激活

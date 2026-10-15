@@ -15,6 +15,11 @@ type InitReq struct {
 	Modules map[string]bool `json:"modules"`
 }
 
+// VerifyInstallCodeReq 部署密钥核验请求（首装页失焦即时校验，不落任何数据）。
+type VerifyInstallCodeReq struct {
+	InitCode string `json:"init_code" binding:"required,max=128"` // 待核验的部署密钥
+}
+
 // SetupStorageReq 首装向导存储配置请求。
 // provider 为空或 "local" 表示跳过，保持 config.yaml 的本地存储配置。
 type SetupStorageReq struct {
