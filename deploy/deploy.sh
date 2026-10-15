@@ -113,7 +113,7 @@ CONFIG_DIR="" UPLOADS_DIR="" THEMES_DIR="" LOGS_DIR="" FRONTEND_DIR="" FRONTEND_
 PGDATA_DIR="" REDISDATA_DIR=""
 EXTRA_MOUNTS=""           # 升级补写的新增挂载（宿主机路径:容器路径，分号分隔；.env 持久化）
 MARKET_URL=""
-INSTALL_CODE=""           # 官方部署首装安装码（--install-code；空=不启用校验，自部署默认）
+INSTALL_CODE=""           # 官方部署首装安装码（--install-code 或交互启用；空=不启用校验，自部署默认）
 
 NGINX_MODE=""            # ""=未指定(自动检测) / 1=启用 --host-nginx / 0=禁用 --no-host-nginx
 NGINX_CONF_DIR="/etc/nginx/conf.d"
@@ -180,9 +180,10 @@ NovaBlog 部署脚本
 
 其他
   --market-url <地址>    官方主题市场地址（首装拉取默认主题用，可留空）
-  --install-code <值|auto> 官方部署首装安装码：auto=自动生成随机码。写入 config.yaml
+  --install-code <值|auto> 官方部署首装安装码：auto=自动生成 UUID。写入 config.yaml
                          (install.init_code) 后首装必须携带，防止恶意抢先初始化；
-                         部署完成后在摘要中展示，请随邮件发给用户。不传则不启用（自部署）
+                         部署完成后在摘要中展示，请随邮件发给用户。不传时交互安装会
+                         询问是否启用（选 y 自动生成 UUID）；--yes 非交互模式不启用（自部署）
   --host-nginx           启用宿主机 nginx 反代：自动生成 <博客名>.conf 到 conf.d
                          并 systemctl reload nginx（域名须为裸域名，详见下方说明）
   --no-host-nginx        禁用宿主机 nginx 反代（默认：自动检测，交互时询问）
@@ -296,6 +297,18 @@ gen_secret() {
     openssl rand -hex "$bytes"
   else
     head -c "$bytes" /dev/urandom | od -An -tx1 | tr -d ' \n'
+  fi
+}
+
+# gen_uuid 生成标准 UUID（小写、带连字符）：优先 uuidgen（macOS 自带），
+# 其次 Linux 内核随机 UUID 接口，兜底 32 位随机 hex（后端 init_code 上限 128 字符，均兼容）
+gen_uuid() {
+  if command -v uuidgen >/dev/null 2>&1; then
+    uuidgen | tr 'A-Z' 'a-z'
+  elif [ -r /proc/sys/kernel/random/uuid ]; then
+    cat /proc/sys/kernel/random/uuid
+  else
+    gen_secret 16
   fi
 }
 
@@ -942,7 +955,7 @@ redeploy_one() { # $1=博客名称
     frontend_note="（空目录，使用后台安装的主题）"
   fi
   if [ -n "$install_code" ]; then
-    install_code_note="已配置（沿用 .env 记录）"
+    install_code_note="${install_code}（沿用 .env 记录，请随邮件发给用户）"
   else
     install_code_note="未启用（自部署）"
   fi
@@ -1782,11 +1795,18 @@ deploy_blog() {
     REDISDATA_DIR="$(abs_dir "${REDISDATA_DIR:-./$NAME/data/redis}")"
   fi
   [ -n "$MARKET_URL" ] || MARKET_URL="$(env_get NOVABLOG_MARKET_URL)"
-  # 官方部署安装码：先从 .env 沿用，--install-code auto 现场生成 32 位随机码（仅全新安装时生效，
-  # 沿用旧配置的场景下若配置中已有安装码会以配置为准）
+  # 官方部署安装码优先级：--install-code flag > .env 记录 > 交互询问；
+  # auto 统一转换为标准 UUID（仅全新安装时写入 config，沿用旧配置的场景下若配置中已有安装码会以配置为准）
   [ -n "$INSTALL_CODE" ] || INSTALL_CODE="$(env_get NOVABLOG_INSTALL_CODE)"
+  if [ -z "$INSTALL_CODE" ] && [ "$INTERACTIVE" = 1 ]; then
+    echo
+    c_info "===== 首装安装码（官方部署防恶意抢先初始化） ====="
+    if [ "$(ask_choice '是否启用首装安装码？（y=启用并自动生成 / n=不启用，自部署）' 'y|n' 'n')" = "y" ]; then
+      INSTALL_CODE="auto"
+    fi
+  fi
   if [ "$INSTALL_CODE" = "auto" ]; then
-    INSTALL_CODE="$(gen_secret 16)"
+    INSTALL_CODE="$(gen_uuid)"
     c_info "已自动生成首装安装码（部署完成后随摘要展示，请随邮件发给用户）"
   fi
 
@@ -1926,7 +1946,7 @@ themes:
 cors:
   allowed_origins: "$(yaml_quote "$CORS_ORIGINS")"
 YAML
-    # 官方部署安装码段：仅在显式启用（--install-code）时追加，自部署 config.yaml 保持原样
+    # 官方部署安装码段：仅在启用（--install-code / 交互选择启用）时追加，自部署 config.yaml 保持原样
     if [ -n "$INSTALL_CODE" ]; then
       {
         echo
@@ -2107,6 +2127,10 @@ EOF
     INSTALL_CODE_NOTE="未启用（自部署）"
   fi
   print_deploy_summary "$FRONTEND_NOTE" "$INSTALL_CODE_NOTE"
+  if [ -n "$INSTALL_CODE" ]; then
+    c_info "首装安装码：$INSTALL_CODE"
+    c_info "请把它随部署邮件一起发给用户；仅首次初始化向导需要填写（更换：编辑 config.yaml 的 install.init_code 后重启容器）。"
+  fi
 }
 
 # ============================== 入口分流 ==============================
