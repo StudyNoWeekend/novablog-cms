@@ -109,3 +109,20 @@ func (m *SongModel) Update(ctx context.Context, song *Song) error {
 func (m *SongModel) Delete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&Song{}).Error
 }
+
+// BatchUpdateSort 在事务内批量更新歌曲的 sort_order。
+func (m *SongModel) BatchUpdateSort(ctx context.Context, tx *gorm.DB, items []Song) error {
+	for _, item := range items {
+		if err := tx.Model(&Song{}).
+			Where("id = ?", item.ID).
+			Update("sort_order", item.SortOrder).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Transaction 暴露事务能力，供 logic 层使用。
+func (m *SongModel) Transaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return m.db.WithContext(ctx).Transaction(fn)
+}

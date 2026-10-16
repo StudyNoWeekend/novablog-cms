@@ -1,5 +1,10 @@
 <template>
   <div class="song-row" @click="emit('play')">
+    <!-- 拖拽把手（hover 显示，整行可拖拽排序） -->
+    <span class="drag-handle" title="拖拽排序" aria-label="拖拽排序">
+      <HolderOutlined />
+    </span>
+
     <!-- 来源图标（可点击跳转B站） -->
     <a
       :href="song.source_url"
@@ -15,15 +20,36 @@
     </a>
 
     <!-- 圆角封面 -->
-    <img
-      :src="coverUrl"
+    <SongCoverImg
+      :url="song.cover_url"
       :alt="song.title"
-      referrerpolicy="no-referrer"
+      :width="160"
       class="cover-img"
     />
 
     <!-- 标题 -->
     <div class="song-title" :title="song.title">{{ song.title }}</div>
+
+    <!-- 分类快改（点击弹出下拉立即切换） -->
+    <a-dropdown :trigger="['click']">
+      <span
+        class="category-chip"
+        :class="{ 'category-chip-none': !currentCategoryName }"
+        title="点击修改分类"
+        @click.stop
+      >
+        {{ currentCategoryName || '未分类' }}
+      </span>
+      <template #overlay>
+        <a-menu @click="handleCategoryMenuClick">
+          <a-menu-item v-for="cat in categories" :key="cat.id">
+            {{ cat.name }}
+          </a-menu-item>
+          <a-menu-divider v-if="categories.length" />
+          <a-menu-item key="__none__" :disabled="!song.category_id">未分类</a-menu-item>
+        </a-menu>
+      </template>
+    </a-dropdown>
 
     <!-- 作者 -->
     <div class="song-artist" :title="song.artist">{{ song.artist }}</div>
@@ -31,35 +57,67 @@
     <!-- 时长 -->
     <div class="song-duration">{{ formatDuration(song.duration) }}</div>
 
-    <!-- 播放按钮（hover 显示） -->
-    <div class="play-icon-wrapper">
-      <svg viewBox="0 0 24 24" fill="currentColor" class="play-icon">
-        <path d="M8 5v14l11-7z" />
-      </svg>
+    <!-- 操作按钮（hover 显示，占位避免布局位移） -->
+    <div class="row-actions">
+      <span class="action-btn" title="播放" aria-label="播放" @click.stop="emit('play')">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="action-icon">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </span>
+      <span class="action-btn" title="置顶" aria-label="置顶" @click.stop="emit('top')">
+        <VerticalAlignTopOutlined class="action-icon" />
+      </span>
+      <span class="action-btn" title="编辑" aria-label="编辑" @click.stop="emit('edit')">
+        <EditOutlined class="action-icon" />
+      </span>
+      <span class="action-btn action-danger" title="删除" aria-label="删除" @click.stop="emit('delete')">
+        <DeleteOutlined class="action-icon" />
+      </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import {
+  DeleteOutlined,
+  EditOutlined,
+  HolderOutlined,
+  VerticalAlignTopOutlined,
+} from '@ant-design/icons-vue'
 import type { Song } from '@/types/music'
-import { getThumbUrl } from '@/utils/image'
-import fallbackCover from '@/assets/brand/novablog-logo-mark.png'
+import type { Category } from '@/types/category'
+import SongCoverImg from '@/components/music/SongCoverImg.vue'
 
 const props = defineProps<{
   song: Song
+  categories: Category[]
 }>()
 
 const emit = defineEmits<{
   (e: 'play'): void
+  (e: 'edit'): void
+  (e: 'delete'): void
+  (e: 'top'): void
+  (e: 'change-category', categoryId: string): void
 }>()
 
-// B站封面 http -> https，避免混合内容拦截；COS 封面生成缩略图节省流量
-const coverUrl = computed(() => {
-  const url = props.song.cover_url
-  if (!url) return fallbackCover
-  return getThumbUrl(url.replace(/^http:\/\//, 'https://'), 160)
+const currentCategoryName = computed(() => {
+  if (!props.song.category_id) return ''
+  return props.categories.find((c) => c.id === props.song.category_id)?.name || ''
 })
+
+function handleCategoryMenuClick({ key }: { key: string | number }) {
+  if (key === '__none__') {
+    if (props.song.category_id) {
+      emit('change-category', '')
+    }
+    return
+  }
+  if (key !== props.song.category_id) {
+    emit('change-category', String(key))
+  }
+}
 
 function formatDuration(seconds: number): string {
   if (!seconds || seconds <= 0) return '--:--'
@@ -83,6 +141,27 @@ function formatDuration(seconds: number): string {
 
 .song-row:hover {
   background: var(--color-primary-light);
+}
+
+/* 拖拽把手 */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--text-tertiary);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.song-row:hover .drag-handle {
+  opacity: 1;
+}
+
+.drag-handle:hover {
+  color: var(--color-primary);
 }
 
 /* 来源图标 */
@@ -130,6 +209,33 @@ function formatDuration(seconds: number): string {
   white-space: nowrap;
 }
 
+/* 分类快改标签 */
+.category-chip {
+  flex-shrink: 0;
+  max-width: 120px;
+  padding: 1px 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.category-chip:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.category-chip-none {
+  color: var(--text-tertiary);
+  border-style: dashed;
+}
+
 /* 作者 */
 .song-artist {
   flex-shrink: 0;
@@ -151,26 +257,45 @@ function formatDuration(seconds: number): string {
   text-align: right;
 }
 
-/* 播放按钮 */
-.play-icon-wrapper {
+/* 行尾操作按钮 */
+.row-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  gap: 2px;
   flex-shrink: 0;
-  color: var(--color-primary);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
-.song-row:hover .play-icon-wrapper {
+.song-row:hover .row-actions {
   opacity: 1;
 }
 
-.play-icon {
-  width: 20px;
-  height: 20px;
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.action-btn:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.action-btn.action-danger:hover {
+  background: rgba(255, 77, 79, 0.1);
+  color: #ff4d4f;
+}
+
+.action-icon {
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
 }
 </style>

@@ -46,7 +46,7 @@
           <div class="cover-field">
             <div class="cover-preview" @click="showMediaPicker = true">
               <template v-if="formState.cover_url">
-                <img :src="formState.cover_url.replace(/^http:\/\//, 'https://')" alt="封面预览" referrerpolicy="no-referrer" class="cover-preview-img" />
+                <SongCoverImg :url="formState.cover_url" alt="封面预览" :width="320" class="cover-preview-img" />
                 <div class="cover-preview-overlay">
                   <PictureOutlined />
                 </div>
@@ -85,7 +85,7 @@
         <div class="batch-list">
           <div v-for="(item, index) in parseResults" :key="index" class="batch-item">
             <a-checkbox v-model:checked="item.selected" />
-            <img :src="item.cover_url ? item.cover_url.replace(/^http:\/\//, 'https://') : fallbackCover" :alt="item.title" referrerpolicy="no-referrer" class="batch-cover" />
+            <SongCoverImg :url="item.cover_url" :alt="item.title" :width="160" class="batch-cover" />
             <div class="batch-fields">
               <a-input v-model:value="item.title" placeholder="歌曲名称" size="small" />
               <a-input v-model:value="item.artist" placeholder="歌手" size="small" />
@@ -121,7 +121,7 @@ import { musicApi } from '@/api/music'
 import type { Song, SongCreateReq, ParseResult, BatchCreateSongReq } from '@/types/music'
 import type { Category } from '@/types/category'
 import MediaPicker from '@/components/media/MediaPicker.vue'
-import fallbackCover from '@/assets/brand/novablog-logo-mark.png'
+import SongCoverImg from '@/components/music/SongCoverImg.vue'
 
 const props = defineProps<{
   open: boolean
@@ -329,7 +329,8 @@ async function handleSave() {
         title: formState.title,
         artist: formState.artist,
         cover_url: formState.cover_url,
-        category_id: formState.category_id,
+        // 空字符串表示清空分类（后端将其置为 NULL）
+        category_id: formState.category_id ?? '',
         duration: formState.duration,
         sort_order: formState.sort_order,
       })

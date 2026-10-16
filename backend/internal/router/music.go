@@ -15,6 +15,8 @@ func RegisterMusicRoutes(r *gin.RouterGroup, musicController *controller.MusicCo
 		music.POST("/songs", musicController.CreateSong)
 		music.POST("/songs/batch", musicController.BatchCreateSongs)
 		music.GET("/songs", musicController.GetSongList)
+		// 注意：songs/sort 必须在 songs/:id 之前注册，否则会被 :id 匹配
+		music.PUT("/songs/sort", musicController.SortSongs)
 		music.GET("/songs/:id", musicController.GetSongByID)
 		music.PUT("/songs/:id", musicController.UpdateSong)
 		music.DELETE("/songs/:id", musicController.DeleteSong)

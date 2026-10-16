@@ -57,3 +57,12 @@ export interface ParseTask {
 export interface BatchCreateSongReq {
   songs: SongCreateReq[]
 }
+
+export interface SongSortItem {
+  id: string
+  sort_order: number
+}
+
+export interface SongSortReq {
+  items: SongSortItem[]
+}
