@@ -132,6 +132,22 @@ func Ping(ctx context.Context, baseURL, pushKey string) (*PingInfo, error) {
 	return &out, nil
 }
 
+// VerifyBlogResult 站点归属验证结果。
+type VerifyBlogResult struct {
+	Verified bool   `json:"verified"`
+	Username string `json:"username"` // 验证码所属的社区账号
+}
+
+// VerifyBlog 提交站点归属验证码（验证码本身即凭据，无需推送密钥）。
+func VerifyBlog(ctx context.Context, baseURL, code string) (*VerifyBlogResult, error) {
+	var out VerifyBlogResult
+	body := map[string]string{"verify_code": code}
+	if err := call(ctx, baseURL, http.MethodPost, "/verify/blog", "", body, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ArticleTypeInfo 社区内容类型字典条目。
 type ArticleTypeInfo struct {
 	ID        uint   `json:"id"`

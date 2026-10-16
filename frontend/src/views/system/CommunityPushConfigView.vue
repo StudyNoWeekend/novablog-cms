@@ -29,6 +29,12 @@
             autocomplete="new-password"
           />
         </a-form-item>
+        <a-form-item
+          label="社区验证码"
+          extra="在 NovaBlog 社区「个人设置 → 绑定博客」复制；保存配置时自动向社区确认博客归属，通过后社区账号获得「站长」标识"
+        >
+          <a-input v-model:value="form.verify_code" placeholder="粘贴社区个人设置页展示的验证码" allow-clear />
+        </a-form-item>
         <div class="config-actions">
           <a-button type="primary" :loading="saving" @click="handleSave">
             <SaveOutlined /> 保存配置
@@ -44,6 +50,14 @@
           class="test-result"
           :message="`连接成功：${testResult.credential_name}（博主 ${testResult.username}）`"
           :description="`社区账号博客地址：${testResult.blog_url || '未绑定'}`"
+        />
+        <a-alert
+          v-if="verifyResult"
+          :type="verifyResult.status === 'verified' ? 'success' : 'error'"
+          show-icon
+          class="test-result"
+          :message="verifyResult.status === 'verified' ? '博客归属验证成功' : '博客归属验证未通过'"
+          :description="verifyResult.message"
         />
       </a-form>
     </a-card>
@@ -112,10 +126,11 @@ import {
 } from '@/api/communityPush'
 
 const config = ref<CommunityPushConfig | null>(null)
-const form = reactive({ base_url: '', site_url: '', push_key: '' })
+const form = reactive({ base_url: '', site_url: '', push_key: '', verify_code: '' })
 const saving = ref(false)
 const testing = ref(false)
 const testResult = ref<{ username: string; blog_url: string; credential_name: string } | null>(null)
+const verifyResult = ref<{ status: 'verified' | 'failed'; message: string } | null>(null)
 
 const records = ref<CommunitySyncRecord[]>([])
 const recordsTotal = ref(0)
@@ -194,6 +209,7 @@ async function loadConfig() {
     form.base_url = config.value.base_url
     form.site_url = config.value.site_url
     form.push_key = ''
+    form.verify_code = config.value.verify_code || ''
   } catch {
     // 错误由拦截器统一提示
   }
@@ -206,13 +222,25 @@ async function handleSave() {
   }
   saving.value = true
   try {
-    config.value = await communityPushApi.updateConfig({
+    const result = await communityPushApi.updateConfig({
       base_url: form.base_url.trim(),
       site_url: form.site_url.trim(),
       push_key: form.push_key.trim() || undefined,
+      verify_code: form.verify_code.trim(),
     })
+    config.value = result
     form.push_key = ''
-    message.success('推送配置已保存')
+    // 验证码随保存一并提交给社区，结果单独提示
+    if (result.verify_status === 'verified') {
+      verifyResult.value = { status: 'verified', message: result.verify_message || '' }
+      message.success('推送配置已保存，博客归属验证通过')
+    } else if (result.verify_status === 'failed') {
+      verifyResult.value = { status: 'failed', message: result.verify_message || '验证码被社区拒绝' }
+      message.warning('推送配置已保存，但博客归属验证未通过')
+    } else {
+      verifyResult.value = null
+      message.success('推送配置已保存')
+    }
   } finally {
     saving.value = false
   }

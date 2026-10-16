@@ -10,10 +10,11 @@ import (
 
 // CommunityPushConfig CMS 推送到 NovaBlog 社区的运行配置，对应 community_push_configs 表（单行模式）。
 type CommunityPushConfig struct {
-	ID      string `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	BaseURL string `gorm:"type:varchar(500);not null;default:''"` // 社区 API 地址（空=未配置）
-	SiteURL string `gorm:"type:varchar(500);not null;default:''"` // 博客对外地址（拼 source_url）
-	PushKey string `gorm:"type:varchar(200);not null;default:''"` // 推送密钥 nbk_...（仅管理员接口可写，读取脱敏）
+	ID         string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	BaseURL    string    `gorm:"type:varchar(500);not null;default:''"` // 社区 API 地址（空=未配置）
+	SiteURL    string    `gorm:"type:varchar(500);not null;default:''"` // 博客对外地址（拼 source_url）
+	PushKey    string    `gorm:"type:varchar(200);not null;default:''"` // 推送密钥 nbk_...（仅管理员接口可写，读取脱敏）
+	VerifyCode string    `gorm:"type:varchar(200);not null;default:''"` // 社区归属验证码（保存时提交给社区完成「站长」验证）
 	CreatedAt  time.Time `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt  time.Time `gorm:"type:timestamptz;autoUpdateTime"`
 }
