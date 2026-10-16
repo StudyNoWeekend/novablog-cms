@@ -333,6 +333,7 @@ type CommunityPushConfigData struct {
 	SiteURL       string `json:"site_url"`
 	PushKeyPrefix string `json:"push_key_prefix"` // nbk_xxxxxxxx，完整密钥不回显
 	HasPushKey    bool   `json:"has_push_key"`
+	VerifyCode    string `json:"verify_code"` // 社区归属验证码（对外可见，直接回显）
 }
 
 // GetPushConfig 读取推送配置（yaml 出厂值兜底，DB 单行表优先）。
@@ -358,18 +359,27 @@ func (l *CommunityPushLogic) GetPushConfig(ctx context.Context) (*CommunityPushC
 		SiteURL:       siteURL,
 		PushKeyPrefix: prefix,
 		HasPushKey:    strings.TrimSpace(row.PushKey) != "",
+		VerifyCode:    row.VerifyCode,
 	}, nil
 }
 
 // UpdatePushConfigRequest 更新推送配置请求。
 type UpdatePushConfigRequest struct {
-	BaseURL string `json:"base_url"`
-	SiteURL string `json:"site_url"`
-	PushKey string `json:"push_key"` // 留空表示不修改已有密钥
+	BaseURL    string `json:"base_url"`
+	SiteURL    string `json:"site_url"`
+	PushKey    string `json:"push_key"`    // 留空表示不修改已有密钥
+	VerifyCode string `json:"verify_code"` // 社区归属验证码（允许清空）
 }
 
-// UpdatePushConfig 保存推送配置并热更新运行时值。
-func (l *CommunityPushLogic) UpdatePushConfig(ctx context.Context, r *UpdatePushConfigRequest) (*CommunityPushConfigData, error) {
+// UpdatePushConfigResult 保存推送配置结果（附验证码提交结果）。
+type UpdatePushConfigResult struct {
+	CommunityPushConfigData
+	VerifyStatus  string `json:"verify_status"`  // verified | failed | skipped
+	VerifyMessage string `json:"verify_message"` // failed 时的原因
+}
+
+// UpdatePushConfig 保存推送配置并热更新运行时值；携带验证码时顺带向社区提交归属验证。
+func (l *CommunityPushLogic) UpdatePushConfig(ctx context.Context, r *UpdatePushConfigRequest) (*UpdatePushConfigResult, error) {
 	row, err := l.configModel.GetConfig(ctx)
 	if err != nil {
 		return nil, err
@@ -380,6 +390,7 @@ func (l *CommunityPushLogic) UpdatePushConfig(ctx context.Context, r *UpdatePush
 	}
 	row.BaseURL = normalized
 	row.SiteURL = strings.TrimRight(strings.TrimSpace(r.SiteURL), "/")
+	row.VerifyCode = strings.TrimSpace(r.VerifyCode)
 	if strings.TrimSpace(r.PushKey) != "" {
 		row.PushKey = strings.TrimSpace(r.PushKey)
 	}
@@ -392,7 +403,44 @@ func (l *CommunityPushLogic) UpdatePushConfig(ctx context.Context, r *UpdatePush
 	SetCommunitySiteURL(row.SiteURL)
 	SetCommunityPushKey(row.PushKey)
 
-	return l.GetPushConfig(ctx)
+	config, err := l.GetPushConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := &UpdatePushConfigResult{CommunityPushConfigData: *config}
+	result.VerifyStatus, result.VerifyMessage = l.submitVerifyCode(ctx, row.BaseURL, row.VerifyCode)
+	return result, nil
+}
+
+// submitVerifyCode 向社区提交站点归属验证码。
+// skipped：未填写验证码；failed：社区拒绝或网络异常（已保存验证码，修正后重新保存即可）。
+func (l *CommunityPushLogic) submitVerifyCode(ctx context.Context, baseURL, code string) (status, message string) {
+	if code == "" {
+		return "skipped", ""
+	}
+	normalized, err := novapush.NormalizeBaseURL(baseURL)
+	if err != nil {
+		return "failed", "社区地址无效，无法提交验证码"
+	}
+	result, err := novapush.VerifyBlog(ctx, normalized, code)
+	if err != nil {
+		communityPushLog().Warn("提交站点归属验证码失败", zap.Error(err))
+		return "failed", mapVerifyError(err)
+	}
+	return "verified", "验证成功，社区账号「" + result.Username + "」已获得站长标识"
+}
+
+// mapVerifyError 验证码提交失败的用户可读原因（无推送密钥参与，不走 mapPushError 的密钥文案）。
+func mapVerifyError(err error) string {
+	var apiErr *novapush.APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.Message
+	}
+	var authErr *novapush.AuthError
+	if errors.As(err, &authErr) {
+		return authErr.Message
+	}
+	return "社区服务暂不可用，请稍后在社区页面刷新验证状态"
 }
 
 // TestConnection 连通性自检：ping 社区并回显博主信息。

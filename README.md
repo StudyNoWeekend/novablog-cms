@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
 </p>
 
-[官方站点](http://novablog.ditancafebar.cn) · [免费注册](http://novablog.ditancafebar.cn/register) · [主题仓库](https://github.com/StudyNoWeekend/novablog-web) · [Docker 镜像](https://github.com/StudyNoWeekend/novablog-cms/pkgs/container/novablog-cms) · [Skill 文档](https://github.com/StudyNoWeekend/novablog-cms/blob/main/frontend/public/docs/novablog-api.md)
+[官方站点](http://novablog.ditancafebar.cn) · [免费注册](http://novablog.ditancafebar.cn/register) · [作者博客](http://czf.ditancafebar.cn) · [主题仓库](https://github.com/StudyNoWeekend/novablog-web) · [Docker 镜像](https://github.com/StudyNoWeekend/novablog-cms/pkgs/container/novablog-cms) · [Skill 文档](https://github.com/StudyNoWeekend/novablog-cms/blob/main/frontend/public/docs/novablog-api.md)
 
 *官方站点 / 注册 / API 均为临时域名，后续可能更换*
 

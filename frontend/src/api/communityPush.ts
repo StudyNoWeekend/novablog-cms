@@ -7,6 +7,13 @@ export interface CommunityPushConfig {
   site_url: string
   push_key_prefix: string
   has_push_key: boolean
+  verify_code: string
+}
+
+// 保存配置的返回：附验证码提交结果（skipped=未填写 verified=已通过 failed=被拒绝）
+export interface UpdateCommunityPushConfigResult extends CommunityPushConfig {
+  verify_status?: 'verified' | 'failed' | 'skipped'
+  verify_message?: string
 }
 
 export interface CommunityPingInfo {
@@ -44,8 +51,8 @@ export interface CommunityPushSyncResult {
 export const communityPushApi = {
   getConfig: () => request.get<CommunityPushConfig>('/community-push/config'),
 
-  updateConfig: (data: { base_url: string; site_url: string; push_key?: string }) =>
-    request.put<CommunityPushConfig>('/community-push/config', data),
+  updateConfig: (data: { base_url: string; site_url: string; push_key?: string; verify_code?: string }) =>
+    request.put<UpdateCommunityPushConfigResult>('/community-push/config', data),
 
   testConnection: () => request.post<CommunityPingInfo>('/community-push/test'),
 
