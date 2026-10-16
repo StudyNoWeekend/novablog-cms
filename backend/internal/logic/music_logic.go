@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // MusicLogic 歌曲业务逻辑结构体。
@@ -122,7 +123,12 @@ func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSon
 		song.CoverURL = l.saveCoverToStorage(ctx, *r.CoverURL)
 	}
 	if r.CategoryID != nil {
-		song.CategoryID = r.CategoryID
+		if strings.TrimSpace(*r.CategoryID) == "" {
+			// 空字符串表示清空分类，置为 NULL（避免写空串触发 uuid 外键错误）
+			song.CategoryID = nil
+		} else {
+			song.CategoryID = r.CategoryID
+		}
 	}
 	if r.Duration != nil {
 		song.Duration = *r.Duration
@@ -148,6 +154,21 @@ func (l *MusicLogic) DeleteSong(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+// SortSongs 批量更新歌曲排序，事务内执行。
+func (l *MusicLogic) SortSongs(ctx context.Context, r *req.SortSongsReq) error {
+	items := make([]model.Song, 0, len(r.Items))
+	for _, it := range r.Items {
+		items = append(items, model.Song{
+			ID:        it.ID,
+			SortOrder: it.SortOrder,
+		})
+	}
+
+	return l.songModel.Transaction(ctx, func(tx *gorm.DB) error {
+		return l.songModel.BatchUpdateSort(ctx, tx, items)
+	})
 }
 
 // StartParse 启动 B 站链接解析任务。

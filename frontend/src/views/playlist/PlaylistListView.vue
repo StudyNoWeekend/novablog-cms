@@ -18,7 +18,7 @@
           <div class="song-list-area">
             <div class="page-header">
               <h1 class="page-title">音乐播放列表</h1>
-              <a-button type="primary" @click="showAddModal = true">
+              <a-button type="primary" @click="openAddModal">
                 <PlusOutlined /> 添加歌曲
               </a-button>
             </div>
@@ -47,7 +47,7 @@
               v-else-if="songs.length === 0"
               description="还没有歌曲，点击添加吧"
             >
-              <a-button type="primary" @click="showAddModal = true">
+              <a-button type="primary" @click="openAddModal">
                 <PlusOutlined /> 添加歌曲
               </a-button>
             </a-empty>
@@ -55,10 +55,25 @@
             <!-- 歌曲列表 -->
             <div v-else class="song-list">
               <SongCard
-                v-for="song in songs"
+                v-for="(song, index) in songs"
                 :key="song.id"
                 :song="song"
+                :categories="categories"
+                :draggable="true"
+                :class="{
+                  'is-dragging': dragIndex === index,
+                  'is-drag-over': dragOverIndex === index,
+                }"
+                @dragstart="handleDragStart(index, $event)"
+                @dragover.prevent="handleDragOver(index)"
+                @dragleave="dragOverIndex = null"
+                @drop.prevent="handleDrop()"
+                @dragend="handleDragEnd"
                 @play="playSong(song)"
+                @edit="openEditModal(song)"
+                @delete="handleDeleteSong(song)"
+                @top="handleTopSong(song)"
+                @change-category="(categoryId: string) => handleChangeCategory(song, categoryId)"
               />
             </div>
 
@@ -87,11 +102,12 @@
           @close="closePlayer"
         />
 
-        <!-- 添加歌曲弹窗 -->
+        <!-- 添加/编辑歌曲弹窗 -->
         <SongFormModal
           v-model:open="showAddModal"
           :categories="categories"
-          @saved="loadSongs"
+          :song="editingSong"
+          @saved="onSongSaved"
         />
       </a-tab-pane>
 
@@ -282,6 +298,148 @@ function closePlayer() {
   currentSong.value = null
 }
 
+// ---- 编辑/删除歌曲 ----
+const editingSong = ref<Song | undefined>(undefined)
+
+function openAddModal() {
+  editingSong.value = undefined
+  showAddModal.value = true
+}
+
+function openEditModal(song: Song) {
+  editingSong.value = song
+  showAddModal.value = true
+}
+
+function onSongSaved() {
+  editingSong.value = undefined
+  loadSongs()
+}
+
+function handleDeleteSong(song: Song) {
+  Modal.confirm({
+    title: '确认删除',
+    content: `删除歌曲「${song.title}」后无法恢复，确定要删除吗？`,
+    okText: '删除',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        await musicApi.deleteSong(song.id)
+        message.success('删除成功')
+        loadSongs()
+      } catch {
+        // 错误由拦截器处理
+      }
+    },
+  })
+}
+
+// ---- 分类快改 ----
+async function handleChangeCategory(song: Song, categoryId: string) {
+  const prev = song.category_id
+  const next = categoryId || null
+  // 乐观更新本地状态
+  song.category_id = next
+  // 当前按分类筛选且歌曲被移走时，从列表中移除
+  if (selectedCategory.value && next !== selectedCategory.value) {
+    songs.value = songs.value.filter((s) => s.id !== song.id)
+    total.value = Math.max(0, total.value - 1)
+  }
+  try {
+    await musicApi.updateSong(song.id, { category_id: categoryId })
+    message.success('分类已更新')
+  } catch {
+    // 更新失败回滚并重拉列表
+    song.category_id = prev
+    loadSongs()
+  }
+}
+
+// ---- 排序（拖拽 + 置顶）----
+const dragIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+function handleDragStart(index: number, e: DragEvent) {
+  dragIndex.value = index
+  // Firefox 需要先 setData 才会触发拖拽
+  e.dataTransfer?.setData('text/plain', String(index))
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+  }
+}
+
+function handleDragOver(index: number) {
+  if (dragIndex.value === null || dragIndex.value === index) return
+  dragOverIndex.value = index
+}
+
+function handleDragEnd() {
+  dragIndex.value = null
+  dragOverIndex.value = null
+}
+
+function handleDrop() {
+  const from = dragIndex.value
+  const to = dragOverIndex.value
+  handleDragEnd()
+  if (from === null || to === null || from === to) return
+  persistSortWithMove(toGlobalIndex(from), toGlobalIndex(to))
+}
+
+function toGlobalIndex(localIndex: number): number {
+  return (page.value - 1) * pageSize.value + localIndex
+}
+
+// 拉取当前分类筛选下的全量歌曲（后端 page_size 上限 100，需分页循环）
+async function fetchAllSongsInScope(): Promise<Song[]> {
+  const all: Song[] = []
+  let p = 1
+  for (;;) {
+    const params: { category_id?: string; page: number; page_size: number } = {
+      page: p,
+      page_size: 100,
+    }
+    if (selectedCategory.value) params.category_id = selectedCategory.value
+    const res = await musicApi.getSongs(params)
+    const list = res.list || []
+    all.push(...list)
+    if (list.length === 0 || all.length >= (res.total || 0)) break
+    p++
+  }
+  return all
+}
+
+// 全量归一化保存：把 [from → to] 的移动合入全量顺序后统一编号提交，失败时回滚重拉
+async function persistSortWithMove(from: number, to: number) {
+  try {
+    const all = await fetchAllSongsInScope()
+    if (from < 0 || from >= all.length) return
+    const moved = all.splice(from, 1)[0]
+    all.splice(Math.max(0, Math.min(to, all.length)), 0, moved)
+    await musicApi.sortSongs({
+      items: all.map((s, idx) => ({ id: s.id, sort_order: idx + 1 })),
+    })
+    message.success('排序已更新')
+  } catch {
+    // 错误由拦截器提示，finally 中回滚到服务端顺序
+  } finally {
+    loadSongs()
+  }
+}
+
+// 置顶：移动到全量顺序第 0 位（置顶后仍可被拖拽换位）
+function handleTopSong(song: Song) {
+  const localIndex = songs.value.findIndex((s) => s.id === song.id)
+  if (localIndex < 0) return
+  const globalIndex = toGlobalIndex(localIndex)
+  if (globalIndex === 0) {
+    message.info('该歌曲已在最前')
+    return
+  }
+  persistSortWithMove(globalIndex, 0)
+}
+
 // ---- 第三方歌单相关 ----
 const playlists = ref<ThirdPartyPlaylist[]>([])
 const loadingPlaylists = ref(false)
@@ -380,6 +538,16 @@ function onPlaylistSaved() {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* 拖拽排序状态（作用于 SongCard 根元素） */
+.is-dragging {
+  opacity: 0.5;
+}
+
+.is-drag-over {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -2px;
 }
 
 .skeleton-row {

@@ -3,10 +3,10 @@
     <div v-if="currentSong" class="player-bar">
       <div class="player-side">
         <div class="player-info">
-          <img
-            :src="coverUrl || fallbackCover"
+          <SongCoverImg
+            :url="currentSong.cover_url"
             :alt="currentSong.title"
-            referrerpolicy="no-referrer"
+            :width="96"
             class="player-cover"
           />
           <div class="player-meta">
@@ -66,12 +66,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { musicApi } from '@/api/music'
 import type { Song } from '@/types/music'
-import { getThumbUrl } from '@/utils/image'
 import { message } from 'ant-design-vue'
-import fallbackCover from '@/assets/brand/novablog-logo-mark.png'
+import SongCoverImg from '@/components/music/SongCoverImg.vue'
 
 const props = defineProps<{
   currentSong: Song | null
@@ -88,14 +87,6 @@ const emit = defineEmits<{
 const playerSrc = ref('')
 const isLoading = ref(false)
 const currentSongId = ref('')
-
-// 将 B 站封面的 HTTP 协议转为 HTTPS，避免混合内容拦截
-function fixCoverUrl(url: string): string {
-  if (!url) return ''
-  return url.replace(/^http:\/\//, 'https://')
-}
-
-const coverUrl = computed(() => getThumbUrl(fixCoverUrl(props.currentSong?.cover_url || ''), 96))
 
 function onFrameLoad() {
   isLoading.value = false

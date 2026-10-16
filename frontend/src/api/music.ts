@@ -6,6 +6,7 @@ import type {
   SongUpdateReq,
   ParseTask,
   BatchCreateSongReq,
+  SongSortReq,
 } from '@/types/music'
 
 export const musicApi = {
@@ -24,6 +25,9 @@ export const musicApi = {
   },
   deleteSong(id: string) {
     return request.delete(`/music/songs/${id}`)
+  },
+  sortSongs(data: SongSortReq) {
+    return request.put('/music/songs/sort', data)
   },
 
   // 解析

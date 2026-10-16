@@ -102,6 +102,20 @@ func (c *MusicController) DeleteSong(ctx *gin.Context) {
 	response.Success(ctx, nil)
 }
 
+// SortSongs 批量排序歌曲 PUT /api/v1/music/songs/sort
+func (c *MusicController) SortSongs(ctx *gin.Context) {
+	var r req.SortSongsReq
+	if err := ctx.ShouldBindJSON(&r); err != nil {
+		response.Fail(ctx, enum.ErrInvalidParam.Code, enum.ErrInvalidParam.Msg, enum.ErrInvalidParam.HttpCode)
+		return
+	}
+	if err := c.logic.SortSongs(ctx, &r); err != nil {
+		response.HandleError(ctx, err)
+		return
+	}
+	response.Success(ctx, nil)
+}
+
 // ParseMusic 解析B站音乐链接 POST /api/v1/music/parse
 func (c *MusicController) ParseMusic(ctx *gin.Context) {
 	var r req.ParseMusicReq

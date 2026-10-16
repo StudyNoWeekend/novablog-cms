@@ -39,3 +39,14 @@ type ParseMusicReq struct {
 type BatchCreateSongReq struct {
 	Songs []CreateSongReq `json:"songs" binding:"required,min=1,dive"`
 }
+
+// SortSongItem 歌曲排序项请求参数。
+type SortSongItem struct {
+	ID        string `json:"id" binding:"required"`
+	SortOrder int    `json:"sort_order"`
+}
+
+// SortSongsReq 批量排序歌曲请求参数。
+type SortSongsReq struct {
+	Items []SortSongItem `json:"items" binding:"required,min=1"`
+}
