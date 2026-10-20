@@ -33,6 +33,16 @@
             :maxlength="500"
             class="desc-input"
           />
+          <!-- 分类设置 -->
+          <div class="category-setting">
+            <div class="category-label">分类</div>
+            <CategorySelect
+              v-model="form.category_id"
+              type="portfolio"
+              placeholder="选择分类（可选）"
+              class="category-select"
+            />
+          </div>
           <!-- 封面设置 -->
           <div class="cover-setting">
             <div class="cover-label">封面设置</div>
@@ -209,6 +219,7 @@ import {
 import { portfolioApi } from '@/api/portfolio'
 import type { PortfolioDetail, PortfolioItem } from '@/types/portfolio'
 import PortfolioItemPicker from '@/components/portfolio/PortfolioItemPicker.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -224,6 +235,7 @@ const items = ref<PortfolioItem[]>([])
 const form = reactive({
   name: '',
   description: '',
+  category_id: undefined as string | undefined,
 })
 
 // 封面设置
@@ -276,6 +288,7 @@ async function fetchDetail() {
     detail.value = res
     form.name = res.name
     form.description = res.description || ''
+    form.category_id = res.category_id || undefined
     coverMode.value = res.cover_mode ?? 0
     coverPresetId.value = res.cover_preset_id || null
     coverPreviewUrl.value = res.cover_url || ''
@@ -301,6 +314,7 @@ async function handleSave() {
     await portfolioApi.update(portfolioId.value, {
       name: form.name.trim(),
       description: form.description.trim(),
+      category_id: form.category_id,
       cover_mode: coverMode.value,
       cover_preset_id:
         coverMode.value === 1 ? coverPresetId.value || undefined : undefined,
@@ -500,6 +514,22 @@ async function persistSort() {
 .name-input {
   font-size: 18px;
   font-weight: 600;
+}
+
+.category-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #29365C);
+}
+
+.category-select {
+  max-width: 320px;
 }
 
 .cover-setting {

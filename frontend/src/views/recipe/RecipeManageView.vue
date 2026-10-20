@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="recipe" @select="handleCategorySelect" />
+
     <a-card>
       <div class="toolbar">
         <a-input-search
@@ -30,7 +33,10 @@
             <div class="title-cell">
               <img v-if="record.cover" :src="record.cover" class="cover-thumb" referrerpolicy="no-referrer" />
               <div v-else class="cover-thumb placeholder"><CoffeeOutlined /></div>
-              <span class="title-text">{{ record.title }}</span>
+              <div>
+                <div class="title-text">{{ record.title }}</div>
+                <div v-if="record.category_name" class="sub-text">{{ record.category_name }}</div>
+              </div>
             </div>
           </template>
           <template v-else-if="column.key === 'difficulty'">
@@ -97,9 +103,14 @@
             <a-input-number v-model:value="form.servings" :min="1" style="width: 100%" />
           </a-form-item>
         </div>
-        <a-form-item label="标签（逗号分隔）">
-          <a-input v-model:value="form.tags" placeholder="如：家常菜,下饭菜" :maxlength="500" />
-        </a-form-item>
+        <div class="form-row">
+          <a-form-item label="分类">
+            <CategorySelect v-model="form.category_id" type="recipe" placeholder="选择分类（可选）" />
+          </a-form-item>
+          <a-form-item label="标签（逗号分隔）" class="span-2">
+            <a-input v-model:value="form.tags" placeholder="如：家常菜,下饭菜" :maxlength="500" />
+          </a-form-item>
+        </div>
 
         <a-form-item label="食材清单">
           <div class="dynamic-list">
@@ -156,10 +167,13 @@ import { recipeApi } from '@/api/recipe'
 import type { Recipe, RecipeIngredient, RecipeStep } from '@/types/recipe'
 import MediaPicker from '@/components/media/MediaPicker.vue'
 import ImageField from '@/components/media/ImageField.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
 const keyword = ref('')
+const categoryFilter = ref<string | undefined>(undefined)
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const list = ref<Recipe[]>([])
@@ -180,6 +194,7 @@ const form = reactive({
   minutes: 0,
   servings: 1,
   tags: '',
+  category_id: undefined as string | undefined,
   ingredients: [] as RecipeIngredient[],
   steps: [] as RecipeStep[],
   status: 0,
@@ -219,6 +234,7 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
+      category_id: categoryFilter.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -228,6 +244,12 @@ async function fetchList() {
   } finally {
     loading.value = false
   }
+}
+
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
 }
 
 function handleTableChange(p: { current?: number; pageSize?: number }) {
@@ -247,6 +269,7 @@ function resetForm() {
   form.minutes = 0
   form.servings = 1
   form.tags = ''
+  form.category_id = undefined
   form.ingredients = []
   form.steps = []
   form.status = 0
@@ -270,6 +293,7 @@ function handleEdit(record: Recipe) {
   form.minutes = record.minutes || 0
   form.servings = record.servings || 1
   form.tags = record.tags || ''
+  form.category_id = record.category_id || undefined
   form.ingredients = (record.ingredients || []).map((i) => ({ ...i }))
   form.steps = (record.steps || []).map((s) => ({ ...s }))
   form.status = record.status
@@ -289,6 +313,7 @@ function buildPayload() {
     minutes: form.minutes,
     servings: form.servings,
     tags: form.tags.trim() || undefined,
+    category_id: form.category_id,
     ingredients: form.ingredients.filter((i) => i.name.trim()),
     steps: form.steps.filter((s) => s.text.trim()),
     status: form.status,
@@ -383,10 +408,19 @@ function handleDelete(record: Recipe) {
   font-weight: 500;
 }
 
+.sub-text {
+  font-size: 12px;
+  color: #8A93A8;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+}
+
+.span-2 {
+  grid-column: span 2;
 }
 
 .cover-picker {

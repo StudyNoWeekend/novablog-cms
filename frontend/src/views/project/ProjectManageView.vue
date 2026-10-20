@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="project" @select="handleCategorySelect" />
+
     <a-card>
       <div class="project-toolbar">
         <a-input-search
@@ -14,13 +17,6 @@
           placeholder="搜索项目名称/简介..."
           style="width: 220px"
           allow-clear
-        />
-        <a-select
-          v-model:value="filterCategory"
-          placeholder="全部领域"
-          style="width: 150px"
-          allow-clear
-          :options="filterCategoryOptions"
         />
         <a-select
           v-model:value="filterStatus"
@@ -49,8 +45,8 @@
               <div v-else class="cover-placeholder">
                 <ProjectOutlined />
               </div>
-              <a-tag v-if="item.category" class="category-tag" color="blue">
-                {{ item.category }}
+              <a-tag v-if="item.category_name || item.category" class="category-tag" color="blue">
+                {{ item.category_name || item.category }}
               </a-tag>
               <a-tag v-else class="category-tag">未分类</a-tag>
             </div>
@@ -155,13 +151,8 @@
         </a-form-item>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="领域分类">
-              <a-auto-complete
-                v-model:value="form.category"
-                :options="presetCategoryOptions"
-                placeholder="摄影 / 视频剪辑 / 技术开发，可自定义"
-                allow-clear
-              />
+            <a-form-item label="分类">
+              <CategorySelect v-model="form.category_id" type="project" placeholder="选择分类（可选）" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
@@ -288,7 +279,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -304,13 +295,10 @@ import { projectApi } from '@/api/project'
 import type { Project } from '@/types/project'
 import { getThumbUrl } from '@/utils/image'
 import MediaPicker from '@/components/media/MediaPicker.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
-
-/** 领域分类预设项，支持自由输入其他行业 */
-const PRESET_CATEGORIES = ['摄影', '视频剪辑', '技术开发', '设计', '其他']
-
-const presetCategoryOptions = PRESET_CATEGORIES.map((c) => ({ value: c }))
 
 const statusOptions = [
   { value: 0, label: '草稿' },
@@ -320,21 +308,13 @@ const statusOptions = [
 const keyword = ref('')
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
-const filterCategory = ref<string | undefined>(undefined)
 const filterStatus = ref<number | undefined>(undefined)
+const categoryFilter = ref<string | undefined>(undefined)
 
 const list = ref<Project[]>([])
 const loading = ref(false)
 
 const { page, pageSize, total, reset, handlePageChange: changePagination } = usePagination(12)
-
-/** 筛选下拉选项 = 预设分类 + 当前列表中实际出现的分类 */
-const filterCategoryOptions = computed(() => {
-  const existed = list.value
-    .map((item) => item.category)
-    .filter((c): c is string => !!c && !PRESET_CATEGORIES.includes(c))
-  return Array.from(new Set([...PRESET_CATEGORIES, ...existed])).map((c) => ({ value: c, label: c }))
-})
 
 const modalVisible = ref(false)
 const modalLoading = ref(false)
@@ -345,7 +325,7 @@ const mediaPickerVisible = ref(false)
 
 const form = reactive({
   title: '',
-  category: '',
+  category_id: undefined as string | undefined,
   role: '',
   client: '',
   cover_url: '',
@@ -362,7 +342,7 @@ const form = reactive({
 
 watch(keyword, setDebounce)
 
-watch([debouncedKeyword, filterCategory, filterStatus], () => {
+watch([debouncedKeyword, filterStatus], () => {
   reset()
   fetchList()
 })
@@ -378,7 +358,7 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
-      category: filterCategory.value || undefined,
+      category_id: categoryFilter.value,
       status: filterStatus.value,
     })
     list.value = res.list || []
@@ -391,6 +371,12 @@ async function fetchList() {
   }
 }
 
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
+}
+
 function handlePageChange(newPage: number, newPageSize?: number) {
   changePagination(newPage, newPageSize)
   fetchList()
@@ -398,7 +384,7 @@ function handlePageChange(newPage: number, newPageSize?: number) {
 
 function resetForm() {
   form.title = ''
-  form.category = ''
+  form.category_id = undefined
   form.role = ''
   form.client = ''
   form.cover_url = ''
@@ -425,7 +411,7 @@ function handleEdit(item: Project) {
   editingId.value = item.id
   resetForm()
   form.title = item.title
-  form.category = item.category || ''
+  form.category_id = item.category_id || undefined
   form.role = item.role || ''
   form.client = item.client || ''
   form.cover_url = item.cover_url || ''
@@ -470,7 +456,7 @@ async function handleSubmit() {
     if (modalMode.value === 'create') {
       await projectApi.create({
         title: form.title.trim(),
-        category: form.category.trim() || undefined,
+        category_id: form.category_id,
         role: form.role.trim() || undefined,
         client: form.client.trim() || undefined,
         cover_url: form.cover_url.trim() || undefined,
@@ -488,7 +474,7 @@ async function handleSubmit() {
     } else {
       await projectApi.update(editingId.value, {
         title: form.title.trim(),
-        category: form.category.trim(),
+        category_id: form.category_id,
         role: form.role.trim(),
         client: form.client.trim(),
         cover_url: form.cover_url.trim(),

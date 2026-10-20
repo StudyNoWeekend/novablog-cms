@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="book" @select="handleCategorySelect" />
+
     <a-card>
       <div class="toolbar">
         <a-input-search
@@ -37,7 +40,9 @@
               <div v-else class="cover-thumb placeholder"><ReadOutlined /></div>
               <div>
                 <div class="title-text">{{ record.title }}</div>
-                <div class="sub-text">{{ record.author || '未知作者' }}</div>
+                <div class="sub-text">
+                  {{ [record.author, record.category_name].filter(Boolean).join(' · ') || '未知作者' }}
+                </div>
               </div>
             </div>
           </template>
@@ -89,6 +94,11 @@
             <a-rate v-model:value="form.rating" :count="5" />
           </a-form-item>
         </div>
+        <div class="form-row">
+          <a-form-item label="分类">
+            <CategorySelect v-model="form.category_id" type="book" placeholder="选择分类（可选）" />
+          </a-form-item>
+        </div>
         <a-form-item label="封面图">
           <MediaPicker v-model:visible="mediaPickerVisible" module="book" @selected="handleMediaSelected" />
           <ImageField v-model="form.cover" type="book" with-preset :search-keyword="form.title" placeholder="或直接粘贴封面地址">
@@ -130,11 +140,14 @@ import { bookApi } from '@/api/book'
 import type { Book } from '@/types/book'
 import MediaPicker from '@/components/media/MediaPicker.vue'
 import ImageField from '@/components/media/ImageField.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
 const keyword = ref('')
 const readingStatusFilter = ref<string | undefined>(undefined)
+const categoryFilter = ref<string | undefined>(undefined)
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const list = ref<Book[]>([])
@@ -156,6 +169,7 @@ const form = reactive({
   rating: 0,
   reading_status: 'want' as Book['reading_status'],
   review: '',
+  category_id: undefined as string | undefined,
   status: 0,
 })
 
@@ -194,6 +208,7 @@ async function fetchList() {
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
       reading_status: readingStatusFilter.value || undefined,
+      category_id: categoryFilter.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -203,6 +218,12 @@ async function fetchList() {
   } finally {
     loading.value = false
   }
+}
+
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
 }
 
 function handleTableChange(p: { current?: number; pageSize?: number }) {
@@ -225,6 +246,7 @@ function resetForm() {
   form.rating = 0
   form.reading_status = 'want'
   form.review = ''
+  form.category_id = undefined
   form.status = 0
   startedAt.value = null
   finishedAt.value = null
@@ -247,6 +269,7 @@ function handleEdit(record: Book) {
   form.rating = record.rating || 0
   form.reading_status = record.reading_status
   form.review = record.review || ''
+  form.category_id = record.category_id || undefined
   form.status = record.status
   startedAt.value = record.started_at ? dayjs(record.started_at) : null
   finishedAt.value = record.finished_at ? dayjs(record.finished_at) : null
@@ -267,6 +290,7 @@ function buildPayload() {
     review: form.review.trim() || undefined,
     started_at: startedAt.value ? startedAt.value.toISOString() : undefined,
     finished_at: finishedAt.value ? finishedAt.value.toISOString() : undefined,
+    category_id: form.category_id,
     status: form.status,
   }
 }

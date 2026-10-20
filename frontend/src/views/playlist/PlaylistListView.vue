@@ -313,6 +313,8 @@ function openEditModal(song: Song) {
 
 function onSongSaved() {
   editingSong.value = undefined
+  // 保存时可能自动创建了新分类，同步刷新侧栏与卡片分类下拉
+  loadCategories()
   loadSongs()
 }
 

@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="tech_stack" @select="handleCategorySelect" />
+
     <a-card>
       <div class="toolbar">
         <a-input-search
@@ -15,13 +18,6 @@
           style="width: 240px"
           allow-clear
         />
-        <a-select v-model:value="categoryFilter" style="width: 160px" allow-clear>
-          <a-select-option value="language">语言</a-select-option>
-          <a-select-option value="framework">框架</a-select-option>
-          <a-select-option value="tool">工具</a-select-option>
-          <a-select-option value="database">数据库</a-select-option>
-          <a-select-option value="other">其他</a-select-option>
-        </a-select>
       </div>
 
       <a-table
@@ -36,7 +32,8 @@
           <template v-if="column.key === 'name'">
             <div class="title-cell">
               <span class="name-text">{{ record.name }}</span>
-              <a-tag v-if="record.category">{{ categoryLabel(record.category) }}</a-tag>
+              <a-tag v-if="record.category_name">{{ record.category_name }}</a-tag>
+              <a-tag v-else-if="record.category">{{ categoryLabel(record.category) }}</a-tag>
             </div>
           </template>
           <template v-else-if="column.key === 'level'">
@@ -71,13 +68,7 @@
         </a-form-item>
         <div class="form-row">
           <a-form-item label="分类">
-            <a-select v-model:value="form.category" allow-clear>
-              <a-select-option value="language">语言</a-select-option>
-              <a-select-option value="framework">框架</a-select-option>
-              <a-select-option value="tool">工具</a-select-option>
-              <a-select-option value="database">数据库</a-select-option>
-              <a-select-option value="other">其他</a-select-option>
-            </a-select>
+            <CategorySelect v-model="form.category_id" type="tech_stack" placeholder="选择分类（可选）" />
           </a-form-item>
           <a-form-item label="熟练度">
             <a-select v-model:value="form.level">
@@ -117,6 +108,8 @@ import { PlusOutlined } from '@ant-design/icons-vue'
 import { techStackApi } from '@/api/tech-stack'
 import type { TechStackItem } from '@/types/tech-stack'
 import ImageField from '@/components/media/ImageField.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
@@ -135,7 +128,7 @@ const editingId = ref('')
 
 const form = reactive({
   name: '',
-  category: undefined as string | undefined,
+  category_id: undefined as string | undefined,
   icon: '',
   level: 2,
   description: '',
@@ -159,7 +152,7 @@ const paginationConfig = computed(() => ({
 }))
 
 watch(keyword, setDebounce)
-watch([debouncedKeyword, categoryFilter], () => {
+watch([debouncedKeyword], () => {
   reset()
   fetchList()
 })
@@ -175,7 +168,7 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
-      category: categoryFilter.value || undefined,
+      category_id: categoryFilter.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -185,6 +178,12 @@ async function fetchList() {
   } finally {
     loading.value = false
   }
+}
+
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
 }
 
 function handleTableChange(p: { current?: number; pageSize?: number }) {
@@ -206,7 +205,7 @@ function levelColor(l: number): string {
 
 function resetForm() {
   form.name = ''
-  form.category = undefined
+  form.category_id = undefined
   form.icon = ''
   form.level = 2
   form.description = ''
@@ -225,7 +224,7 @@ function handleEdit(record: TechStackItem) {
   editingId.value = record.id
   resetForm()
   form.name = record.name
-  form.category = record.category || undefined
+  form.category_id = record.category_id || undefined
   form.icon = record.icon || ''
   form.level = record.level || 1
   form.description = record.description || ''
@@ -236,7 +235,7 @@ function handleEdit(record: TechStackItem) {
 function buildPayload() {
   return {
     name: form.name.trim(),
-    category: form.category || undefined,
+    category_id: form.category_id,
     icon: form.icon.trim() || undefined,
     level: form.level,
     description: form.description.trim() || undefined,

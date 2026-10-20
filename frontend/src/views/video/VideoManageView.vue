@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="video" @select="handleCategorySelect" />
+
     <a-card>
       <div class="video-toolbar">
         <a-input-search
@@ -46,6 +49,11 @@
               <div v-else class="cover-placeholder">
                 <PlaySquareOutlined />
               </div>
+              <a-tag
+                v-if="item.category_name"
+                color="blue"
+                class="status-tag category-cover-tag"
+              >{{ item.category_name }}</a-tag>
               <a-tag
                 v-if="item.status === 1"
                 color="green"
@@ -146,6 +154,9 @@
             show-count
           />
         </a-form-item>
+        <a-form-item label="分类">
+          <CategorySelect v-model="form.category_id" type="video" placeholder="选择分类（可选）" />
+        </a-form-item>
         <a-form-item label="发布平台" required>
           <div class="platform-selector">
             <div
@@ -226,6 +237,8 @@ import {
 import { videoApi } from '@/api/video'
 import type { VideoWork, ParseVideoReq } from '@/types/video'
 import MediaPicker from '@/components/media/MediaPicker.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { getThumbUrl } from '@/utils/image'
 import PlatformIcon from '@/components/video/PlatformIcon.vue'
 import { PLATFORMS, PLATFORM_MAP } from '@/components/video/platforms'
@@ -234,6 +247,7 @@ import { useDebounce } from '@/composables/useDebounce'
 
 const keyword = ref('')
 const statusFilter = ref<number | undefined>(undefined)
+const categoryFilter = ref<string | undefined>(undefined)
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const list = ref<VideoWork[]>([])
@@ -251,6 +265,7 @@ const form = reactive({
   title: '',
   cover_url: '',
   description: '',
+  category_id: undefined as string | undefined,
   published: true,
 })
 
@@ -283,6 +298,7 @@ async function fetchList() {
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
       status: statusFilter.value,
+      category_id: categoryFilter.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -299,10 +315,17 @@ function handlePageChange(newPage: number, newPageSize?: number) {
   fetchList()
 }
 
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
+}
+
 function resetForm() {
   form.title = ''
   form.cover_url = ''
   form.description = ''
+  form.category_id = undefined
   form.published = true
   Object.keys(selectedPlatforms).forEach((key) => delete selectedPlatforms[key])
 }
@@ -325,6 +348,7 @@ function handleEdit(item: VideoWork) {
   form.title = item.title
   form.cover_url = item.cover_url || ''
   form.description = item.description || ''
+  form.category_id = item.category_id || undefined
   form.published = item.status === 1
   if (item.platforms && item.platforms.length) {
     item.platforms.forEach((link) => {
@@ -398,6 +422,7 @@ async function handleSubmit() {
       title: form.title.trim(),
       cover_url: form.cover_url.trim() || undefined,
       description: form.description.trim() || undefined,
+      category_id: form.category_id,
       status: form.published ? 1 : 0,
       platforms,
     }
@@ -511,6 +536,11 @@ function formatDateTime(time?: string): string {
   top: 8px;
   right: 8px;
   pointer-events: none;
+}
+
+.category-cover-tag {
+  right: auto;
+  left: 8px;
 }
 
 .video-info {

@@ -33,22 +33,12 @@
     </div>
 
     <!-- Add/Edit Category Modal -->
-    <a-modal
-      v-model:open="modalVisible"
-      :title="editingCategory ? '编辑分类' : '新增分类'"
-      :confirm-loading="submitting"
-      @ok="handleSubmit"
-      @cancel="modalVisible = false"
-    >
-      <a-form layout="vertical">
-        <a-form-item label="分类名称" required>
-          <a-input v-model:value="form.name" placeholder="请输入分类名称" :maxlength="50" show-count />
-        </a-form-item>
-        <a-form-item label="描述">
-          <a-input v-model:value="form.description" placeholder="分类描述（可选）" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+    <CategoryEditModal
+      v-model:visible="modalVisible"
+      :type="type"
+      :category="editingCategory"
+      @saved="loadCategories"
+    />
 
     <!-- Delete Confirmation -->
     <a-modal
@@ -65,11 +55,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { categoryApi } from '@/api/category'
 import type { Category } from '@/types/category'
+import CategoryEditModal from '@/components/common/CategoryEditModal.vue'
 
 const props = defineProps<{
   type: string
@@ -85,12 +76,7 @@ const loading = ref(false)
 
 // Modal state
 const modalVisible = ref(false)
-const submitting = ref(false)
 const editingCategory = ref<Category | null>(null)
-const form = reactive({
-  name: '',
-  description: '',
-})
 
 // Delete state
 const deleteVisible = ref(false)
@@ -118,50 +104,16 @@ function handleSelect(id: string | undefined) {
 
 function showAddModal() {
   editingCategory.value = null
-  form.name = ''
-  form.description = ''
   modalVisible.value = true
 }
 
 function handleMenuClick(e: { key: string }, cat: Category) {
   if (e.key === 'edit') {
     editingCategory.value = cat
-    form.name = cat.name
-    form.description = cat.description || ''
     modalVisible.value = true
   } else if (e.key === 'delete') {
     deletingCategory.value = cat
     deleteVisible.value = true
-  }
-}
-
-async function handleSubmit() {
-  if (!form.name.trim()) {
-    message.warning('请输入分类名称')
-    return
-  }
-  submitting.value = true
-  try {
-    if (editingCategory.value) {
-      await categoryApi.update(editingCategory.value.id, {
-        name: form.name.trim(),
-        description: form.description || undefined,
-      })
-      message.success('分类已更新')
-    } else {
-      await categoryApi.create({
-        name: form.name.trim(),
-        description: form.description || undefined,
-        type: props.type,
-      })
-      message.success('分类已创建')
-    }
-    modalVisible.value = false
-    loadCategories()
-  } catch {
-    // error handled by interceptor
-  } finally {
-    submitting.value = false
   }
 }
 

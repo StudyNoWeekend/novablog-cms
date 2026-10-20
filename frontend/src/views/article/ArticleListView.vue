@@ -25,20 +25,6 @@
         <a-select-option :value="3">已下架</a-select-option>
       </a-select>
 
-      <a-select
-        v-model:value="filterCategory"
-        placeholder="全部分类"
-        allow-clear
-        style="width: 140px"
-        @change="handleFilterChange"
-        :loading="categoriesLoading"
-      >
-        <a-select-option :value="undefined">全部分类</a-select-option>
-        <a-select-option v-for="cat in categories" :key="cat.id" :value="cat.id">
-          {{ cat.name }}
-        </a-select-option>
-      </a-select>
-
       <a-input-search
         v-model:value="filterKeyword"
         placeholder="搜索文章标题..."
@@ -111,8 +97,6 @@ import { useRouter } from 'vue-router'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
 import { useArticleStore } from '@/stores/article'
-import { categoryApi } from '@/api/category'
-import type { Category } from '@/types/category'
 import ArticleCard from '@/components/article/ArticleCard.vue'
 import CategoryBar from '@/components/common/CategoryBar.vue'
 
@@ -122,12 +106,9 @@ const store = useArticleStore()
 const filterStatus = ref<number | undefined>(undefined)
 const filterKeyword = ref('')
 const filterCategory = ref<string | undefined>(undefined)
-const categories = ref<Category[]>([])
-const categoriesLoading = ref(false)
 const error = ref(false)
 
-onMounted(async () => {
-  loadCategories()
+onMounted(() => {
   fetchList()
 })
 
@@ -143,17 +124,6 @@ async function fetchList() {
 async function retry() {
   error.value = false
   await fetchList()
-}
-
-async function loadCategories() {
-  categoriesLoading.value = true
-  try {
-    categories.value = await categoryApi.getList('article')
-  } catch {
-    // 错误由拦截器处理
-  } finally {
-    categoriesLoading.value = false
-  }
 }
 
 function handleFilterChange() {

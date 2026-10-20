@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="game" @select="handleCategorySelect" />
+
     <a-card>
       <div class="toolbar">
         <a-input-search
@@ -37,7 +40,9 @@
               <div v-else class="cover-thumb placeholder"><RocketOutlined /></div>
               <div>
                 <div class="title-text">{{ record.title }}</div>
-                <div class="sub-text">{{ [record.platform, record.genre].filter(Boolean).join(' · ') || '—' }}</div>
+                <div class="sub-text">
+                  {{ [record.category_name, record.platform, record.genre].filter(Boolean).join(' · ') || '—' }}
+                </div>
               </div>
             </div>
           </template>
@@ -93,6 +98,9 @@
           </a-form-item>
         </div>
         <div class="form-row">
+          <a-form-item label="分类">
+            <CategorySelect v-model="form.category_id" type="game" placeholder="选择分类（可选）" />
+          </a-form-item>
           <a-form-item label="时长（小时）">
             <a-input-number v-model:value="form.play_hours" :min="0" style="width: 100%" />
           </a-form-item>
@@ -132,11 +140,14 @@ import { gameApi } from '@/api/game'
 import type { Game } from '@/types/game'
 import MediaPicker from '@/components/media/MediaPicker.vue'
 import ImageField from '@/components/media/ImageField.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
 const keyword = ref('')
 const playStatusFilter = ref<string | undefined>(undefined)
+const categoryFilter = ref<string | undefined>(undefined)
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const list = ref<Game[]>([])
@@ -158,6 +169,7 @@ const form = reactive({
   play_hours: 0,
   rating: 0,
   short_review: '',
+  category_id: undefined as string | undefined,
   status: 0,
 })
 
@@ -196,6 +208,7 @@ async function fetchList() {
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
       play_status: playStatusFilter.value || undefined,
+      category_id: categoryFilter.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -205,6 +218,12 @@ async function fetchList() {
   } finally {
     loading.value = false
   }
+}
+
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
 }
 
 function handleTableChange(p: { current?: number; pageSize?: number }) {
@@ -229,6 +248,7 @@ function resetForm() {
   form.play_hours = 0
   form.rating = 0
   form.short_review = ''
+  form.category_id = undefined
   form.status = 0
 }
 
@@ -251,6 +271,7 @@ function handleEdit(record: Game) {
   form.play_hours = record.play_hours || 0
   form.rating = record.rating || 0
   form.short_review = record.short_review || ''
+  form.category_id = record.category_id || undefined
   form.status = record.status
   modalVisible.value = true
 }
@@ -269,6 +290,7 @@ function buildPayload() {
     play_hours: form.play_hours,
     rating: form.rating,
     short_review: form.short_review.trim() || undefined,
+    category_id: form.category_id,
     status: form.status,
   }
 }

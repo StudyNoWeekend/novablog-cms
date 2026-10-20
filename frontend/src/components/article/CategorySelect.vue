@@ -4,6 +4,7 @@
     :placeholder="placeholder"
     style="width: 100%"
     :loading="loading"
+    allow-clear
     @change="handleChange"
   >
     <a-select-option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -43,7 +44,7 @@ onMounted(async () => {
   finally { loading.value = false }
 })
 
-function handleChange(val: string) {
-  emit('update:modelValue', val)
+function handleChange(val: string | undefined) {
+  emit('update:modelValue', val || undefined)
 }
 </script>

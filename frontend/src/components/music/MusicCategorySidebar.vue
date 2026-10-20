@@ -34,31 +34,23 @@
       </li>
     </ul>
 
-    <!-- 添加/编辑分类弹窗 -->
-    <a-modal
-      v-model:open="showAddModal"
-      :title="editingCategory ? '编辑分类' : '新增分类'"
-      :confirm-loading="saving"
-      @ok="handleSave"
-    >
-      <a-form layout="vertical">
-        <a-form-item label="分类名称" required>
-          <a-input v-model:value="formState.name" placeholder="请输入分类名称" />
-        </a-form-item>
-        <a-form-item label="排序">
-          <a-input-number v-model:value="formState.sort_order" :min="0" style="width: 100%" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+    <!-- 添加/编辑分类弹窗（与其他模块共用同一弹窗） -->
+    <CategoryEditModal
+      v-model:visible="modalVisible"
+      type="music"
+      :category="editingCategory"
+      @saved="emit('refresh')"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { PlusOutlined, MoreOutlined } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import { categoryApi } from '@/api/category'
-import type { Category, CategoryCreateReq } from '@/types/category'
+import type { Category } from '@/types/category'
+import CategoryEditModal from '@/components/common/CategoryEditModal.vue'
 
 defineProps<{
   categories: Category[]
@@ -70,29 +62,17 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const showAddModal = ref(false)
-const saving = ref(false)
+const modalVisible = ref(false)
 const editingCategory = ref<Category | null>(null)
-
-const formState = reactive<CategoryCreateReq>({
-  name: '',
-  sort_order: 0,
-})
 
 function openAddModal() {
   editingCategory.value = null
-  formState.name = ''
-  formState.slug = undefined
-  formState.sort_order = 0
-  showAddModal.value = true
+  modalVisible.value = true
 }
 
 function handleEdit(cat: Category) {
   editingCategory.value = cat
-  formState.name = cat.name
-  formState.slug = cat.slug
-  formState.sort_order = cat.sort_order
-  showAddModal.value = true
+  modalVisible.value = true
 }
 
 function handleDelete(cat: Category) {
@@ -112,38 +92,6 @@ function handleDelete(cat: Category) {
       }
     },
   })
-}
-
-async function handleSave() {
-  if (!formState.name.trim()) {
-    message.warning('请输入分类名称')
-    return
-  }
-  saving.value = true
-  try {
-    if (editingCategory.value) {
-      await categoryApi.update(editingCategory.value.id, {
-        name: formState.name,
-        slug: formState.slug,
-        sort_order: formState.sort_order,
-      })
-      message.success('更新成功')
-    } else {
-      await categoryApi.create({
-        name: formState.name,
-        slug: formState.slug,
-        sort_order: formState.sort_order,
-        type: 'music',
-      })
-      message.success('添加成功')
-    }
-    showAddModal.value = false
-    emit('refresh')
-  } catch {
-    // 错误由拦截器处理
-  } finally {
-    saving.value = false
-  }
 }
 </script>
 
