@@ -12,6 +12,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="travel" @select="handleCategorySelect" />
+
     <div class="travel-stats" role="region" aria-label="攻略统计">
       <div
         v-for="item in statItems"
@@ -27,9 +30,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 分类标签栏 -->
-    <CategoryBar type="travel" @select="handleCategorySelect" />
 
     <div class="travel-filter-bar">
       <TravelFilterBar v-model="filters" />

@@ -137,15 +137,15 @@
                       v-if="item.file_type === 1"
                       type="primary"
                       size="small"
-                      ghost
+                      class="overlay-btn"
                       @click.stop="openWorkbench(item)"
                     >
                       <SettingOutlined /> 预设
                     </a-button>
-                    <a-button size="small" ghost @click.stop="openMoveForMedia(item)">
+                    <a-button size="small" class="overlay-btn" @click.stop="openMoveForMedia(item)">
                       <FolderOpenOutlined /> 移动
                     </a-button>
-                    <a-button size="small" danger ghost @click.stop="openDelete(item)">
+                    <a-button type="primary" danger size="small" class="overlay-btn" @click.stop="openDelete(item)">
                       <DeleteOutlined /> 删除
                     </a-button>
                   </div>
@@ -831,9 +831,17 @@ function formatDateTime(time?: string): string {
   justify-content: center;
   flex-wrap: wrap;
   gap: 8px;
-  background: rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.45);
   opacity: 0;
   transition: opacity 0.2s;
+}
+
+/* 实心按钮 + 投影：保证在任意照片/视频封面上都有足够对比度 */
+.media-overlay :deep(.overlay-btn) {
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .media-content img {

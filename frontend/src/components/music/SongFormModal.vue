@@ -63,15 +63,13 @@
           </div>
         </a-form-item>
         <a-form-item label="分类">
-          <a-select
-            v-model:value="formState.category_id"
-            placeholder="选择分类"
+          <a-auto-complete
+            v-model:value="categoryName"
+            :options="categoryOptions"
+            :filter-option="filterCategoryOption"
+            placeholder="选择已有分类或输入新分类名称（不存在时自动创建）"
             allow-clear
-          >
-            <a-select-option v-for="cat in categories" :key="cat.id" :value="cat.id">
-              {{ cat.name }}
-            </a-select-option>
-          </a-select>
+          />
         </a-form-item>
       </template>
 
@@ -95,15 +93,13 @@
         </div>
 
         <a-form-item label="统一分类" style="margin-top: 16px">
-          <a-select
-            v-model:value="batchCategoryId"
-            placeholder="为选中歌曲选择分类"
+          <a-auto-complete
+            v-model:value="batchCategoryName"
+            :options="categoryOptions"
+            :filter-option="filterCategoryOption"
+            placeholder="选择已有分类或输入新分类名称（不存在时自动创建）"
             allow-clear
-          >
-            <a-select-option v-for="cat in categories" :key="cat.id" :value="cat.id">
-              {{ cat.name }}
-            </a-select-option>
-          </a-select>
+          />
         </a-form-item>
       </template>
     </a-form>
@@ -118,6 +114,7 @@ import { ref, reactive, computed, watch, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { PictureOutlined } from '@ant-design/icons-vue'
 import { musicApi } from '@/api/music'
+import { categoryApi } from '@/api/category'
 import type { Song, SongCreateReq, ParseResult, BatchCreateSongReq } from '@/types/music'
 import type { Category } from '@/types/category'
 import MediaPicker from '@/components/media/MediaPicker.vue'
@@ -168,10 +165,38 @@ const formState = reactive<SongCreateReq>({
   cid: 0,
   source_url: '',
   source_type: 'bilibili',
-  category_id: null,
   duration: 0,
   sort_order: 0,
 })
+
+// 分类输入：存分类名而非 id，保存时解析（已有分类用其 id，不存在则自动创建）
+const categoryName = ref('')
+const batchCategoryName = ref('')
+
+const categoryOptions = computed(() => props.categories.map((c) => ({ value: c.name })))
+
+function filterCategoryOption(input: string, option: { value: string }) {
+  return option.value.toLowerCase().includes(input.toLowerCase())
+}
+
+// 校验分类名长度（后端限制 max=50）
+function categoryInputValid(name: string): boolean {
+  if (name.trim().length > 50) {
+    message.warning('分类名称不能超过 50 个字符')
+    return false
+  }
+  return true
+}
+
+// 解析分类名：已有分类直接用其 id，否则以 type=music 自动创建并返回新 id
+async function resolveCategoryId(name: string): Promise<string> {
+  const trimmed = name.trim()
+  if (!trimmed) return ''
+  const existing = props.categories.find((c) => c.name === trimmed)
+  if (existing) return existing.id
+  const created = await categoryApi.create({ name: trimmed, type: 'music' })
+  return created.id
+}
 
 // 解析结果列表（多首模式）
 interface SelectableParseResult extends ParseResult {
@@ -180,9 +205,6 @@ interface SelectableParseResult extends ParseResult {
   artist: string
 }
 const parseResults = ref<SelectableParseResult[]>([])
-
-// 批量分类
-const batchCategoryId = ref<string | null>(null)
 
 // 全选
 const selectAll = computed({
@@ -219,7 +241,7 @@ watch(
         formState.cid = props.song.cid
         formState.source_url = props.song.source_url
         formState.source_type = props.song.source_type
-        formState.category_id = props.song.category_id
+        categoryName.value = props.categories.find((c) => c.id === props.song!.category_id)?.name || ''
         formState.duration = props.song.duration
         formState.sort_order = props.song.sort_order
       } else {
@@ -228,7 +250,7 @@ watch(
       biliUrl.value = ''
       parseStatus.value = ''
       parseResults.value = []
-      batchCategoryId.value = null
+      batchCategoryName.value = ''
     }
   },
 )
@@ -241,7 +263,7 @@ function resetForm() {
   formState.cid = 0
   formState.source_url = ''
   formState.source_type = 'bilibili'
-  formState.category_id = null
+  categoryName.value = ''
   formState.duration = 0
   formState.sort_order = 0
 }
@@ -323,14 +345,18 @@ async function handleSave() {
       message.warning('请输入歌手名称')
       return
     }
+    if (!categoryInputValid(categoryName.value)) {
+      return
+    }
     saving.value = true
     try {
+      const categoryId = await resolveCategoryId(categoryName.value)
       await musicApi.updateSong(props.song.id, {
         title: formState.title,
         artist: formState.artist,
         cover_url: formState.cover_url,
         // 空字符串表示清空分类（后端将其置为 NULL）
-        category_id: formState.category_id ?? '',
+        category_id: categoryId,
         duration: formState.duration,
         sort_order: formState.sort_order,
       })
@@ -352,6 +378,10 @@ async function handleSave() {
       message.warning('请至少选择一首歌曲')
       return
     }
+    if (!categoryInputValid(batchCategoryName.value)) {
+      return
+    }
+    const categoryId = await resolveCategoryId(batchCategoryName.value)
     const songs: SongCreateReq[] = selected.map(r => ({
       title: r.title,
       artist: r.artist,
@@ -360,7 +390,7 @@ async function handleSave() {
       cid: r.cid,
       source_url: biliUrl.value.trim(),
       source_type: 'bilibili',
-      category_id: batchCategoryId.value,
+      category_id: categoryId,
       duration: r.duration,
     }))
     saving.value = true
@@ -390,9 +420,13 @@ async function handleSave() {
     message.warning('请先解析B站视频链接')
     return
   }
+  if (!categoryInputValid(categoryName.value)) {
+    return
+  }
 
   saving.value = true
   try {
+    const categoryId = await resolveCategoryId(categoryName.value)
     await musicApi.createSong({
       title: formState.title,
       artist: formState.artist,
@@ -401,7 +435,7 @@ async function handleSave() {
       cid: formState.cid,
       source_url: formState.source_url,
       source_type: formState.source_type,
-      category_id: formState.category_id,
+      category_id: categoryId,
       duration: formState.duration,
       sort_order: formState.sort_order,
     })

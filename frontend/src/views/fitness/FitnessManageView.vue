@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="fitness" @select="handleCategorySelect" />
+
     <a-card>
       <div class="toolbar">
         <a-input-search
@@ -15,11 +18,6 @@
           style="width: 240px"
           allow-clear
         />
-        <a-select v-model:value="typeFilter" style="width: 140px" allow-clear>
-          <a-select-option value="strength">力量</a-select-option>
-          <a-select-option value="cardio">有氧</a-select-option>
-          <a-select-option value="stretch">拉伸</a-select-option>
-        </a-select>
       </div>
 
       <a-table
@@ -38,7 +36,9 @@
             </div>
           </template>
           <template v-else-if="column.key === 'type'">
-            <a-tag :color="typeColor(record.type)">{{ typeLabel(record.type) }}</a-tag>
+            <a-tag v-if="record.category_name" color="blue">{{ record.category_name }}</a-tag>
+            <a-tag v-else-if="record.type" :color="typeColor(record.type)">{{ typeLabel(record.type) }}</a-tag>
+            <span v-else>—</span>
           </template>
           <template v-else-if="column.key === 'duration_min'">
             {{ record.duration_min }} 分钟
@@ -74,12 +74,8 @@
           <a-form-item label="训练日期" required>
             <a-date-picker v-model:value="trainDate" style="width: 100%" />
           </a-form-item>
-          <a-form-item label="训练类型">
-            <a-select v-model:value="form.type">
-              <a-select-option value="strength">力量</a-select-option>
-              <a-select-option value="cardio">有氧</a-select-option>
-              <a-select-option value="stretch">拉伸</a-select-option>
-            </a-select>
+          <a-form-item label="分类">
+            <CategorySelect v-model="form.category_id" type="fitness" placeholder="选择分类（可选）" />
           </a-form-item>
         </div>
         <a-form-item label="标题" required>
@@ -129,11 +125,13 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import dayjs, { type Dayjs } from 'dayjs'
 import { fitnessApi } from '@/api/fitness'
 import type { FitnessRecord, FitnessExercise } from '@/types/fitness'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
 const keyword = ref('')
-const typeFilter = ref<string | undefined>(undefined)
+const categoryFilter = ref<string | undefined>(undefined)
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const list = ref<FitnessRecord[]>([])
@@ -148,7 +146,7 @@ const trainDate = ref<Dayjs>(dayjs())
 
 const form = reactive({
   title: '',
-  type: 'strength' as FitnessRecord['type'],
+  category_id: undefined as string | undefined,
   duration_min: 0,
   calories: 0,
   content: [] as FitnessExercise[],
@@ -174,7 +172,7 @@ const paginationConfig = computed(() => ({
 }))
 
 watch(keyword, setDebounce)
-watch([debouncedKeyword, typeFilter], () => {
+watch([debouncedKeyword], () => {
   reset()
   fetchList()
 })
@@ -190,7 +188,7 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
-      type: typeFilter.value || undefined,
+      category_id: categoryFilter.value,
     })
     list.value = res.list || []
     total.value = res.total || 0
@@ -200,6 +198,12 @@ async function fetchList() {
   } finally {
     loading.value = false
   }
+}
+
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
 }
 
 function handleTableChange(p: { current?: number; pageSize?: number }) {
@@ -223,7 +227,7 @@ function typeColor(t: string): string {
 function resetForm() {
   trainDate.value = dayjs()
   form.title = ''
-  form.type = 'strength'
+  form.category_id = undefined
   form.duration_min = 0
   form.calories = 0
   form.content = []
@@ -244,7 +248,7 @@ function handleEdit(record: FitnessRecord) {
   resetForm()
   trainDate.value = record.date ? dayjs(record.date) : dayjs()
   form.title = record.title
-  form.type = record.type
+  form.category_id = record.category_id || undefined
   form.duration_min = record.duration_min || 0
   form.calories = record.calories || 0
   form.content = (record.content || []).map((c) => ({ ...c }))
@@ -257,7 +261,7 @@ function buildPayload() {
   return {
     date: trainDate.value ? trainDate.value.toISOString() : undefined,
     title: form.title.trim(),
-    type: form.type,
+    category_id: form.category_id,
     duration_min: form.duration_min,
     calories: form.calories,
     content: form.content.filter((c) => c.name.trim()),

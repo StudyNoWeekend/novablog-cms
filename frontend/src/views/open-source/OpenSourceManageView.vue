@@ -7,6 +7,9 @@
       </a-button>
     </div>
 
+    <!-- 分类标签栏 -->
+    <CategoryBar type="open_source" @select="handleCategorySelect" />
+
     <a-card>
       <div class="opensource-toolbar">
         <a-input-search
@@ -43,6 +46,7 @@
               {{ item.summary || '暂无简介，保存后自动回填仓库描述' }}
             </div>
             <div class="repo-tags">
+              <a-tag v-if="item.category_name" class="topic-tag" color="purple">{{ item.category_name }}</a-tag>
               <a-tag v-if="item.language" class="lang-tag" color="blue">{{ item.language }}</a-tag>
               <a-tag v-for="topic in splitTopics(item.topics).slice(0, 3)" :key="topic" class="topic-tag">
                 {{ topic }}
@@ -171,13 +175,18 @@
             :max-tag-count="8"
           />
         </a-form-item>
-        <a-form-item label="主页 / 演示地址">
-          <a-input
-            v-model:value="form.homepage"
-            placeholder="https://（可选）"
-            :maxlength="1024"
-          />
-        </a-form-item>
+        <div class="form-row">
+          <a-form-item label="分类">
+            <CategorySelect v-model="form.category_id" type="open_source" placeholder="选择分类（可选）" />
+          </a-form-item>
+          <a-form-item label="主页 / 演示地址">
+            <a-input
+              v-model:value="form.homepage"
+              placeholder="https://（可选）"
+              :maxlength="1024"
+            />
+          </a-form-item>
+        </div>
         <a-row :gutter="16">
           <a-col :span="12">
             <a-form-item label="状态">
@@ -249,6 +258,8 @@ import {
 import { openSourceApi } from '@/api/openSource'
 import type { OpenSourceWork } from '@/types/openSource'
 import MarkdownViewer from '@/components/editor/MarkdownViewer.vue'
+import CategoryBar from '@/components/common/CategoryBar.vue'
+import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
@@ -266,6 +277,7 @@ const keyword = ref('')
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
 
 const filterStatus = ref<number | undefined>(undefined)
+const categoryFilter = ref<string | undefined>(undefined)
 
 const list = ref<OpenSourceWork[]>([])
 const loading = ref(false)
@@ -290,6 +302,7 @@ const form = reactive({
   language: '',
   topics: [] as string[],
   homepage: '',
+  category_id: undefined as string | undefined,
   status: 0,
   sort_order: 0,
 })
@@ -312,6 +325,7 @@ async function fetchList() {
       page: page.value,
       page_size: pageSize.value,
       keyword: debouncedKeyword.value || undefined,
+      category_id: categoryFilter.value,
       status: filterStatus.value,
     })
     list.value = res.list || []
@@ -322,6 +336,12 @@ async function fetchList() {
   } finally {
     loading.value = false
   }
+}
+
+function handleCategorySelect(id: string | undefined) {
+  categoryFilter.value = id
+  reset()
+  fetchList()
 }
 
 function handlePageChange(newPage: number, newPageSize?: number) {
@@ -336,6 +356,7 @@ function resetForm() {
   form.language = ''
   form.topics = []
   form.homepage = ''
+  form.category_id = undefined
   form.status = 0
   form.sort_order = 0
 }
@@ -357,6 +378,7 @@ function handleEdit(item: OpenSourceWork) {
   form.language = item.language || ''
   form.topics = splitTopics(item.topics)
   form.homepage = item.homepage || ''
+  form.category_id = item.category_id || undefined
   form.status = item.status
   form.sort_order = item.sort_order
   modalVisible.value = true
@@ -398,6 +420,7 @@ async function handleSubmit() {
         language: form.language.trim() || undefined,
         topics: form.topics.join(',') || undefined,
         homepage: form.homepage.trim() || undefined,
+        category_id: form.category_id,
         status: form.status,
         sort_order: form.sort_order,
       })
@@ -410,6 +433,7 @@ async function handleSubmit() {
         language: form.language.trim(),
         topics: form.topics.join(','),
         homepage: form.homepage.trim(),
+        category_id: form.category_id,
         status: form.status,
         sort_order: form.sort_order,
       })
@@ -485,6 +509,12 @@ function handleDelete(item: OpenSourceWork) {
   gap: 12px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
 }
 
 .opensource-grid {
