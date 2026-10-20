@@ -36,6 +36,7 @@
           <BellOutlined />
         </span>
       </a-badge>
+      <LocaleSwitch />
       <AppAvatar />
     </div>
   </header>
@@ -47,6 +48,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { BellOutlined, MenuOutlined, GithubOutlined } from '@ant-design/icons-vue'
 import AppAvatar from '@/components/common/AppAvatar.vue'
+import LocaleSwitch from '@/components/common/LocaleSwitch.vue'
 import { ALL_ROLES } from '@/constants/setupRoles'
 
 const authStore = useAuthStore()
@@ -139,6 +141,10 @@ const roleDisplay = computed(() => {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.header-right .locale-switch {
+  margin-right: -4px;
 }
 
 .action-icon {
