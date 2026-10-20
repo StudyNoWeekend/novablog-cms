@@ -1,0 +1,57 @@
+{
+  "home": "ホーム",
+  "group": {
+    "about": "私について",
+    "content": "コンテンツ作成",
+    "system": "システムとセキュリティ",
+    "ai": "AI"
+  },
+  "setup": "システム初期化",
+  "login": "ログイン",
+  "dashboard": "ダッシュボード",
+  "article": {
+    "list": "記事管理",
+    "create": "記事を新規作成",
+    "edit": "記事を編集"
+  },
+  "comment": { "list": "コメント管理" },
+  "media": { "list": "メディアライブラリ" },
+  "portfolio": { "list": "フォトポートフォリオ", "edit": "ポートフォリオを編集" },
+  "equipment": { "list": "デバイス管理" },
+  "project": { "list": "プロジェクト経験" },
+  "openSource": { "list": "オープンソース作品" },
+  "recipe": { "list": "レシピ" },
+  "book": { "list": "本棚" },
+  "game": { "list": "ゲームライブラリ" },
+  "fitness": { "list": "フィットネストレーニング" },
+  "techStack": { "list": "技術スタック" },
+  "video": { "list": "動画作品" },
+  "travel": {
+    "list": "旅行ガイド",
+    "create": "ガイドを新規作成",
+    "edit": "ガイドを編集",
+    "detail": "ガイド詳細"
+  },
+  "playlist": { "list": "音楽プレイリスト" },
+  "system": {
+    "config": "システム設定",
+    "module": "モジュール管理",
+    "map": "マップ設定"
+  },
+  "apiDoc": { "list": "API ドキュメント" },
+  "mcp": { "list": "MCP サービス" },
+  "security": {
+    "blacklist": "ブラックリスト管理",
+    "monitor": "アクセス統計"
+  },
+  "theme": {
+    "market": "テーママーケット",
+    "detail": "テーマ詳細"
+  },
+  "profile": {
+    "info": "プロフィール",
+    "cors": "CORS 設定"
+  },
+  "storage": { "config": "オブジェクトストレージ" },
+  "notFound": "ページが見つかりません"
+}

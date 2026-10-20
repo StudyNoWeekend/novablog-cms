@@ -12,8 +12,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
+const { t } = useI18n()
 
 const breadcrumbs = computed(() => {
   const items: Array<{ title: string; path?: string }> = []
@@ -21,7 +23,8 @@ const breadcrumbs = computed(() => {
   const matched = route.matched.filter((r) => r.meta.title)
 
   for (const record of matched) {
-    const title = record.meta.title as string
+    // meta.title 存的是 menu.* 的 i18n key
+    const title = t(record.meta.title as string)
     const path = record.path
 
     if (record.name === 'Dashboard' && matched.length > 1) {
@@ -36,7 +39,7 @@ const breadcrumbs = computed(() => {
   }
 
   if (items.length === 0) {
-    items.push({ title: '首页', path: '/dashboard' })
+    items.push({ title: t('menu.home'), path: '/dashboard' })
   }
 
   return items

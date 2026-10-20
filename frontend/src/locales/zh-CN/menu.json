@@ -1,0 +1,57 @@
+{
+  "home": "首页",
+  "group": {
+    "about": "关于我",
+    "content": "内容创作",
+    "system": "系统与安全",
+    "ai": "AI"
+  },
+  "setup": "系统初始化",
+  "login": "登录",
+  "dashboard": "工作台",
+  "article": {
+    "list": "文章管理",
+    "create": "新建文章",
+    "edit": "编辑文章"
+  },
+  "comment": { "list": "评论管理" },
+  "media": { "list": "媒体库" },
+  "portfolio": { "list": "摄影作品集", "edit": "编辑作品集" },
+  "equipment": { "list": "个人设备" },
+  "project": { "list": "项目经历" },
+  "openSource": { "list": "开源作品" },
+  "recipe": { "list": "美食菜谱" },
+  "book": { "list": "读书书架" },
+  "game": { "list": "游戏库" },
+  "fitness": { "list": "健身训练" },
+  "techStack": { "list": "技术栈" },
+  "video": { "list": "视频作品" },
+  "travel": {
+    "list": "旅行攻略",
+    "create": "新建攻略",
+    "edit": "编辑攻略",
+    "detail": "攻略详情"
+  },
+  "playlist": { "list": "音乐播放列表" },
+  "system": {
+    "config": "系统配置",
+    "module": "模块管理",
+    "map": "地图配置"
+  },
+  "apiDoc": { "list": "API 文档" },
+  "mcp": { "list": "MCP 服务" },
+  "security": {
+    "blacklist": "黑名单管理",
+    "monitor": "访问统计"
+  },
+  "theme": {
+    "market": "主题市场",
+    "detail": "主题详情"
+  },
+  "profile": {
+    "info": "个人资料",
+    "cors": "跨域配置"
+  },
+  "storage": { "config": "对象存储" },
+  "notFound": "页面不存在"
+}

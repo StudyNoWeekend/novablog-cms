@@ -1,0 +1,57 @@
+{
+  "home": "홈",
+  "group": {
+    "about": "소개",
+    "content": "콘텐츠 제작",
+    "system": "시스템 및 보안",
+    "ai": "AI"
+  },
+  "setup": "시스템 초기화",
+  "login": "로그인",
+  "dashboard": "대시보드",
+  "article": {
+    "list": "게시글 관리",
+    "create": "게시글 작성",
+    "edit": "게시글 편집"
+  },
+  "comment": { "list": "댓글 관리" },
+  "media": { "list": "미디어 라이브러리" },
+  "portfolio": { "list": "사진 포트폴리오", "edit": "포트폴리오 편집" },
+  "equipment": { "list": "개인 장비" },
+  "project": { "list": "프로젝트 경력" },
+  "openSource": { "list": "오픈소스 작품" },
+  "recipe": { "list": "요리 레시피" },
+  "book": { "list": "독서 서재" },
+  "game": { "list": "게임 라이브러리" },
+  "fitness": { "list": "피트니스 트레이닝" },
+  "techStack": { "list": "기술 스택" },
+  "video": { "list": "영상 작품" },
+  "travel": {
+    "list": "여행 가이드",
+    "create": "가이드 작성",
+    "edit": "가이드 편집",
+    "detail": "가이드 상세"
+  },
+  "playlist": { "list": "음악 재생목록" },
+  "system": {
+    "config": "시스템 설정",
+    "module": "모듈 관리",
+    "map": "지도 설정"
+  },
+  "apiDoc": { "list": "API 문서" },
+  "mcp": { "list": "MCP 서비스" },
+  "security": {
+    "blacklist": "블랙리스트 관리",
+    "monitor": "접속 통계"
+  },
+  "theme": {
+    "market": "테마 마켓",
+    "detail": "테마 상세"
+  },
+  "profile": {
+    "info": "프로필",
+    "cors": "CORS 설정"
+  },
+  "storage": { "config": "오브젝트 스토리지" },
+  "notFound": "페이지를 찾을 수 없습니다"
+}

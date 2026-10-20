@@ -28,7 +28,7 @@
             :class="{ active: isActive('/dashboard') }"
           >
             <span class="nav-icon"><DashboardOutlined /></span>
-            <span class="nav-text">工作台</span>
+            <span class="nav-text">{{ $t('menu.dashboard') }}</span>
           </router-link>
           <router-link
             to="/comments"
@@ -36,7 +36,7 @@
             :class="{ active: isActive('/comments') }"
           >
             <span class="nav-icon"><MessageOutlined /></span>
-            <span class="nav-text">评论管理</span>
+            <span class="nav-text">{{ $t('menu.comment.list') }}</span>
           </router-link>
           <router-link
             to="/media"
@@ -44,29 +44,29 @@
             :class="{ active: isActive('/media') }"
           >
             <span class="nav-icon"><PictureOutlined /></span>
-            <span class="nav-text">媒体库</span>
+            <span class="nav-text">{{ $t('menu.media.list') }}</span>
           </router-link>
         </div>
 
         <!-- 分组菜单（点击标题折叠/展开） -->
-        <div v-for="group in menuGroups" :key="group.title" class="menu-group">
+        <div v-for="group in menuGroups" :key="group.titleKey" class="menu-group">
           <button
             type="button"
             class="menu-group-title"
-            :aria-expanded="isGroupExpanded(group.title)"
-            @click="toggleGroup(group.title)"
+            :aria-expanded="isGroupExpanded(group.titleKey)"
+            @click="toggleGroup(group.titleKey)"
           >
-            <span class="menu-group-title__text">{{ group.title }}</span>
+            <span class="menu-group-title__text">{{ $t(group.titleKey) }}</span>
             <CaretRightOutlined
               class="menu-group-title__arrow"
-              :class="{ expanded: isGroupExpanded(group.title) }"
+              :class="{ expanded: isGroupExpanded(group.titleKey) }"
             />
           </button>
-          <template v-if="isGroupExpanded(group.title)">
+          <template v-if="isGroupExpanded(group.titleKey)">
           <!-- 普通菜单项 -->
           <router-link
             v-for="item in group.items"
-            :key="item.label"
+            :key="item.labelKey"
             :to="item.path"
             class="nav-item"
             :class="{ active: isMenuActive(item.path) }"
@@ -74,7 +74,7 @@
             <span class="nav-icon">
               <component :is="item.icon" />
             </span>
-            <span class="nav-text">{{ item.label }}</span>
+            <span class="nav-text">{{ $t(item.labelKey) }}</span>
           </router-link>
           </template>
         </div>
@@ -126,7 +126,7 @@ const moduleStore = useModuleStore()
 const isMobile = ref(false)
 
 interface SidebarMenuBase {
-  label: string
+  labelKey: string
   icon: Component
   moduleKey?: ModuleKey
 }
@@ -137,44 +137,45 @@ interface SidebarMenuLink extends SidebarMenuBase {
 
 type SidebarMenuItem = SidebarMenuLink
 
-const menuGroupDefs: { title: string; items: SidebarMenuItem[] }[] = [
+// labelKey/titleKey 为 menu.* 的 i18n key；折叠状态持久化以 titleKey 为身份（跨语言稳定）
+const menuGroupDefs: { titleKey: string; items: SidebarMenuItem[] }[] = [
   {
-    title: '关于我',
+    titleKey: 'menu.group.about',
     items: [
-      { path: '/profile/info', label: '个人资料', icon: UserOutlined },
-      { path: '/equipments', label: '个人设备', icon: LaptopOutlined, moduleKey: 'equipment_enabled' },
-      { path: '/projects', label: '项目经历', icon: ProjectOutlined, moduleKey: 'project_enabled' },
-      { path: '/tech-stacks', label: '技术栈', icon: CodeOutlined, moduleKey: 'tech_stack_enabled' },
-      { path: '/open-sources', label: '开源作品', icon: GithubOutlined, moduleKey: 'open_source_enabled' },
+      { path: '/profile/info', labelKey: 'menu.profile.info', icon: UserOutlined },
+      { path: '/equipments', labelKey: 'menu.equipment.list', icon: LaptopOutlined, moduleKey: 'equipment_enabled' },
+      { path: '/projects', labelKey: 'menu.project.list', icon: ProjectOutlined, moduleKey: 'project_enabled' },
+      { path: '/tech-stacks', labelKey: 'menu.techStack.list', icon: CodeOutlined, moduleKey: 'tech_stack_enabled' },
+      { path: '/open-sources', labelKey: 'menu.openSource.list', icon: GithubOutlined, moduleKey: 'open_source_enabled' },
     ],
   },
   {
-    title: '内容创作',
+    titleKey: 'menu.group.content',
     items: [
-      { path: '/articles', label: '文章管理', icon: FileTextOutlined, moduleKey: 'article_enabled' },
-      { path: '/playlists', label: '音乐播放列表', icon: CustomerServiceOutlined, moduleKey: 'music_enabled' },
-      { path: '/videos', label: '视频作品', icon: PlaySquareOutlined, moduleKey: 'video_enabled' },
-      { path: '/travels', label: '旅行攻略', icon: CompassOutlined, moduleKey: 'travel_enabled' },
-      { path: '/portfolios', label: '摄影作品集', icon: CameraOutlined, moduleKey: 'portfolio_enabled' },
-      { path: '/recipes', label: '美食菜谱', icon: CoffeeOutlined, moduleKey: 'recipe_enabled' },
-      { path: '/books', label: '读书书架', icon: ReadOutlined, moduleKey: 'book_enabled' },
-      { path: '/games', label: '游戏库', icon: RocketOutlined, moduleKey: 'game_enabled' },
-      { path: '/fitness', label: '健身训练', icon: HeartOutlined, moduleKey: 'fitness_enabled' },
+      { path: '/articles', labelKey: 'menu.article.list', icon: FileTextOutlined, moduleKey: 'article_enabled' },
+      { path: '/playlists', labelKey: 'menu.playlist.list', icon: CustomerServiceOutlined, moduleKey: 'music_enabled' },
+      { path: '/videos', labelKey: 'menu.video.list', icon: PlaySquareOutlined, moduleKey: 'video_enabled' },
+      { path: '/travels', labelKey: 'menu.travel.list', icon: CompassOutlined, moduleKey: 'travel_enabled' },
+      { path: '/portfolios', labelKey: 'menu.portfolio.list', icon: CameraOutlined, moduleKey: 'portfolio_enabled' },
+      { path: '/recipes', labelKey: 'menu.recipe.list', icon: CoffeeOutlined, moduleKey: 'recipe_enabled' },
+      { path: '/books', labelKey: 'menu.book.list', icon: ReadOutlined, moduleKey: 'book_enabled' },
+      { path: '/games', labelKey: 'menu.game.list', icon: RocketOutlined, moduleKey: 'game_enabled' },
+      { path: '/fitness', labelKey: 'menu.fitness.list', icon: HeartOutlined, moduleKey: 'fitness_enabled' },
     ],
   },
   {
-    title: '系统与安全',
+    titleKey: 'menu.group.system',
     items: [
-      { path: '/themes', label: '主题市场', icon: SkinOutlined },
-      { path: '/system-config', label: '系统配置', icon: SettingOutlined },
-      { path: '/security/monitor', label: '访问统计', icon: EyeOutlined },
+      { path: '/themes', labelKey: 'menu.theme.market', icon: SkinOutlined },
+      { path: '/system-config', labelKey: 'menu.system.config', icon: SettingOutlined },
+      { path: '/security/monitor', labelKey: 'menu.security.monitor', icon: EyeOutlined },
     ],
   },
   {
-    title: 'AI',
+    titleKey: 'menu.group.ai',
     items: [
-      { path: '/api-doc', label: 'API 文档', icon: BookOutlined },
-      { path: '/mcp', label: 'MCP 服务', icon: ApiOutlined },
+      { path: '/api-doc', labelKey: 'menu.apiDoc.list', icon: BookOutlined },
+      { path: '/mcp', labelKey: 'menu.mcp.list', icon: ApiOutlined },
     ],
   },
 ]
@@ -207,13 +208,13 @@ function isMenuActive(path: string): boolean {
 // 侧边栏收窄为图标栏时标题已隐藏，此时不折叠（保留全部图标导航）
 const collapsedGroups = ref<Record<string, boolean>>(sidebarStorage.getCollapsedGroups())
 
-function isGroupExpanded(title: string): boolean {
+function isGroupExpanded(titleKey: string): boolean {
   if (!isMobile.value && appStore.sidebarCollapsed) return true
-  return !collapsedGroups.value[title]
+  return !collapsedGroups.value[titleKey]
 }
 
-function toggleGroup(title: string) {
-  collapsedGroups.value = { ...collapsedGroups.value, [title]: !collapsedGroups.value[title] }
+function toggleGroup(titleKey: string) {
+  collapsedGroups.value = { ...collapsedGroups.value, [titleKey]: !collapsedGroups.value[titleKey] }
   sidebarStorage.setCollapsedGroups(collapsedGroups.value)
 }
 

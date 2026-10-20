@@ -45,6 +45,26 @@ export const marketStorage = {
   },
 }
 
+// localeStorage 界面语言偏好存储（与登录态无关，隐私模式下静默降级为默认语言）。
+const LOCALE_KEY = 'novablog_locale'
+
+export const localeStorage = {
+  get(): string | null {
+    try {
+      return localStorage.getItem(LOCALE_KEY)
+    } catch {
+      return null
+    }
+  },
+  set(value: string) {
+    try {
+      localStorage.setItem(LOCALE_KEY, value)
+    } catch {
+      // 持久化失败不影响交互（如隐私模式下的存储配额限制）
+    }
+  },
+}
+
 // sidebarStorage 侧边栏 UI 偏好存储（分组折叠状态，与登录态无关）。
 const SIDEBAR_COLLAPSED_KEY = 'novablog_sidebar_group_collapsed'
 const SIDEBAR_SUBMENU_KEY = 'novablog_sidebar_submenu_expanded'
