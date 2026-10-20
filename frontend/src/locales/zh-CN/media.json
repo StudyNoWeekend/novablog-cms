@@ -1,0 +1,192 @@
+{
+  "library": {
+    "title": "媒体库"
+  },
+  "upload": {
+    "image": "上传图片",
+    "video": "上传视频",
+    "progress": "上传中 {percent}%（{done}/{total}）",
+    "batchComplete": "上传完成，共 {total} 个文件",
+    "partialFailed": "成功 {success} 个，失败 {failed} 个：{names}",
+    "moreSuffix": "等 {count} 个",
+    "nameSeparator": "、",
+    "sizeLimit": "文件大小不能超过 100MB",
+    "failed": "上传失败"
+  },
+  "type": {
+    "image": "图片",
+    "video": "视频",
+    "folder": "文件夹"
+  },
+  "search": {
+    "placeholder": "搜索全部文件..."
+  },
+  "view": {
+    "grid": "图标视图",
+    "list": "文件视图"
+  },
+  "empty": {
+    "root": "暂无媒体文件",
+    "folder": "此文件夹为空"
+  },
+  "itemCount": "{count} 项",
+  "columns": {
+    "dimensions": "尺寸",
+    "size": "大小",
+    "uploadedAt": "上传时间"
+  },
+  "actions": {
+    "rename": "重命名",
+    "move": "移动",
+    "moveTo": "移动到"
+  },
+  "folder": {
+    "rootName": "全部文件",
+    "create": "新建文件夹",
+    "rename": "重命名文件夹",
+    "name": "文件夹名称",
+    "namePlaceholder": "请输入文件夹名称",
+    "nameRequired": "请输入文件夹名称",
+    "nameRule": "创建于「{name}」内；名称不能包含 / \\ : * ? \" 竖线或尖括号",
+    "systemTag": "系统",
+    "systemRestricted": "系统文件夹由模块固定使用，不支持重命名、移动或删除",
+    "systemRenameDenied": "系统文件夹不支持重命名",
+    "systemMoveDenied": "系统文件夹不支持移动",
+    "systemDeleteDenied": "系统文件夹不支持删除",
+    "created": "文件夹已创建",
+    "renameSuccess": "重命名成功",
+    "deleteTitle": "删除文件夹",
+    "deleteConfirm": "确定删除文件夹「{name}」？仅允许删除空文件夹。",
+    "deleteConfirmWithChildren": "「{name}」包含子文件夹，仅允许删除空文件夹，确定继续？",
+    "deleteSuccess": "文件夹已删除",
+    "empty": "暂无文件夹",
+    "moved": "文件夹已移动"
+  },
+  "move": {
+    "title": "移动到文件夹",
+    "folderHint": "将文件夹「{name}」移动到所选位置（默认移动到根目录）",
+    "filesHint": "将选中的 {count} 个文件移动到所选位置（默认移动到根目录）",
+    "filesMoved": "文件已移动",
+    "failed": "移动失败"
+  },
+  "delete": {
+    "title": "删除媒体文件",
+    "force": "仍要删除",
+    "usedWarning": "该文件被 {total} 处内容引用，删除后对应位置将无法显示图片",
+    "permanentWarning": "删除后文件将从存储中永久移除，不可恢复",
+    "usageCount": "{count} 处",
+    "failed": "删除失败"
+  },
+  "picker": {
+    "title": "选择图片",
+    "confirm": "确认选择"
+  },
+  "chooser": {
+    "title": "选择图片版本",
+    "tip": "点击图片直接打开该图的预设工作台（制作/编辑相框 EXIF 成品图），点「使用」选定版本后确认。",
+    "managePresets": "在媒体库管理预设",
+    "openWorkbench": "打开预设工作台",
+    "openWorkbenchAria": "打开「{name}」的预设工作台",
+    "use": "使用",
+    "inUse": "使用中",
+    "useAria": "使用{name}",
+    "createPreset": "制作预设",
+    "createPresetAria": "制作新预设",
+    "original": "使用原图"
+  },
+  "field": {
+    "previewAlt": "图片预览",
+    "noImage": "暂无图片",
+    "searchOnline": "在线搜索",
+    "searchOnlineAria": "在线搜索图片",
+    "uploadLocal": "本地上传",
+    "uploadLocalAria": "本地上传图片",
+    "clear": "清除",
+    "clearAria": "清除图片",
+    "urlPlaceholder": "或直接粘贴图片地址"
+  },
+  "external": {
+    "searchLabel": "搜索关键词",
+    "selectIconAria": "选择图标 {name}",
+    "selectImageAria": "选择图片 {name}",
+    "candidate": "候选图片",
+    "searchFailed": "搜索失败，请稍后重试，或改用本地上传",
+    "noResults": "没有找到结果，换个关键词试试",
+    "savedWithTransfer": "已选择并转存图片",
+    "picked": "已选择图片",
+    "tech": {
+      "title": "搜索品牌图标",
+      "placeholder": "输入技术名称，如 Vue / Docker / PostgreSQL",
+      "hint": "来自 Simple Icons 品牌图标库"
+    },
+    "game": {
+      "title": "搜索游戏封面",
+      "placeholder": "输入游戏名称，如 塞尔达传说 / 黑神话",
+      "hint": "来自 Bangumi 条目库"
+    },
+    "book": {
+      "title": "搜索书籍封面",
+      "placeholder": "输入书名，如 三体 / 深入理解计算机系统",
+      "hint": "来自豆瓣读书"
+    },
+    "recipe": {
+      "title": "搜索美食图片",
+      "placeholder": "输入菜名，如 红烧肉 / 宫保鸡丁",
+      "hint": "来自 Bing 图片搜索"
+    }
+  },
+  "preset": {
+    "open": "预设",
+    "templateStyle": "模板风格",
+    "templateGallery": "画廊",
+    "templateMovie": "电影",
+    "templateFloating": "悬浮",
+    "styleParams": "样式参数",
+    "fontSize": "字体大小",
+    "borderSize": "边框尺寸",
+    "borderColor": "边框背景",
+    "textColor": "文字颜色",
+    "colorAuto": "自动",
+    "colorBlack": "黑",
+    "colorWhite": "白",
+    "font": "字体",
+    "brandSection": "品牌/型号展示",
+    "logoText": "文字",
+    "logoPlaceholder": "Logo 图片模式暂占位",
+    "showExif": "显示 EXIF",
+    "paramsSection": "参数设定",
+    "make": "品牌",
+    "model": "型号",
+    "lens": "镜头",
+    "focalLength": "焦距",
+    "aperture": "光圈",
+    "shutter": "快门",
+    "date": "日期",
+    "loadingOriginal": "加载原图中...",
+    "gallery": "图库 ({count})",
+    "exifSection": "EXIF 信息",
+    "exifFile": "文件",
+    "exifResolution": "分辨率",
+    "exifSize": "大小",
+    "exifMake": "厂商",
+    "exifModel": "型号",
+    "exifSoftware": "软件",
+    "library": "预设库",
+    "namePlaceholder": "预设名称...",
+    "untitledPreset": "未命名预设",
+    "untitledFile": "未命名",
+    "exportNamePlaceholder": "文件名(默认自动)",
+    "originalLoadError": "原图加载失败，请检查对象存储 CORS 配置",
+    "originalLoadFailed": "加载原图失败",
+    "applyFailed": "应用预设失败",
+    "renderFailed": "合成图片失败",
+    "saveFailed": "保存失败: {reason}",
+    "exportSuccess": "导出成功",
+    "exportFailed": "导出失败: {reason}",
+    "unknownError": "未知错误",
+    "originalNotLoaded": "原图未加载",
+    "canvasFailed": "创建 canvas 失败",
+    "blobFailed": "导出 Blob 失败",
+    "exifWriteFailed": "写入 EXIF 失败"
+  }
+}

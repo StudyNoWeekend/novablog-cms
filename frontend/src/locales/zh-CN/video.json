@@ -1,0 +1,57 @@
+{
+  "actions": {
+    "create": "新建视频",
+    "edit": "编辑视频",
+    "parse": "解析",
+    "overwrite": "覆盖"
+  },
+  "status": {
+    "published": "已发布",
+    "draft": "草稿"
+  },
+  "list": {
+    "searchPlaceholder": "搜索视频标题...",
+    "empty": "还没有视频作品，开始添加吧",
+    "noDescription": "暂无介绍",
+    "noPlatforms": "暂无平台链接",
+    "total": "共 {total} 个视频"
+  },
+  "form": {
+    "coverUrl": "封面 URL",
+    "coverUrlPlaceholder": "请输入封面图片地址（可选），或点击右侧按钮从媒体库选择",
+    "selectCoverFromMedia": "从媒体库选择封面",
+    "mediaLibrary": "媒体库",
+    "intro": "介绍",
+    "titlePlaceholder": "请输入视频标题",
+    "introPlaceholder": "请输入视频介绍（可选）",
+    "categoryPlaceholder": "选择分类（可选）",
+    "platforms": "发布平台",
+    "platformLinkPlaceholder": "请输入 {name} 视频链接",
+    "publishedHint": "发布后将在博客前台公开显示",
+    "draftHint": "仅后台可见，博客前台不显示"
+  },
+  "message": {
+    "linkRequired": "请先输入视频链接",
+    "parseSuccess": "解析成功",
+    "overwriteTitle": "覆盖确认",
+    "overwriteContent": "表单中已有内容，是否用解析结果覆盖？",
+    "titleRequired": "请输入视频标题",
+    "platformRequired": "请至少添加一个平台链接",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  },
+  "platforms": {
+    "bilibili": "B站",
+    "youtube": "YouTube",
+    "xigua": "西瓜视频",
+    "douyin": "抖音",
+    "xiaohongshu": "小红书",
+    "kuaishou": "快手",
+    "wechat_channels": "微信视频号",
+    "tiktok": "TikTok",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "vimeo": "Vimeo",
+    "facebook": "Facebook"
+  }
+}

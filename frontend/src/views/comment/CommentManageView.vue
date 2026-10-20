@@ -1,26 +1,26 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">评论管理</h1>
+      <h1 class="page-title">{{ $t('comment.title') }}</h1>
     </div>
 
     <!-- 筛选栏 -->
     <div class="filter-bar">
       <a-select
         v-model:value="filterTargetType"
-        placeholder="全部来源"
+        :placeholder="$t('comment.filter.allSources')"
         allow-clear
         style="width: 150px"
         @change="handleFilterChange"
       >
-        <a-select-option :value="undefined">全部来源</a-select-option>
-        <a-select-option value="article">文章</a-select-option>
-        <a-select-option value="travel">旅行攻略</a-select-option>
+        <a-select-option :value="undefined">{{ $t('comment.filter.allSources') }}</a-select-option>
+        <a-select-option value="article">{{ $t('comment.source.article') }}</a-select-option>
+        <a-select-option value="travel">{{ $t('comment.source.travel') }}</a-select-option>
       </a-select>
 
       <a-input-search
         v-model:value="filterKeyword"
-        placeholder="搜索评论内容..."
+        :placeholder="$t('comment.filter.searchPlaceholder')"
         style="width: 240px"
         @search="handleFilterChange"
         :loading="loading"
@@ -31,11 +31,11 @@
     <a-result
       v-if="error"
       status="error"
-      title="加载失败"
-      sub-title="获取评论列表时出错，请重试"
+      :title="$t('common.state.error')"
+      :sub-title="$t('comment.error.getListFailed')"
     >
       <template #extra>
-        <a-button type="primary" @click="retry">重试</a-button>
+        <a-button type="primary" @click="retry">{{ $t('common.actions.retry') }}</a-button>
       </template>
     </a-result>
 
@@ -50,7 +50,7 @@
         :scroll="{ x: 900 }"
       >
         <template #emptyText>
-          <a-empty description="暂无评论" />
+          <a-empty :description="$t('comment.empty')" />
         </template>
 
         <template #bodyCell="{ column, record }">
@@ -63,7 +63,7 @@
               <div class="commenter-info">
                 <div class="commenter-name-row">
                   <span class="commenter-name">{{ record.nickname }}</span>
-                  <a-tag v-if="record.is_blogger" color="blue" class="blogger-tag">博主</a-tag>
+                  <a-tag v-if="record.is_blogger" color="blue" class="blogger-tag">{{ $t('comment.blogger') }}</a-tag>
                 </div>
                 <a
                   v-if="record.website"
@@ -94,17 +94,17 @@
 
           <!-- 时间 -->
           <template v-else-if="column.key === 'created_at'">
-            <span class="time-text">{{ formatDate(record.created_at) }}</span>
+            <span class="time-text">{{ formatDateTime(record.created_at) }}</span>
           </template>
 
           <!-- 操作 -->
           <template v-else-if="column.key === 'action'">
             <div class="action-cell">
               <a-button type="link" size="small" @click="openReply(record)">
-                <MessageOutlined /> 回复
+                <MessageOutlined /> {{ $t('comment.action.reply') }}
               </a-button>
               <a-button type="link" size="small" danger @click="handleDelete(record.id)">
-                <DeleteOutlined /> 删除
+                <DeleteOutlined /> {{ $t('common.actions.delete') }}
               </a-button>
             </div>
           </template>
@@ -119,7 +119,7 @@
         :page-size="pageSize"
         :total="total"
         :show-size-changer="true"
-        :show-total="(total: number) => `共 ${total} 条`"
+        :show-total="(total: number) => t('common.table.total', { total })"
         @change="handlePageChange"
         @show-size-change="handlePageSizeChange"
       />
@@ -128,20 +128,20 @@
     <!-- 回复 Modal -->
     <a-modal
       v-model:open="replyModalVisible"
-      title="回复评论"
+      :title="$t('comment.reply.title')"
       :confirm-loading="replySubmitting"
-      ok-text="发送回复"
-      cancel-text="取消"
+      :ok-text="$t('comment.reply.okText')"
+      :cancel-text="$t('common.actions.cancel')"
       @ok="submitReply"
     >
       <div class="reply-context" v-if="replyTarget">
-        <span class="reply-context-label">回复 {{ replyTarget.nickname }}：</span>
+        <span class="reply-context-label">{{ $t('comment.reply.replyTo', { name: replyTarget.nickname }) }}</span>
         <span class="reply-context-content">{{ replyTarget.content }}</span>
       </div>
       <a-textarea
         v-model:value="replyContent"
         :rows="4"
-        placeholder="请输入回复内容..."
+        :placeholder="$t('comment.reply.placeholder')"
         :maxlength="500"
         show-count
       />
@@ -150,8 +150,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Modal, message, type TableColumnsType } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import {
   MessageOutlined,
   DeleteOutlined,
@@ -160,6 +161,9 @@ import {
 } from '@ant-design/icons-vue'
 import { commentApi } from '@/api/comment'
 import type { Comment, CommentListReq } from '@/types/comment'
+import { formatDateTime } from '@/utils/datetime'
+
+const { t } = useI18n()
 
 // 列表状态
 const loading = ref(false)
@@ -177,14 +181,14 @@ const replyContent = ref('')
 const replyTarget = ref<Comment | null>(null)
 const replySubmitting = ref(false)
 
-// 表格列定义
-const columns: TableColumnsType<Comment> = [
-  { title: '评论者', key: 'commenter', width: 220 },
-  { title: '内容', key: 'content', ellipsis: true },
-  { title: '来源', key: 'target', width: 200 },
-  { title: '时间', key: 'created_at', width: 170 },
-  { title: '操作', key: 'action', width: 200 },
-]
+// 表格列定义（包裹 computed，切换语言时刷新）
+const columns = computed<TableColumnsType<Comment>>(() => [
+  { title: t('comment.columns.commenter'), key: 'commenter', width: 220 },
+  { title: t('common.field.content'), key: 'content', ellipsis: true },
+  { title: t('comment.columns.source'), key: 'target', width: 200 },
+  { title: t('comment.columns.time'), key: 'created_at', width: 170 },
+  { title: t('common.table.actions'), key: 'action', width: 200 },
+])
 
 onMounted(() => {
   fetchList()
@@ -241,13 +245,13 @@ async function submitReply() {
   if (!replyTarget.value) return
   const content = replyContent.value.trim()
   if (!content) {
-    message.warning('请输入回复内容')
+    message.warning(t('comment.message.replyEmpty'))
     return
   }
   replySubmitting.value = true
   try {
     await commentApi.reply(replyTarget.value.id, { content })
-    message.success('回复成功')
+    message.success(t('comment.message.replySuccess'))
     replyModalVisible.value = false
     fetchList()
   } catch {
@@ -259,29 +263,21 @@ async function submitReply() {
 
 function handleDelete(id: string) {
   Modal.confirm({
-    title: '确认删除',
-    content: '删除后评论将无法恢复，确定要删除吗？',
-    okText: '删除',
+    title: t('comment.message.deleteTitle'),
+    content: t('comment.message.deleteContent'),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await commentApi.remove(id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         fetchList()
       } catch {
         // 错误由请求拦截器处理
       }
     },
   })
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 </script>
 

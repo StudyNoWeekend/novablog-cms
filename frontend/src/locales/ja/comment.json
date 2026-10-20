@@ -1,0 +1,36 @@
+{
+  "title": "コメント管理",
+  "filter": {
+    "allSources": "すべてのソース",
+    "searchPlaceholder": "コメントを検索..."
+  },
+  "source": {
+    "article": "記事",
+    "travel": "旅行ガイド"
+  },
+  "columns": {
+    "commenter": "投稿者",
+    "source": "ソース",
+    "time": "日時"
+  },
+  "blogger": "ブロガー",
+  "empty": "コメントはありません",
+  "action": {
+    "reply": "返信"
+  },
+  "error": {
+    "getListFailed": "コメントリストの取得中にエラーが発生しました。再試行してください。"
+  },
+  "reply": {
+    "title": "コメントに返信",
+    "okText": "返信を送信",
+    "replyTo": "{name} へ返信：",
+    "placeholder": "返信内容を入力..."
+  },
+  "message": {
+    "replyEmpty": "返信内容を入力してください",
+    "replySuccess": "返信しました",
+    "deleteTitle": "削除の確認",
+    "deleteContent": "削除するとコメントは元に戻せません。本当に削除しますか？"
+  }
+}

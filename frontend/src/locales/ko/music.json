@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "audioImport": "오디오 가져오기"
+  },
+  "addSong": "노래 추가",
+  "list": {
+    "title": "음악 재생목록",
+    "total": "총 {total}곡",
+    "empty": "아직 노래가 없습니다. 추가해 보세요",
+    "errorSubtitle": "노래 목록을 가져오는 중 오류가 발생했습니다. 다시 시도해 주세요",
+    "deleteConfirm": "노래 \"{name}\"을(를) 삭제하면 복구할 수 없습니다. 정말 삭제하시겠습니까?",
+    "categoryUpdated": "카테고리가 업데이트되었습니다",
+    "sortUpdated": "정렬 순서가 업데이트되었습니다",
+    "alreadyFirst": "이 노래는 이미 맨 앞에 있습니다"
+  },
+  "song": {
+    "dragSort": "드래그하여 순서 변경",
+    "viewOnBilibili": "Bilibili에서 보기",
+    "changeCategory": "클릭하여 카테고리 변경",
+    "uncategorized": "미분류",
+    "play": "재생",
+    "pinTop": "맨 위로"
+  },
+  "player": {
+    "source": "Bilibili 플레이어",
+    "prev": "이전 곡",
+    "next": "다음 곡",
+    "close": "플레이어 닫기",
+    "loading": "플레이어를 불러오는 중…",
+    "frameTitle": "Bilibili 동영상 플레이어",
+    "loadFailed": "재생 주소를 가져오지 못했습니다. 잠시 후 다시 시도해 주세요"
+  },
+  "form": {
+    "editTitle": "노래 편집",
+    "biliUrl": "Bilibili 동영상 링크",
+    "biliUrlPlaceholder": "Bilibili 동영상 링크를 붙여넣으세요. 예: https://www.bilibili.com/video/BV...",
+    "biliUrlRequired": "Bilibili 동영상 링크를 입력해 주세요",
+    "parse": "분석",
+    "parseProcessing": "분석 중입니다. 잠시만 기다려 주세요...",
+    "parseSuccess": "분석 성공",
+    "parseSuccessStatus": "분석 성공, 정보가 자동으로 채워졌습니다",
+    "parseFailed": "분석 실패",
+    "parseFirst": "먼저 Bilibili 동영상 링크를 분석해 주세요",
+    "songName": "노래 이름",
+    "songNamePlaceholder": "노래 이름을 입력해 주세요",
+    "songNameRequired": "노래 이름을 입력해 주세요",
+    "artist": "가수",
+    "artistPlaceholder": "가수 이름을 입력해 주세요",
+    "artistRequired": "가수 이름을 입력해 주세요",
+    "coverPreviewAlt": "커버 미리보기",
+    "chooseCover": "커버 선택",
+    "coverUrlPlaceholder": "커버 이미지 URL, 또는 미디어 라이브러리에서 선택",
+    "coverHint": "썸네일을 클릭하면 미디어 라이브러리에서 선택할 수 있고, 외부 이미지 URL을 직접 붙여넣을 수도 있습니다(Bilibili 커버는 자동으로 스토리지에 저장됩니다).",
+    "categoryPlaceholder": "기존 카테고리를 선택하거나 새 이름을 입력하세요(없으면 자동 생성)",
+    "categoryTooLong": "카테고리 이름은 50자를 초과할 수 없습니다",
+    "selectAll": "전체 선택",
+    "batchSummary": "총 {total}곡, {selected}곡 선택됨",
+    "batchCategory": "공통 카테고리",
+    "selectAtLeastOne": "최소 한 곡 이상 선택해 주세요",
+    "batchAddSuccess": "노래 {count}곡을 추가했습니다",
+    "addSuccess": "추가되었습니다"
+  }
+}

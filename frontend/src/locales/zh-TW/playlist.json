@@ -1,0 +1,28 @@
+{
+  "thirdParty": "第三方歌單",
+  "addPlaylist": "新增歌單",
+  "total": "共 {total} 個歌單",
+  "empty": "還沒有第三方歌單，點擊新增吧",
+  "errorSubtitle": "取得歌單列表時發生錯誤，請重試",
+  "card": {
+    "viewOn": "在 {platform} 中查看歌單"
+  },
+  "form": {
+    "addTitle": "新增第三方歌單",
+    "editTitle": "編輯歌單",
+    "platform": "平台",
+    "platformPlaceholder": "選擇平台",
+    "platformRequired": "請選擇平台",
+    "url": "歌單連結",
+    "urlPlaceholder": "輸入第三方平台歌單連結，如 https://music.163.com/playlist/...",
+    "urlRequired": "請輸入歌單連結",
+    "name": "歌單名稱",
+    "namePlaceholder": "輸入歌單名稱",
+    "nameRequired": "請輸入歌單名稱",
+    "coverUrl": "封面圖 URL",
+    "coverUrlPlaceholder": "歌單封面圖片URL（可選）",
+    "descriptionPlaceholder": "簡短描述這個歌單（可選）",
+    "showOnFront": "前台顯示",
+    "addSuccess": "新增成功"
+  }
+}

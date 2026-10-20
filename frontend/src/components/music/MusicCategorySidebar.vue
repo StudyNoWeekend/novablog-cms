@@ -1,7 +1,7 @@
 <template>
   <div class="category-sidebar">
     <div class="sidebar-header">
-      <span class="sidebar-title">分类</span>
+      <span class="sidebar-title">{{ $t('common.field.category') }}</span>
       <a-button type="text" size="small" @click="openAddModal">
         <PlusOutlined />
       </a-button>
@@ -12,7 +12,7 @@
         :class="{ active: modelValue === '' }"
         @click="emit('update:modelValue', '')"
       >
-        <span class="category-name">全部</span>
+        <span class="category-name">{{ $t('common.status.all') }}</span>
       </li>
       <li
         v-for="cat in categories"
@@ -26,8 +26,8 @@
           <MoreOutlined class="category-more" @click.stop />
           <template #overlay>
             <a-menu>
-              <a-menu-item @click="handleEdit(cat)">编辑</a-menu-item>
-              <a-menu-item @click="handleDelete(cat)">删除</a-menu-item>
+              <a-menu-item @click="handleEdit(cat)">{{ $t('common.actions.edit') }}</a-menu-item>
+              <a-menu-item @click="handleDelete(cat)">{{ $t('common.actions.delete') }}</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
@@ -46,6 +46,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined, MoreOutlined } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import { categoryApi } from '@/api/category'
@@ -56,6 +57,8 @@ defineProps<{
   categories: Category[]
   modelValue: string
 }>()
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
@@ -77,15 +80,15 @@ function handleEdit(cat: Category) {
 
 function handleDelete(cat: Category) {
   Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除分类「${cat.name}」吗？`,
-    okText: '删除',
+    title: t('common.message.deleteConfirm'),
+    content: t('common.message.deleteConfirmNamed', { name: cat.name }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await categoryApi.remove(cat.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         emit('refresh')
       } catch {
         // 错误由拦截器处理

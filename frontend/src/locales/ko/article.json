@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "게시글 관리",
+    "writeArticle": "글쓰기",
+    "searchPlaceholder": "게시글 제목 검색...",
+    "empty": "아직 게시글이 없습니다. 지금 작성해 보세요",
+    "writeFirst": "첫 게시글 작성하기",
+    "loadError": "게시글 목록을 가져오는 중 오류가 발생했습니다. 다시 시도해 주세요",
+    "totalArticles": "총 {total}개",
+    "deleteTitle": "게시글 삭제",
+    "deleteConfirm": "삭제한 게시글은 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  },
+  "filter": {
+    "allStatus": "전체 상태"
+  },
+  "status": {
+    "draft": "초안",
+    "published": "게시됨",
+    "unpublished": "게시 중지"
+  },
+  "editorType": {
+    "markdown": "MD",
+    "html": "HTML"
+  },
+  "edit": {
+    "backToList": "목록으로",
+    "titlePlaceholder": "게시글 제목을 입력하세요...",
+    "richText": "리치 텍스트",
+    "saveDraft": "초안 저장",
+    "titleRequired": "게시글 제목을 입력해 주세요",
+    "draftSaved": "초안이 저장되었습니다",
+    "published": "게시글이 게시되었습니다"
+  },
+  "form": {
+    "summaryPlaceholder": "게시글 요약. 목록과 SEO에 표시됩니다...",
+    "pinToTop": "상단 고정",
+    "comment": "댓글"
+  },
+  "card": {
+    "moveToDraft": "초안으로 전환",
+    "minutesAgo": "{count}분 전",
+    "hoursAgo": "{count}시간 전",
+    "daysAgo": "{count}일 전"
+  }
+}

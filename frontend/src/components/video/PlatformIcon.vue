@@ -1,5 +1,5 @@
 <template>
-  <a-tooltip :title="config?.name || platform">
+  <a-tooltip :title="platformLabel">
     <span class="platform-icon" :style="{ color: config?.color || '#999' }">
       <svg
         :width="size"
@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PLATFORM_MAP } from './platforms'
 
 const props = withDefaults(
@@ -28,7 +29,12 @@ const props = withDefaults(
   },
 )
 
+const { t } = useI18n()
+
 const config = computed(() => PLATFORM_MAP[props.platform])
+
+// 平台显示名：跟随当前语言；未知平台时回退显示原始 key
+const platformLabel = computed(() => (config.value ? t(config.value.labelKey) : props.platform))
 </script>
 
 <style scoped>

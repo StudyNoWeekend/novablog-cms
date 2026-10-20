@@ -1,0 +1,192 @@
+{
+  "library": {
+    "title": "メディアライブラリ"
+  },
+  "upload": {
+    "image": "画像をアップロード",
+    "video": "動画をアップロード",
+    "progress": "アップロード中 {percent}%（{done}/{total}）",
+    "batchComplete": "アップロード完了：{total} 件のファイル",
+    "partialFailed": "成功 {success} 件、失敗 {failed} 件：{names}",
+    "moreSuffix": " 他 {count} 件",
+    "nameSeparator": "、",
+    "sizeLimit": "ファイルサイズは 100MB を超えることができません",
+    "failed": "アップロードに失敗しました"
+  },
+  "type": {
+    "image": "画像",
+    "video": "動画",
+    "folder": "フォルダー"
+  },
+  "search": {
+    "placeholder": "すべてのファイルを検索..."
+  },
+  "view": {
+    "grid": "アイコン表示",
+    "list": "ファイル表示"
+  },
+  "empty": {
+    "root": "メディアファイルがありません",
+    "folder": "このフォルダーは空です"
+  },
+  "itemCount": "{count} 件",
+  "columns": {
+    "dimensions": "サイズ",
+    "size": "容量",
+    "uploadedAt": "アップロード日時"
+  },
+  "actions": {
+    "rename": "名前を変更",
+    "move": "移動",
+    "moveTo": "移動先"
+  },
+  "folder": {
+    "rootName": "すべてのファイル",
+    "create": "新規フォルダー",
+    "rename": "フォルダー名を変更",
+    "name": "フォルダー名",
+    "namePlaceholder": "フォルダー名を入力してください",
+    "nameRequired": "フォルダー名を入力してください",
+    "nameRule": "「{name}」内に作成します。名前には / \\ : * ? \" 縦線、山括弧 は使用できません",
+    "systemTag": "システム",
+    "systemRestricted": "システムフォルダーはモジュールで固定使用されるため、名前変更・移動・削除はできません",
+    "systemRenameDenied": "システムフォルダーは名前を変更できません",
+    "systemMoveDenied": "システムフォルダーは移動できません",
+    "systemDeleteDenied": "システムフォルダーは削除できません",
+    "created": "フォルダーを作成しました",
+    "renameSuccess": "名前を変更しました",
+    "deleteTitle": "フォルダーを削除",
+    "deleteConfirm": "フォルダー「{name}」を削除しますか？空のフォルダーのみ削除できます。",
+    "deleteConfirmWithChildren": "「{name}」にはサブフォルダーがあります。空のフォルダーのみ削除できます。続行しますか？",
+    "deleteSuccess": "フォルダーを削除しました",
+    "empty": "フォルダーがありません",
+    "moved": "フォルダーを移動しました"
+  },
+  "move": {
+    "title": "フォルダーへ移動",
+    "folderHint": "フォルダー「{name}」を選択した場所へ移動します（既定ではルートへ移動）",
+    "filesHint": "選択した {count} 件のファイルを選択した場所へ移動します（既定ではルートへ移動）",
+    "filesMoved": "ファイルを移動しました",
+    "failed": "移動に失敗しました"
+  },
+  "delete": {
+    "title": "メディアファイルを削除",
+    "force": "それでも削除",
+    "usedWarning": "このファイルは {total} 件のコンテンツから参照されており、削除すると該当箇所の画像が表示されなくなります",
+    "permanentWarning": "削除するとファイルはストレージから完全に削除され、復元できません",
+    "usageCount": "{count} 件",
+    "failed": "削除に失敗しました"
+  },
+  "picker": {
+    "title": "画像を選択",
+    "confirm": "選択を確定"
+  },
+  "chooser": {
+    "title": "画像バージョンを選択",
+    "tip": "画像をクリックするとその画像のプリセットワークベンチが開きます（フレーム付き EXIF 画像の作成・編集）。「使用」でバージョンを確定してください。",
+    "managePresets": "メディアライブラリでプリセットを管理",
+    "openWorkbench": "プリセットワークベンチを開く",
+    "openWorkbenchAria": "「{name}」のプリセットワークベンチを開く",
+    "use": "使用",
+    "inUse": "使用中",
+    "useAria": "{name} を使用",
+    "createPreset": "プリセットを作成",
+    "createPresetAria": "新しいプリセットを作成",
+    "original": "オリジナルを使用"
+  },
+  "field": {
+    "previewAlt": "画像プレビュー",
+    "noImage": "画像がありません",
+    "searchOnline": "オンライン検索",
+    "searchOnlineAria": "オンラインで画像を検索",
+    "uploadLocal": "ローカルからアップロード",
+    "uploadLocalAria": "ローカルから画像をアップロード",
+    "clear": "クリア",
+    "clearAria": "画像をクリア",
+    "urlPlaceholder": "または画像 URL を直接貼り付け"
+  },
+  "external": {
+    "searchLabel": "検索キーワード",
+    "selectIconAria": "アイコン {name} を選択",
+    "selectImageAria": "画像 {name} を選択",
+    "candidate": "候補画像",
+    "searchFailed": "検索に失敗しました。しばらくしてから再試行するか、ローカルアップロードをご利用ください",
+    "noResults": "結果が見つかりません。キーワードを変えてお試しください",
+    "savedWithTransfer": "画像を選択して保存しました",
+    "picked": "画像を選択しました",
+    "tech": {
+      "title": "ブランドアイコンを検索",
+      "placeholder": "技術名を入力（例：Vue / Docker / PostgreSQL）",
+      "hint": "Simple Icons ブランドアイコンライブラリから"
+    },
+    "game": {
+      "title": "ゲームカバーを検索",
+      "placeholder": "ゲーム名を入力（例：ゼルダの伝説 / 黒神話）",
+      "hint": "Bangumi から"
+    },
+    "book": {
+      "title": "書籍カバーを検索",
+      "placeholder": "書名を入力（例：三体）",
+      "hint": "豆瓣読書から"
+    },
+    "recipe": {
+      "title": "料理写真を検索",
+      "placeholder": "料理名を入力（例：紅焼肉 / 宮保鶏丁）",
+      "hint": "Bing 画像検索から"
+    }
+  },
+  "preset": {
+    "open": "プリセット",
+    "templateStyle": "テンプレートスタイル",
+    "templateGallery": "ギャラリー",
+    "templateMovie": "映画",
+    "templateFloating": "フロート",
+    "styleParams": "スタイル設定",
+    "fontSize": "フォントサイズ",
+    "borderSize": "枠サイズ",
+    "borderColor": "枠の背景",
+    "textColor": "文字色",
+    "colorAuto": "自動",
+    "colorBlack": "黒",
+    "colorWhite": "白",
+    "font": "フォント",
+    "brandSection": "ブランド/モデル表示",
+    "logoText": "テキスト",
+    "logoPlaceholder": "Logo 画像モードは準備中です",
+    "showExif": "EXIF 表示",
+    "paramsSection": "パラメータ設定",
+    "make": "ブランド",
+    "model": "型番",
+    "lens": "レンズ",
+    "focalLength": "焦点距離",
+    "aperture": "絞り",
+    "shutter": "シャッター",
+    "date": "日付",
+    "loadingOriginal": "原図を読み込み中...",
+    "gallery": "ライブラリ ({count})",
+    "exifSection": "EXIF 情報",
+    "exifFile": "ファイル",
+    "exifResolution": "解像度",
+    "exifSize": "サイズ",
+    "exifMake": "メーカー",
+    "exifModel": "型番",
+    "exifSoftware": "ソフトウェア",
+    "library": "プリセットライブラリ",
+    "namePlaceholder": "プリセット名...",
+    "untitledPreset": "無題のプリセット",
+    "untitledFile": "untitled",
+    "exportNamePlaceholder": "ファイル名（既定は自動）",
+    "originalLoadError": "原図の読み込みに失敗しました。オブジェクトストレージの CORS 設定を確認してください",
+    "originalLoadFailed": "原図の読み込みに失敗しました",
+    "applyFailed": "プリセットの適用に失敗しました",
+    "renderFailed": "画像の合成に失敗しました",
+    "saveFailed": "保存に失敗しました: {reason}",
+    "exportSuccess": "エクスポートしました",
+    "exportFailed": "エクスポートに失敗しました: {reason}",
+    "unknownError": "不明なエラー",
+    "originalNotLoaded": "原図が読み込まれていません",
+    "canvasFailed": "canvas の作成に失敗しました",
+    "blobFailed": "Blob のエクスポートに失敗しました",
+    "exifWriteFailed": "EXIF の書き込みに失敗しました"
+  }
+}

@@ -1,7 +1,7 @@
 <template>
   <a-modal
     :open="visible"
-    title="移动到文件夹"
+    :title="$t('media.move.title')"
     :confirm-loading="submitting"
     @ok="handleOk"
     @cancel="emit('update:visible', false)"
@@ -21,17 +21,18 @@
           <span class="tree-folder">
             <FolderOutlined />
             <span class="tree-title">{{ title }}</span>
-            <span v-if="count > 0" class="tree-count">{{ count }} 项</span>
+            <span v-if="count > 0" class="tree-count">{{ $t('media.itemCount', { count }) }}</span>
           </span>
         </template>
       </a-tree>
-      <a-empty v-else description="暂无文件夹" />
+      <a-empty v-else :description="$t('media.folder.empty')" />
     </a-spin>
   </a-modal>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { FolderOutlined } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
@@ -54,6 +55,8 @@ const emit = defineEmits<{
 
 const { folderTree, folderLoading, fetchFolderTree, collectSubtreeIds } = useMediaFolders()
 
+const { t } = useI18n()
+
 const ROOT_KEY = '__root__'
 
 const selectedKeys = ref<string[]>([])
@@ -61,9 +64,9 @@ const expandedKeys = ref<string[]>([])
 const submitting = ref(false)
 
 const hint = computed(() => {
-  if (props.folder) return `将文件夹「${props.folder.name}」移动到所选位置（默认移动到根目录）`
+  if (props.folder) return t('media.move.folderHint', { name: props.folder.name })
   const count = props.mediaIds?.length || 0
-  return `将选中的 ${count} 个文件移动到所选位置（默认移动到根目录）`
+  return t('media.move.filesHint', { count })
 })
 
 interface TreeItem {
@@ -87,7 +90,7 @@ const treeData = computed<TreeItem[]>(() => {
         children: build(n.children || []),
       }))
 
-  return [{ title: '全部文件', key: ROOT_KEY, count: 0, children: build(folderTree.value) }]
+  return [{ title: t('media.folder.rootName'), key: ROOT_KEY, count: 0, children: build(folderTree.value) }]
 })
 
 watch(
@@ -116,15 +119,15 @@ async function handleOk() {
   try {
     if (props.folder) {
       await mediaApi.updateFolder(props.folder.id, { parent_id: folderId ?? '' })
-      message.success('文件夹已移动')
+      message.success(t('media.folder.moved'))
     } else {
       await mediaApi.moveMedia(props.mediaIds || [], folderId)
-      message.success('文件已移动')
+      message.success(t('media.move.filesMoved'))
     }
     emit('update:visible', false)
     emit('success')
   } catch (err: any) {
-    message.error(err?.message || '移动失败')
+    message.error(err?.message || t('media.move.failed'))
   } finally {
     submitting.value = false
   }

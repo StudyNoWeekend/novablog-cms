@@ -1,7 +1,7 @@
 <template>
   <a-select
     v-model:value="selectedValue"
-    :placeholder="placeholder"
+    :placeholder="placeholderText"
     style="width: 100%"
     :loading="loading"
     allow-clear
@@ -14,7 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { categoryApi } from '@/api/category'
 import type { Category } from '@/types/category'
 
@@ -23,9 +24,13 @@ const props = withDefaults(defineProps<{
   placeholder?: string
   type?: string
 }>(), {
-  placeholder: '选择分类',
   type: 'article',
 })
+
+const { t } = useI18n()
+
+// 未传入 placeholder 时使用 i18n 默认文案（computed 保证切换语言后跟随刷新）
+const placeholderText = computed(() => props.placeholder ?? t('category.selectPlaceholder'))
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string | undefined): void

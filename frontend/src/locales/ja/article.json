@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "記事管理",
+    "writeArticle": "記事を書く",
+    "searchPlaceholder": "記事タイトルを検索...",
+    "empty": "まだ記事がありません。執筆を始めましょう",
+    "writeFirst": "最初の記事を書く",
+    "loadError": "記事リストの取得中にエラーが発生しました。再試行してください",
+    "totalArticles": "全 {total} 件",
+    "deleteTitle": "記事の削除",
+    "deleteConfirm": "削除した記事は復元できません。本当に削除しますか？"
+  },
+  "filter": {
+    "allStatus": "すべてのステータス"
+  },
+  "status": {
+    "draft": "下書き",
+    "published": "公開済み",
+    "unpublished": "公開停止"
+  },
+  "editorType": {
+    "markdown": "MD",
+    "html": "HTML"
+  },
+  "edit": {
+    "backToList": "一覧に戻る",
+    "titlePlaceholder": "記事タイトルを入力...",
+    "richText": "リッチテキスト",
+    "saveDraft": "下書き保存",
+    "titleRequired": "記事タイトルを入力してください",
+    "draftSaved": "下書きを保存しました",
+    "published": "記事を公開しました"
+  },
+  "form": {
+    "summaryPlaceholder": "記事の概要。一覧やSEOに表示されます...",
+    "pinToTop": "先頭に固定",
+    "comment": "コメント"
+  },
+  "card": {
+    "moveToDraft": "下書きに戻す",
+    "minutesAgo": "{count}分前",
+    "hoursAgo": "{count}時間前",
+    "daysAgo": "{count}日前"
+  }
+}

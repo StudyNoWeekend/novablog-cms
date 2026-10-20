@@ -1,0 +1,57 @@
+{
+  "actions": {
+    "create": "動画を作成",
+    "edit": "動画を編集",
+    "parse": "取得",
+    "overwrite": "上書き"
+  },
+  "status": {
+    "published": "公開済み",
+    "draft": "下書き"
+  },
+  "list": {
+    "searchPlaceholder": "動画タイトルを検索...",
+    "empty": "まだ動画がありません。追加してみましょう",
+    "noDescription": "説明なし",
+    "noPlatforms": "プラットフォームリンクなし",
+    "total": "{total} 件の動画"
+  },
+  "form": {
+    "coverUrl": "カバー URL",
+    "coverUrlPlaceholder": "カバー画像の URL を入力してください（任意）。または右側のボタンからメディアライブラリを選択できます",
+    "selectCoverFromMedia": "メディアライブラリからカバーを選択",
+    "mediaLibrary": "メディアライブラリ",
+    "intro": "説明",
+    "titlePlaceholder": "動画タイトルを入力してください",
+    "introPlaceholder": "動画の説明を入力してください（任意）",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "platforms": "公開プラットフォーム",
+    "platformLinkPlaceholder": "{name} の動画リンクを入力してください",
+    "publishedHint": "公開するとブログに表示されます",
+    "draftHint": "管理画面でのみ表示され、ブログには表示されません"
+  },
+  "message": {
+    "linkRequired": "先に動画リンクを入力してください",
+    "parseSuccess": "情報を取得しました",
+    "overwriteTitle": "上書き確認",
+    "overwriteContent": "フォームに入力内容があります。取得結果で上書きしますか？",
+    "titleRequired": "動画タイトルを入力してください",
+    "platformRequired": "プラットフォームリンクを 1 つ以上追加してください",
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  },
+  "platforms": {
+    "bilibili": "ビリビリ動画",
+    "youtube": "YouTube",
+    "xigua": "西瓜動画",
+    "douyin": "抖音",
+    "xiaohongshu": "小紅書",
+    "kuaishou": "快手",
+    "wechat_channels": "WeChatチャンネル",
+    "tiktok": "TikTok",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "vimeo": "Vimeo",
+    "facebook": "Facebook"
+  }
+}

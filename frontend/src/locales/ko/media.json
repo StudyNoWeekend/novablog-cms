@@ -1,0 +1,192 @@
+{
+  "library": {
+    "title": "미디어 라이브러리"
+  },
+  "upload": {
+    "image": "이미지 업로드",
+    "video": "동영상 업로드",
+    "progress": "업로드 중 {percent}% ({done}/{total})",
+    "batchComplete": "업로드 완료: 총 {total}개 파일",
+    "partialFailed": "성공 {success}개, 실패 {failed}개: {names}",
+    "moreSuffix": " 외 {count}개",
+    "nameSeparator": ", ",
+    "sizeLimit": "파일 크기는 100MB를 초과할 수 없습니다",
+    "failed": "업로드 실패"
+  },
+  "type": {
+    "image": "이미지",
+    "video": "동영상",
+    "folder": "폴더"
+  },
+  "search": {
+    "placeholder": "모든 파일 검색..."
+  },
+  "view": {
+    "grid": "아이콘 보기",
+    "list": "파일 보기"
+  },
+  "empty": {
+    "root": "미디어 파일이 없습니다",
+    "folder": "이 폴더는 비어 있습니다"
+  },
+  "itemCount": "{count}개 항목",
+  "columns": {
+    "dimensions": "크기",
+    "size": "용량",
+    "uploadedAt": "업로드 시간"
+  },
+  "actions": {
+    "rename": "이름 바꾸기",
+    "move": "이동",
+    "moveTo": "이동"
+  },
+  "folder": {
+    "rootName": "전체 파일",
+    "create": "새 폴더",
+    "rename": "폴더 이름 바꾸기",
+    "name": "폴더 이름",
+    "namePlaceholder": "폴더 이름을 입력하세요",
+    "nameRequired": "폴더 이름을 입력하세요",
+    "nameRule": "\"{name}\" 안에 생성됩니다. 이름에는 / \\ : * ? \" 수직선, 꺾쇠괄호를 사용할 수 없습니다",
+    "systemTag": "시스템",
+    "systemRestricted": "시스템 폴더는 모듈에서 사용 중이므로 이름 바꾸기, 이동 또는 삭제할 수 없습니다",
+    "systemRenameDenied": "시스템 폴더는 이름을 바꿀 수 없습니다",
+    "systemMoveDenied": "시스템 폴더는 이동할 수 없습니다",
+    "systemDeleteDenied": "시스템 폴더는 삭제할 수 없습니다",
+    "created": "폴더가 생성되었습니다",
+    "renameSuccess": "이름이 변경되었습니다",
+    "deleteTitle": "폴더 삭제",
+    "deleteConfirm": "폴더 「{name}」을(를) 삭제하시겠습니까? 빈 폴더만 삭제할 수 있습니다.",
+    "deleteConfirmWithChildren": "「{name}」에 하위 폴더가 있습니다. 빈 폴더만 삭제할 수 있습니다. 계속하시겠습니까?",
+    "deleteSuccess": "폴더가 삭제되었습니다",
+    "empty": "폴더가 없습니다",
+    "moved": "폴더가 이동되었습니다"
+  },
+  "move": {
+    "title": "폴더로 이동",
+    "folderHint": "폴더 「{name}」을(를) 선택한 위치로 이동합니다(기본값은 루트)",
+    "filesHint": "선택한 {count}개 파일을 선택한 위치로 이동합니다(기본값은 루트)",
+    "filesMoved": "파일이 이동되었습니다",
+    "failed": "이동 실패"
+  },
+  "delete": {
+    "title": "미디어 파일 삭제",
+    "force": "그래도 삭제",
+    "usedWarning": "이 파일은 {total}곳에서 참조 중이며, 삭제하면 해당 위치의 이미지가 표시되지 않습니다",
+    "permanentWarning": "삭제하면 파일이 저장소에서 영구적으로 제거되며 복구할 수 없습니다",
+    "usageCount": "{count}곳",
+    "failed": "삭제 실패"
+  },
+  "picker": {
+    "title": "이미지 선택",
+    "confirm": "선택 확인"
+  },
+  "chooser": {
+    "title": "이미지 버전 선택",
+    "tip": "이미지를 클릭하면 해당 이미지의 프리셋 워크벤치가 열립니다(프레임 EXIF 이미지 제작/편집). 「사용」을 눌러 버전을 확정하세요.",
+    "managePresets": "미디어 라이브러리에서 프리셋 관리",
+    "openWorkbench": "프리셋 워크벤치 열기",
+    "openWorkbenchAria": "「{name}」 프리셋 워크벤치 열기",
+    "use": "사용",
+    "inUse": "사용 중",
+    "useAria": "{name} 사용",
+    "createPreset": "프리셋 만들기",
+    "createPresetAria": "새 프리셋 만들기",
+    "original": "원본 사용"
+  },
+  "field": {
+    "previewAlt": "이미지 미리보기",
+    "noImage": "이미지 없음",
+    "searchOnline": "온라인 검색",
+    "searchOnlineAria": "온라인으로 이미지 검색",
+    "uploadLocal": "로컬 업로드",
+    "uploadLocalAria": "로컬에서 이미지 업로드",
+    "clear": "지우기",
+    "clearAria": "이미지 지우기",
+    "urlPlaceholder": "또는 이미지 URL을 직접 붙여넣으세요"
+  },
+  "external": {
+    "searchLabel": "검색 키워드",
+    "selectIconAria": "아이콘 {name} 선택",
+    "selectImageAria": "이미지 {name} 선택",
+    "candidate": "후보 이미지",
+    "searchFailed": "검색에 실패했습니다. 잠시 후 다시 시도하거나 로컬 업로드를 이용하세요",
+    "noResults": "결과를 찾을 수 없습니다. 다른 키워드로 시도해 보세요",
+    "savedWithTransfer": "이미지를 선택하고 저장했습니다",
+    "picked": "이미지를 선택했습니다",
+    "tech": {
+      "title": "브랜드 아이콘 검색",
+      "placeholder": "기술 이름 입력(예: Vue / Docker / PostgreSQL)",
+      "hint": "Simple Icons 브랜드 아이콘에서"
+    },
+    "game": {
+      "title": "게임 커버 검색",
+      "placeholder": "게임 이름 입력(예: 젤다의 전설 / 블랙 신화)",
+      "hint": "Bangumi에서"
+    },
+    "book": {
+      "title": "책 표지 검색",
+      "placeholder": "책 제목 입력(예: 삼체)",
+      "hint": "더우반 독서에서"
+    },
+    "recipe": {
+      "title": "음식 사진 검색",
+      "placeholder": "요리 이름 입력(예: 훙사오러우 / 궁바오지딩)",
+      "hint": "Bing 이미지 검색에서"
+    }
+  },
+  "preset": {
+    "open": "프리셋",
+    "templateStyle": "템플릿 스타일",
+    "templateGallery": "갤러리",
+    "templateMovie": "영화",
+    "templateFloating": "플로팅",
+    "styleParams": "스타일 설정",
+    "fontSize": "글자 크기",
+    "borderSize": "테두리 크기",
+    "borderColor": "테두리 배경",
+    "textColor": "글자 색",
+    "colorAuto": "자동",
+    "colorBlack": "검정",
+    "colorWhite": "흰색",
+    "font": "글꼴",
+    "brandSection": "브랜드/모델 표시",
+    "logoText": "텍스트",
+    "logoPlaceholder": "Logo 이미지 모드는 준비 중입니다",
+    "showExif": "EXIF 표시",
+    "paramsSection": "파라미터 설정",
+    "make": "브랜드",
+    "model": "모델",
+    "lens": "렌즈",
+    "focalLength": "초점 거리",
+    "aperture": "조리개",
+    "shutter": "셔터",
+    "date": "날짜",
+    "loadingOriginal": "원본 불러오는 중...",
+    "gallery": "라이브러리 ({count})",
+    "exifSection": "EXIF 정보",
+    "exifFile": "파일",
+    "exifResolution": "해상도",
+    "exifSize": "크기",
+    "exifMake": "제조사",
+    "exifModel": "모델",
+    "exifSoftware": "소프트웨어",
+    "library": "프리셋 라이브러리",
+    "namePlaceholder": "프리셋 이름...",
+    "untitledPreset": "이름 없는 프리셋",
+    "untitledFile": "untitled",
+    "exportNamePlaceholder": "파일명(기본 자동)",
+    "originalLoadError": "원본 불러오기 실패. 오브젝트 스토리지 CORS 설정을 확인하세요",
+    "originalLoadFailed": "원본 불러오기 실패",
+    "applyFailed": "프리셋 적용 실패",
+    "renderFailed": "이미지 합성 실패",
+    "saveFailed": "저장 실패: {reason}",
+    "exportSuccess": "내보내기 성공",
+    "exportFailed": "내보내기 실패: {reason}",
+    "unknownError": "알 수 없는 오류",
+    "originalNotLoaded": "원본이 로드되지 않았습니다",
+    "canvasFailed": "canvas 생성 실패",
+    "blobFailed": "Blob 내보내기 실패",
+    "exifWriteFailed": "EXIF 쓰기 실패"
+  }
+}

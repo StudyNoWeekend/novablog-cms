@@ -1,7 +1,7 @@
 <template>
   <a-modal
     v-model:open="open"
-    title="选择图片"
+    :title="$t('media.picker.title')"
     width="680px"
     :footer="null"
     @cancel="handleCancel"
@@ -9,7 +9,7 @@
     <div class="picker-breadcrumb">
       <a-breadcrumb>
         <a-breadcrumb-item>
-          <a @click.prevent="enterFolder(null)">全部文件</a>
+          <a @click.prevent="enterFolder(null)">{{ $t('media.folder.rootName') }}</a>
         </a-breadcrumb-item>
         <a-breadcrumb-item v-for="folder in currentPath" :key="folder.id">
           <a @click.prevent="enterFolder(folder.id)">{{ folder.name }}</a>
@@ -45,7 +45,7 @@
         </div>
       </div>
     </div>
-    <a-empty v-if="!loading && subFolders.length === 0 && mediaList.length === 0" description="此文件夹为空" />
+    <a-empty v-if="!loading && subFolders.length === 0 && mediaList.length === 0" :description="$t('media.empty.folder')" />
     <a-pagination
       v-if="total > 20"
       :current="page"
@@ -56,7 +56,7 @@
     />
 
     <div v-if="selectedId" class="media-picker-footer">
-      <a-button type="primary" @click="handleConfirm">确认选择</a-button>
+      <a-button type="primary" @click="handleConfirm">{{ $t('media.picker.confirm') }}</a-button>
     </div>
 
     <MediaPresetChooser

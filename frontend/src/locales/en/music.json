@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "audioImport": "Audio Import"
+  },
+  "addSong": "Add Song",
+  "list": {
+    "title": "Music Playlist",
+    "total": "{total} songs in total",
+    "empty": "No songs yet. Click add to get started",
+    "errorSubtitle": "Failed to load songs. Please try again",
+    "deleteConfirm": "Song \"{name}\" will be permanently deleted. Are you sure?",
+    "categoryUpdated": "Category updated",
+    "sortUpdated": "Order updated",
+    "alreadyFirst": "This song is already at the top"
+  },
+  "song": {
+    "dragSort": "Drag to reorder",
+    "viewOnBilibili": "View on Bilibili",
+    "changeCategory": "Click to change category",
+    "uncategorized": "Uncategorized",
+    "play": "Play",
+    "pinTop": "Pin to top"
+  },
+  "player": {
+    "source": "Bilibili Player",
+    "prev": "Previous",
+    "next": "Next",
+    "close": "Close player",
+    "loading": "Loading player…",
+    "frameTitle": "Bilibili video player",
+    "loadFailed": "Failed to get the audio URL. Please try again later"
+  },
+  "form": {
+    "editTitle": "Edit Song",
+    "biliUrl": "Bilibili Video URL",
+    "biliUrlPlaceholder": "Paste a Bilibili video URL, e.g. https://www.bilibili.com/video/BV...",
+    "biliUrlRequired": "Please enter a Bilibili video URL",
+    "parse": "Parse",
+    "parseProcessing": "Parsing, please wait...",
+    "parseSuccess": "Parsed successfully",
+    "parseSuccessStatus": "Parsed successfully, info filled in automatically",
+    "parseFailed": "Parse failed",
+    "parseFirst": "Parse the Bilibili video URL first",
+    "songName": "Song Name",
+    "songNamePlaceholder": "Enter song name",
+    "songNameRequired": "Please enter a song name",
+    "artist": "Artist",
+    "artistPlaceholder": "Enter artist name",
+    "artistRequired": "Please enter an artist name",
+    "coverPreviewAlt": "Cover preview",
+    "chooseCover": "Choose Cover",
+    "coverUrlPlaceholder": "Cover image URL, or pick from the media library",
+    "coverHint": "Click the thumbnail to pick from the media library, or paste an external image URL (Bilibili covers are saved to storage automatically).",
+    "categoryPlaceholder": "Pick an existing category or type a new name (created automatically if missing)",
+    "categoryTooLong": "Category name cannot exceed 50 characters",
+    "selectAll": "Select All",
+    "batchSummary": "{total} songs, {selected} selected",
+    "batchCategory": "Shared Category",
+    "selectAtLeastOne": "Select at least one song",
+    "batchAddSuccess": "Successfully added {count} songs",
+    "addSuccess": "Added successfully"
+  }
+}

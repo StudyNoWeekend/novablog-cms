@@ -1,0 +1,28 @@
+{
+  "thirdParty": "サードパーティプレイリスト",
+  "addPlaylist": "プレイリストを追加",
+  "total": "全 {total} 件のプレイリスト",
+  "empty": "サードパーティプレイリストがありません。追加しましょう",
+  "errorSubtitle": "プレイリストの取得中にエラーが発生しました。再試行してください",
+  "card": {
+    "viewOn": "{platform} でプレイリストを見る"
+  },
+  "form": {
+    "addTitle": "サードパーティプレイリストを追加",
+    "editTitle": "プレイリストを編集",
+    "platform": "プラットフォーム",
+    "platformPlaceholder": "プラットフォームを選択",
+    "platformRequired": "プラットフォームを選択してください",
+    "url": "プレイリストURL",
+    "urlPlaceholder": "第三者プラットフォームのプレイリストURLを入力（例: https://music.163.com/playlist/...）",
+    "urlRequired": "プレイリストURLを入力してください",
+    "name": "プレイリスト名",
+    "namePlaceholder": "プレイリスト名を入力",
+    "nameRequired": "プレイリスト名を入力してください",
+    "coverUrl": "カバー画像URL",
+    "coverUrlPlaceholder": "プレイリストのカバー画像URL（任意）",
+    "descriptionPlaceholder": "このプレイリストの簡単な説明（任意）",
+    "showOnFront": "サイトに表示",
+    "addSuccess": "追加しました"
+  }
+}

@@ -1,15 +1,15 @@
 <template>
   <a-modal
     v-model:open="open"
-    title="选择图片版本"
+    :title="$t('media.chooser.title')"
     width="680px"
     :footer="null"
     @cancel="handleCancel"
   >
     <a-spin :spinning="loading">
       <div class="chooser-tip">
-        点击图片直接打开该图的预设工作台（制作/编辑相框 EXIF 成品图），点「使用」选定版本后确认。
-        <a :href="mediaLibraryUrl" target="_blank" rel="noopener">在媒体库管理预设</a>
+        {{ $t('media.chooser.tip') }}
+        <a :href="mediaLibraryUrl" target="_blank" rel="noopener">{{ $t('media.chooser.managePresets') }}</a>
       </div>
       <div class="chooser-grid">
         <div
@@ -22,14 +22,14 @@
             class="chooser-item-media"
             role="button"
             tabindex="0"
-            :aria-label="`打开「${card.name}」的预设工作台`"
+            :aria-label="$t('media.chooser.openWorkbenchAria', { name: card.name })"
             @click="openWorkbench"
             @keydown.enter="openWorkbench"
           >
             <img :src="card.url" :alt="card.name" referrerpolicy="no-referrer" loading="lazy" />
             <div class="media-hover-tip">
               <EditOutlined />
-              <span>打开预设工作台</span>
+              <span>{{ $t('media.chooser.openWorkbench') }}</span>
             </div>
           </div>
           <div class="chooser-item-bar">
@@ -37,10 +37,10 @@
             <a-button
               size="small"
               :type="choiceKind === card.key ? 'primary' : 'default'"
-              :aria-label="`使用${card.name}`"
+              :aria-label="$t('media.chooser.useAria', { name: card.name })"
               @click="choiceKind = card.key"
             >
-              {{ choiceKind === card.key ? '使用中' : '使用' }}
+              {{ choiceKind === card.key ? $t('media.chooser.inUse') : $t('media.chooser.use') }}
             </a-button>
           </div>
         </div>
@@ -50,18 +50,18 @@
           class="chooser-item chooser-item-create"
           role="button"
           tabindex="0"
-          aria-label="制作新预设"
+          :aria-label="$t('media.chooser.createPresetAria')"
           @click="openWorkbench"
           @keydown.enter="openWorkbench"
         >
           <PlusOutlined class="create-icon" />
-          <span>制作预设</span>
+          <span>{{ $t('media.chooser.createPreset') }}</span>
         </div>
       </div>
       <div class="chooser-footer">
-        <a-button aria-label="取消" @click="handleCancel">取消</a-button>
-        <a-button type="primary" :disabled="!choiceKind" aria-label="确认" @click="handleConfirm">
-          确认
+        <a-button :aria-label="$t('common.actions.cancel')" @click="handleCancel">{{ $t('common.actions.cancel') }}</a-button>
+        <a-button type="primary" :disabled="!choiceKind" :aria-label="$t('common.actions.confirm')" @click="handleConfirm">
+          {{ $t('common.actions.confirm') }}
         </a-button>
       </div>
     </a-spin>
@@ -78,6 +78,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
@@ -106,6 +107,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const { t } = useI18n()
 const mediaLibraryUrl = router.resolve('/media').href
 
 const open = ref(props.visible)
@@ -115,7 +117,7 @@ const choiceKind = ref<string>(CHOICE_ORIGINAL)
 const workbenchVisible = ref(false)
 
 const cards = computed<VersionCard[]>(() => [
-  { key: CHOICE_ORIGINAL, name: '使用原图', url: props.originalUrl },
+  { key: CHOICE_ORIGINAL, name: t('media.chooser.original'), url: props.originalUrl },
   ...presets.value.map((p) => ({ key: p.id, name: p.name, url: p.output_url })),
 ])
 

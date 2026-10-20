@@ -1,8 +1,8 @@
 <template>
   <a-modal
     :open="visible"
-    title="删除媒体文件"
-    :ok-text="used ? '仍要删除' : '删除'"
+    :title="$t('media.delete.title')"
+    :ok-text="used ? $t('media.delete.force') : $t('common.actions.delete')"
     :ok-button-props="{ danger: true }"
     :confirm-loading="deleting"
     @ok="handleDelete"
@@ -27,14 +27,14 @@
           v-if="used"
           type="error"
           show-icon
-          :message="`该文件被 ${total} 处内容引用，删除后对应位置将无法显示图片`"
+          :message="$t('media.delete.usedWarning', { total })"
           style="margin-top: 12px"
         />
         <a-alert
           v-else
           type="warning"
           show-icon
-          message="删除后文件将从存储中永久移除，不可恢复"
+          :message="$t('media.delete.permanentWarning')"
           style="margin-top: 12px"
         />
 
@@ -42,7 +42,7 @@
           <div v-for="group in groups" :key="group.module" class="usage-group">
             <div class="usage-module">
               <a-tag color="processing">{{ group.module }}</a-tag>
-              <span class="usage-count">{{ group.items.length }} 处</span>
+              <span class="usage-count">{{ $t('media.delete.usageCount', { count: group.items.length }) }}</span>
             </div>
             <ul class="usage-list">
               <li v-for="item in group.items" :key="`${item.id}-${item.field}`">
@@ -59,6 +59,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { PlayCircleOutlined } from '@ant-design/icons-vue'
 import { mediaApi, type MediaItem, type MediaUsageGroup } from '@/api/media'
@@ -72,6 +73,8 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
   (e: 'success'): void
 }>()
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const deleting = ref(false)
@@ -111,11 +114,11 @@ async function handleDelete() {
   deleting.value = true
   try {
     await mediaApi.remove(props.media.id, used.value)
-    message.success('删除成功')
+    message.success(t('common.message.deleteSuccess'))
     emit('success')
     emit('update:visible', false)
   } catch (err: any) {
-    message.error(err?.message || '删除失败')
+    message.error(err?.message || t('media.delete.failed'))
   } finally {
     deleting.value = false
   }

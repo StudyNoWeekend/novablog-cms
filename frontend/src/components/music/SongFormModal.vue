@@ -1,7 +1,7 @@
 <template>
   <a-modal
     v-model:open="visible"
-    :title="isEdit ? '编辑歌曲' : '添加歌曲'"
+    :title="isEdit ? $t('music.form.editTitle') : $t('music.addSong')"
     :confirm-loading="saving"
     width="640px"
     @ok="handleSave"
@@ -9,11 +9,11 @@
   >
     <a-form layout="vertical">
       <!-- B站链接输入 + 解析按钮（仅添加模式） -->
-      <a-form-item v-if="!isEdit" label="B站视频链接">
+      <a-form-item v-if="!isEdit" :label="$t('music.form.biliUrl')">
         <a-input-group compact>
           <a-input
             v-model:value="biliUrl"
-            placeholder="粘贴B站视频链接，如 https://www.bilibili.com/video/BV..."
+            :placeholder="$t('music.form.biliUrlPlaceholder')"
             style="width: calc(100% - 90px)"
             @pressEnter="handleParse"
           />
@@ -23,7 +23,7 @@
             style="width: 90px"
             @click="handleParse"
           >
-            解析
+            {{ $t('music.form.parse') }}
           </a-button>
         </a-input-group>
       </a-form-item>
@@ -36,38 +36,38 @@
 
       <!-- 编辑模式 或 单首结果：单首表单 -->
       <template v-if="isEdit || (parseResults.length <= 1 && formState.bvid)">
-        <a-form-item label="歌曲名称" required>
-          <a-input v-model:value="formState.title" placeholder="请输入歌曲名称" />
+        <a-form-item :label="$t('music.form.songName')" required>
+          <a-input v-model:value="formState.title" :placeholder="$t('music.form.songNamePlaceholder')" />
         </a-form-item>
-        <a-form-item label="歌手" required>
-          <a-input v-model:value="formState.artist" placeholder="请输入歌手名称" />
+        <a-form-item :label="$t('music.form.artist')" required>
+          <a-input v-model:value="formState.artist" :placeholder="$t('music.form.artistPlaceholder')" />
         </a-form-item>
-        <a-form-item label="封面">
+        <a-form-item :label="$t('common.field.cover')">
           <div class="cover-field">
             <div class="cover-preview" @click="showMediaPicker = true">
               <template v-if="formState.cover_url">
-                <SongCoverImg :url="formState.cover_url" alt="封面预览" :width="320" class="cover-preview-img" />
+                <SongCoverImg :url="formState.cover_url" :alt="$t('music.form.coverPreviewAlt')" :width="320" class="cover-preview-img" />
                 <div class="cover-preview-overlay">
                   <PictureOutlined />
                 </div>
               </template>
               <div v-else class="cover-placeholder">
                 <PictureOutlined />
-                <span>选择封面</span>
+                <span>{{ $t('music.form.chooseCover') }}</span>
               </div>
             </div>
             <div class="cover-input">
-              <a-input v-model:value="formState.cover_url" placeholder="封面图片URL，或从左侧媒体库选择" />
-              <div class="cover-input-hint">点击缩略图可从媒体库选择，也可直接粘贴外部图片 URL（B站封面会自动保存到存储）。</div>
+              <a-input v-model:value="formState.cover_url" :placeholder="$t('music.form.coverUrlPlaceholder')" />
+              <div class="cover-input-hint">{{ $t('music.form.coverHint') }}</div>
             </div>
           </div>
         </a-form-item>
-        <a-form-item label="分类">
+        <a-form-item :label="$t('common.field.category')">
           <a-auto-complete
             v-model:value="categoryName"
             :options="categoryOptions"
             :filter-option="filterCategoryOption"
-            placeholder="选择已有分类或输入新分类名称（不存在时自动创建）"
+            :placeholder="$t('music.form.categoryPlaceholder')"
             allow-clear
           />
         </a-form-item>
@@ -76,8 +76,8 @@
       <!-- 多首结果：批量选择列表 -->
       <template v-if="!isEdit && parseResults.length > 1">
         <div class="batch-header">
-          <a-checkbox v-model:checked="selectAll">全选</a-checkbox>
-          <span class="batch-summary">共 {{ parseResults.length }} 首，已选 {{ selectedCount }} 首</span>
+          <a-checkbox v-model:checked="selectAll">{{ $t('music.form.selectAll') }}</a-checkbox>
+          <span class="batch-summary">{{ $t('music.form.batchSummary', { total: parseResults.length, selected: selectedCount }) }}</span>
         </div>
 
         <div class="batch-list">
@@ -85,19 +85,19 @@
             <a-checkbox v-model:checked="item.selected" />
             <SongCoverImg :url="item.cover_url" :alt="item.title" :width="160" class="batch-cover" />
             <div class="batch-fields">
-              <a-input v-model:value="item.title" placeholder="歌曲名称" size="small" />
-              <a-input v-model:value="item.artist" placeholder="歌手" size="small" />
+              <a-input v-model:value="item.title" :placeholder="$t('music.form.songName')" size="small" />
+              <a-input v-model:value="item.artist" :placeholder="$t('music.form.artist')" size="small" />
             </div>
             <span class="batch-duration">{{ formatDuration(item.duration) }}</span>
           </div>
         </div>
 
-        <a-form-item label="统一分类" style="margin-top: 16px">
+        <a-form-item :label="$t('music.form.batchCategory')" style="margin-top: 16px">
           <a-auto-complete
             v-model:value="batchCategoryName"
             :options="categoryOptions"
             :filter-option="filterCategoryOption"
-            placeholder="选择已有分类或输入新分类名称（不存在时自动创建）"
+            :placeholder="$t('music.form.categoryPlaceholder')"
             allow-clear
           />
         </a-form-item>
@@ -111,6 +111,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { PictureOutlined } from '@ant-design/icons-vue'
 import { musicApi } from '@/api/music'
@@ -131,6 +132,8 @@ const emit = defineEmits<{
   (e: 'saved'): void
 }>()
 
+const { t } = useI18n()
+
 const visible = computed({
   get: () => props.open,
   set: (val: boolean) => emit('update:open', val),
@@ -147,11 +150,11 @@ const showMediaPicker = ref(false)
 const parseStatusText = computed(() => {
   switch (parseStatus.value) {
     case 'processing':
-      return '正在解析，请稍候...'
+      return t('music.form.parseProcessing')
     case 'success':
-      return '解析成功，已自动填充信息'
+      return t('music.form.parseSuccessStatus')
     case 'failed':
-      return '解析失败'
+      return t('music.form.parseFailed')
     default:
       return ''
   }
@@ -182,7 +185,7 @@ function filterCategoryOption(input: string, option: { value: string }) {
 // 校验分类名长度（后端限制 max=50）
 function categoryInputValid(name: string): boolean {
   if (name.trim().length > 50) {
-    message.warning('分类名称不能超过 50 个字符')
+    message.warning(t('music.form.categoryTooLong'))
     return false
   }
   return true
@@ -270,7 +273,7 @@ function resetForm() {
 
 async function handleParse() {
   if (!biliUrl.value.trim()) {
-    message.warning('请输入B站视频链接')
+    message.warning(t('music.form.biliUrlRequired'))
     return
   }
   parsing.value = true
@@ -289,12 +292,12 @@ async function handleParse() {
           parseStatus.value = 'success'
           parsing.value = false
           clearParseInterval()
-          message.success('解析成功')
+          message.success(t('music.form.parseSuccess'))
         } else if (task.status === 'failed') {
           parseStatus.value = 'failed'
           parsing.value = false
           clearParseInterval()
-          message.error(task.error || '解析失败')
+          message.error(task.error || t('music.form.parseFailed'))
         }
       } catch {
         parseStatus.value = 'failed'
@@ -338,11 +341,11 @@ async function handleSave() {
   if (isEdit.value && props.song) {
     // 编辑模式：单首更新
     if (!formState.title.trim()) {
-      message.warning('请输入歌曲名称')
+      message.warning(t('music.form.songNameRequired'))
       return
     }
     if (!formState.artist.trim()) {
-      message.warning('请输入歌手名称')
+      message.warning(t('music.form.artistRequired'))
       return
     }
     if (!categoryInputValid(categoryName.value)) {
@@ -360,7 +363,7 @@ async function handleSave() {
         duration: formState.duration,
         sort_order: formState.sort_order,
       })
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
       emit('saved')
       emit('update:open', false)
     } catch {
@@ -375,7 +378,7 @@ async function handleSave() {
     // 多首批量创建
     const selected = parseResults.value.filter(r => r.selected)
     if (selected.length === 0) {
-      message.warning('请至少选择一首歌曲')
+      message.warning(t('music.form.selectAtLeastOne'))
       return
     }
     if (!categoryInputValid(batchCategoryName.value)) {
@@ -396,7 +399,7 @@ async function handleSave() {
     saving.value = true
     try {
       await musicApi.batchCreateSongs({ songs })
-      message.success(`成功添加 ${songs.length} 首歌曲`)
+      message.success(t('music.form.batchAddSuccess', { count: songs.length }))
       emit('saved')
       emit('update:open', false)
     } catch {
@@ -409,15 +412,15 @@ async function handleSave() {
 
   // 单首创建
   if (!formState.title.trim()) {
-    message.warning('请输入歌曲名称')
+    message.warning(t('music.form.songNameRequired'))
     return
   }
   if (!formState.artist.trim()) {
-    message.warning('请输入歌手名称')
+    message.warning(t('music.form.artistRequired'))
     return
   }
   if (!formState.bvid) {
-    message.warning('请先解析B站视频链接')
+    message.warning(t('music.form.parseFirst'))
     return
   }
   if (!categoryInputValid(categoryName.value)) {
@@ -439,7 +442,7 @@ async function handleSave() {
       duration: formState.duration,
       sort_order: formState.sort_order,
     })
-    message.success('添加成功')
+    message.success(t('music.form.addSuccess'))
     emit('saved')
     emit('update:open', false)
   } catch {

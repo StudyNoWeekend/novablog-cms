@@ -1,0 +1,57 @@
+{
+  "actions": {
+    "create": "新增影片",
+    "edit": "編輯影片",
+    "parse": "解析",
+    "overwrite": "覆蓋"
+  },
+  "status": {
+    "published": "已發佈",
+    "draft": "草稿"
+  },
+  "list": {
+    "searchPlaceholder": "搜尋影片標題...",
+    "empty": "還沒有影片作品，開始新增吧",
+    "noDescription": "暫無介紹",
+    "noPlatforms": "暫無平台連結",
+    "total": "共 {total} 個影片"
+  },
+  "form": {
+    "coverUrl": "封面 URL",
+    "coverUrlPlaceholder": "請輸入封面圖片網址（可選），或點擊右側按鈕從媒體庫選擇",
+    "selectCoverFromMedia": "從媒體庫選擇封面",
+    "mediaLibrary": "媒體庫",
+    "intro": "介紹",
+    "titlePlaceholder": "請輸入影片標題",
+    "introPlaceholder": "請輸入影片介紹（可選）",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "platforms": "發佈平台",
+    "platformLinkPlaceholder": "請輸入 {name} 影片連結",
+    "publishedHint": "發佈後將在部落格前台公開顯示",
+    "draftHint": "僅後台可見，部落格前台不顯示"
+  },
+  "message": {
+    "linkRequired": "請先輸入影片連結",
+    "parseSuccess": "解析成功",
+    "overwriteTitle": "覆蓋確認",
+    "overwriteContent": "表單中已有內容，是否用解析結果覆蓋？",
+    "titleRequired": "請輸入影片標題",
+    "platformRequired": "請至少新增一個平台連結",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，確定要刪除嗎？"
+  },
+  "platforms": {
+    "bilibili": "B站",
+    "youtube": "YouTube",
+    "xigua": "西瓜影片",
+    "douyin": "抖音",
+    "xiaohongshu": "小紅書",
+    "kuaishou": "快手",
+    "wechat_channels": "微信視頻號",
+    "tiktok": "TikTok",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "vimeo": "Vimeo",
+    "facebook": "Facebook"
+  }
+}

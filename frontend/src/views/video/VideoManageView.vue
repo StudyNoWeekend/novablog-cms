@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">视频作品</h1>
+      <h1 class="page-title">{{ t('menu.video.list') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 新建视频
+        <PlusOutlined /> {{ t('video.actions.create') }}
       </a-button>
     </div>
 
@@ -14,27 +14,27 @@
       <div class="video-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索视频标题..."
+          :placeholder="t('video.list.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
         <a-select
           v-model:value="statusFilter"
           style="width: 120px"
-          placeholder="状态"
+          :placeholder="t('common.field.status')"
           allow-clear
           @change="reset(); fetchList()"
         >
-          <a-select-option value="">全部</a-select-option>
-          <a-select-option :value="1">已发布</a-select-option>
-          <a-select-option :value="0">草稿</a-select-option>
+          <a-select-option value="">{{ t('common.status.all') }}</a-select-option>
+          <a-select-option :value="1">{{ t('video.status.published') }}</a-select-option>
+          <a-select-option :value="0">{{ t('video.status.draft') }}</a-select-option>
         </a-select>
       </div>
 
       <a-spin :spinning="loading">
         <a-empty
           v-if="!loading && list.length === 0"
-          description="还没有视频作品，开始添加吧"
+          :description="t('video.list.empty')"
           style="margin-top: 48px"
         />
         <div v-else class="video-grid">
@@ -58,17 +58,17 @@
                 v-if="item.status === 1"
                 color="green"
                 class="status-tag"
-              >已发布</a-tag>
+              >{{ t('video.status.published') }}</a-tag>
               <a-tag
                 v-else
                 color="orange"
                 class="status-tag"
-              >草稿</a-tag>
+              >{{ t('video.status.draft') }}</a-tag>
             </div>
             <div class="video-info">
               <div class="video-title" :title="item.title">{{ item.title }}</div>
               <div class="video-desc" :title="item.description">
-                {{ item.description || '暂无介绍' }}
+                {{ item.description || t('video.list.noDescription') }}
               </div>
               <div class="video-platforms">
                 <template v-if="item.platforms && item.platforms.length">
@@ -84,17 +84,17 @@
                     <PlatformIcon :platform="link.platform" :size="22" />
                   </a>
                 </template>
-                <span v-else class="no-platform">暂无平台链接</span>
+                <span v-else class="no-platform">{{ t('video.list.noPlatforms') }}</span>
               </div>
               <div class="video-meta">
                 <span class="meta-item">{{ formatDateTime(item.created_at) }}</span>
               </div>
               <div class="video-actions">
                 <a-button type="link" size="small" @click="handleEdit(item)">
-                  <EditOutlined /> 编辑
+                  <EditOutlined /> {{ t('common.actions.edit') }}
                 </a-button>
                 <a-button type="link" size="small" danger @click="handleDelete(item)">
-                  <DeleteOutlined /> 删除
+                  <DeleteOutlined /> {{ t('common.actions.delete') }}
                 </a-button>
               </div>
             </div>
@@ -109,7 +109,7 @@
           :total="total"
           :page-size-options="[12, 24, 48]"
           show-size-changer
-          :show-total="(t: number) => `共 ${t} 个视频`"
+          :show-total="(count: number) => t('video.list.total', { total: count })"
           @change="handlePageChange"
           @show-size-change="handlePageChange"
         />
@@ -119,45 +119,45 @@
     <!-- 新建/编辑视频弹窗 -->
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '新建视频' : '编辑视频'"
+      :title="modalMode === 'create' ? t('video.actions.create') : t('video.actions.edit')"
       :confirm-loading="modalLoading"
       width="640px"
       @ok="handleSubmit"
     >
       <a-form layout="vertical">
-        <a-form-item label="标题" required>
+        <a-form-item :label="t('common.field.title')" required>
           <a-input
             v-model:value="form.title"
-            placeholder="请输入视频标题"
+            :placeholder="t('video.form.titlePlaceholder')"
             :maxlength="100"
             show-count
           />
         </a-form-item>
-        <a-form-item label="封面 URL">
+        <a-form-item :label="t('video.form.coverUrl')">
           <a-input
             v-model:value="form.cover_url"
-            placeholder="请输入封面图片地址（可选），或点击右侧按钮从媒体库选择"
+            :placeholder="t('video.form.coverUrlPlaceholder')"
           >
             <template #addonAfter>
-              <a aria-label="从媒体库选择封面" @click.prevent="mediaPickerVisible = true">
-                <PictureOutlined /> 媒体库
+              <a :aria-label="t('video.form.selectCoverFromMedia')" @click.prevent="mediaPickerVisible = true">
+                <PictureOutlined /> {{ t('video.form.mediaLibrary') }}
               </a>
             </template>
           </a-input>
         </a-form-item>
-        <a-form-item label="介绍">
+        <a-form-item :label="t('video.form.intro')">
           <a-textarea
             v-model:value="form.description"
-            placeholder="请输入视频介绍（可选）"
+            :placeholder="t('video.form.introPlaceholder')"
             :rows="3"
             :maxlength="500"
             show-count
           />
         </a-form-item>
-        <a-form-item label="分类">
-          <CategorySelect v-model="form.category_id" type="video" placeholder="选择分类（可选）" />
+        <a-form-item :label="t('common.field.category')">
+          <CategorySelect v-model="form.category_id" type="video" :placeholder="t('video.form.categoryPlaceholder')" />
         </a-form-item>
-        <a-form-item label="发布平台" required>
+        <a-form-item :label="t('video.form.platforms')" required>
           <div class="platform-selector">
             <div
               v-for="p in PLATFORMS"
@@ -168,19 +168,19 @@
               @click="togglePlatform(p.key)"
             >
               <PlatformIcon :platform="p.key" :size="20" />
-              <span class="platform-toggle-name">{{ p.name }}</span>
+              <span class="platform-toggle-name">{{ t(p.labelKey) }}</span>
             </div>
           </div>
           <div v-if="Object.keys(selectedPlatforms).length > 0" class="platform-urls">
             <div v-for="p in selectedPlatformList" :key="p.key" class="platform-url-item">
               <div class="platform-url-label">
                 <PlatformIcon :platform="p.key" :size="16" />
-                <span>{{ p.name }}</span>
+                <span>{{ t(p.labelKey) }}</span>
               </div>
               <a-input-group compact class="platform-url-input-group">
                 <a-input
                   v-model:value="selectedPlatforms[p.key]"
-                  :placeholder="`请输入${p.name}视频链接`"
+                  :placeholder="t('video.form.platformLinkPlaceholder', { name: t(p.labelKey) })"
                   style="width: calc(100% - 72px)"
                 >
                   <template #prefix>
@@ -196,20 +196,20 @@
                   @click="handleParse(p.key)"
                 >
                   <template #icon><SyncOutlined /></template>
-                  解析
+                  {{ t('video.actions.parse') }}
                 </a-button>
               </a-input-group>
             </div>
           </div>
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.field.status')">
           <a-switch
             v-model:checked="form.published"
-            checked-children="发布"
-            un-checked-children="草稿"
+            :checked-children="t('common.actions.publish')"
+            :un-checked-children="t('video.status.draft')"
           />
           <span style="margin-left: 8px; color: var(--text-secondary, #667085); font-size: 13px;">
-            {{ form.published ? '发布后将在博客前台公开显示' : '仅后台可见，博客前台不显示' }}
+            {{ form.published ? t('video.form.publishedHint') : t('video.form.draftHint') }}
           </span>
         </a-form-item>
       </a-form>
@@ -226,6 +226,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import {
   PlusOutlined,
   EditOutlined,
@@ -244,6 +245,9 @@ import PlatformIcon from '@/components/video/PlatformIcon.vue'
 import { PLATFORMS, PLATFORM_MAP } from '@/components/video/platforms'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
+import { formatDateTime } from '@/utils/datetime'
+
+const { t } = useI18n()
 
 const keyword = ref('')
 const statusFilter = ref<number | undefined>(undefined)
@@ -375,7 +379,7 @@ function buildPlatforms() {
 async function handleParse(platformKey: string) {
   const url = selectedPlatforms[platformKey]
   if (!url || !url.trim()) {
-    message.warning('请先输入视频链接')
+    message.warning(t('video.message.linkRequired'))
     return
   }
   parsingPlatform.value = platformKey
@@ -386,14 +390,14 @@ async function handleParse(platformKey: string) {
       if (res.title) form.title = res.title
       if (res.cover_url) form.cover_url = res.cover_url
       if (res.description) form.description = res.description
-      message.success('解析成功')
+      message.success(t('video.message.parseSuccess'))
     }
     if (hasExisting) {
       Modal.confirm({
-        title: '覆盖确认',
-        content: '表单中已有内容，是否用解析结果覆盖？',
-        okText: '覆盖',
-        cancelText: '取消',
+        title: t('video.message.overwriteTitle'),
+        content: t('video.message.overwriteContent'),
+        okText: t('video.actions.overwrite'),
+        cancelText: t('common.actions.cancel'),
         onOk: doFill,
       })
     } else {
@@ -408,12 +412,12 @@ async function handleParse(platformKey: string) {
 
 async function handleSubmit() {
   if (!form.title.trim()) {
-    message.warning('请输入视频标题')
+    message.warning(t('video.message.titleRequired'))
     return
   }
   const platforms = buildPlatforms()
   if (platforms.length === 0) {
-    message.warning('请至少添加一个平台链接')
+    message.warning(t('video.message.platformRequired'))
     return
   }
   modalLoading.value = true
@@ -428,10 +432,10 @@ async function handleSubmit() {
     }
     if (modalMode.value === 'create') {
       await videoApi.create(payload)
-      message.success('创建成功')
+      message.success(t('common.message.createSuccess'))
     } else {
       await videoApi.update(editingId.value, payload)
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -444,15 +448,15 @@ async function handleSubmit() {
 
 function handleDelete(item: VideoWork) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${item.title}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('video.message.deleteTitle'),
+    content: t('video.message.deleteConfirm', { name: item.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await videoApi.remove(item.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }
@@ -462,13 +466,6 @@ function handleDelete(item: VideoWork) {
       }
     },
   })
-}
-
-function formatDateTime(time?: string): string {
-  if (!time) return '-'
-  const d = new Date(time)
-  if (Number.isNaN(d.getTime())) return time
-  return d.toLocaleString('zh-CN')
 }
 </script>
 

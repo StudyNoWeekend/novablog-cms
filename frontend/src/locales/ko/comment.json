@@ -1,0 +1,36 @@
+{
+  "title": "댓글 관리",
+  "filter": {
+    "allSources": "전체 소스",
+    "searchPlaceholder": "댓글 검색..."
+  },
+  "source": {
+    "article": "아티클",
+    "travel": "여행 가이드"
+  },
+  "columns": {
+    "commenter": "작성자",
+    "source": "출처",
+    "time": "시간"
+  },
+  "blogger": "블로거",
+  "empty": "댓글이 없습니다",
+  "action": {
+    "reply": "답글"
+  },
+  "error": {
+    "getListFailed": "댓글 목록을 가져오는 중 오류가 발생했습니다. 다시 시도해 주세요."
+  },
+  "reply": {
+    "title": "댓글 답글 달기",
+    "okText": "답글 보내기",
+    "replyTo": "{name}에게 답글:",
+    "placeholder": "답글 내용을 입력..."
+  },
+  "message": {
+    "replyEmpty": "답글 내용을 입력해 주세요",
+    "replySuccess": "답글을 보냈습니다",
+    "deleteTitle": "삭제 확인",
+    "deleteContent": "삭제한 댓글은 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  }
+}

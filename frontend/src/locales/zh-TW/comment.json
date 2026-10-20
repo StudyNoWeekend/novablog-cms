@@ -1,0 +1,36 @@
+{
+  "title": "留言管理",
+  "filter": {
+    "allSources": "全部來源",
+    "searchPlaceholder": "搜尋留言內容..."
+  },
+  "source": {
+    "article": "文章",
+    "travel": "旅遊攻略"
+  },
+  "columns": {
+    "commenter": "留言者",
+    "source": "來源",
+    "time": "時間"
+  },
+  "blogger": "博主",
+  "empty": "暫無留言",
+  "action": {
+    "reply": "回覆"
+  },
+  "error": {
+    "getListFailed": "取得留言列表時發生錯誤，請重試"
+  },
+  "reply": {
+    "title": "回覆留言",
+    "okText": "送出回覆",
+    "replyTo": "回覆 {name}：",
+    "placeholder": "請輸入回覆內容..."
+  },
+  "message": {
+    "replyEmpty": "請輸入回覆內容",
+    "replySuccess": "回覆成功",
+    "deleteTitle": "確認刪除",
+    "deleteContent": "刪除後留言將無法復原，確定要刪除嗎？"
+  }
+}

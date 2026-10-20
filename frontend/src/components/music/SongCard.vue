@@ -1,7 +1,7 @@
 <template>
   <div class="song-row" @click="emit('play')">
     <!-- 拖拽把手（hover 显示，整行可拖拽排序） -->
-    <span class="drag-handle" title="拖拽排序" aria-label="拖拽排序">
+    <span class="drag-handle" :title="$t('music.song.dragSort')" :aria-label="$t('music.song.dragSort')">
       <HolderOutlined />
     </span>
 
@@ -11,7 +11,7 @@
       target="_blank"
       rel="noopener noreferrer"
       class="source-link"
-      title="在B站查看"
+      :title="$t('music.song.viewOnBilibili')"
       @click.stop
     >
       <svg viewBox="0 0 24 24" fill="currentColor" class="source-icon">
@@ -35,10 +35,10 @@
       <span
         class="category-chip"
         :class="{ 'category-chip-none': !currentCategoryName }"
-        title="点击修改分类"
+        :title="$t('music.song.changeCategory')"
         @click.stop
       >
-        {{ currentCategoryName || '未分类' }}
+        {{ currentCategoryName || $t('music.song.uncategorized') }}
       </span>
       <template #overlay>
         <a-menu @click="handleCategoryMenuClick">
@@ -46,7 +46,7 @@
             {{ cat.name }}
           </a-menu-item>
           <a-menu-divider v-if="categories.length" />
-          <a-menu-item key="__none__" :disabled="!song.category_id">未分类</a-menu-item>
+          <a-menu-item key="__none__" :disabled="!song.category_id">{{ $t('music.song.uncategorized') }}</a-menu-item>
         </a-menu>
       </template>
     </a-dropdown>
@@ -59,18 +59,18 @@
 
     <!-- 操作按钮（hover 显示，占位避免布局位移） -->
     <div class="row-actions">
-      <span class="action-btn" title="播放" aria-label="播放" @click.stop="emit('play')">
+      <span class="action-btn" :title="$t('music.song.play')" :aria-label="$t('music.song.play')" @click.stop="emit('play')">
         <svg viewBox="0 0 24 24" fill="currentColor" class="action-icon">
           <path d="M8 5v14l11-7z" />
         </svg>
       </span>
-      <span class="action-btn" title="置顶" aria-label="置顶" @click.stop="emit('top')">
+      <span class="action-btn" :title="$t('music.song.pinTop')" :aria-label="$t('music.song.pinTop')" @click.stop="emit('top')">
         <VerticalAlignTopOutlined class="action-icon" />
       </span>
-      <span class="action-btn" title="编辑" aria-label="编辑" @click.stop="emit('edit')">
+      <span class="action-btn" :title="$t('common.actions.edit')" :aria-label="$t('common.actions.edit')" @click.stop="emit('edit')">
         <EditOutlined class="action-icon" />
       </span>
-      <span class="action-btn action-danger" title="删除" aria-label="删除" @click.stop="emit('delete')">
+      <span class="action-btn action-danger" :title="$t('common.actions.delete')" :aria-label="$t('common.actions.delete')" @click.stop="emit('delete')">
         <DeleteOutlined class="action-icon" />
       </span>
     </div>

@@ -13,7 +13,7 @@
           :placeholder="searchPlaceholder"
           allow-clear
           enter-button
-          aria-label="搜索关键词"
+          :aria-label="$t('media.external.searchLabel')"
           @search="handleSearch"
         />
         <span class="toolbar-hint">{{ sourceHint }}</span>
@@ -27,7 +27,7 @@
             :key="item.url"
             type="button"
             class="icon-item"
-            :aria-label="`选择图标 ${item.name}`"
+            :aria-label="$t('media.external.selectIconAria', { name: item.name })"
             @click="handlePick(item)"
           >
             <img :src="thumbSrc(item.url)" :alt="item.name" loading="lazy" />
@@ -42,10 +42,10 @@
             :key="`${item.url}-${index}`"
             type="button"
             class="cover-item"
-            :aria-label="`选择图片 ${item.name || index + 1}`"
+            :aria-label="$t('media.external.selectImageAria', { name: item.name || index + 1 })"
             @click="handlePick(item)"
           >
-            <img :src="thumbSrc(item.url)" :alt="item.name || '候选图片'" loading="lazy" referrerpolicy="no-referrer" />
+            <img :src="thumbSrc(item.url)" :alt="item.name || $t('media.external.candidate')" loading="lazy" referrerpolicy="no-referrer" />
             <span v-if="item.name" class="cover-name">{{ item.name }}</span>
           </button>
         </div>
@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { imageSearchApi } from '@/api/image-search'
 import type { ImageResult, ImageSearchType } from '@/api/image-search'
@@ -106,12 +107,7 @@ const DEFAULT_MODULE: Record<string, string> = {
 
 const saveModule = computed(() => props.module || DEFAULT_MODULE[props.type] || '')
 
-const META: Record<string, { title: string; placeholder: string; hint: string }> = {
-  tech: { title: '搜索品牌图标', placeholder: '输入技术名称，如 Vue / Docker / PostgreSQL', hint: '来自 Simple Icons 品牌图标库' },
-  game: { title: '搜索游戏封面', placeholder: '输入游戏名称，如 塞尔达传说 / 黑神话', hint: '来自 Bangumi 条目库' },
-  book: { title: '搜索书籍封面', placeholder: '输入书名，如 三体 / 深入理解计算机系统', hint: '来自豆瓣读书' },
-  recipe: { title: '搜索美食图片', placeholder: '输入菜名，如 红烧肉 / 宫保鸡丁', hint: '来自 Bing 图片搜索' },
-}
+const { t } = useI18n()
 
 const open = ref(false)
 const keyword = ref('')
@@ -120,11 +116,12 @@ const loading = ref(false)
 const saving = ref(false)
 const failed = ref(false)
 
-const modalTitle = computed(() => META[props.type].title)
-const searchPlaceholder = computed(() => META[props.type].placeholder)
-const sourceHint = computed(() => META[props.type].hint)
+/** 语义类型 → media.external.<type>.* 文案（5 语言包中必须同时存在） */
+const modalTitle = computed(() => t(`media.external.${props.type}.title`))
+const searchPlaceholder = computed(() => t(`media.external.${props.type}.placeholder`))
+const sourceHint = computed(() => t(`media.external.${props.type}.hint`))
 const emptyText = computed(() =>
-  failed.value ? '搜索失败，请稍后重试，或改用本地上传' : '没有找到结果，换个关键词试试'
+  failed.value ? t('media.external.searchFailed') : t('media.external.noResults')
 )
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -194,7 +191,7 @@ async function handlePick(item: ImageResult) {
     try {
       const media = await imageSearchApi.save(item.url, saveModule.value)
       emit('selected', media.url)
-      message.success('已选择并转存图片')
+      message.success(t('media.external.savedWithTransfer'))
       open.value = false
     } catch {
       // 错误提示已由 axios 拦截器统一弹出
@@ -204,7 +201,7 @@ async function handlePick(item: ImageResult) {
     return
   }
   emit('selected', item.url)
-  message.success('已选择图片')
+  message.success(t('media.external.picked'))
   open.value = false
 }
 

@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "audioImport": "音声インポート"
+  },
+  "addSong": "楽曲を追加",
+  "list": {
+    "title": "音楽プレイリスト",
+    "total": "全 {total} 曲",
+    "empty": "楽曲がありません。追加しましょう",
+    "errorSubtitle": "楽曲リストの取得中にエラーが発生しました。再試行してください",
+    "deleteConfirm": "楽曲「{name}」を削除すると元に戻せません。本当に削除しますか？",
+    "categoryUpdated": "カテゴリを更新しました",
+    "sortUpdated": "並び順を更新しました",
+    "alreadyFirst": "この曲はすでに先頭です"
+  },
+  "song": {
+    "dragSort": "ドラッグで並び替え",
+    "viewOnBilibili": "Bilibiliで見る",
+    "changeCategory": "クリックでカテゴリを変更",
+    "uncategorized": "未分類",
+    "play": "再生",
+    "pinTop": "先頭に固定"
+  },
+  "player": {
+    "source": "Bilibili プレイヤー",
+    "prev": "前の曲",
+    "next": "次の曲",
+    "close": "プレイヤーを閉じる",
+    "loading": "プレイヤーを読み込み中…",
+    "frameTitle": "Bilibili 動画プレイヤー",
+    "loadFailed": "再生URLの取得に失敗しました。しばらくしてから再試行してください"
+  },
+  "form": {
+    "editTitle": "楽曲を編集",
+    "biliUrl": "Bilibili 動画URL",
+    "biliUrlPlaceholder": "Bilibili動画URLを貼り付け（例: https://www.bilibili.com/video/BV...）",
+    "biliUrlRequired": "Bilibili動画URLを入力してください",
+    "parse": "解析",
+    "parseProcessing": "解析中です。お待ちください...",
+    "parseSuccess": "解析に成功しました",
+    "parseSuccessStatus": "解析に成功し、情報を自動入力しました",
+    "parseFailed": "解析に失敗しました",
+    "parseFirst": "先にBilibili動画URLを解析してください",
+    "songName": "曲名",
+    "songNamePlaceholder": "曲名を入力してください",
+    "songNameRequired": "曲名を入力してください",
+    "artist": "アーティスト",
+    "artistPlaceholder": "アーティスト名を入力してください",
+    "artistRequired": "アーティスト名を入力してください",
+    "coverPreviewAlt": "カバープレビュー",
+    "chooseCover": "カバーを選択",
+    "coverUrlPlaceholder": "カバー画像のURL、またはメディアライブラリから選択",
+    "coverHint": "サムネイルをクリックするとメディアライブラリから選択できます。外部画像URLの直接貼り付けも可能です（Bilibiliのカバーは自動的にストレージに保存されます）。",
+    "categoryPlaceholder": "既存のカテゴリを選択するか、新しい名前を入力（存在しない場合は自動作成）",
+    "categoryTooLong": "カテゴリ名は50文字以内で入力してください",
+    "selectAll": "すべて選択",
+    "batchSummary": "全 {total} 曲、{selected} 曲を選択中",
+    "batchCategory": "共通カテゴリ",
+    "selectAtLeastOne": "少なくとも1曲選択してください",
+    "batchAddSuccess": "{count}曲を追加しました",
+    "addSuccess": "追加しました"
+  }
+}

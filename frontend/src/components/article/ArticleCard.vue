@@ -39,17 +39,17 @@
             <template #overlay>
               <a-menu>
                 <a-menu-item v-if="article.status === 1" @click="handlePublish">
-                  <SendOutlined /> 发布
+                  <SendOutlined /> {{ $t('common.actions.publish') }}
                 </a-menu-item>
                 <a-menu-item v-if="article.status === 2" @click="handleUnpublish">
-                  <StopOutlined /> 下架
+                  <StopOutlined /> {{ $t('common.actions.offline') }}
                 </a-menu-item>
                 <a-menu-item v-if="article.status !== 1" @click="handleDraft">
-                  <FileTextOutlined /> 转为草稿
+                  <FileTextOutlined /> {{ $t('article.card.moveToDraft') }}
                 </a-menu-item>
                 <a-menu-divider />
                 <a-menu-item danger @click="handleDelete">
-                  <DeleteOutlined /> 删除
+                  <DeleteOutlined /> {{ $t('common.actions.delete') }}
                 </a-menu-item>
               </a-menu>
             </template>
@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import {
   FileTextOutlined, TagsOutlined, ClockCircleOutlined,
@@ -70,6 +71,9 @@ import {
 } from '@ant-design/icons-vue'
 import type { Article } from '@/types/article'
 import { getThumbUrl } from '@/utils/image'
+import { formatDate } from '@/utils/datetime'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   article: Article
@@ -82,32 +86,50 @@ const emit = defineEmits<{
   (e: 'pushUpdated'): void
 }>()
 
-const statusMap: Record<number, { text: string; color: string }> = {
-  1: { text: '草稿', color: 'default' },
-  2: { text: '已发布', color: 'green' },
-  3: { text: '已下架', color: 'orange' },
+// 状态/编辑器类型枚举 → i18n key（文案见 article.status.* / article.editorType.*）
+const statusKeyMap: Record<number, string> = {
+  1: 'draft',
+  2: 'published',
+  3: 'unpublished',
 }
 
-const statusText = computed(() => statusMap[props.article.status]?.text || '未知')
-const statusColor = computed(() => statusMap[props.article.status]?.color || 'default')
+const statusText = computed(() => {
+  const key = statusKeyMap[props.article.status]
+  return key ? t(`article.status.${key}`) : t('common.status.unknown')
+})
 
-const editorTypeMap: Record<number, { text: string; color: string }> = {
-  1: { text: 'MD', color: 'blue' },
-  2: { text: 'HTML', color: 'purple' },
+const statusColorMap: Record<number, string> = {
+  1: 'default',
+  2: 'green',
+  3: 'orange',
 }
 
-const editorTypeText = computed(() => editorTypeMap[props.article.type]?.text || 'MD')
-const editorTypeColor = computed(() => editorTypeMap[props.article.type]?.color || 'blue')
+const statusColor = computed(() => statusColorMap[props.article.status] || 'default')
 
+const editorTypeKeyMap: Record<number, string> = {
+  1: 'markdown',
+  2: 'html',
+}
+
+const editorTypeText = computed(() => t(`article.editorType.${editorTypeKeyMap[props.article.type] || 'markdown'}`))
+
+const editorTypeColorMap: Record<number, string> = {
+  1: 'blue',
+  2: 'purple',
+}
+
+const editorTypeColor = computed(() => editorTypeColorMap[props.article.type] || 'blue')
+
+// 相对时间 + 超过一周回退为本地化日期（跟随当前语言）
 function formatTime(time: string) {
   if (!time) return ''
   const d = new Date(time)
   const now = new Date()
   const diff = now.getTime() - d.getTime()
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
-  if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`
-  return d.toLocaleDateString('zh-CN')
+  if (diff < 3600000) return t('article.card.minutesAgo', { count: Math.floor(diff / 60000) })
+  if (diff < 86400000) return t('article.card.hoursAgo', { count: Math.floor(diff / 3600000) })
+  if (diff < 604800000) return t('article.card.daysAgo', { count: Math.floor(diff / 86400000) })
+  return formatDate(d)
 }
 
 function handleEdit() { emit('edit', props.article.id) }

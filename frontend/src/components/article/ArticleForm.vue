@@ -5,7 +5,7 @@
       <a-textarea
         v-model:value="form.summary"
         :rows="2"
-        placeholder="文章摘要，将显示在列表和SEO中..."
+        :placeholder="$t('article.form.summaryPlaceholder')"
         class="summary-input"
       />
     </div>
@@ -23,7 +23,7 @@
           </template>
           <div v-else class="cover-placeholder-compact">
             <PictureOutlined />
-            <span>封面</span>
+            <span>{{ $t('common.field.cover') }}</span>
           </div>
         </div>
       </div>
@@ -32,7 +32,7 @@
       <div class="toolbar-item">
         <a-select
           v-model:value="form.category_id"
-          placeholder="分类"
+          :placeholder="$t('common.field.category')"
           style="width: 140px"
           :loading="categoriesLoading"
         >
@@ -47,7 +47,7 @@
         <a-select
           v-model:value="form.tag_ids"
           mode="multiple"
-          placeholder="标签"
+          :placeholder="$t('common.field.tag')"
           style="min-width: 160px; max-width: 240px"
           :loading="tagsLoading"
           :options="tagOptions"
@@ -58,13 +58,13 @@
       <!-- 置顶 -->
       <div class="toolbar-item switch-item">
         <a-switch v-model:checked="form.is_top" size="small" />
-        <span class="switch-label">置顶</span>
+        <span class="switch-label">{{ $t('article.form.pinToTop') }}</span>
       </div>
 
       <!-- 评论 -->
       <div class="toolbar-item switch-item">
         <a-switch v-model:checked="form.is_comment" size="small" />
-        <span class="switch-label">评论</span>
+        <span class="switch-label">{{ $t('article.form.comment') }}</span>
       </div>
     </div>
 

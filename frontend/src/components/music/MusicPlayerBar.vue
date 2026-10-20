@@ -12,14 +12,14 @@
           <div class="player-meta">
             <div class="player-title" :title="currentSong.title">{{ currentSong.title }}</div>
             <div class="player-artist" :title="currentSong.artist">{{ currentSong.artist }}</div>
-            <div class="player-source">B 站播放器</div>
+            <div class="player-source">{{ $t('music.player.source') }}</div>
           </div>
         </div>
         <div class="player-controls">
           <button
             class="control-btn"
             :disabled="!hasPrev"
-            title="上一首"
+            :title="$t('music.player.prev')"
             @click="emit('prev')"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="ctrl-icon">
@@ -29,14 +29,14 @@
           <button
             class="control-btn"
             :disabled="!hasNext"
-            title="下一首"
+            :title="$t('music.player.next')"
             @click="emit('next')"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" class="ctrl-icon">
               <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
             </svg>
           </button>
-          <button class="control-btn" title="关闭播放器" @click="emit('close')">
+          <button class="control-btn" :title="$t('music.player.close')" @click="emit('close')">
             <svg viewBox="0 0 24 24" fill="currentColor" class="ctrl-icon">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
             </svg>
@@ -46,14 +46,14 @@
       <!-- B 站官方外链播放器：iframe 加载即播，播放控制由 B 站 UI 提供 -->
       <div class="player-frame">
         <div v-if="isLoading" class="player-loading">
-          <span class="loading-spinner" aria-label="加载中"></span>
-          <span class="loading-text">正在加载播放器…</span>
+          <span class="loading-spinner" :aria-label="$t('common.state.loading')"></span>
+          <span class="loading-text">{{ $t('music.player.loading') }}</span>
         </div>
         <iframe
           v-if="playerSrc"
           :src="playerSrc"
           class="player-iframe"
-          title="B站视频播放器"
+          :title="$t('music.player.frameTitle')"
           allow="autoplay; fullscreen; encrypted-media"
           allowfullscreen
           scrolling="no"
@@ -67,6 +67,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { musicApi } from '@/api/music'
 import type { Song } from '@/types/music'
 import { message } from 'ant-design-vue'
@@ -83,6 +84,8 @@ const emit = defineEmits<{
   (e: 'next'): void
   (e: 'close'): void
 }>()
+
+const { t } = useI18n()
 
 const playerSrc = ref('')
 const isLoading = ref(false)
@@ -102,7 +105,7 @@ async function loadPlayer(songId: string) {
   } catch {
     isLoading.value = false
     if (currentSongId.value === songId) {
-      message.error('获取播放地址失败，请稍后重试')
+      message.error(t('music.player.loadFailed'))
     }
   }
 }

@@ -2,7 +2,7 @@
   <a-breadcrumb class="folder-breadcrumbs">
     <a-breadcrumb-item>
       <a @click.prevent="emit('navigate', null)">
-        <HddOutlined /> 全部文件
+        <HddOutlined /> {{ $t('media.folder.rootName') }}
       </a>
     </a-breadcrumb-item>
     <a-breadcrumb-item v-for="folder in path" :key="folder.id">

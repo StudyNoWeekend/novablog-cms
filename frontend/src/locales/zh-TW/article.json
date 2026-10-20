@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "文章管理",
+    "writeArticle": "寫文章",
+    "searchPlaceholder": "搜尋文章標題...",
+    "empty": "還沒有文章，開始創作吧",
+    "writeFirst": "寫第一篇文章",
+    "loadError": "取得文章列表時發生錯誤，請重試",
+    "totalArticles": "共 {total} 篇",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除後文章將無法復原，確定要刪除嗎？"
+  },
+  "filter": {
+    "allStatus": "全部狀態"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已發佈",
+    "unpublished": "已下架"
+  },
+  "editorType": {
+    "markdown": "MD",
+    "html": "HTML"
+  },
+  "edit": {
+    "backToList": "返回列表",
+    "titlePlaceholder": "輸入文章標題...",
+    "richText": "富文字",
+    "saveDraft": "儲存草稿",
+    "titleRequired": "請輸入文章標題",
+    "draftSaved": "草稿已儲存",
+    "published": "文章已發佈"
+  },
+  "form": {
+    "summaryPlaceholder": "文章摘要，將顯示在列表和SEO中...",
+    "pinToTop": "置頂",
+    "comment": "留言"
+  },
+  "card": {
+    "moveToDraft": "轉為草稿",
+    "minutesAgo": "{count}分鐘前",
+    "hoursAgo": "{count}小時前",
+    "daysAgo": "{count}天前"
+  }
+}
