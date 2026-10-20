@@ -1,0 +1,56 @@
+{
+  "items": {
+    "article": {
+      "label": "Articles",
+      "description": "Article list and detail pages on the blog frontend"
+    },
+    "music": {
+      "label": "Music",
+      "description": "Music player on the blog frontend"
+    },
+    "video": {
+      "label": "Videos",
+      "description": "Video showcase on the blog frontend"
+    },
+    "travel": {
+      "label": "Travel",
+      "description": "Travel guides on the blog frontend"
+    },
+    "portfolio": {
+      "label": "Portfolio",
+      "description": "Photography portfolio on the blog frontend"
+    },
+    "equipment": {
+      "label": "My Gear",
+      "description": "Personal equipment list on the blog frontend"
+    },
+    "project": {
+      "label": "Projects",
+      "description": "Project experience on the blog frontend"
+    },
+    "openSource": {
+      "label": "Open Source",
+      "description": "GitHub open-source work on the blog frontend"
+    },
+    "recipe": {
+      "label": "Recipes",
+      "description": "Recipe collection on the blog frontend"
+    },
+    "book": {
+      "label": "Bookshelf",
+      "description": "Bookshelf and book reviews on the blog frontend"
+    },
+    "game": {
+      "label": "Game Library",
+      "description": "Game library and short reviews on the blog frontend"
+    },
+    "fitness": {
+      "label": "Fitness",
+      "description": "Fitness training logs on the blog frontend"
+    },
+    "techStack": {
+      "label": "Tech Stack",
+      "description": "Tech stack showcase on the blog frontend"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "header": {
+    "greeting": "Hi, {name}",
+    "defaultNickname": "用户",
+    "editRole": "修改",
+    "githubRepo": "Novablog CMS 仓库",
+    "githubRepoAria": "GitHub 仓库",
+    "welcome": "欢迎来到你的创作空间"
+  },
+  "role": {
+    "selectTitle": "选择你的创作方向",
+    "editTitle": "修改创作方向",
+    "selectDesc": "检测到你还没有选择创作方向。选择爱好（可多选）后，系统将按方向定制左侧菜单模块，之后可在「模块管理」中随时调整。",
+    "editDesc": "重新选择你的创作方向（可多选），保存后系统将按新方向更新左侧菜单模块，之后可在「模块管理」中随时调整。",
+    "presetTitle": "将为你开启的模块",
+    "commonTag": "通用",
+    "pickLater": "稍后再选",
+    "updateSuccess": "已按创作方向更新功能模块",
+    "saveFailed": "保存失败，请重试"
+  },
+  "avatar": {
+    "logout": "退出登录"
+  }
+}

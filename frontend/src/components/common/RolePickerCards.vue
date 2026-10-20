@@ -1,7 +1,7 @@
 <template>
   <div class="role-picker">
-    <div v-for="group in ROLE_GROUPS" :key="group.title" class="role-group">
-      <div class="role-group__title">{{ group.title }}</div>
+    <div v-for="group in ROLE_GROUPS" :key="group.titleKey" class="role-group">
+      <div class="role-group__title">{{ $t(group.titleKey) }}</div>
       <div class="role-grid">
         <button
           v-for="role in group.roles"
@@ -13,8 +13,8 @@
           @click="toggleRole(role.key)"
         >
           <span class="role-card__icon"><component :is="roleIconMap[role.key]" /></span>
-          <span class="role-card__label">{{ role.label }}</span>
-          <span class="role-card__desc">{{ role.description }}</span>
+          <span class="role-card__label">{{ $t(role.labelKey) }}</span>
+          <span class="role-card__desc">{{ $t(role.descKey) }}</span>
           <span v-if="isSelected(role.key)" class="role-card__check"><CheckOutlined /></span>
         </button>
       </div>
@@ -30,8 +30,8 @@
         @click="toggleRole(role.key)"
       >
         <span class="role-card__icon"><component :is="roleIconMap[role.key]" /></span>
-        <span class="role-card__label">{{ role.label }}</span>
-        <span class="role-card__desc">{{ role.description }}</span>
+        <span class="role-card__label">{{ $t(role.labelKey) }}</span>
+        <span class="role-card__desc">{{ $t(role.descKey) }}</span>
         <span v-if="isSelected(role.key)" class="role-card__check"><CheckOutlined /></span>
       </button>
     </div>

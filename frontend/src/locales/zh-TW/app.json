@@ -1,0 +1,24 @@
+{
+  "header": {
+    "greeting": "Hi，{name}",
+    "defaultNickname": "使用者",
+    "editRole": "修改",
+    "githubRepo": "Novablog CMS 儲存庫",
+    "githubRepoAria": "GitHub 儲存庫",
+    "welcome": "歡迎來到你的創作空間"
+  },
+  "role": {
+    "selectTitle": "選擇你的創作方向",
+    "editTitle": "修改創作方向",
+    "selectDesc": "偵測到你還沒有選擇創作方向。選擇興趣（可多選）後，系統將依方向客製化左側選單模組，之後可在「模組管理」中隨時調整。",
+    "editDesc": "重新選擇你的創作方向（可多選），儲存後系統將依新方向更新左側選單模組，之後可在「模組管理」中隨時調整。",
+    "presetTitle": "將為你開啟的模組",
+    "commonTag": "通用",
+    "pickLater": "稍後再選",
+    "updateSuccess": "已依創作方向更新功能模組",
+    "saveFailed": "儲存失敗，請重試"
+  },
+  "avatar": {
+    "logout": "登出"
+  }
+}

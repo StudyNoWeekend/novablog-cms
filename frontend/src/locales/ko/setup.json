@@ -1,0 +1,143 @@
+{
+  "welcome": "Novablog에 오신 것을 환영합니다",
+  "slogan": "전문적인 방식으로 창작물을 선보이세요",
+  "steps": {
+    "account": "계정",
+    "direction": "방향",
+    "storage": "스토리지",
+    "theme": "외관"
+  },
+  "phaseDesc": {
+    "form": "블로거 계정을 만들어 시작하세요",
+    "role": "창작 방향을 선택하면 해당 기능 모듈이 자동으로 활성화됩니다",
+    "storage": "파일 저장 방식을 선택하세요. 건너뛰고 나중에 설정할 수 있습니다",
+    "theme": "공식 기본 테마를 가져와 블로그 외관 설정을 한 번에 완료합니다"
+  },
+  "form": {
+    "initCodePlaceholder": "공식 이메일의 배포 키를 입력하세요",
+    "usernamePlaceholder": "로그인 사용자 이름 설정",
+    "passwordPlaceholder": "로그인 비밀번호 설정",
+    "confirmPlaceholder": "확인을 위해 비밀번호를 다시 입력하세요",
+    "nicknamePlaceholder": "닉네임",
+    "nextStep": "다음: 창작 방향 선택"
+  },
+  "role": {
+    "title": "어떤 블로그를 만들고 싶으신가요?",
+    "desc": "창작 방향을 선택하세요(중복 선택 가능). 선택에 따라 백오피스 기능 모듈이 미리 설정되며, 이후 모듈 관리에서 언제든 조정할 수 있습니다.",
+    "presetTitle": "활성화될 모듈",
+    "customize": "세부 조정",
+    "collapseCustomize": "접기",
+    "commonBadge": "공통",
+    "switchModuleAria": "{name} 모듈 전환",
+    "createAccount": "계정 만들기",
+    "skip": "건너뛰고 나중에 선택"
+  },
+  "roles": {
+    "tech": "기술 개발자",
+    "techDesc": "기술 글을 쓰고 프로젝트와 오픈소스 작품을 소개",
+    "digital": "디지털 리뷰",
+    "digitalDesc": "장비 리뷰와 사용 영상",
+    "photo": "사진 애호가",
+    "photoDesc": "사진 포트폴리오와 장비 목록",
+    "video": "영상 크리에이터",
+    "videoDesc": "영상 작품과 플랫폼 링크 모음",
+    "music": "음악가",
+    "musicDesc": "플레이리스트와 음악 작품 공유",
+    "travelvlog": "여행 브이로거",
+    "travelvlogDesc": "여행 브이로그, 가이드, 장비",
+    "travel": "여행 블로거",
+    "travelDesc": "여행 가이드와 여행 장비",
+    "food": "미식 애호가",
+    "foodDesc": "레시피, 식재료, 요리 순서",
+    "fitness": "피트니스",
+    "fitnessDesc": "운동 기록과 피트니스 장비",
+    "fashion": "패션 스타일",
+    "fashionDesc": "코디 룩북 포트폴리오",
+    "pet": "반려동물 일상",
+    "petDesc": "반려동물 앨범과 포트폴리오",
+    "reading": "독서",
+    "readingDesc": "독서 책장, 평점, 서평",
+    "gaming": "게이머",
+    "gamingDesc": "게임 라이브러리, 플레이 시간, 한줄 평",
+    "designer": "디자이너 / 일러스트레이터",
+    "designerDesc": "포트폴리오와 프로젝트 경력",
+    "craft": "핸드메이드 DIY",
+    "craftDesc": "핸드메이드 작품 갤러리",
+    "lifestyle": "라이프스타일",
+    "lifestyleDesc": "글과 미디어 라이브러리로 일상을 기록. 전용 모듈은 사용하지 않음",
+    "all": "올라운드 크리에이터",
+    "allDesc": "모든 콘텐츠 모듈을 활성화. 이후 언제든 조정 가능",
+    "group": {
+      "tech": "기술 · 디지털",
+      "media": "영상 · 사운드",
+      "life": "여행 · 라이프",
+      "hobby": "취미 · 컬렉션"
+    }
+  },
+  "storage": {
+    "title": "오브젝트 스토리지 설정",
+    "desc": "업로드한 이미지, 영상 등 자료를 저장할 방식을 선택하세요. 건너뛰고 관리자 화면에서 나중에 설정할 수도 있습니다.",
+    "providerLabel": "스토리지 유형",
+    "providerPlaceholder": "스토리지 유형 선택",
+    "providers": {
+      "local": "로컬 스토리지",
+      "aliyun": "Alibaba Cloud OSS",
+      "tencent": "Tencent Cloud COS",
+      "minio": "MinIO"
+    },
+    "enableSsl": "SSL 사용",
+    "pathPrefixLabel": "PathPrefix(선택)",
+    "customDomainLabel": "CustomDomain(선택)",
+    "saveAndContinue": "저장하고 계속",
+    "testConnection": "연결 테스트",
+    "skip": "건너뛰고 로컬 스토리지 사용"
+  },
+  "theme": {
+    "title": "블로그 외관 초기화",
+    "desc": "NovaBlog 공식 주소를 입력하고 공식 계정에 로그인하면 기본 테마가 자동으로 가져와져 활성화됩니다(이 주소는 커뮤니티 푸시와 테마 마켓의 통합 진입점입니다)",
+    "baseURLLabel": "NovaBlog 공식 주소",
+    "baseURLPlaceholder": "공식 주소를 입력하세요",
+    "accountLabel": "공식 계정",
+    "emailPlaceholder": "공식 마켓 로그인 이메일",
+    "passwordLabel": "공식 비밀번호",
+    "passwordPlaceholder": "공식 마켓 로그인 비밀번호",
+    "enabledWithVersion": "{name} v{version} 활성화됨",
+    "fetchDefault": "기본 테마 가져오기",
+    "doneLogin": "완료하고 로그인으로 이동",
+    "skip": "건너뛰고 나중에 테마 페이지에서 설치"
+  },
+  "stage": {
+    "fetching": "공식 마켓에서 기본 테마를 가져오는 중…",
+    "installing": "테마 아티팩트를 다운로드하고 설치하는 중…",
+    "activating": "테마를 활성화하는 중…",
+    "processing": "처리 중…"
+  },
+  "validation": {
+    "usernameRequired": "사용자 이름을 입력하세요",
+    "usernameLength": "사용자 이름은 3-50자여야 합니다",
+    "passwordRequired": "비밀번호를 입력하세요",
+    "passwordMinLength": "비밀번호는 6자 이상이어야 합니다",
+    "confirmRequired": "비밀번호를 다시 입력하세요",
+    "confirmMismatch": "두 비밀번호가 일치하지 않습니다",
+    "initCodeRequired": "공식 배포 인스턴스는 이메일의 배포 키를 입력해야 합니다",
+    "initCodeChecking": "배포 키를 확인하는 중…",
+    "initCodeValid": "배포 키가 올바릅니다",
+    "initCodeInvalid": "배포 키가 올바르지 않습니다. 공식 이메일의 키를 입력하세요",
+    "initCodeVerifyFailed": "배포 키 확인에 실패했습니다. 확인 후 다시 시도하세요",
+    "marketAccountRequired": "공식 마켓 다운로드는 공식 계정 로그인이 필요합니다",
+    "marketURLFormat": "공식 주소는 http:// 또는 https://로 시작해야 합니다"
+  },
+  "message": {
+    "initFailed": "초기화에 실패했습니다",
+    "initFailedRetry": "초기화에 실패했습니다. 다시 시도하세요",
+    "missingRequired": "다음 필수 항목을 입력해 주세요: {items}",
+    "missingRequiredBefore": "먼저 다음 필수 항목을 입력해 주세요: {items}",
+    "storageSaveFailed": "스토리지 설정 저장에 실패했습니다",
+    "storageSaveFailedRetry": "스토리지 설정 저장에 실패했습니다. 다시 시도하세요",
+    "localNoTest": "로컬 스토리지는 연결 테스트가 필요 없습니다",
+    "testSuccess": "연결 테스트를 통과했습니다",
+    "testFailed": "연결 테스트에 실패했습니다. 설정을 확인하세요",
+    "themeStartFailed": "테마 설치 시작에 실패했습니다",
+    "themeEnabled": "'{name}' 테마가 활성화되었습니다. 블로그가 곧 공개됩니다"
+  }
+}

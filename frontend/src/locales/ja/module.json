@@ -1,0 +1,56 @@
+{
+  "items": {
+    "article": {
+      "label": "記事管理",
+      "description": "ブログ画面の記事リストと詳細表示"
+    },
+    "music": {
+      "label": "音楽管理",
+      "description": "ブログ画面の音楽プレーヤー表示"
+    },
+    "video": {
+      "label": "動画管理",
+      "description": "ブログ画面の動画作品表示"
+    },
+    "travel": {
+      "label": "旅行管理",
+      "description": "ブログ画面の旅行ガイド表示"
+    },
+    "portfolio": {
+      "label": "ポートフォリオ管理",
+      "description": "ブログ画面の写真ポートフォリオ表示"
+    },
+    "equipment": {
+      "label": "個人機材",
+      "description": "ブログ画面の個人機材表示"
+    },
+    "project": {
+      "label": "プロジェクト経歴",
+      "description": "ブログ画面のプロジェクト経歴表示"
+    },
+    "openSource": {
+      "label": "オープンソース作品",
+      "description": "ブログ画面の GitHub オープンソース作品表示"
+    },
+    "recipe": {
+      "label": "レシピ",
+      "description": "ブログ画面のレシピ表示"
+    },
+    "book": {
+      "label": "読書本棚",
+      "description": "ブログ画面の読書本棚と書評表示"
+    },
+    "game": {
+      "label": "ゲームライブラリ",
+      "description": "ブログ画面のゲームライブラリとショートレビュー表示"
+    },
+    "fitness": {
+      "label": "トレーニング",
+      "description": "ブログ画面のトレーニング記録表示"
+    },
+    "techStack": {
+      "label": "技術スタック",
+      "description": "ブログ画面の技術スタック表示"
+    }
+  }
+}

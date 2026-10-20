@@ -20,63 +20,66 @@ export type RoleKey =
   | 'lifestyle'
   | 'all'
 
-/** 角色卡片元数据（icon 为 Ant Design 图标组件名，向导渲染时解析） */
+/**
+ * 角色卡片元数据（icon 为 Ant Design 图标组件名，向导渲染时解析）；
+ * 文案一律走 i18n：labelKey/descKey 指向 setup.roles.*（尾段 = RoleKey 原值，描述加 Desc 后缀）
+ */
 export interface RoleDef {
   key: RoleKey
-  label: string
-  description: string
+  labelKey: string
+  descKey: string
   /** 该角色在通用模块之外额外开启的模块开关 key */
   modules: ModuleKey[]
 }
 
 /** 17 张创作方向卡片，按展示分组 */
 export interface RoleGroup {
-  title: string
+  titleKey: string
   roles: RoleDef[]
 }
 
 export const ROLE_GROUPS: RoleGroup[] = [
   {
-    title: '技术 · 数码',
+    titleKey: 'setup.roles.group.tech',
     roles: [
-      { key: 'tech', label: '技术开发者', description: '写技术文章，展示项目与开源作品', modules: ['project_enabled', 'open_source_enabled', 'tech_stack_enabled'] },
-      { key: 'digital', label: '数码测评', description: '装备测评与上手视频', modules: ['equipment_enabled', 'video_enabled'] },
+      { key: 'tech', labelKey: 'setup.roles.tech', descKey: 'setup.roles.techDesc', modules: ['project_enabled', 'open_source_enabled', 'tech_stack_enabled'] },
+      { key: 'digital', labelKey: 'setup.roles.digital', descKey: 'setup.roles.digitalDesc', modules: ['equipment_enabled', 'video_enabled'] },
     ],
   },
   {
-    title: '影像 · 声音',
+    titleKey: 'setup.roles.group.media',
     roles: [
-      { key: 'photo', label: '摄影爱好者', description: '摄影作品集与器材清单', modules: ['portfolio_enabled', 'equipment_enabled'] },
-      { key: 'video', label: '视频创作者', description: '视频作品与平台链接汇总', modules: ['video_enabled'] },
-      { key: 'music', label: '音乐人', description: '歌单与音乐作品分享', modules: ['music_enabled'] },
-      { key: 'travelvlog', label: '旅行 Vlogger', description: '旅行 vlog、攻略与装备', modules: ['travel_enabled', 'video_enabled', 'equipment_enabled'] },
+      { key: 'photo', labelKey: 'setup.roles.photo', descKey: 'setup.roles.photoDesc', modules: ['portfolio_enabled', 'equipment_enabled'] },
+      { key: 'video', labelKey: 'setup.roles.video', descKey: 'setup.roles.videoDesc', modules: ['video_enabled'] },
+      { key: 'music', labelKey: 'setup.roles.music', descKey: 'setup.roles.musicDesc', modules: ['music_enabled'] },
+      { key: 'travelvlog', labelKey: 'setup.roles.travelvlog', descKey: 'setup.roles.travelvlogDesc', modules: ['travel_enabled', 'video_enabled', 'equipment_enabled'] },
     ],
   },
   {
-    title: '旅行 · 生活',
+    titleKey: 'setup.roles.group.life',
     roles: [
-      { key: 'travel', label: '旅行博主', description: '旅行攻略与出行装备', modules: ['travel_enabled', 'equipment_enabled'] },
-      { key: 'food', label: '美食爱好者', description: '菜谱、食材与烹饪步骤', modules: ['recipe_enabled'] },
-      { key: 'fitness', label: '健身运动', description: '训练记录与健身装备', modules: ['fitness_enabled', 'equipment_enabled'] },
-      { key: 'fashion', label: '时尚穿搭', description: '穿搭 lookbook 作品集', modules: ['portfolio_enabled'] },
-      { key: 'pet', label: '宠物日常', description: '毛孩子相册与作品集', modules: ['portfolio_enabled'] },
+      { key: 'travel', labelKey: 'setup.roles.travel', descKey: 'setup.roles.travelDesc', modules: ['travel_enabled', 'equipment_enabled'] },
+      { key: 'food', labelKey: 'setup.roles.food', descKey: 'setup.roles.foodDesc', modules: ['recipe_enabled'] },
+      { key: 'fitness', labelKey: 'setup.roles.fitness', descKey: 'setup.roles.fitnessDesc', modules: ['fitness_enabled', 'equipment_enabled'] },
+      { key: 'fashion', labelKey: 'setup.roles.fashion', descKey: 'setup.roles.fashionDesc', modules: ['portfolio_enabled'] },
+      { key: 'pet', labelKey: 'setup.roles.pet', descKey: 'setup.roles.petDesc', modules: ['portfolio_enabled'] },
     ],
   },
   {
-    title: '兴趣 · 收藏',
+    titleKey: 'setup.roles.group.hobby',
     roles: [
-      { key: 'reading', label: '读书', description: '读书书架、评分与书评', modules: ['book_enabled'] },
-      { key: 'gaming', label: '游戏玩家', description: '游戏库、时长与短评', modules: ['game_enabled', 'video_enabled'] },
-      { key: 'designer', label: '设计师 / 插画师', description: '作品集与项目经历', modules: ['portfolio_enabled', 'project_enabled'] },
-      { key: 'craft', label: '手工 DIY', description: '手工作品图集', modules: ['portfolio_enabled'] },
+      { key: 'reading', labelKey: 'setup.roles.reading', descKey: 'setup.roles.readingDesc', modules: ['book_enabled'] },
+      { key: 'gaming', labelKey: 'setup.roles.gaming', descKey: 'setup.roles.gamingDesc', modules: ['game_enabled', 'video_enabled'] },
+      { key: 'designer', labelKey: 'setup.roles.designer', descKey: 'setup.roles.designerDesc', modules: ['portfolio_enabled', 'project_enabled'] },
+      { key: 'craft', labelKey: 'setup.roles.craft', descKey: 'setup.roles.craftDesc', modules: ['portfolio_enabled'] },
     ],
   },
 ]
 
 /** 不参与分组展示的两个特殊角色 */
 export const SPECIAL_ROLES: RoleDef[] = [
-  { key: 'lifestyle', label: '生活方式', description: '以文章与媒体库记录生活，暂不开启专属模块', modules: [] },
-  { key: 'all', label: '全能创作者', description: '开启全部内容模块，之后随时可调', modules: ['music_enabled', 'video_enabled', 'travel_enabled', 'portfolio_enabled', 'equipment_enabled', 'project_enabled', 'open_source_enabled', 'recipe_enabled', 'book_enabled', 'game_enabled', 'fitness_enabled', 'tech_stack_enabled'] },
+  { key: 'lifestyle', labelKey: 'setup.roles.lifestyle', descKey: 'setup.roles.lifestyleDesc', modules: [] },
+  { key: 'all', labelKey: 'setup.roles.all', descKey: 'setup.roles.allDesc', modules: ['music_enabled', 'video_enabled', 'travel_enabled', 'portfolio_enabled', 'equipment_enabled', 'project_enabled', 'open_source_enabled', 'recipe_enabled', 'book_enabled', 'game_enabled', 'fitness_enabled', 'tech_stack_enabled'] },
 ]
 
 /** 全部角色（含特殊角色）扁平列表 */

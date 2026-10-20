@@ -11,8 +11,8 @@
           <div class="module-list">
             <div v-for="item in modules" :key="item.key" class="module-item">
               <div class="module-info">
-                <div class="module-name">{{ item.label }}</div>
-                <div class="module-desc">{{ item.description }}</div>
+                <div class="module-name">{{ t(item.labelKey) }}</div>
+                <div class="module-desc">{{ t(item.descKey) }}</div>
               </div>
               <div class="module-switch">
                 <a-switch
@@ -33,11 +33,13 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { moduleApi } from '@/api/module'
 import { useModuleStore } from '@/stores/module'
 import { MODULE_DEFS } from '@/constants/modules'
 import type { UpdateModuleConfigReq } from '@/types/module'
 
+const { t } = useI18n()
 const modules = MODULE_DEFS
 
 const loading = ref(true)

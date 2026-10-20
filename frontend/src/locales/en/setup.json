@@ -1,0 +1,143 @@
+{
+  "welcome": "Welcome to Novablog",
+  "slogan": "Showcase your creations the professional way",
+  "steps": {
+    "account": "Account",
+    "direction": "Focus",
+    "storage": "Storage",
+    "theme": "Appearance"
+  },
+  "phaseDesc": {
+    "form": "Create your blogger account to get started",
+    "role": "Choose your content focus and the system will preset the matching modules",
+    "storage": "Choose how files are stored. You can skip this and configure it later",
+    "theme": "Fetch the official default theme and finish the blog appearance setup in one click"
+  },
+  "form": {
+    "initCodePlaceholder": "Enter the deployment key from the official email",
+    "usernamePlaceholder": "Set your login username",
+    "passwordPlaceholder": "Set your login password",
+    "confirmPlaceholder": "Re-enter the password to confirm",
+    "nicknamePlaceholder": "Your nickname",
+    "nextStep": "Next: Choose your focus"
+  },
+  "role": {
+    "title": "What kind of blog do you want to build?",
+    "desc": "Choose your content focus (multiple allowed). The system will preset backend modules accordingly, and you can adjust them anytime in Module Management.",
+    "presetTitle": "Modules to be enabled for you",
+    "customize": "Fine-tune",
+    "collapseCustomize": "Hide fine-tuning",
+    "commonBadge": "Core",
+    "switchModuleAria": "Toggle {name} module",
+    "createAccount": "Create account",
+    "skip": "Skip for now"
+  },
+  "roles": {
+    "tech": "Tech Developer",
+    "techDesc": "Write technical articles and showcase projects and open-source work",
+    "digital": "Gadget Reviews",
+    "digitalDesc": "Gear reviews and hands-on videos",
+    "photo": "Photography Lover",
+    "photoDesc": "Photo portfolio and gear list",
+    "video": "Video Creator",
+    "videoDesc": "Video works and platform links",
+    "music": "Musician",
+    "musicDesc": "Share playlists and music works",
+    "travelvlog": "Travel Vlogger",
+    "travelvlogDesc": "Travel vlogs, guides and gear",
+    "travel": "Travel Blogger",
+    "travelDesc": "Travel guides and travel gear",
+    "food": "Food Lover",
+    "foodDesc": "Recipes, ingredients and cooking steps",
+    "fitness": "Fitness",
+    "fitnessDesc": "Training logs and fitness gear",
+    "fashion": "Fashion and Style",
+    "fashionDesc": "Outfit lookbook portfolio",
+    "pet": "Pet Life",
+    "petDesc": "Photo albums and portfolio for your furry friends",
+    "reading": "Reading",
+    "readingDesc": "Bookshelf, ratings and book reviews",
+    "gaming": "Gamer",
+    "gamingDesc": "Game library, playtime and short reviews",
+    "designer": "Designer / Illustrator",
+    "designerDesc": "Portfolio and project experience",
+    "craft": "DIY Crafter",
+    "craftDesc": "Handmade works gallery",
+    "lifestyle": "Lifestyle",
+    "lifestyleDesc": "Record life with articles and the media library. No dedicated modules for now",
+    "all": "All-round Creator",
+    "allDesc": "Enable all content modules, adjustable anytime",
+    "group": {
+      "tech": "Tech & Digital",
+      "media": "Photo & Sound",
+      "life": "Travel & Life",
+      "hobby": "Hobbies & Collections"
+    }
+  },
+  "storage": {
+    "title": "Configure Object Storage",
+    "desc": "Choose where uploaded images, videos and other assets are stored. You can skip this and configure it anytime in the admin console.",
+    "providerLabel": "Storage type",
+    "providerPlaceholder": "Select storage type",
+    "providers": {
+      "local": "Local storage",
+      "aliyun": "Alibaba Cloud OSS",
+      "tencent": "Tencent Cloud COS",
+      "minio": "MinIO"
+    },
+    "enableSsl": "Enable SSL",
+    "pathPrefixLabel": "PathPrefix (optional)",
+    "customDomainLabel": "CustomDomain (optional)",
+    "saveAndContinue": "Save and continue",
+    "testConnection": "Test connection",
+    "skip": "Skip and use local storage"
+  },
+  "theme": {
+    "title": "Initialize Blog Appearance",
+    "desc": "Enter the NovaBlog official URL and sign in to your official account. The default theme will be fetched and enabled automatically (this URL is the unified entry for community feeds and the theme marketplace).",
+    "baseURLLabel": "NovaBlog official URL",
+    "baseURLPlaceholder": "Enter the official URL",
+    "accountLabel": "Official account",
+    "emailPlaceholder": "Email for the official marketplace",
+    "passwordLabel": "Official password",
+    "passwordPlaceholder": "Password for the official marketplace",
+    "enabledWithVersion": "Enabled {name} v{version}",
+    "fetchDefault": "Fetch default theme",
+    "doneLogin": "Finish and go to login",
+    "skip": "Skip and install later on the theme page"
+  },
+  "stage": {
+    "fetching": "Fetching the default theme from the official marketplace…",
+    "installing": "Downloading and installing the theme package…",
+    "activating": "Activating the theme…",
+    "processing": "Processing…"
+  },
+  "validation": {
+    "usernameRequired": "Please enter a username",
+    "usernameLength": "Username must be 3-50 characters",
+    "passwordRequired": "Please enter a password",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "confirmRequired": "Please re-enter the password",
+    "confirmMismatch": "The two passwords do not match",
+    "initCodeRequired": "Official deployments require the deployment key from the email",
+    "initCodeChecking": "Verifying the deployment key…",
+    "initCodeValid": "The deployment key is correct",
+    "initCodeInvalid": "Invalid deployment key. Please enter the key from the official email",
+    "initCodeVerifyFailed": "Deployment key verification failed. Please check and retry",
+    "marketAccountRequired": "Marketplace downloads require signing in to an official account",
+    "marketURLFormat": "The official URL must start with http:// or https://"
+  },
+  "message": {
+    "initFailed": "Initialization failed",
+    "initFailedRetry": "Initialization failed. Please try again",
+    "missingRequired": "Please fill in the following required fields: {items}",
+    "missingRequiredBefore": "Please fill in the following required fields first: {items}",
+    "storageSaveFailed": "Failed to save storage settings",
+    "storageSaveFailedRetry": "Failed to save storage settings. Please try again",
+    "localNoTest": "Local storage does not need a connection test",
+    "testSuccess": "Connection test passed",
+    "testFailed": "Connection test failed. Please check the settings",
+    "themeStartFailed": "Failed to start theme installation",
+    "themeEnabled": "Theme \"{name}\" is now enabled. Your blog will be live soon"
+  }
+}

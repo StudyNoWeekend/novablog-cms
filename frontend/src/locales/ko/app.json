@@ -1,0 +1,24 @@
+{
+  "header": {
+    "greeting": "안녕하세요, {name}",
+    "defaultNickname": "사용자",
+    "editRole": "변경",
+    "githubRepo": "Novablog CMS 저장소",
+    "githubRepoAria": "GitHub 저장소",
+    "welcome": "당신의 창작 공간에 오신 것을 환영합니다"
+  },
+  "role": {
+    "selectTitle": "관심 분야 선택",
+    "editTitle": "관심 분야 변경",
+    "selectDesc": "아직 관심 분야를 선택하지 않았습니다. 관심사를 선택하면(중복 선택 가능) 시스템이 왼쪽 메뉴 모듈을 맞춤 구성합니다. 이후 '모듈 관리'에서 언제든지 조정할 수 있습니다.",
+    "editDesc": "관심 분야를 다시 선택하세요(중복 선택 가능). 저장하면 새로운 분야에 따라 왼쪽 메뉴 모듈이 업데이트됩니다. 이후 '모듈 관리'에서 언제든지 조정할 수 있습니다.",
+    "presetTitle": "활성화될 모듈",
+    "commonTag": "공통",
+    "pickLater": "나중에 선택",
+    "updateSuccess": "관심 분야에 따라 모듈을 업데이트했습니다",
+    "saveFailed": "저장에 실패했습니다. 다시 시도해 주세요"
+  },
+  "avatar": {
+    "logout": "로그아웃"
+  }
+}

@@ -9,7 +9,7 @@
       <div class="login-logo">Novablog</div>
 
       <!-- 标题 -->
-      <h1 class="login-title">创作者后台</h1>
+      <h1 class="login-title">{{ $t('auth.title') }}</h1>
 
       <!-- 表单 -->
       <a-form
@@ -24,7 +24,7 @@
         <a-form-item name="username" :rules="usernameRules">
           <a-input
             v-model:value="form.username"
-            placeholder="用户名/邮箱"
+            :placeholder="$t('auth.form.usernamePlaceholder')"
             size="large"
             class="login-input"
           >
@@ -38,7 +38,7 @@
         <a-form-item name="password" :rules="passwordRules">
           <a-input-password
             v-model:value="form.password"
-            placeholder="密码"
+            :placeholder="$t('auth.form.passwordPlaceholder')"
             size="large"
             class="login-input"
           >
@@ -50,8 +50,8 @@
 
         <!-- 记住我 + 忘记密码 -->
         <div class="form-extra">
-          <a-checkbox v-model:checked="rememberMe">记住我</a-checkbox>
-          <a class="forgot-link" @click="handleForgotPassword">忘记密码</a>
+          <a-checkbox v-model:checked="rememberMe">{{ $t('auth.form.rememberMe') }}</a-checkbox>
+          <a class="forgot-link" @click="handleForgotPassword">{{ $t('auth.actions.forgotPassword') }}</a>
         </div>
 
         <!-- 登录按钮 -->
@@ -64,7 +64,7 @@
             :loading="loading"
             :class="{ 'btn-loading': loading }"
           >
-            登 录
+            {{ $t('auth.actions.login') }}
           </a-button>
         </a-form-item>
       </a-form>
@@ -73,20 +73,22 @@
       <a-divider class="login-divider" />
 
       <!-- 底部标语 -->
-      <p class="login-slogan">用专业的方式，展示你的创作</p>
+      <p class="login-slogan">{{ $t('auth.slogan') }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import type { FormInstance } from 'ant-design-vue'
 import logoMark from '@/assets/brand/novablog-logo-mark.png'
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const rememberMe = ref(true)
@@ -96,13 +98,13 @@ const form = reactive({
   password: '',
 })
 
-const usernameRules = [
-  { required: true, message: '请输入用户名/邮箱', trigger: 'blur' },
-]
+const usernameRules = computed(() => [
+  { required: true, message: t('auth.validation.usernameRequired'), trigger: 'blur' },
+])
 
-const passwordRules = [
-  { required: true, message: '请输入密码', trigger: 'blur' },
-]
+const passwordRules = computed(() => [
+  { required: true, message: t('auth.validation.passwordRequired'), trigger: 'blur' },
+])
 
 async function handleLogin() {
   loading.value = true
@@ -116,7 +118,7 @@ async function handleLogin() {
 }
 
 function handleForgotPassword() {
-  message.info('请联系管理员重置密码')
+  message.info(t('auth.message.contactAdminReset'))
 }
 </script>
 

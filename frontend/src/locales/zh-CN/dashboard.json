@@ -1,0 +1,71 @@
+{
+  "empty": "暂无工作台数据",
+  "metrics": {
+    "todayVisits": "今日访问",
+    "todayVisitors": "今日访客",
+    "totalVisits": "总访问量",
+    "totalContent": "内容总数",
+    "totalComments": "总评论"
+  },
+  "todo": {
+    "draftsPending": "篇草稿待发布"
+  },
+  "tabs": {
+    "visits": "访问量",
+    "production": "内容产出"
+  },
+  "range": {
+    "days7": "7天",
+    "days30": "30天",
+    "days90": "90天"
+  },
+  "chart": {
+    "noTrendData": "暂无趋势数据",
+    "siteWide": "全站"
+  },
+  "summary": {
+    "totalOutput": "总产出",
+    "dailyAvg": "日均产出"
+  },
+  "moduleData": {
+    "title": "模块数据",
+    "module": "模块",
+    "published": "发布",
+    "totalViews": "累计访问",
+    "today": "今日",
+    "last7Days": "7日",
+    "share": "访问占比",
+    "publishedCount": "已发布 {count}",
+    "empty": "暂无启用的内容模块"
+  },
+  "distribution": {
+    "title": "访问分布",
+    "empty": "暂无访问数据"
+  },
+  "topContent": {
+    "title": "热门内容排行",
+    "views": "浏览",
+    "comments": "评论",
+    "empty": "暂无热门内容"
+  },
+  "recentComments": {
+    "title": "最近评论",
+    "blogger": "博主",
+    "empty": "暂无评论"
+  },
+  "contentType": {
+    "article": "文章",
+    "travel": "旅行攻略",
+    "portfolio": "摄影作品",
+    "video": "视频作品",
+    "song": "音乐",
+    "equipment": "个人设备",
+    "project": "项目经历",
+    "open_source": "开源作品",
+    "recipe": "美食菜谱",
+    "book": "读书书架",
+    "game": "游戏库",
+    "fitness": "健身训练",
+    "tech_stack": "技术栈"
+  }
+}
