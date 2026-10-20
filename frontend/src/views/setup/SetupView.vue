@@ -12,7 +12,7 @@
       <h1 class="setup-title">Novablog</h1>
 
       <!-- 欢迎文字 -->
-      <p class="setup-welcome">欢迎使用 Novablog</p>
+      <p class="setup-welcome">{{ $t('setup.welcome') }}</p>
       <p class="setup-desc">{{ phaseDescriptions[phase] }}</p>
 
       <!-- 步骤指示条 -->
@@ -38,7 +38,7 @@
         >
           <a-input-password
             v-model:value="form.init_code"
-            placeholder="请输入官方邮件中的部署密钥"
+            :placeholder="$t('setup.form.initCodePlaceholder')"
             size="large"
             class="setup-input"
             @blur="handleInitCodeBlur"
@@ -53,7 +53,7 @@
         <a-form-item name="username" :rules="usernameRules">
           <a-input
             v-model:value="form.username"
-            placeholder="设置登录用户名"
+            :placeholder="$t('setup.form.usernamePlaceholder')"
             size="large"
             class="setup-input"
           >
@@ -67,7 +67,7 @@
         <a-form-item name="password" :rules="passwordRules">
           <a-input-password
             v-model:value="form.password"
-            placeholder="设置登录密码"
+            :placeholder="$t('setup.form.passwordPlaceholder')"
             size="large"
             class="setup-input"
           >
@@ -81,7 +81,7 @@
         <a-form-item name="confirmPassword" :rules="confirmPasswordRules">
           <a-input-password
             v-model:value="form.confirmPassword"
-            placeholder="再次输入密码以确认"
+            :placeholder="$t('setup.form.confirmPlaceholder')"
             size="large"
             class="setup-input"
           >
@@ -95,7 +95,7 @@
         <a-form-item name="nickname">
           <a-input
             v-model:value="form.nickname"
-            placeholder="您的昵称"
+            :placeholder="$t('setup.form.nicknamePlaceholder')"
             size="large"
             class="setup-input"
           >
@@ -115,7 +115,7 @@
             :loading="loading"
             :class="{ 'btn-loading': loading }"
           >
-            下一步：选择创作方向
+            {{ $t('setup.form.nextStep') }}
           </a-button>
         </a-form-item>
       </a-form>
@@ -125,16 +125,16 @@
 
       <!-- 步骤二：选择创作方向（可多选，随创建账号一起提交） -->
       <div v-if="phase === 'role'" class="role-step">
-        <h2 class="role-step__title">你想打造怎样的博客？</h2>
-        <p class="role-step__desc">选择你的创作方向（可多选），系统将按方向预置后台功能模块，之后可在「模块管理」中随时调整。</p>
+        <h2 class="role-step__title">{{ $t('setup.role.title') }}</h2>
+        <p class="role-step__desc">{{ $t('setup.role.desc') }}</p>
 
         <RolePickerCards v-model:selected="selectedRoles" class="role-step__picker" />
 
         <div class="role-preset">
           <div class="role-preset__header">
-            <span class="role-preset__title">将为你开启的模块</span>
+            <span class="role-preset__title">{{ $t('setup.role.presetTitle') }}</span>
             <a-button type="link" size="small" @click="showCustomize = !showCustomize">
-              {{ showCustomize ? '收起微调' : '自定义微调' }}
+              {{ showCustomize ? $t('setup.role.collapseCustomize') : $t('setup.role.customize') }}
             </a-button>
           </div>
           <div class="role-preset__chips">
@@ -146,7 +146,7 @@
             >
               <CheckOutlined v-if="item.enabled" class="module-chip__check" />
               {{ item.label }}
-              <em v-if="item.common" class="module-chip__badge">通用</em>
+              <em v-if="item.common" class="module-chip__badge">{{ $t('setup.role.commonBadge') }}</em>
             </span>
           </div>
           <div v-if="showCustomize" class="role-preset__customize">
@@ -155,7 +155,7 @@
               <a-switch
                 v-model:checked="moduleOverrides[item.key]"
                 size="small"
-                :aria-label="`开关 ${item.label} 模块`"
+                :aria-label="$t('setup.role.switchModuleAria', { name: item.label })"
               />
             </div>
           </div>
@@ -171,10 +171,10 @@
               :class="{ 'btn-loading': loading }"
               @click="handleInit"
             >
-              创建账号
+              {{ $t('setup.role.createAccount') }}
             </a-button>
             <a-button size="large" block :disabled="loading" @click="skipRole">
-              跳过，稍后再选
+              {{ $t('setup.role.skip') }}
             </a-button>
           </a-space>
         </div>
@@ -185,23 +185,23 @@
       <!-- 步骤二：配置对象存储 -->
       <div v-if="phase === 'storage'" class="storage-step">
         <div class="storage-step__icon"><CloudServerOutlined /></div>
-        <h2 class="storage-step__title">配置对象存储</h2>
-        <p class="storage-step__desc">选择文件存储方式，用于保存上传的图片、视频等素材。可跳过，后续在管理后台中随时配置。</p>
+        <h2 class="storage-step__title">{{ $t('setup.storage.title') }}</h2>
+        <p class="storage-step__desc">{{ $t('setup.storage.desc') }}</p>
 
         <a-form ref="storageFormRef" layout="vertical" class="setup-form" autocomplete="off">
           <!-- 存储提供商 -->
-          <a-form-item label="存储类型" name="provider">
+          <a-form-item :label="$t('setup.storage.providerLabel')" name="provider">
             <a-select
               v-model:value="storageForm.provider"
-              placeholder="选择存储类型"
+              :placeholder="$t('setup.storage.providerPlaceholder')"
               size="large"
               class="setup-input"
               @change="onProviderChange"
             >
-              <a-select-option value="local">本地存储</a-select-option>
-              <a-select-option value="aliyun">阿里云 OSS</a-select-option>
-              <a-select-option value="tencent">腾讯云 COS</a-select-option>
-              <a-select-option value="minio">MinIO</a-select-option>
+              <a-select-option value="local">{{ $t('setup.storage.providers.local') }}</a-select-option>
+              <a-select-option value="aliyun">{{ $t('setup.storage.providers.aliyun') }}</a-select-option>
+              <a-select-option value="tencent">{{ $t('setup.storage.providers.tencent') }}</a-select-option>
+              <a-select-option value="minio">{{ $t('setup.storage.providers.minio') }}</a-select-option>
             </a-select>
           </a-form-item>
 
@@ -227,15 +227,15 @@
               <a-input-password v-model:value="storageForm.access_secret" placeholder="********" size="large" class="setup-input" />
             </a-form-item>
 
-            <a-form-item v-if="storageForm.provider === 'minio'" label="启用 SSL" name="use_ssl">
+            <a-form-item v-if="storageForm.provider === 'minio'" :label="$t('setup.storage.enableSsl')" name="use_ssl">
               <a-switch v-model:checked="storageForm.use_ssl" />
             </a-form-item>
 
-            <a-form-item label="PathPrefix（可选）" name="path_prefix">
+            <a-form-item :label="$t('setup.storage.pathPrefixLabel')" name="path_prefix">
               <a-input v-model:value="storageForm.path_prefix" placeholder="blog/images" size="large" class="setup-input" />
             </a-form-item>
 
-            <a-form-item label="CustomDomain（可选）" name="custom_domain">
+            <a-form-item :label="$t('setup.storage.customDomainLabel')" name="custom_domain">
               <a-input v-model:value="storageForm.custom_domain" placeholder="https://cdn.yourdomain.com" size="large" class="setup-input" />
             </a-form-item>
           </template>
@@ -251,7 +251,7 @@
               @click="handleSaveStorage"
             >
               <template #icon><SaveOutlined /></template>
-              保存并继续
+              {{ $t('setup.storage.saveAndContinue') }}
             </a-button>
             <a-button
               v-if="storageForm.provider && storageForm.provider !== 'local'"
@@ -261,10 +261,10 @@
               @click="handleTestConnection"
             >
               <template #icon><ApiOutlined /></template>
-              测试连接
+              {{ $t('setup.storage.testConnection') }}
             </a-button>
             <a-button size="large" block @click="skipStorage">
-              跳过，使用本地存储
+              {{ $t('setup.storage.skip') }}
             </a-button>
           </a-space>
         </div>
@@ -276,22 +276,22 @@
       <!-- 步骤三：初始化博客外观（登录官方账号并拉取官方默认主题） -->
       <div v-if="phase === 'theme'" class="theme-step">
         <div class="theme-step__icon"><SkinOutlined /></div>
-        <h2 class="theme-step__title">初始化博客外观</h2>
-        <p class="theme-step__desc">输入 NovaBlog 官方地址并登录官方账号，将自动获取并启用默认主题（该地址为社区推送与主题市场的统一入口）</p>
+        <h2 class="theme-step__title">{{ $t('setup.theme.title') }}</h2>
+        <p class="theme-step__desc">{{ $t('setup.theme.desc') }}</p>
 
         <a-form ref="marketFormRef" :model="marketForm" layout="vertical" class="setup-form" autocomplete="off">
-          <a-form-item label="NovaBlog 官方地址" name="baseURL" :rules="marketURLRules">
-            <a-input v-model:value="marketForm.baseURL" :placeholder="defaultMarketURL || '请输入官方地址'" allow-clear size="large">
+          <a-form-item :label="$t('setup.theme.baseURLLabel')" name="baseURL" :rules="marketURLRules">
+            <a-input v-model:value="marketForm.baseURL" :placeholder="defaultMarketURL || $t('setup.theme.baseURLPlaceholder')" allow-clear size="large">
               <template #prefix><LinkOutlined /></template>
             </a-input>
           </a-form-item>
-          <a-form-item label="官方账号" name="email" :rules="marketAccountRules">
-            <a-input v-model:value="marketForm.email" placeholder="官方市场登录邮箱" allow-clear size="large">
+          <a-form-item :label="$t('setup.theme.accountLabel')" name="email" :rules="marketAccountRules">
+            <a-input v-model:value="marketForm.email" :placeholder="$t('setup.theme.emailPlaceholder')" allow-clear size="large">
               <template #prefix><UserOutlined /></template>
             </a-input>
           </a-form-item>
-          <a-form-item label="官方密码" name="password" :rules="marketAccountRules">
-            <a-input-password v-model:value="marketForm.password" placeholder="官方市场登录密码" size="large">
+          <a-form-item :label="$t('setup.theme.passwordLabel')" name="password" :rules="marketAccountRules">
+            <a-input-password v-model:value="marketForm.password" :placeholder="$t('setup.theme.passwordPlaceholder')" size="large">
               <template #prefix><LockOutlined /></template>
             </a-input-password>
           </a-form-item>
@@ -304,7 +304,7 @@
             </template>
             <template v-else-if="themeStatus.status === 'success'">
               <CheckCircleOutlined class="theme-step__ok" />
-              已启用 {{ themeStatus.theme_name }} v{{ themeStatus.theme_version }}
+              {{ $t('setup.theme.enabledWithVersion', { name: themeStatus.theme_name, version: themeStatus.theme_version }) }}
             </template>
             <template v-else-if="themeStatus.status === 'failed'">
               <CloseCircleOutlined class="theme-step__err" /> {{ themeStatus.message }}
@@ -321,7 +321,7 @@
             :loading="themeStarting"
             @click="startThemeInit"
           >
-            {{ themeStatus?.status === 'failed' ? '重试' : '获取默认主题' }}
+            {{ themeStatus?.status === 'failed' ? $t('common.actions.retry') : $t('setup.theme.fetchDefault') }}
           </a-button>
           <a-button
             v-if="themeStatus?.status === 'success'"
@@ -330,16 +330,16 @@
             block
             @click="goLogin"
           >
-            完成，进入登录
+            {{ $t('setup.theme.doneLogin') }}
           </a-button>
           <a-button size="large" block :disabled="themeStatus?.status === 'running'" @click="goLogin">
-            跳过，稍后在主题页安装
+            {{ $t('setup.theme.skip') }}
           </a-button>
         </div>
       </div>
 
       <!-- 底部标语 -->
-      <p class="setup-slogan">用专业的方式，展示你的创作</p>
+      <p class="setup-slogan">{{ $t('setup.slogan') }}</p>
     </div>
   </div>
 </template>
@@ -347,6 +347,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   ApiOutlined,
@@ -374,6 +375,7 @@ import RolePickerCards from '@/components/common/RolePickerCards.vue'
 import logoMark from '@/assets/brand/novablog-logo-mark.png'
 
 const router = useRouter()
+const { t } = useI18n()
 const formRef = ref<FormInstance>()
 const marketFormRef = ref<FormInstance>()
 const storageFormRef = ref<FormInstance>()
@@ -385,19 +387,19 @@ const themeStarting = ref(false)
 const themeStatus = ref<ThemeInstallStatus | null>(null)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
-const stepItems = [
-  { title: '账号' },
-  { title: '方向' },
-  { title: '存储' },
-  { title: '外观' },
-]
+const stepItems = computed(() => [
+  { title: t('setup.steps.account') },
+  { title: t('setup.steps.direction') },
+  { title: t('setup.steps.storage') },
+  { title: t('setup.steps.theme') },
+])
 const stepCurrent = computed(() => ({ form: 0, role: 1, storage: 2, theme: 3 })[phase.value])
-const phaseDescriptions: Record<string, string> = {
-  form: '创建您的博主账号以开始使用系统',
-  role: '选择创作方向，系统将预置对应的功能模块',
-  storage: '选择文件存储方式，可跳过稍后配置',
-  theme: '获取官方默认主题，一键完成博客外观初始化',
-}
+const phaseDescriptions = computed<Record<string, string>>(() => ({
+  form: t('setup.phaseDesc.form'),
+  role: t('setup.phaseDesc.role'),
+  storage: t('setup.phaseDesc.storage'),
+  theme: t('setup.phaseDesc.theme'),
+}))
 
 // ---- 创作方向选择 ----
 const selectedRoles = ref<RoleKey[]>([])
@@ -423,14 +425,17 @@ const finalModules = computed<Record<ModuleKey, boolean>>(() => {
 const moduleChips = computed(() =>
   MODULE_DEFS.map((def) => ({
     key: def.key,
-    label: def.label,
+    label: t(def.labelKey),
     common: COMMON_MODULE_KEYS.includes(def.key),
     enabled: finalModules.value[def.key],
   })),
 )
 
 const customizableModules = computed(() =>
-  MODULE_DEFS.filter((def) => !COMMON_MODULE_KEYS.includes(def.key)),
+  MODULE_DEFS.filter((def) => !COMMON_MODULE_KEYS.includes(def.key)).map((def) => ({
+    key: def.key,
+    label: t(def.labelKey),
+  })),
 )
 
 // 存储配置表单
@@ -450,7 +455,9 @@ const storageSaving = ref(false)
 const storageTesting = ref(false)
 
 // 云存储必填校验规则
-const cloudRequiredRules = [{ required: true, message: '此项为必填', trigger: 'blur' }]
+const cloudRequiredRules = computed(() => [
+  { required: true, message: t('common.message.required'), trigger: 'blur' },
+])
 
 // 官方市场表单（向导输入）；地址默认值由后端统一配置下发（见 onMounted 预填），
 // 修改后会写入社区推送配置并全局生效
@@ -462,7 +469,9 @@ const marketForm = reactive({
 const defaultMarketURL = ref('')
 
 // 官方市场账号（必填）：官方代理下载要求登录态，由后端临时换取 Token，不落库
-const marketAccountRules = [{ required: true, message: '官方市场下载需要先登录官方账号', trigger: 'blur' }]
+const marketAccountRules = computed(() => [
+  { required: true, message: t('setup.validation.marketAccountRequired'), trigger: 'blur' },
+])
 
 onMounted(async () => {
   try {
@@ -487,9 +496,9 @@ onMounted(async () => {
   }
 })
 
-const marketURLRules = [
-  { pattern: /^https?:\/\//, message: '官方地址需以 http:// 或 https:// 开头', trigger: 'blur' },
-]
+const marketURLRules = computed(() => [
+  { pattern: /^https?:\/\//, message: t('setup.validation.marketURLFormat'), trigger: 'blur' },
+])
 
 const form = reactive({
   username: '',
@@ -501,7 +510,9 @@ const form = reactive({
 
 // 官方部署需先输入邮件中的安装码（后端 status.require_init_code 下发）；自部署不渲染该输入框
 const needInstallCode = ref(false)
-const installCodeRules = [{ required: true, message: '官方部署实例需要填写邮件中的部署密钥', trigger: 'blur' }]
+const installCodeRules = computed(() => [
+  { required: true, message: t('setup.validation.initCodeRequired'), trigger: 'blur' },
+])
 
 // 部署密钥失焦即时核验：结果以 validate-status/help 内联展示，避免填完整个表单才发现密钥错误
 const initCodeChecking = ref(false)
@@ -527,7 +538,7 @@ function verifyInitCode(): Promise<boolean> {
   const code = form.init_code.trim()
   initCodeChecking.value = true
   initCodeStatus.value = 'validating'
-  initCodeHelp.value = '正在校验部署密钥…'
+  initCodeHelp.value = t('setup.validation.initCodeChecking')
   initCodeVerifyTask = (async () => {
     try {
       const res = await setupApi.verifyInstallCode(code)
@@ -535,11 +546,11 @@ function verifyInitCode(): Promise<boolean> {
       if (form.init_code.trim() !== code) return false
       if (res.valid) {
         initCodeStatus.value = 'success'
-        initCodeHelp.value = '部署密钥正确'
+        initCodeHelp.value = t('setup.validation.initCodeValid')
         return true
       }
       initCodeStatus.value = 'error'
-      initCodeHelp.value = res.message || '部署密钥错误，请输入官方邮件中的安装密钥'
+      initCodeHelp.value = res.message || t('setup.validation.initCodeInvalid')
       return false
     } catch {
       // 网络等异常由拦截器统一提示，这里还原为常规校验状态
@@ -563,38 +574,38 @@ function handleInitCodeBlur() {
 const stageText = computed(() => {
   switch (themeStatus.value?.stage) {
     case 'fetching':
-      return '正在从官方市场获取默认主题…'
+      return t('setup.stage.fetching')
     case 'installing':
-      return '正在下载并安装主题制品…'
+      return t('setup.stage.installing')
     case 'activating':
-      return '正在启用主题…'
+      return t('setup.stage.activating')
     default:
-      return '处理中…'
+      return t('setup.stage.processing')
   }
 })
 
-const usernameRules = [
-  { required: true, message: '请输入用户名', trigger: 'blur' },
-  { min: 3, max: 50, message: '用户名长度为 3-50 个字符', trigger: 'blur' },
-]
+const usernameRules = computed(() => [
+  { required: true, message: t('setup.validation.usernameRequired'), trigger: 'blur' },
+  { min: 3, max: 50, message: t('setup.validation.usernameLength'), trigger: 'blur' },
+])
 
-const passwordRules = [
-  { required: true, message: '请输入密码', trigger: 'blur' },
-  { min: 6, message: '密码长度至少为 6 个字符', trigger: 'blur' },
-]
+const passwordRules = computed(() => [
+  { required: true, message: t('setup.validation.passwordRequired'), trigger: 'blur' },
+  { min: 6, message: t('setup.validation.passwordMinLength'), trigger: 'blur' },
+])
 
-const confirmPasswordRules = [
-  { required: true, message: '请再次输入密码', trigger: 'blur' },
+const confirmPasswordRules = computed(() => [
+  { required: true, message: t('setup.validation.confirmRequired'), trigger: 'blur' },
   {
     validator: (_rule: any, value: string) => {
       if (value && value !== form.password) {
-        return Promise.reject(new Error('两次输入的密码不一致'))
+        return Promise.reject(new Error(t('setup.validation.confirmMismatch')))
       }
       return Promise.resolve()
     },
     trigger: 'blur',
   },
-]
+])
 
 /** 账号步本地校验通过后进入创作方向选择步；官方部署需先通过部署密钥核验，未通过则拦截 */
 async function goRoleStep() {
@@ -607,7 +618,7 @@ async function goRoleStep() {
   if (needInstallCode.value) {
     // 已核验失败且输入未变（变化会清空状态）：直接拦截，不重复请求消耗防爆破额度
     if (initCodeStatus.value === 'error') {
-      message.error(initCodeHelp.value || '部署密钥错误，请输入官方邮件中的安装密钥')
+      message.error(initCodeHelp.value || t('setup.validation.initCodeInvalid'))
       return
     }
     // 从未核验过或核验中断网：先核验再决定是否放行
@@ -616,7 +627,7 @@ async function goRoleStep() {
       try {
         const passed = await verifyInitCode()
         if (!passed) {
-          message.error(initCodeHelp.value || '部署密钥校验未通过，请检查后重试')
+          message.error(initCodeHelp.value || t('setup.validation.initCodeVerifyFailed'))
           return
         }
       } finally {
@@ -647,14 +658,14 @@ async function handleInit() {
     const res = await setupApi.init(payload)
     if (res.success) {
       storage.setInitialized(true)
-      message.success('博主账号创建成功')
+      message.success(t('common.message.createSuccess'))
       phase.value = 'storage'
     } else {
-      message.error(res.message || '初始化失败')
+      message.error(res.message || t('setup.message.initFailed'))
       phase.value = 'form'
     }
   } catch (error: any) {
-    message.error(error?.message || '初始化失败，请重试')
+    message.error(error?.message || t('setup.message.initFailedRetry'))
     phase.value = 'form'
   } finally {
     loading.value = false
@@ -691,7 +702,7 @@ async function handleSaveStorage() {
     if (!storageForm.access_key) missing.push('AccessKey')
     if (!storageForm.access_secret) missing.push('AccessSecret')
     if (missing.length > 0) {
-      message.warning(`请填写以下必填项：${missing.join('、')}`)
+      message.warning(t('setup.message.missingRequired', { items: missing.join('、') }))
       return
     }
   }
@@ -716,13 +727,13 @@ async function handleSaveStorage() {
       extra: extra || undefined,
     })
     if (res.success) {
-      message.success(res.message || '存储配置已保存')
+      message.success(res.message || t('common.message.saveSuccess'))
       phase.value = 'theme'
     } else {
-      message.error(res.message || '保存存储配置失败')
+      message.error(res.message || t('setup.message.storageSaveFailed'))
     }
   } catch (error: any) {
-    message.error(error?.message || '保存存储配置失败，请重试')
+    message.error(error?.message || t('setup.message.storageSaveFailedRetry'))
   } finally {
     storageSaving.value = false
   }
@@ -731,7 +742,7 @@ async function handleSaveStorage() {
 /** 测试云存储连接 */
 async function handleTestConnection() {
   if (!storageForm.provider || storageForm.provider === 'local') {
-    message.info('本地存储无需测试连接')
+    message.info(t('setup.message.localNoTest'))
     return
   }
 
@@ -741,7 +752,7 @@ async function handleTestConnection() {
   if (!storageForm.access_key) missing.push('AccessKey')
   if (!storageForm.access_secret) missing.push('AccessSecret')
   if (missing.length > 0) {
-    message.warning(`请先填写以下必填项：${missing.join('、')}`)
+    message.warning(t('setup.message.missingRequiredBefore', { items: missing.join('、') }))
     return
   }
 
@@ -762,9 +773,9 @@ async function handleTestConnection() {
       custom_domain: storageForm.custom_domain,
       extra: extra,
     })
-    message.success('连接测试通过')
+    message.success(t('setup.message.testSuccess'))
   } catch (error: any) {
-    message.error(error?.message || '连接测试失败，请检查配置')
+    message.error(error?.message || t('setup.message.testFailed'))
   } finally {
     storageTesting.value = false
   }
@@ -801,7 +812,7 @@ async function startThemeInit() {
       pollTimer = setInterval(pollThemeStatus, 1500)
     }
   } catch (error: any) {
-    message.error(error?.message || '启动主题安装失败')
+    message.error(error?.message || t('setup.message.themeStartFailed'))
   } finally {
     themeStarting.value = false
   }
@@ -814,7 +825,7 @@ async function pollThemeStatus() {
     if (status.status !== 'running') {
       stopPolling()
       if (status.status === 'success') {
-        message.success(`主题「${status.theme_name}」已启用，博客即将上线`)
+        message.success(t('setup.message.themeEnabled', { name: status.theme_name }))
       }
     }
   } catch {

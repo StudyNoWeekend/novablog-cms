@@ -1,0 +1,143 @@
+{
+  "welcome": "歡迎使用 Novablog",
+  "slogan": "用專業的方式，展示你的創作",
+  "steps": {
+    "account": "帳號",
+    "direction": "方向",
+    "storage": "儲存",
+    "theme": "外觀"
+  },
+  "phaseDesc": {
+    "form": "建立您的部落格帳號以開始使用系統",
+    "role": "選擇創作方向，系統將預先啟用對應的功能模組",
+    "storage": "選擇檔案儲存方式，可略過稍後設定",
+    "theme": "取得官方預設主題，一鍵完成部落格外觀初始化"
+  },
+  "form": {
+    "initCodePlaceholder": "請輸入官方郵件中的部署金鑰",
+    "usernamePlaceholder": "設定登入使用者名稱",
+    "passwordPlaceholder": "設定登入密碼",
+    "confirmPlaceholder": "再次輸入密碼以確認",
+    "nicknamePlaceholder": "您的暱稱",
+    "nextStep": "下一步：選擇創作方向"
+  },
+  "role": {
+    "title": "你想打造怎樣的部落格？",
+    "desc": "選擇你的創作方向（可多選），系統將依方向預先啟用後台功能模組，之後可在「模組管理」中隨時調整。",
+    "presetTitle": "將為你啟用的模組",
+    "customize": "自訂微調",
+    "collapseCustomize": "收起微調",
+    "commonBadge": "通用",
+    "switchModuleAria": "開關 {name} 模組",
+    "createAccount": "建立帳號",
+    "skip": "略過，稍後再選"
+  },
+  "roles": {
+    "tech": "技術開發者",
+    "techDesc": "撰寫技術文章，展示專案與開源作品",
+    "digital": "數位評測",
+    "digitalDesc": "裝備評測與上手影片",
+    "photo": "攝影愛好者",
+    "photoDesc": "攝影作品集與器材清單",
+    "video": "影片創作者",
+    "videoDesc": "影片作品與平台連結彙整",
+    "music": "音樂人",
+    "musicDesc": "歌單與音樂作品分享",
+    "travelvlog": "旅遊 Vlogger",
+    "travelvlogDesc": "旅遊 vlog、攻略與裝備",
+    "travel": "旅遊部落客",
+    "travelDesc": "旅遊攻略與出行裝備",
+    "food": "美食愛好者",
+    "foodDesc": "食譜、食材與烹飪步驟",
+    "fitness": "健身運動",
+    "fitnessDesc": "訓練紀錄與健身裝備",
+    "fashion": "時尚穿搭",
+    "fashionDesc": "穿搭 lookbook 作品集",
+    "pet": "寵物日常",
+    "petDesc": "毛小孩相簿與作品集",
+    "reading": "閱讀",
+    "readingDesc": "讀書書架、評分與書評",
+    "gaming": "遊戲玩家",
+    "gamingDesc": "遊戲庫、時數與短評",
+    "designer": "設計師 / 插畫師",
+    "designerDesc": "作品集與專案經歷",
+    "craft": "手作 DIY",
+    "craftDesc": "手作作品圖集",
+    "lifestyle": "生活方式",
+    "lifestyleDesc": "以文章與媒體庫記錄生活，暫不啟用專屬模組",
+    "all": "全能創作者",
+    "allDesc": "啟用全部內容模組，之後隨時可調",
+    "group": {
+      "tech": "技術 · 數位",
+      "media": "影像 · 聲音",
+      "life": "旅遊 · 生活",
+      "hobby": "興趣 · 收藏"
+    }
+  },
+  "storage": {
+    "title": "設定物件儲存",
+    "desc": "選擇檔案儲存方式，用於儲存上傳的圖片、影片等素材。可略過，之後在管理後台中隨時設定。",
+    "providerLabel": "儲存類型",
+    "providerPlaceholder": "選擇儲存類型",
+    "providers": {
+      "local": "本機儲存",
+      "aliyun": "阿里雲 OSS",
+      "tencent": "騰訊雲 COS",
+      "minio": "MinIO"
+    },
+    "enableSsl": "啟用 SSL",
+    "pathPrefixLabel": "PathPrefix（可選）",
+    "customDomainLabel": "CustomDomain（可選）",
+    "saveAndContinue": "儲存並繼續",
+    "testConnection": "測試連線",
+    "skip": "略過，使用本機儲存"
+  },
+  "theme": {
+    "title": "初始化部落格外觀",
+    "desc": "輸入 NovaBlog 官方網址並登入官方帳號，將自動取得並啟用預設主題（該網址為社群推送與主題市場的統一入口）",
+    "baseURLLabel": "NovaBlog 官方網址",
+    "baseURLPlaceholder": "請輸入官方網址",
+    "accountLabel": "官方帳號",
+    "emailPlaceholder": "官方市場登入電子郵件",
+    "passwordLabel": "官方密碼",
+    "passwordPlaceholder": "官方市場登入密碼",
+    "enabledWithVersion": "已啟用 {name} v{version}",
+    "fetchDefault": "取得預設主題",
+    "doneLogin": "完成，前往登入",
+    "skip": "略過，稍後在主題頁安裝"
+  },
+  "stage": {
+    "fetching": "正在從官方市場取得預設主題…",
+    "installing": "正在下載並安裝主題製品…",
+    "activating": "正在啟用主題…",
+    "processing": "處理中…"
+  },
+  "validation": {
+    "usernameRequired": "請輸入使用者名稱",
+    "usernameLength": "使用者名稱長度為 3-50 個字元",
+    "passwordRequired": "請輸入密碼",
+    "passwordMinLength": "密碼長度至少為 6 個字元",
+    "confirmRequired": "請再次輸入密碼",
+    "confirmMismatch": "兩次輸入的密碼不一致",
+    "initCodeRequired": "官方部署實例需要填寫郵件中的部署金鑰",
+    "initCodeChecking": "正在驗證部署金鑰…",
+    "initCodeValid": "部署金鑰正確",
+    "initCodeInvalid": "部署金鑰錯誤，請輸入官方郵件中的安裝金鑰",
+    "initCodeVerifyFailed": "部署金鑰驗證未通過，請檢查後重試",
+    "marketAccountRequired": "官方市場下載需要先登入官方帳號",
+    "marketURLFormat": "官方網址需以 http:// 或 https:// 開頭"
+  },
+  "message": {
+    "initFailed": "初始化失敗",
+    "initFailedRetry": "初始化失敗，請重試",
+    "missingRequired": "請填寫以下必填項：{items}",
+    "missingRequiredBefore": "請先填寫以下必填項：{items}",
+    "storageSaveFailed": "儲存設定失敗",
+    "storageSaveFailedRetry": "儲存設定失敗，請重試",
+    "localNoTest": "本機儲存無需測試連線",
+    "testSuccess": "連線測試通過",
+    "testFailed": "連線測試失敗，請檢查設定",
+    "themeStartFailed": "啟動主題安裝失敗",
+    "themeEnabled": "主題「{name}」已啟用，部落格即將上線"
+  }
+}

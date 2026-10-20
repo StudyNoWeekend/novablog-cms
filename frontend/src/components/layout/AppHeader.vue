@@ -5,7 +5,7 @@
         <MenuOutlined />
       </span>
       <div class="greeting-wrapper">
-        <h1 class="greeting">Hi, {{ nickname }}</h1>
+        <h1 class="greeting">{{ $t('app.header.greeting', { name: nickname }) }}</h1>
         <div class="subtitle-row">
           <p class="subtitle">{{ roleDisplay }}</p>
           <a-button
@@ -15,7 +15,7 @@
             class="role-edit-btn"
             @click="appStore.roleModalVisible = true"
           >
-            修改
+            {{ $t('app.header.editRole') }}
           </a-button>
         </div>
       </div>
@@ -26,8 +26,8 @@
         href="https://github.com/StudyNoWeekend/novablog-cms"
         target="_blank"
         rel="noopener noreferrer"
-        title="Novablog CMS 仓库"
-        aria-label="GitHub 仓库"
+        :title="$t('app.header.githubRepo')"
+        :aria-label="$t('app.header.githubRepoAria')"
       >
         <GithubOutlined />
       </a>
@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { BellOutlined, MenuOutlined, GithubOutlined } from '@ant-design/icons-vue'
@@ -53,9 +54,10 @@ import { ALL_ROLES } from '@/constants/setupRoles'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
+const { t } = useI18n()
 
 const nickname = computed(() => {
-  return authStore.user?.nickname || authStore.username || '用户'
+  return authStore.user?.nickname || authStore.username || t('app.header.defaultNickname')
 })
 
 const hasRole = computed(() => !!authStore.user?.role)
@@ -63,13 +65,14 @@ const hasRole = computed(() => !!authStore.user?.role)
 // 已选创作方向的展示文案：role 为空时回退到欢迎语（失效 key 自动过滤）
 const roleDisplay = computed(() => {
   const role = authStore.user?.role
-  if (!role) return '欢迎来到你的创作空间'
+  if (!role) return t('app.header.welcome')
   const labels = role
     .split(',')
     .map((key) => key.trim())
-    .map((key) => ALL_ROLES.find((r) => r.key === key)?.label)
-    .filter(Boolean)
-  return labels.length ? labels.join(' · ') : '欢迎来到你的创作空间'
+    .map((key) => ALL_ROLES.find((r) => r.key === key)?.labelKey)
+    .filter((labelKey): labelKey is string => !!labelKey)
+    .map((labelKey) => t(labelKey))
+  return labels.length ? labels.join(' · ') : t('app.header.welcome')
 })
 </script>
 

@@ -11,12 +11,12 @@
       <a-menu class="avatar-menu" @click="handleMenuClick">
         <a-menu-item key="profile">
           <UserOutlined class="menu-item-icon" />
-          <span>个人资料</span>
+          <span>{{ $t('menu.profile.info') }}</span>
         </a-menu-item>
         <a-menu-divider />
         <a-menu-item key="logout">
           <LogoutOutlined class="menu-item-icon" />
-          <span>退出登录</span>
+          <span>{{ $t('app.avatar.logout') }}</span>
         </a-menu-item>
       </a-menu>
     </template>

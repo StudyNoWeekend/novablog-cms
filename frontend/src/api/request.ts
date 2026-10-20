@@ -2,6 +2,7 @@ import axios from 'axios'
 import type { AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios'
 
 import { message } from 'ant-design-vue'
+import i18n from '@/locales'
 import { storage } from '@/utils/storage'
 import type { ApiResponse } from '@/types/api'
 import { MARKET_AUTH_EXPIRED_CODE } from '@/types/theme'
@@ -53,12 +54,12 @@ request.interceptors.response.use(
     if (res.code === 0) {
       return res.data
     }
-    message.error(res.msg || '请求失败')
-    return Promise.reject(new Error(res.msg || '请求失败'))
+    message.error(res.msg || i18n.global.t('common.message.requestFailed'))
+    return Promise.reject(new Error(res.msg || i18n.global.t('common.message.requestFailed')))
   },
   async (error: AxiosError<ApiResponse>) => {
     const config = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
-    const errMsg = error.response?.data?.msg || error.message || '网络错误'
+    const errMsg = error.response?.data?.msg || error.message || i18n.global.t('common.message.networkError')
 
     // 官方主题市场登录失效（业务码 401101）由市场模块自行刷新重试或弹回登录遮罩，不做全局提示
     if (error.response?.data?.code === MARKET_AUTH_EXPIRED_CODE) {
@@ -74,7 +75,7 @@ request.interceptors.response.use(
 
       const refreshToken = storage.getRefreshToken()
       if (!refreshToken) {
-        message.error('登录已过期，请重新登录')
+        message.error(i18n.global.t('common.message.loginExpired'))
         storage.clear()
         window.location.href = '/auth/login'
         return Promise.reject(error)
@@ -96,14 +97,14 @@ request.interceptors.response.use(
             storage.setRefreshToken(refresh_token)
             resolvePendingRequests(access_token)
           } else {
-            message.error(newData.msg || '登录已过期，请重新登录')
+            message.error(newData.msg || i18n.global.t('common.message.loginExpired'))
             rejectPendingRequests(new Error('Token refresh failed'))
             storage.clear()
             window.location.href = '/auth/login'
             return Promise.reject(error)
           }
         } catch (refreshError) {
-          const refreshMsg = (refreshError as any).response?.data?.msg || (refreshError as any).message || '登录已过期，请重新登录'
+          const refreshMsg = (refreshError as any).response?.data?.msg || (refreshError as any).message || i18n.global.t('common.message.loginExpired')
           message.error(refreshMsg)
           rejectPendingRequests(new Error('Token refresh failed'))
           storage.clear()

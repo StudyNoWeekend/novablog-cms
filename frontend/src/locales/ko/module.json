@@ -1,0 +1,56 @@
+{
+  "items": {
+    "article": {
+      "label": "아티클 관리",
+      "description": "블로그 화면의 아티클 목록과 상세 표시"
+    },
+    "music": {
+      "label": "음악 관리",
+      "description": "블로그 화면의 음악 플레이어 표시"
+    },
+    "video": {
+      "label": "영상 관리",
+      "description": "블로그 화면의 영상 작품 표시"
+    },
+    "travel": {
+      "label": "여행 관리",
+      "description": "블로그 화면의 여행 가이드 표시"
+    },
+    "portfolio": {
+      "label": "포트폴리오 관리",
+      "description": "블로그 화면의 사진 포트폴리오 표시"
+    },
+    "equipment": {
+      "label": "개인 장비",
+      "description": "블로그 화면의 개인 장비 표시"
+    },
+    "project": {
+      "label": "프로젝트 경력",
+      "description": "블로그 화면의 프로젝트 경력 표시"
+    },
+    "openSource": {
+      "label": "오픈소스 작품",
+      "description": "블로그 화면의 GitHub 오픈소스 작품 표시"
+    },
+    "recipe": {
+      "label": "레시피",
+      "description": "블로그 화면의 레시피 표시"
+    },
+    "book": {
+      "label": "독서 책장",
+      "description": "블로그 화면의 독서 책장과 서평 표시"
+    },
+    "game": {
+      "label": "게임 라이브러리",
+      "description": "블로그 화면의 게임 라이브러리와 한줄 평 표시"
+    },
+    "fitness": {
+      "label": "운동 기록",
+      "description": "블로그 화면의 운동 기록 표시"
+    },
+    "techStack": {
+      "label": "기술 스택",
+      "description": "블로그 화면의 기술 스택 표시"
+    }
+  }
+}

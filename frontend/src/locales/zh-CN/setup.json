@@ -1,0 +1,143 @@
+{
+  "welcome": "欢迎使用 Novablog",
+  "slogan": "用专业的方式，展示你的创作",
+  "steps": {
+    "account": "账号",
+    "direction": "方向",
+    "storage": "存储",
+    "theme": "外观"
+  },
+  "phaseDesc": {
+    "form": "创建您的博主账号以开始使用系统",
+    "role": "选择创作方向，系统将预置对应的功能模块",
+    "storage": "选择文件存储方式，可跳过稍后配置",
+    "theme": "获取官方默认主题，一键完成博客外观初始化"
+  },
+  "form": {
+    "initCodePlaceholder": "请输入官方邮件中的部署密钥",
+    "usernamePlaceholder": "设置登录用户名",
+    "passwordPlaceholder": "设置登录密码",
+    "confirmPlaceholder": "再次输入密码以确认",
+    "nicknamePlaceholder": "您的昵称",
+    "nextStep": "下一步：选择创作方向"
+  },
+  "role": {
+    "title": "你想打造怎样的博客？",
+    "desc": "选择你的创作方向（可多选），系统将按方向预置后台功能模块，之后可在「模块管理」中随时调整。",
+    "presetTitle": "将为你开启的模块",
+    "customize": "自定义微调",
+    "collapseCustomize": "收起微调",
+    "commonBadge": "通用",
+    "switchModuleAria": "开关 {name} 模块",
+    "createAccount": "创建账号",
+    "skip": "跳过，稍后再选"
+  },
+  "roles": {
+    "tech": "技术开发者",
+    "techDesc": "写技术文章，展示项目与开源作品",
+    "digital": "数码测评",
+    "digitalDesc": "装备测评与上手视频",
+    "photo": "摄影爱好者",
+    "photoDesc": "摄影作品集与器材清单",
+    "video": "视频创作者",
+    "videoDesc": "视频作品与平台链接汇总",
+    "music": "音乐人",
+    "musicDesc": "歌单与音乐作品分享",
+    "travelvlog": "旅行 Vlogger",
+    "travelvlogDesc": "旅行 vlog、攻略与装备",
+    "travel": "旅行博主",
+    "travelDesc": "旅行攻略与出行装备",
+    "food": "美食爱好者",
+    "foodDesc": "菜谱、食材与烹饪步骤",
+    "fitness": "健身运动",
+    "fitnessDesc": "训练记录与健身装备",
+    "fashion": "时尚穿搭",
+    "fashionDesc": "穿搭 lookbook 作品集",
+    "pet": "宠物日常",
+    "petDesc": "毛孩子相册与作品集",
+    "reading": "读书",
+    "readingDesc": "读书书架、评分与书评",
+    "gaming": "游戏玩家",
+    "gamingDesc": "游戏库、时长与短评",
+    "designer": "设计师 / 插画师",
+    "designerDesc": "作品集与项目经历",
+    "craft": "手工 DIY",
+    "craftDesc": "手工作品图集",
+    "lifestyle": "生活方式",
+    "lifestyleDesc": "以文章与媒体库记录生活，暂不开启专属模块",
+    "all": "全能创作者",
+    "allDesc": "开启全部内容模块，之后随时可调",
+    "group": {
+      "tech": "技术 · 数码",
+      "media": "影像 · 声音",
+      "life": "旅行 · 生活",
+      "hobby": "兴趣 · 收藏"
+    }
+  },
+  "storage": {
+    "title": "配置对象存储",
+    "desc": "选择文件存储方式，用于保存上传的图片、视频等素材。可跳过，后续在管理后台中随时配置。",
+    "providerLabel": "存储类型",
+    "providerPlaceholder": "选择存储类型",
+    "providers": {
+      "local": "本地存储",
+      "aliyun": "阿里云 OSS",
+      "tencent": "腾讯云 COS",
+      "minio": "MinIO"
+    },
+    "enableSsl": "启用 SSL",
+    "pathPrefixLabel": "PathPrefix（可选）",
+    "customDomainLabel": "CustomDomain（可选）",
+    "saveAndContinue": "保存并继续",
+    "testConnection": "测试连接",
+    "skip": "跳过，使用本地存储"
+  },
+  "theme": {
+    "title": "初始化博客外观",
+    "desc": "输入 NovaBlog 官方地址并登录官方账号，将自动获取并启用默认主题（该地址为社区推送与主题市场的统一入口）",
+    "baseURLLabel": "NovaBlog 官方地址",
+    "baseURLPlaceholder": "请输入官方地址",
+    "accountLabel": "官方账号",
+    "emailPlaceholder": "官方市场登录邮箱",
+    "passwordLabel": "官方密码",
+    "passwordPlaceholder": "官方市场登录密码",
+    "enabledWithVersion": "已启用 {name} v{version}",
+    "fetchDefault": "获取默认主题",
+    "doneLogin": "完成，进入登录",
+    "skip": "跳过，稍后在主题页安装"
+  },
+  "stage": {
+    "fetching": "正在从官方市场获取默认主题…",
+    "installing": "正在下载并安装主题制品…",
+    "activating": "正在启用主题…",
+    "processing": "处理中…"
+  },
+  "validation": {
+    "usernameRequired": "请输入用户名",
+    "usernameLength": "用户名长度为 3-50 个字符",
+    "passwordRequired": "请输入密码",
+    "passwordMinLength": "密码长度至少为 6 个字符",
+    "confirmRequired": "请再次输入密码",
+    "confirmMismatch": "两次输入的密码不一致",
+    "initCodeRequired": "官方部署实例需要填写邮件中的部署密钥",
+    "initCodeChecking": "正在校验部署密钥…",
+    "initCodeValid": "部署密钥正确",
+    "initCodeInvalid": "部署密钥错误，请输入官方邮件中的安装密钥",
+    "initCodeVerifyFailed": "部署密钥校验未通过，请检查后重试",
+    "marketAccountRequired": "官方市场下载需要先登录官方账号",
+    "marketURLFormat": "官方地址需以 http:// 或 https:// 开头"
+  },
+  "message": {
+    "initFailed": "初始化失败",
+    "initFailedRetry": "初始化失败，请重试",
+    "missingRequired": "请填写以下必填项：{items}",
+    "missingRequiredBefore": "请先填写以下必填项：{items}",
+    "storageSaveFailed": "保存存储配置失败",
+    "storageSaveFailedRetry": "保存存储配置失败，请重试",
+    "localNoTest": "本地存储无需测试连接",
+    "testSuccess": "连接测试通过",
+    "testFailed": "连接测试失败，请检查配置",
+    "themeStartFailed": "启动主题安装失败",
+    "themeEnabled": "主题「{name}」已启用，博客即将上线"
+  }
+}

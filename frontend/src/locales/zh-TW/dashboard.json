@@ -1,0 +1,71 @@
+{
+  "empty": "暫無工作台資料",
+  "metrics": {
+    "todayVisits": "今日瀏覽",
+    "todayVisitors": "今日訪客",
+    "totalVisits": "總瀏覽量",
+    "totalContent": "內容總數",
+    "totalComments": "總留言"
+  },
+  "todo": {
+    "draftsPending": "篇草稿待發布"
+  },
+  "tabs": {
+    "visits": "瀏覽量",
+    "production": "內容產出"
+  },
+  "range": {
+    "days7": "7天",
+    "days30": "30天",
+    "days90": "90天"
+  },
+  "chart": {
+    "noTrendData": "暫無趨勢資料",
+    "siteWide": "全站"
+  },
+  "summary": {
+    "totalOutput": "總產出",
+    "dailyAvg": "日均產出"
+  },
+  "moduleData": {
+    "title": "模組資料",
+    "module": "模組",
+    "published": "發布",
+    "totalViews": "累計瀏覽",
+    "today": "今日",
+    "last7Days": "7日",
+    "share": "瀏覽佔比",
+    "publishedCount": "已發布 {count}",
+    "empty": "暫無啟用的內容模組"
+  },
+  "distribution": {
+    "title": "瀏覽分布",
+    "empty": "暫無瀏覽資料"
+  },
+  "topContent": {
+    "title": "熱門內容排行",
+    "views": "瀏覽",
+    "comments": "留言",
+    "empty": "暫無熱門內容"
+  },
+  "recentComments": {
+    "title": "最新留言",
+    "blogger": "站長",
+    "empty": "暫無留言"
+  },
+  "contentType": {
+    "article": "文章",
+    "travel": "旅遊攻略",
+    "portfolio": "攝影作品",
+    "video": "影片作品",
+    "song": "音樂",
+    "equipment": "個人設備",
+    "project": "專案經歷",
+    "open_source": "開源作品",
+    "recipe": "美食食譜",
+    "book": "讀書書架",
+    "game": "遊戲庫",
+    "fitness": "健身訓練",
+    "tech_stack": "技術棧"
+  }
+}

@@ -11,12 +11,16 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+const { t } = useI18n()
 
+// meta.title 为 menu.* 的 i18n key（见 README 规范），缺失时回退到个人资料
 const routeTitle = computed(() => {
-  return (route.meta?.title as string) || '个人资料'
+  const titleKey = route.meta?.title as string | undefined
+  return titleKey ? t(titleKey) : t('menu.profile.info')
 })
 </script>
 

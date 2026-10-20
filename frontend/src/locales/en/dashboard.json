@@ -1,0 +1,71 @@
+{
+  "empty": "No dashboard data",
+  "metrics": {
+    "todayVisits": "Today's Visits",
+    "todayVisitors": "Today's Visitors",
+    "totalVisits": "Total Visits",
+    "totalContent": "Total Content",
+    "totalComments": "Total Comments"
+  },
+  "todo": {
+    "draftsPending": "drafts pending publication"
+  },
+  "tabs": {
+    "visits": "Traffic",
+    "production": "Content Output"
+  },
+  "range": {
+    "days7": "7 days",
+    "days30": "30 days",
+    "days90": "90 days"
+  },
+  "chart": {
+    "noTrendData": "No trend data",
+    "siteWide": "All Sites"
+  },
+  "summary": {
+    "totalOutput": "Total Output",
+    "dailyAvg": "Daily Average"
+  },
+  "moduleData": {
+    "title": "Module Data",
+    "module": "Module",
+    "published": "Published",
+    "totalViews": "Total Views",
+    "today": "Today",
+    "last7Days": "7 Days",
+    "share": "Share",
+    "publishedCount": "Published {count}",
+    "empty": "No enabled content modules"
+  },
+  "distribution": {
+    "title": "Traffic Distribution",
+    "empty": "No visit data"
+  },
+  "topContent": {
+    "title": "Top Content",
+    "views": "views",
+    "comments": "comments",
+    "empty": "No top content"
+  },
+  "recentComments": {
+    "title": "Recent Comments",
+    "blogger": "Author",
+    "empty": "No comments"
+  },
+  "contentType": {
+    "article": "Article",
+    "travel": "Travel Guide",
+    "portfolio": "Photography",
+    "video": "Videos",
+    "song": "Music",
+    "equipment": "Devices",
+    "project": "Projects",
+    "open_source": "Open Source",
+    "recipe": "Recipes",
+    "book": "Bookshelf",
+    "game": "Games",
+    "fitness": "Fitness",
+    "tech_stack": "Tech Stack"
+  }
+}

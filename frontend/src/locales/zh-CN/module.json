@@ -1,0 +1,56 @@
+{
+  "items": {
+    "article": {
+      "label": "文章管理",
+      "description": "博客前台的文章列表、详情展示"
+    },
+    "music": {
+      "label": "音乐管理",
+      "description": "博客前台的音乐播放器展示"
+    },
+    "video": {
+      "label": "视频管理",
+      "description": "博客前台的视频作品展示"
+    },
+    "travel": {
+      "label": "旅行管理",
+      "description": "博客前台的旅行攻略展示"
+    },
+    "portfolio": {
+      "label": "作品集管理",
+      "description": "博客前台的摄影作品集展示"
+    },
+    "equipment": {
+      "label": "个人设备",
+      "description": "博客前台的个人设备展示"
+    },
+    "project": {
+      "label": "项目经历",
+      "description": "博客前台的项目经历展示"
+    },
+    "openSource": {
+      "label": "开源作品",
+      "description": "博客前台的 GitHub 开源作品展示"
+    },
+    "recipe": {
+      "label": "美食菜谱",
+      "description": "博客前台的美食菜谱展示"
+    },
+    "book": {
+      "label": "读书书架",
+      "description": "博客前台的读书书架与书评展示"
+    },
+    "game": {
+      "label": "游戏库",
+      "description": "博客前台的游戏库与短评展示"
+    },
+    "fitness": {
+      "label": "健身训练",
+      "description": "博客前台的健身训练记录展示"
+    },
+    "techStack": {
+      "label": "技术栈",
+      "description": "博客前台的技术栈展示"
+    }
+  }
+}

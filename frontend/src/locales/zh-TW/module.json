@@ -1,0 +1,56 @@
+{
+  "items": {
+    "article": {
+      "label": "文章管理",
+      "description": "部落格前台的文章列表、詳情展示"
+    },
+    "music": {
+      "label": "音樂管理",
+      "description": "部落格前台的音樂播放器展示"
+    },
+    "video": {
+      "label": "影片管理",
+      "description": "部落格前台的影片作品展示"
+    },
+    "travel": {
+      "label": "旅遊管理",
+      "description": "部落格前台的旅遊攻略展示"
+    },
+    "portfolio": {
+      "label": "作品集管理",
+      "description": "部落格前台的攝影作品集展示"
+    },
+    "equipment": {
+      "label": "個人設備",
+      "description": "部落格前台的個人設備展示"
+    },
+    "project": {
+      "label": "專案經歷",
+      "description": "部落格前台的專案經歷展示"
+    },
+    "openSource": {
+      "label": "開源作品",
+      "description": "部落格前台的 GitHub 開源作品展示"
+    },
+    "recipe": {
+      "label": "美食食譜",
+      "description": "部落格前台的美食食譜展示"
+    },
+    "book": {
+      "label": "閱讀書架",
+      "description": "部落格前台的讀書書架與書評展示"
+    },
+    "game": {
+      "label": "遊戲庫",
+      "description": "部落格前台的遊戲庫與短評展示"
+    },
+    "fitness": {
+      "label": "健身訓練",
+      "description": "部落格前台的健身訓練紀錄展示"
+    },
+    "techStack": {
+      "label": "技術棧",
+      "description": "部落格前台的技術棧展示"
+    }
+  }
+}

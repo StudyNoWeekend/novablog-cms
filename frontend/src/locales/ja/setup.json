@@ -1,0 +1,143 @@
+{
+  "welcome": "Novablog へようこそ",
+  "slogan": "プロフェッショナルな方法で、あなたの創作を発信",
+  "steps": {
+    "account": "アカウント",
+    "direction": "方向性",
+    "storage": "ストレージ",
+    "theme": "外観"
+  },
+  "phaseDesc": {
+    "form": "ブログ管理者アカウントを作成して開始します",
+    "role": "創作の方向性を選択すると、対応する機能モジュールが自動で有効になります",
+    "storage": "ファイルの保存方法を選択します。スキップして後で設定することもできます",
+    "theme": "公式のデフォルトテーマを取得し、ブログの外観をワンクリックで初期化します"
+  },
+  "form": {
+    "initCodePlaceholder": "公式メールのデプロイキーを入力してください",
+    "usernamePlaceholder": "ログインユーザー名を設定",
+    "passwordPlaceholder": "ログインパスワードを設定",
+    "confirmPlaceholder": "確認のためもう一度パスワードを入力",
+    "nicknamePlaceholder": "ニックネーム",
+    "nextStep": "次へ：創作の方向性を選択"
+  },
+  "role": {
+    "title": "どんなブログを作りたいですか？",
+    "desc": "創作の方向性を選択してください（複数選択可）。選択内容に応じて管理画面の機能モジュールが事前設定され、後から「モジュール管理」でいつでも変更できます。",
+    "presetTitle": "有効になるモジュール",
+    "customize": "カスタマイズ",
+    "collapseCustomize": "閉じる",
+    "commonBadge": "共通",
+    "switchModuleAria": "{name} モジュールの切り替え",
+    "createAccount": "アカウントを作成",
+    "skip": "スキップして後で選択"
+  },
+  "roles": {
+    "tech": "技術開発者",
+    "techDesc": "技術記事を書き、プロジェクトやオープンソース作品を紹介",
+    "digital": "ガジェットレビュー",
+    "digitalDesc": "機材のレビューとハンズオン動画",
+    "photo": "写真愛好家",
+    "photoDesc": "写真ポートフォリオと機材リスト",
+    "video": "動画クリエイター",
+    "videoDesc": "動画作品とプラットフォームリンクのまとめ",
+    "music": "ミュージシャン",
+    "musicDesc": "プレイリストと音楽作品の共有",
+    "travelvlog": "旅行 Vlogger",
+    "travelvlogDesc": "旅行 vlog、ガイド、装備",
+    "travel": "旅行ブロガー",
+    "travelDesc": "旅行ガイドと旅の装備",
+    "food": "グルメ愛好家",
+    "foodDesc": "レシピ、食材、調理手順",
+    "fitness": "フィットネス",
+    "fitnessDesc": "トレーニング記録とギア",
+    "fashion": "ファッションスタイル",
+    "fashionDesc": "コーデ lookbook ポートフォリオ",
+    "pet": "ペットの日常",
+    "petDesc": "ペットのアルバムとポートフォリオ",
+    "reading": "読書",
+    "readingDesc": "本棚、評価、書評",
+    "gaming": "ゲーマー",
+    "gamingDesc": "ゲームライブラリ、プレイ時間、ショートレビュー",
+    "designer": "デザイナー / イラストレーター",
+    "designerDesc": "ポートフォリオとプロジェクト経歴",
+    "craft": "ハンドメイド DIY",
+    "craftDesc": "手づくり作品ギャラリー",
+    "lifestyle": "ライフスタイル",
+    "lifestyleDesc": "記事とメディアライブラリで生活を記録。専用モジュールは今のところ無効",
+    "all": "オールラウンドクリエイター",
+    "allDesc": "すべてのコンテンツモジュールを有効化。後からいつでも調整可能",
+    "group": {
+      "tech": "技術・デジタル",
+      "media": "映像・サウンド",
+      "life": "旅行・ライフ",
+      "hobby": "趣味・コレクション"
+    }
+  },
+  "storage": {
+    "title": "オブジェクトストレージの設定",
+    "desc": "アップロードした画像や動画などの素材を保存する方法を選択します。スキップして、後から管理画面でいつでも設定できます。",
+    "providerLabel": "ストレージ種別",
+    "providerPlaceholder": "ストレージ種別を選択",
+    "providers": {
+      "local": "ローカルストレージ",
+      "aliyun": "Alibaba Cloud OSS",
+      "tencent": "Tencent Cloud COS",
+      "minio": "MinIO"
+    },
+    "enableSsl": "SSL を有効化",
+    "pathPrefixLabel": "PathPrefix（任意）",
+    "customDomainLabel": "CustomDomain（任意）",
+    "saveAndContinue": "保存して続行",
+    "testConnection": "接続テスト",
+    "skip": "スキップしてローカルストレージを使用"
+  },
+  "theme": {
+    "title": "ブログ外観の初期化",
+    "desc": "NovaBlog 公式アドレスを入力して公式アカウントにログインすると、デフォルトテーマが自動で取得・有効化されます（このアドレスはコミュニティ配信とテーママーケットの共通入口です）",
+    "baseURLLabel": "NovaBlog 公式アドレス",
+    "baseURLPlaceholder": "公式アドレスを入力",
+    "accountLabel": "公式アカウント",
+    "emailPlaceholder": "公式マーケットのログインメールアドレス",
+    "passwordLabel": "公式パスワード",
+    "passwordPlaceholder": "公式マーケットのログインパスワード",
+    "enabledWithVersion": "{name} v{version} を有効化しました",
+    "fetchDefault": "デフォルトテーマを取得",
+    "doneLogin": "完了してログインへ",
+    "skip": "スキップして後でテーマページでインストール"
+  },
+  "stage": {
+    "fetching": "公式マーケットからデフォルトテーマを取得中…",
+    "installing": "テーマアーティファクトをダウンロードしてインストール中…",
+    "activating": "テーマを有効化中…",
+    "processing": "処理中…"
+  },
+  "validation": {
+    "usernameRequired": "ユーザー名を入力してください",
+    "usernameLength": "ユーザー名は 3〜50 文字で入力してください",
+    "passwordRequired": "パスワードを入力してください",
+    "passwordMinLength": "パスワードは 6 文字以上で入力してください",
+    "confirmRequired": "もう一度パスワードを入力してください",
+    "confirmMismatch": "2 回のパスワード入力が一致しません",
+    "initCodeRequired": "公式デプロイインスタンスにはメールのデプロイキーが必要です",
+    "initCodeChecking": "デプロイキーを確認中…",
+    "initCodeValid": "デプロイキーは正しいです",
+    "initCodeInvalid": "デプロイキーが正しくありません。公式メールのキーを入力してください",
+    "initCodeVerifyFailed": "デプロイキーの検証に失敗しました。確認して再試行してください",
+    "marketAccountRequired": "公式マーケットからダウンロードするには、公式アカウントへのログインが必要です",
+    "marketURLFormat": "公式アドレスは http:// または https:// で始まる必要があります"
+  },
+  "message": {
+    "initFailed": "初期化に失敗しました",
+    "initFailedRetry": "初期化に失敗しました。もう一度お試しください",
+    "missingRequired": "次の必須項目を入力してください：{items}",
+    "missingRequiredBefore": "先に次の必須項目を入力してください：{items}",
+    "storageSaveFailed": "ストレージ設定の保存に失敗しました",
+    "storageSaveFailedRetry": "ストレージ設定の保存に失敗しました。もう一度お試しください",
+    "localNoTest": "ローカルストレージは接続テスト不要です",
+    "testSuccess": "接続テストに成功しました",
+    "testFailed": "接続テストに失敗しました。設定を確認してください",
+    "themeStartFailed": "テーマインストールの開始に失敗しました",
+    "themeEnabled": "テーマ「{name}」を有効化しました。ブログはまもなく公開されます"
+  }
+}

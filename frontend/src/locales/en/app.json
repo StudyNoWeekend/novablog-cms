@@ -1,0 +1,24 @@
+{
+  "header": {
+    "greeting": "Hi, {name}",
+    "defaultNickname": "User",
+    "editRole": "Edit",
+    "githubRepo": "Novablog CMS repository",
+    "githubRepoAria": "GitHub repository",
+    "welcome": "Welcome to your creative space"
+  },
+  "role": {
+    "selectTitle": "Choose Your Creative Focus",
+    "editTitle": "Edit Your Creative Focus",
+    "selectDesc": "We noticed you haven't chosen a creative focus yet. Pick your interests (multi-select) and the system will customize the sidebar modules for you. You can adjust them anytime in \"Module Management\".",
+    "editDesc": "Re-select your creative focus (multi-select). After saving, the system will update the sidebar modules to match your new focus. You can adjust them anytime in \"Module Management\".",
+    "presetTitle": "Modules to be enabled",
+    "commonTag": "Common",
+    "pickLater": "Later",
+    "updateSuccess": "Modules updated based on your creative focus",
+    "saveFailed": "Save failed, please try again"
+  },
+  "avatar": {
+    "logout": "Sign Out"
+  }
+}

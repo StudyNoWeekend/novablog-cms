@@ -1,0 +1,24 @@
+{
+  "header": {
+    "greeting": "こんにちは、{name}",
+    "defaultNickname": "ユーザー",
+    "editRole": "変更",
+    "githubRepo": "Novablog CMS リポジトリ",
+    "githubRepoAria": "GitHub リポジトリ",
+    "welcome": "あなたの創作スペースへようこそ"
+  },
+  "role": {
+    "selectTitle": "関心分野を選択",
+    "editTitle": "関心分野を変更",
+    "selectDesc": "まだ関心分野が選択されていません。興味を選択すると（複数選択可）、システムが左側のメニューモジュールをカスタマイズします。後から「モジュール管理」でいつでも調整できます。",
+    "editDesc": "関心分野を再度選択してください（複数選択可）。保存すると、新しい分野に合わせて左側のメニューモジュールが更新されます。後から「モジュール管理」でいつでも調整できます。",
+    "presetTitle": "有効になるモジュール",
+    "commonTag": "共通",
+    "pickLater": "後で選ぶ",
+    "updateSuccess": "関心分野に合わせてモジュールを更新しました",
+    "saveFailed": "保存に失敗しました。もう一度お試しください"
+  },
+  "avatar": {
+    "logout": "ログアウト"
+  }
+}

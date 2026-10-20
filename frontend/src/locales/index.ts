@@ -5,16 +5,6 @@ import 'dayjs/locale/zh-tw'
 import 'dayjs/locale/ja'
 import 'dayjs/locale/ko'
 
-import commonZhCN from './zh-CN/common.json'
-import menuZhCN from './zh-CN/menu.json'
-import commonZhTW from './zh-TW/common.json'
-import menuZhTW from './zh-TW/menu.json'
-import commonEn from './en/common.json'
-import menuEn from './en/menu.json'
-import commonJa from './ja/common.json'
-import menuJa from './ja/menu.json'
-import commonKo from './ko/common.json'
-import menuKo from './ko/menu.json'
 import { localeStorage } from '@/utils/storage'
 
 export const SUPPORTED_LOCALES = ['zh-CN', 'zh-TW', 'en', 'ja', 'ko'] as const
@@ -30,13 +20,20 @@ export const LOCALE_META: Record<AppLocale, { name: string; htmlLang: string; da
   ko: { name: '한국어', htmlLang: 'ko', dayjsLocale: 'ko' },
 }
 
-const messages = {
-  'zh-CN': { common: commonZhCN, menu: menuZhCN },
-  'zh-TW': { common: commonZhTW, menu: menuZhTW },
-  en: { common: commonEn, menu: menuEn },
-  ja: { common: commonJa, menu: menuJa },
-  ko: { common: commonKo, menu: menuKo },
-}
+// 语言包自动装配：<语言目录>/<命名空间>.json → messages[语言][命名空间]。
+// 新增命名空间时只需在各语言目录新建同名 JSON，无需修改本文件。
+const localeFiles = import.meta.glob<{ default: Record<string, unknown> }>('./*/*.json', { eager: true })
+
+const messages = Object.fromEntries(
+  SUPPORTED_LOCALES.map((locale) => [
+    locale,
+    Object.fromEntries(
+      Object.entries(localeFiles)
+        .filter(([path]) => path.startsWith(`./${locale}/`))
+        .map(([path, mod]) => [path.slice(`./${locale}/`.length, -'.json'.length), mod.default]),
+    ),
+  ]),
+)
 
 export function isSupportedLocale(value: unknown): value is AppLocale {
   return typeof value === 'string' && (SUPPORTED_LOCALES as readonly string[]).includes(value)

@@ -4,8 +4,8 @@
     :title="modalTitle"
     :width="760"
     :confirm-loading="saving"
-    ok-text="保存"
-    :cancel-text="hasRole ? '取消' : '稍后再选'"
+    :ok-text="$t('common.actions.save')"
+    :cancel-text="hasRole ? $t('common.actions.cancel') : $t('app.role.pickLater')"
     :ok-button-props="{ disabled: selected.length === 0 }"
     @ok="handleSave"
   >
@@ -16,7 +16,7 @@
     </div>
 
     <div class="role-preset">
-      <div class="role-preset__title">将为你开启的模块</div>
+      <div class="role-preset__title">{{ $t('app.role.presetTitle') }}</div>
       <div class="role-preset__chips">
         <span
           v-for="item in moduleChips"
@@ -26,7 +26,7 @@
         >
           <CheckOutlined v-if="item.enabled" class="module-chip__check" />
           {{ item.label }}
-          <em v-if="item.common" class="module-chip__badge">通用</em>
+          <em v-if="item.common" class="module-chip__badge">{{ $t('app.role.commonTag') }}</em>
         </span>
       </div>
     </div>
@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { CheckOutlined } from '@ant-design/icons-vue'
@@ -62,6 +63,7 @@ const visible = computed({
 const router = useRouter()
 const authStore = useAuthStore()
 const moduleStore = useModuleStore()
+const { t } = useI18n()
 
 const selected = ref<RoleKey[]>([])
 const saving = ref(false)
@@ -69,13 +71,9 @@ const saving = ref(false)
 // 是否已选过创作方向：已选（编辑模式）与未选（首装跳过/旧版本用户）用不同标题与文案
 const hasRole = computed(() => !!authStore.user?.role)
 
-const modalTitle = computed(() => (hasRole.value ? '修改创作方向' : '选择你的创作方向'))
+const modalTitle = computed(() => (hasRole.value ? t('app.role.editTitle') : t('app.role.selectTitle')))
 
-const modalDesc = computed(() =>
-  hasRole.value
-    ? '重新选择你的创作方向（可多选），保存后系统将按新方向更新左侧菜单模块，之后可在「模块管理」中随时调整。'
-    : '检测到你还没有选择创作方向。选择爱好（可多选）后，系统将按方向定制左侧菜单模块，之后可在「模块管理」中随时调整。',
-)
+const modalDesc = computed(() => (hasRole.value ? t('app.role.editDesc') : t('app.role.selectDesc')))
 
 // 解析服务端逗号分隔的 role 为合法角色 key 数组（未选过或含失效 key 时自动过滤）
 function parseUserRole(role?: string): RoleKey[] {
@@ -99,7 +97,7 @@ const presetModules = computed(() => computeModulePreset(selected.value))
 const moduleChips = computed(() =>
   MODULE_DEFS.map((def) => ({
     key: def.key,
-    label: def.label,
+    label: t(def.labelKey),
     common: COMMON_MODULE_KEYS.includes(def.key),
     enabled: presetModules.value[def.key],
   })),
@@ -123,7 +121,7 @@ async function handleSave() {
 
     // 强刷模块配置，AppSidebar 的菜单 computed 会自动重算
     await moduleStore.fetchConfig(true)
-    message.success('已按创作方向更新功能模块')
+    message.success(t('app.role.updateSuccess'))
     visible.value = false
 
     // 当前页面所属模块被关闭时回到工作台
@@ -132,7 +130,7 @@ async function handleSave() {
       router.replace('/dashboard')
     }
   } catch (e: any) {
-    message.error(e?.message || '保存失败，请重试')
+    message.error(e?.message || t('app.role.saveFailed'))
   } finally {
     saving.value = false
   }

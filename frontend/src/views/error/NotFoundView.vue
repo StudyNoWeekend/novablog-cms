@@ -1,8 +1,8 @@
 <template>
   <div class="error-container">
     <h1 class="error-code">404</h1>
-    <p class="error-text">页面不存在</p>
-    <a-button type="primary" @click="$router.push('/dashboard')">返回首页</a-button>
+    <p class="error-text">{{ $t('error.notFound.message') }}</p>
+    <a-button type="primary" @click="$router.push('/dashboard')">{{ $t('common.actions.backHome') }}</a-button>
   </div>
 </template>
 

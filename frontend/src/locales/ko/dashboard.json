@@ -1,0 +1,71 @@
+{
+  "empty": "대시보드 데이터가 없습니다",
+  "metrics": {
+    "todayVisits": "오늘 방문",
+    "todayVisitors": "오늘 방문자",
+    "totalVisits": "총 방문수",
+    "totalContent": "콘텐츠 수",
+    "totalComments": "총 댓글"
+  },
+  "todo": {
+    "draftsPending": "개의 초안이 게시 대기 중"
+  },
+  "tabs": {
+    "visits": "방문수",
+    "production": "콘텐츠 작성"
+  },
+  "range": {
+    "days7": "7일",
+    "days30": "30일",
+    "days90": "90일"
+  },
+  "chart": {
+    "noTrendData": "추이 데이터가 없습니다",
+    "siteWide": "사이트 전체"
+  },
+  "summary": {
+    "totalOutput": "총 작성 수",
+    "dailyAvg": "일 평균"
+  },
+  "moduleData": {
+    "title": "모듈 데이터",
+    "module": "모듈",
+    "published": "게시",
+    "totalViews": "누적 방문",
+    "today": "오늘",
+    "last7Days": "7일",
+    "share": "방문 비율",
+    "publishedCount": "게시 {count}",
+    "empty": "활성화된 모듈이 없습니다"
+  },
+  "distribution": {
+    "title": "방문 분포",
+    "empty": "방문 데이터가 없습니다"
+  },
+  "topContent": {
+    "title": "인기 콘텐츠",
+    "views": "조회",
+    "comments": "댓글",
+    "empty": "인기 콘텐츠가 없습니다"
+  },
+  "recentComments": {
+    "title": "최근 댓글",
+    "blogger": "운영자",
+    "empty": "댓글이 없습니다"
+  },
+  "contentType": {
+    "article": "게시글",
+    "travel": "여행 가이드",
+    "portfolio": "사진 작품",
+    "video": "영상 작품",
+    "song": "음악",
+    "equipment": "장비",
+    "project": "프로젝트",
+    "open_source": "오픈소스",
+    "recipe": "레시피",
+    "book": "독서",
+    "game": "게임",
+    "fitness": "운동",
+    "tech_stack": "기술 스택"
+  }
+}

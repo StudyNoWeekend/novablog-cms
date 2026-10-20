@@ -14,7 +14,7 @@
       <div class="empty-icon">
         <FileTextOutlined />
       </div>
-      <p class="empty-text">暂无工作台数据</p>
+      <p class="empty-text">{{ $t('dashboard.empty') }}</p>
     </div>
 
     <!-- Main content -->
@@ -22,24 +22,24 @@
       <!-- 核心指标条 -->
       <div class="metric-strip">
         <div class="metric-item">
-          <div class="metric-value">{{ trafficSummary?.today_pv.toLocaleString() ?? '0' }}</div>
-          <div class="metric-label">今日访问</div>
+          <div class="metric-value">{{ formatNumber(trafficSummary?.today_pv ?? 0) }}</div>
+          <div class="metric-label">{{ $t('dashboard.metrics.todayVisits') }}</div>
         </div>
         <div class="metric-item">
-          <div class="metric-value">{{ trafficSummary?.today_uv.toLocaleString() ?? '0' }}</div>
-          <div class="metric-label">今日访客</div>
+          <div class="metric-value">{{ formatNumber(trafficSummary?.today_uv ?? 0) }}</div>
+          <div class="metric-label">{{ $t('dashboard.metrics.todayVisitors') }}</div>
         </div>
         <div class="metric-item">
-          <div class="metric-value">{{ trafficSummary?.total_pv.toLocaleString() ?? '0' }}</div>
-          <div class="metric-label">总访问量</div>
+          <div class="metric-value">{{ formatNumber(trafficSummary?.total_pv ?? 0) }}</div>
+          <div class="metric-label">{{ $t('dashboard.metrics.totalVisits') }}</div>
         </div>
         <div class="metric-item">
-          <div class="metric-value">{{ totalContentCount.toLocaleString() }}</div>
-          <div class="metric-label">内容总数</div>
+          <div class="metric-value">{{ formatNumber(totalContentCount) }}</div>
+          <div class="metric-label">{{ $t('dashboard.metrics.totalContent') }}</div>
         </div>
         <div class="metric-item">
-          <div class="metric-value">{{ overview.comment_total.toLocaleString() }}</div>
-          <div class="metric-label">总评论</div>
+          <div class="metric-value">{{ formatNumber(overview.comment_total) }}</div>
+          <div class="metric-label">{{ $t('dashboard.metrics.totalComments') }}</div>
         </div>
       </div>
 
@@ -47,7 +47,7 @@
       <div v-if="todoReminder.show" class="todo-reminder">
         <div class="todo-item" @click="goToArticles">
           <span class="todo-count">{{ todoReminder.drafts }}</span>
-          <span class="todo-text">篇草稿待发布</span>
+          <span class="todo-text">{{ $t('dashboard.todo.draftsPending') }}</span>
           <span class="todo-arrow">&rarr;</span>
         </div>
       </div>
@@ -61,24 +61,24 @@
                 :class="['tab-btn', { active: metricTab === 'traffic' }]"
                 @click="metricTab = 'traffic'"
               >
-                访问量
+                {{ $t('dashboard.tabs.visits') }}
               </button>
               <button
                 :class="['tab-btn', { active: metricTab === 'production' }]"
                 @click="metricTab = 'production'"
               >
-                内容产出
+                {{ $t('dashboard.tabs.production') }}
               </button>
             </div>
           </div>
           <div class="time-tabs">
             <button
-              v-for="t in timeTabs"
-              :key="t.value"
-              :class="['tab-btn', { active: activeRange === t.value }]"
-              @click="switchRange(t.value)"
+              v-for="tab in timeTabs"
+              :key="tab.value"
+              :class="['tab-btn', { active: activeRange === tab.value }]"
+              @click="switchRange(tab.value)"
             >
-              {{ t.label }}
+              {{ tab.label }}
             </button>
           </div>
         </div>
@@ -89,7 +89,7 @@
             :option="trendOption"
             autoresize
           />
-          <div v-else class="chart-empty">暂无趋势数据</div>
+          <div v-else class="chart-empty">{{ $t('dashboard.chart.noTrendData') }}</div>
         </div>
         <div v-if="metricTab === 'production'" class="summary-bar">
           <div v-for="(item, idx) in productionSummary" :key="idx" class="summary-pill">
@@ -103,16 +103,16 @@
       <div class="dashboard-row">
         <div class="dashboard-col-left">
           <div class="card">
-            <h3 class="card-title">模块数据</h3>
+            <h3 class="card-title">{{ $t('dashboard.moduleData.title') }}</h3>
             <table v-if="moduleRows.length" class="module-table">
               <thead>
                 <tr>
-                  <th>模块</th>
-                  <th>发布</th>
-                  <th>累计访问</th>
-                  <th>今日</th>
-                  <th class="col-week">7日</th>
-                  <th class="col-share">访问占比</th>
+                  <th>{{ $t('dashboard.moduleData.module') }}</th>
+                  <th>{{ $t('dashboard.moduleData.published') }}</th>
+                  <th>{{ $t('dashboard.moduleData.totalViews') }}</th>
+                  <th>{{ $t('dashboard.moduleData.today') }}</th>
+                  <th class="col-week">{{ $t('dashboard.moduleData.last7Days') }}</th>
+                  <th class="col-share">{{ $t('dashboard.moduleData.share') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,12 +122,12 @@
                     <span class="module-name">{{ labelOf(row.type) }}</span>
                   </td>
                   <td>
-                    {{ row.total.toLocaleString() }}
-                    <span class="cell-sub">已发布 {{ row.published.toLocaleString() }}</span>
+                    {{ formatNumber(row.total) }}
+                    <span class="cell-sub">{{ $t('dashboard.moduleData.publishedCount', { count: formatNumber(row.published) }) }}</span>
                   </td>
-                  <td>{{ row.total_views.toLocaleString() }}</td>
-                  <td>{{ row.today_views.toLocaleString() }}</td>
-                  <td class="col-week">{{ row.week_views.toLocaleString() }}</td>
+                  <td>{{ formatNumber(row.total_views) }}</td>
+                  <td>{{ formatNumber(row.today_views) }}</td>
+                  <td class="col-week">{{ formatNumber(row.week_views) }}</td>
                   <td class="col-share">
                     <div class="share-cell">
                       <div class="share-bar">
@@ -142,12 +142,12 @@
                 </tr>
               </tbody>
             </table>
-            <div v-else class="list-empty">暂无启用的内容模块</div>
+            <div v-else class="list-empty">{{ $t('dashboard.moduleData.empty') }}</div>
           </div>
         </div>
         <div class="dashboard-col-right">
           <div class="card">
-            <h3 class="card-title">访问分布</h3>
+            <h3 class="card-title">{{ $t('dashboard.distribution.title') }}</h3>
             <div class="pie-wrap">
               <v-chart
                 v-if="viewDistribution.length"
@@ -155,7 +155,7 @@
                 :option="pieOption"
                 autoresize
               />
-              <div v-else class="chart-empty">暂无访问数据</div>
+              <div v-else class="chart-empty">{{ $t('dashboard.distribution.empty') }}</div>
             </div>
             <div class="pie-legend">
               <div v-for="(item, idx) in viewLegend" :key="idx" class="legend-row">
@@ -172,7 +172,7 @@
       <div class="dashboard-row bottom-row">
         <div class="dashboard-col-left">
           <div class="card top-content-card">
-            <h3 class="card-title">热门内容排行</h3>
+            <h3 class="card-title">{{ $t('dashboard.topContent.title') }}</h3>
             <div class="top-content-list">
               <div
                 v-for="(item, idx) in topContentList"
@@ -184,16 +184,16 @@
                 <span class="top-content-type" :style="{ color: colorOf(item.type) }">
                   {{ labelOf(item.type) }}
                 </span>
-                <span class="top-content-views">{{ item.view_count.toLocaleString() }} 浏览</span>
-                <span class="top-content-comments">{{ item.comment_count }} 评论</span>
+                <span class="top-content-views">{{ formatNumber(item.view_count) }} {{ $t('dashboard.topContent.views') }}</span>
+                <span class="top-content-comments">{{ item.comment_count }} {{ $t('dashboard.topContent.comments') }}</span>
               </div>
-              <div v-if="topContentList.length === 0" class="list-empty">暂无热门内容</div>
+              <div v-if="topContentList.length === 0" class="list-empty">{{ $t('dashboard.topContent.empty') }}</div>
             </div>
           </div>
         </div>
         <div class="dashboard-col-right">
           <div class="card">
-            <h3 class="card-title">最近评论</h3>
+            <h3 class="card-title">{{ $t('dashboard.recentComments.title') }}</h3>
             <div class="comment-list">
               <div v-for="item in recentCommentsList" :key="item.id" class="comment-item">
                 <div class="comment-avatar" :class="{ blogger: item.is_blogger }">
@@ -202,14 +202,14 @@
                 <div class="comment-body">
                   <div class="comment-top">
                     <span class="comment-name">{{ item.nickname }}</span>
-                    <span v-if="item.is_blogger" class="blogger-tag">博主</span>
-                    <span class="comment-time">{{ formatCommentTime(item.created_at) }}</span>
+                    <span v-if="item.is_blogger" class="blogger-tag">{{ $t('dashboard.recentComments.blogger') }}</span>
+                    <span class="comment-time">{{ formatDateTime(item.created_at) }}</span>
                   </div>
                   <div class="comment-text">{{ item.content }}</div>
                   <div class="comment-target">{{ item.target_title }}</div>
                 </div>
               </div>
-              <div v-if="recentCommentsList.length === 0" class="list-empty">暂无评论</div>
+              <div v-if="recentCommentsList.length === 0" class="list-empty">{{ $t('dashboard.recentComments.empty') }}</div>
             </div>
           </div>
         </div>
@@ -221,6 +221,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { FileTextOutlined } from '@ant-design/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -233,6 +234,7 @@ import {
 import VChart from 'vue-echarts'
 import { analyticsApi } from '@/api/analytics'
 import { useModuleStore } from '@/stores/module'
+import { formatDateTime } from '@/utils/datetime'
 import { CONTENT_TYPE_DEFS, CONTENT_TYPE_MAP } from '@/constants/dashboardCards'
 import type {
   OverviewData,
@@ -254,11 +256,14 @@ use([
   LegendComponent,
 ])
 
-const timeTabs = [
-  { label: '7天', value: '7d' },
-  { label: '30天', value: '30d' },
-  { label: '90天', value: '90d' },
-]
+const { t, locale } = useI18n()
+
+// 时间范围选项（文案随语言切换刷新）
+const timeTabs = computed(() => [
+  { label: t('dashboard.range.days7'), value: '7d' },
+  { label: t('dashboard.range.days30'), value: '30d' },
+  { label: t('dashboard.range.days90'), value: '90d' },
+])
 
 const loading = ref(true)
 const overview = ref<OverviewData | null>(null)
@@ -272,6 +277,11 @@ const activeRange = ref('30d')
 const metricTab = ref<'traffic' | 'production'>('traffic')
 const router = useRouter()
 const moduleStore = useModuleStore()
+
+// formatNumber 按当前语言格式化数字（千分位），替代硬编码 locale 的 toLocaleString
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat(locale.value).format(value)
+}
 
 async function loadOverview() {
   try {
@@ -389,7 +399,8 @@ function colorOf(type: string): string {
 }
 
 function labelOf(type: string): string {
-  return CONTENT_TYPE_MAP[type]?.label || type
+  const meta = CONTENT_TYPE_MAP[type]
+  return meta ? t(meta.labelKey) : type
 }
 
 // 访问占比（基于启用模块累计访问总量，保留一位小数）
@@ -418,14 +429,14 @@ const trendOption = computed(() => {
   if (!trafficTrend.value) return {}
   const items = trafficTrend.value.items
   const series: unknown[] = enabledDefs.value.map((def) => ({
-    name: def.label,
+    name: t(def.labelKey),
     type: 'bar',
     stack: 'total',
     data: items.map((i) => i.counts?.[def.type] ?? 0),
     itemStyle: { color: def.color },
   }))
   series.push({
-    name: '全站',
+    name: t('dashboard.chart.siteWide'),
     type: 'line',
     data: items.map((i) => i.total_pv),
     smooth: true,
@@ -437,7 +448,7 @@ const trendOption = computed(() => {
     grid: { left: 0, right: 0, top: 42, bottom: 8, containLabel: true },
     tooltip: { trigger: 'axis' },
     legend: {
-      data: [...enabledDefs.value.map((d) => d.label), '全站'],
+      data: [...enabledDefs.value.map((d) => t(d.labelKey)), t('dashboard.chart.siteWide')],
       type: 'scroll',
       top: 0,
       textStyle: { color: '#667085' },
@@ -463,7 +474,7 @@ const productionOption = computed(() => {
   if (!productionTrend.value) return {}
   const items = productionTrend.value.items
   const series = enabledDefs.value.map((def) => ({
-    name: def.label,
+    name: t(def.labelKey),
     type: 'bar',
     stack: 'total',
     data: items.map((i) => i.counts?.[def.type] ?? 0),
@@ -473,7 +484,7 @@ const productionOption = computed(() => {
     grid: { left: 0, right: 0, top: 42, bottom: 8, containLabel: true },
     tooltip: { trigger: 'axis' },
     legend: {
-      data: enabledDefs.value.map((d) => d.label),
+      data: enabledDefs.value.map((d) => t(d.labelKey)),
       type: 'scroll',
       top: 0,
       textStyle: { color: '#667085' },
@@ -502,12 +513,12 @@ const productionSummary = computed(() => {
   const total = enabledDefs.value.reduce((s, def) => s + sumOf(def.type), 0)
   const avgPerDay = items.length > 0 ? (total / items.length).toFixed(1) : '0'
   const stats: { label: string; value: number | string }[] = [
-    { label: '总产出', value: total },
+    { label: t('dashboard.summary.totalOutput'), value: total },
   ]
   for (const def of enabledDefs.value) {
-    stats.push({ label: def.label, value: sumOf(def.type) })
+    stats.push({ label: t(def.labelKey), value: sumOf(def.type) })
   }
-  stats.push({ label: '日均产出', value: avgPerDay })
+  stats.push({ label: t('dashboard.summary.dailyAvg'), value: avgPerDay })
   return stats
 })
 
@@ -566,15 +577,6 @@ const recentCommentsList = computed(() => {
   if (!recentComments.value) return []
   return recentComments.value.items
 })
-
-function formatCommentTime(dateStr: string): string {
-  const d = new Date(dateStr)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${mm}-${dd} ${hh}:${min}`
-}
 
 function formatPercentage(value: number): string {
   return `${value.toFixed(1)}%`

@@ -1,0 +1,71 @@
+{
+  "empty": "ダッシュボードのデータがありません",
+  "metrics": {
+    "todayVisits": "本日のアクセス",
+    "todayVisitors": "本日のビジター",
+    "totalVisits": "累計アクセス",
+    "totalContent": "コンテンツ総数",
+    "totalComments": "コメント総数"
+  },
+  "todo": {
+    "draftsPending": "件の下書きが公開待ち"
+  },
+  "tabs": {
+    "visits": "アクセス数",
+    "production": "コンテンツ投稿"
+  },
+  "range": {
+    "days7": "7日",
+    "days30": "30日",
+    "days90": "90日"
+  },
+  "chart": {
+    "noTrendData": "グラフデータがありません",
+    "siteWide": "サイト全体"
+  },
+  "summary": {
+    "totalOutput": "総投稿数",
+    "dailyAvg": "日平均"
+  },
+  "moduleData": {
+    "title": "モジュールデータ",
+    "module": "モジュール",
+    "published": "公開",
+    "totalViews": "累計アクセス",
+    "today": "今日",
+    "last7Days": "7日",
+    "share": "アクセス比率",
+    "publishedCount": "公開済み {count}",
+    "empty": "有効なモジュールがありません"
+  },
+  "distribution": {
+    "title": "アクセス分布",
+    "empty": "アクセスデータがありません"
+  },
+  "topContent": {
+    "title": "人気コンテンツ",
+    "views": "閲覧",
+    "comments": "コメント",
+    "empty": "人気コンテンツがありません"
+  },
+  "recentComments": {
+    "title": "最新コメント",
+    "blogger": "管理人",
+    "empty": "コメントがありません"
+  },
+  "contentType": {
+    "article": "記事",
+    "travel": "旅行ガイド",
+    "portfolio": "写真作品",
+    "video": "動画作品",
+    "song": "音楽",
+    "equipment": "ガジェット",
+    "project": "プロジェクト",
+    "open_source": "オープンソース",
+    "recipe": "レシピ",
+    "book": "読書",
+    "game": "ゲーム",
+    "fitness": "トレーニング",
+    "tech_stack": "技術スタック"
+  }
+}
