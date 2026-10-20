@@ -1,0 +1,57 @@
+{
+  "actions": {
+    "create": "영상 추가",
+    "edit": "영상 편집",
+    "parse": "가져오기",
+    "overwrite": "덮어쓰기"
+  },
+  "status": {
+    "published": "게시됨",
+    "draft": "초안"
+  },
+  "list": {
+    "searchPlaceholder": "영상 제목 검색...",
+    "empty": "아직 영상이 없습니다. 지금 추가해 보세요",
+    "noDescription": "소개 없음",
+    "noPlatforms": "플랫폼 링크 없음",
+    "total": "총 {total}개의 영상"
+  },
+  "form": {
+    "coverUrl": "커버 URL",
+    "coverUrlPlaceholder": "커버 이미지 URL을 입력하세요(선택 사항). 또는 오른쪽 버튼을 클릭해 미디어 라이브러리에서 선택하세요",
+    "selectCoverFromMedia": "미디어 라이브러리에서 커버 선택",
+    "mediaLibrary": "미디어 라이브러리",
+    "intro": "소개",
+    "titlePlaceholder": "영상 제목을 입력하세요",
+    "introPlaceholder": "영상 소개를 입력하세요(선택 사항)",
+    "categoryPlaceholder": "카테고리 선택(선택 사항)",
+    "platforms": "게시 플랫폼",
+    "platformLinkPlaceholder": "{name} 영상 링크를 입력하세요",
+    "publishedHint": "게시하면 블로그에 공개됩니다",
+    "draftHint": "관리자 화면에만 표시되며 블로그에는 표시되지 않습니다"
+  },
+  "message": {
+    "linkRequired": "먼저 영상 링크를 입력하세요",
+    "parseSuccess": "정보를 가져왔습니다",
+    "overwriteTitle": "덮어쓰기 확인",
+    "overwriteContent": "폼에 이미 입력된 내용이 있습니다. 가져온 결과로 덮어쓰시겠습니까?",
+    "titleRequired": "영상 제목을 입력하세요",
+    "platformRequired": "플랫폼 링크를 하나 이상 추가하세요",
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "「{name}」 삭제 후에는 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  },
+  "platforms": {
+    "bilibili": "빌리빌리",
+    "youtube": "YouTube",
+    "xigua": "시구아 비디오",
+    "douyin": "더우인",
+    "xiaohongshu": "샤오홍슈",
+    "kuaishou": "콰이쇼우",
+    "wechat_channels": "위챗 채널",
+    "tiktok": "TikTok",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "vimeo": "Vimeo",
+    "facebook": "Facebook"
+  }
+}

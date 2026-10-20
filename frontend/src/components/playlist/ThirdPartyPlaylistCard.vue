@@ -30,7 +30,7 @@
         <span class="playlist-card__platform-label">{{ platform.label }}</span>
         <span v-if="editable" class="playlist-card__status">
           <a-tag :color="playlist.enabled ? 'green' : 'default'">
-            {{ playlist.enabled ? '已展示' : '已隐藏' }}
+            {{ playlist.enabled ? $t('common.status.visible') : $t('common.status.hidden') }}
           </a-tag>
         </span>
       </div>
@@ -38,8 +38,8 @@
 
     <!-- 操作按钮（仅管理端） -->
     <div v-if="editable" class="playlist-card__actions" @click.stop>
-      <a-button size="small" @click="emit('edit')">编辑</a-button>
-      <a-button size="small" danger @click="emit('delete')">删除</a-button>
+      <a-button size="small" @click="emit('edit')">{{ $t('common.actions.edit') }}</a-button>
+      <a-button size="small" danger @click="emit('delete')">{{ $t('common.actions.delete') }}</a-button>
     </div>
 
     <!-- 访客查看时整张卡片可点击跳转 -->
@@ -49,7 +49,7 @@
       target="_blank"
       rel="noopener noreferrer"
       class="playlist-card__overlay-link"
-      :title="`在 ${platform.label} 中查看歌单`"
+      :title="$t('playlist.card.viewOn', { platform: platform.label })"
     />
   </div>
 </template>

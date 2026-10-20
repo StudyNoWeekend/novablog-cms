@@ -1,0 +1,19 @@
+{
+  "add": "新增分類",
+  "edit": "編輯分類",
+  "selectPlaceholder": "選擇分類",
+  "form": {
+    "name": "分類名稱",
+    "namePlaceholder": "請輸入分類名稱",
+    "nameRequired": "請輸入分類名稱",
+    "descriptionPlaceholder": "分類描述（選填）",
+    "sortPlaceholder": "數字越小越靠前"
+  },
+  "message": {
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "確定要刪除分類「{name}」嗎？",
+    "deleteSuccess": "分類已刪除",
+    "updateSuccess": "分類已更新",
+    "createSuccess": "分類已建立"
+  }
+}

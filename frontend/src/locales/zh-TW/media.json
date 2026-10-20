@@ -1,0 +1,192 @@
+{
+  "library": {
+    "title": "媒體庫"
+  },
+  "upload": {
+    "image": "上傳圖片",
+    "video": "上傳影片",
+    "progress": "上傳中 {percent}%（{done}/{total}）",
+    "batchComplete": "上傳完成，共 {total} 個檔案",
+    "partialFailed": "成功 {success} 個，失敗 {failed} 個：{names}",
+    "moreSuffix": "等 {count} 個",
+    "nameSeparator": "、",
+    "sizeLimit": "檔案大小不能超過 100MB",
+    "failed": "上傳失敗"
+  },
+  "type": {
+    "image": "圖片",
+    "video": "影片",
+    "folder": "資料夾"
+  },
+  "search": {
+    "placeholder": "搜尋全部檔案..."
+  },
+  "view": {
+    "grid": "圖示檢視",
+    "list": "檔案檢視"
+  },
+  "empty": {
+    "root": "暫無媒體檔案",
+    "folder": "此資料夾為空"
+  },
+  "itemCount": "{count} 項",
+  "columns": {
+    "dimensions": "尺寸",
+    "size": "大小",
+    "uploadedAt": "上傳時間"
+  },
+  "actions": {
+    "rename": "重新命名",
+    "move": "移動",
+    "moveTo": "移動到"
+  },
+  "folder": {
+    "rootName": "全部檔案",
+    "create": "新增資料夾",
+    "rename": "重新命名資料夾",
+    "name": "資料夾名稱",
+    "namePlaceholder": "請輸入資料夾名稱",
+    "nameRequired": "請輸入資料夾名稱",
+    "nameRule": "建立於「{name}」內；名稱不能包含 / \\ : * ? \" 豎線或尖括號",
+    "systemTag": "系統",
+    "systemRestricted": "系統資料夾由模組固定使用，不支援重新命名、移動或刪除",
+    "systemRenameDenied": "系統資料夾不支援重新命名",
+    "systemMoveDenied": "系統資料夾不支援移動",
+    "systemDeleteDenied": "系統資料夾不支援刪除",
+    "created": "資料夾已建立",
+    "renameSuccess": "重新命名成功",
+    "deleteTitle": "刪除資料夾",
+    "deleteConfirm": "確定刪除資料夾「{name}」？僅允許刪除空資料夾。",
+    "deleteConfirmWithChildren": "「{name}」包含子資料夾，僅允許刪除空資料夾，確定繼續？",
+    "deleteSuccess": "資料夾已刪除",
+    "empty": "暫無資料夾",
+    "moved": "資料夾已移動"
+  },
+  "move": {
+    "title": "移動到資料夾",
+    "folderHint": "將資料夾「{name}」移動到所選位置（預設移動到根目錄）",
+    "filesHint": "將選中的 {count} 個檔案移動到所選位置（預設移動到根目錄）",
+    "filesMoved": "檔案已移動",
+    "failed": "移動失敗"
+  },
+  "delete": {
+    "title": "刪除媒體檔案",
+    "force": "仍要刪除",
+    "usedWarning": "該檔案被 {total} 處內容引用，刪除後對應位置將無法顯示圖片",
+    "permanentWarning": "刪除後檔案將從儲存空間中永久移除，無法復原",
+    "usageCount": "{count} 處",
+    "failed": "刪除失敗"
+  },
+  "picker": {
+    "title": "選擇圖片",
+    "confirm": "確認選擇"
+  },
+  "chooser": {
+    "title": "選擇圖片版本",
+    "tip": "點擊圖片直接開啟該圖的預設工作台（製作/編輯相框 EXIF 成品圖），點「使用」選定版本後確認。",
+    "managePresets": "在媒體庫管理預設",
+    "openWorkbench": "開啟預設工作台",
+    "openWorkbenchAria": "開啟「{name}」的預設工作台",
+    "use": "使用",
+    "inUse": "使用中",
+    "useAria": "使用{name}",
+    "createPreset": "製作預設",
+    "createPresetAria": "製作新預設",
+    "original": "使用原圖"
+  },
+  "field": {
+    "previewAlt": "圖片預覽",
+    "noImage": "暫無圖片",
+    "searchOnline": "線上搜尋",
+    "searchOnlineAria": "線上搜尋圖片",
+    "uploadLocal": "本機上傳",
+    "uploadLocalAria": "本機上傳圖片",
+    "clear": "清除",
+    "clearAria": "清除圖片",
+    "urlPlaceholder": "或直接貼上圖片網址"
+  },
+  "external": {
+    "searchLabel": "搜尋關鍵字",
+    "selectIconAria": "選擇圖示 {name}",
+    "selectImageAria": "選擇圖片 {name}",
+    "candidate": "候選圖片",
+    "searchFailed": "搜尋失敗，請稍後重試，或改用本機上傳",
+    "noResults": "沒有找到結果，換個關鍵字試試",
+    "savedWithTransfer": "已選擇並轉存圖片",
+    "picked": "已選擇圖片",
+    "tech": {
+      "title": "搜尋品牌圖示",
+      "placeholder": "輸入技術名稱，如 Vue / Docker / PostgreSQL",
+      "hint": "來自 Simple Icons 品牌圖示庫"
+    },
+    "game": {
+      "title": "搜尋遊戲封面",
+      "placeholder": "輸入遊戲名稱，如 薩爾達傳說 / 黑神話",
+      "hint": "來自 Bangumi 條目庫"
+    },
+    "book": {
+      "title": "搜尋書籍封面",
+      "placeholder": "輸入書名，如 三體 / 深入理解計算機系統",
+      "hint": "來自豆瓣讀書"
+    },
+    "recipe": {
+      "title": "搜尋美食圖片",
+      "placeholder": "輸入菜名，如 紅燒肉 / 宮保雞丁",
+      "hint": "來自 Bing 圖片搜尋"
+    }
+  },
+  "preset": {
+    "open": "預設",
+    "templateStyle": "範本風格",
+    "templateGallery": "畫廊",
+    "templateMovie": "電影",
+    "templateFloating": "懸浮",
+    "styleParams": "樣式參數",
+    "fontSize": "字型大小",
+    "borderSize": "邊框尺寸",
+    "borderColor": "邊框背景",
+    "textColor": "文字顏色",
+    "colorAuto": "自動",
+    "colorBlack": "黑",
+    "colorWhite": "白",
+    "font": "字型",
+    "brandSection": "品牌/型號展示",
+    "logoText": "文字",
+    "logoPlaceholder": "Logo 圖片模式暫佔位",
+    "showExif": "顯示 EXIF",
+    "paramsSection": "參數設定",
+    "make": "品牌",
+    "model": "型號",
+    "lens": "鏡頭",
+    "focalLength": "焦距",
+    "aperture": "光圈",
+    "shutter": "快門",
+    "date": "日期",
+    "loadingOriginal": "載入原圖中...",
+    "gallery": "圖庫 ({count})",
+    "exifSection": "EXIF 資訊",
+    "exifFile": "檔案",
+    "exifResolution": "解析度",
+    "exifSize": "大小",
+    "exifMake": "廠商",
+    "exifModel": "型號",
+    "exifSoftware": "軟體",
+    "library": "預設庫",
+    "namePlaceholder": "預設名稱...",
+    "untitledPreset": "未命名預設",
+    "untitledFile": "未命名",
+    "exportNamePlaceholder": "檔名(預設自動)",
+    "originalLoadError": "原圖載入失敗，請檢查物件儲存 CORS 設定",
+    "originalLoadFailed": "載入原圖失敗",
+    "applyFailed": "套用預設失敗",
+    "renderFailed": "合成圖片失敗",
+    "saveFailed": "儲存失敗: {reason}",
+    "exportSuccess": "匯出成功",
+    "exportFailed": "匯出失敗: {reason}",
+    "unknownError": "未知錯誤",
+    "originalNotLoaded": "原圖未載入",
+    "canvasFailed": "建立 canvas 失敗",
+    "blobFailed": "匯出 Blob 失敗",
+    "exifWriteFailed": "寫入 EXIF 失敗"
+  }
+}

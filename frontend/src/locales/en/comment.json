@@ -1,0 +1,36 @@
+{
+  "title": "Comments",
+  "filter": {
+    "allSources": "All Sources",
+    "searchPlaceholder": "Search comments..."
+  },
+  "source": {
+    "article": "Article",
+    "travel": "Travel Guide"
+  },
+  "columns": {
+    "commenter": "Commenter",
+    "source": "Source",
+    "time": "Time"
+  },
+  "blogger": "Blogger",
+  "empty": "No comments yet",
+  "action": {
+    "reply": "Reply"
+  },
+  "error": {
+    "getListFailed": "Failed to load the comment list. Please try again."
+  },
+  "reply": {
+    "title": "Reply to Comment",
+    "okText": "Send Reply",
+    "replyTo": "Reply to {name}:",
+    "placeholder": "Enter your reply..."
+  },
+  "message": {
+    "replyEmpty": "Please enter a reply",
+    "replySuccess": "Reply sent successfully",
+    "deleteTitle": "Confirm Deletion",
+    "deleteContent": "Once deleted, the comment cannot be recovered. Are you sure you want to delete it?"
+  }
+}

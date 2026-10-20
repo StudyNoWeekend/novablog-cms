@@ -11,47 +11,47 @@
       <!-- 左侧：模板与参数 -->
       <div class="panel left-panel">
         <div class="section">
-          <div class="section-title">模板风格</div>
+          <div class="section-title">{{ $t('media.preset.templateStyle') }}</div>
           <a-radio-group v-model:value="frameConfig.template" class="template-group">
-            <a-radio-button value="gallery">画廊</a-radio-button>
-            <a-radio-button value="movie">电影</a-radio-button>
-            <a-radio-button value="floating">悬浮</a-radio-button>
+            <a-radio-button value="gallery">{{ $t('media.preset.templateGallery') }}</a-radio-button>
+            <a-radio-button value="movie">{{ $t('media.preset.templateMovie') }}</a-radio-button>
+            <a-radio-button value="floating">{{ $t('media.preset.templateFloating') }}</a-radio-button>
           </a-radio-group>
         </div>
 
         <div class="section">
-          <div class="section-title">样式参数</div>
+          <div class="section-title">{{ $t('media.preset.styleParams') }}</div>
           <div class="param-row">
-            <span>字体大小</span>
+            <span>{{ $t('media.preset.fontSize') }}</span>
             <span>{{ frameConfig.fontScale.toFixed(1) }}x</span>
           </div>
           <a-slider v-model:value="frameConfig.fontScale" :min="0.5" :max="2" :step="0.1" />
 
           <div class="param-row">
-            <span>边框尺寸</span>
+            <span>{{ $t('media.preset.borderSize') }}</span>
             <span>{{ frameConfig.borderScale.toFixed(1) }}x</span>
           </div>
           <a-slider v-model:value="frameConfig.borderScale" :min="0.5" :max="2" :step="0.1" />
 
           <div class="param-row">
-            <span>边框背景</span>
+            <span>{{ $t('media.preset.borderColor') }}</span>
             <a-radio-group v-model:value="frameConfig.borderColor" size="small">
-              <a-radio-button value="#ffffff">白</a-radio-button>
-              <a-radio-button value="#000000">黑</a-radio-button>
+              <a-radio-button value="#ffffff">{{ $t('media.preset.colorWhite') }}</a-radio-button>
+              <a-radio-button value="#000000">{{ $t('media.preset.colorBlack') }}</a-radio-button>
             </a-radio-group>
           </div>
 
           <div class="param-row">
-            <span>文字颜色</span>
+            <span>{{ $t('media.preset.textColor') }}</span>
             <a-radio-group v-model:value="frameConfig.textColor" size="small">
-              <a-radio-button value="auto">自动</a-radio-button>
-              <a-radio-button value="black">黑</a-radio-button>
-              <a-radio-button value="white">白</a-radio-button>
+              <a-radio-button value="auto">{{ $t('media.preset.colorAuto') }}</a-radio-button>
+              <a-radio-button value="black">{{ $t('media.preset.colorBlack') }}</a-radio-button>
+              <a-radio-button value="white">{{ $t('media.preset.colorWhite') }}</a-radio-button>
             </a-radio-group>
           </div>
 
           <div class="param-row">
-            <span>字体</span>
+            <span>{{ $t('media.preset.font') }}</span>
             <a-select v-model:value="frameConfig.fontFamily" size="small" style="width: 120px">
               <a-select-option value="Inter">Inter</a-select-option>
               <a-select-option value="Arial">Arial</a-select-option>
@@ -61,50 +61,50 @@
         </div>
 
         <div class="section">
-          <div class="section-title">品牌/型号展示</div>
+          <div class="section-title">{{ $t('media.preset.brandSection') }}</div>
           <a-radio-group v-model:value="frameConfig.logoMode" size="small">
-            <a-radio-button value="text">文字</a-radio-button>
-            <a-radio-button value="image">图片</a-radio-button>
+            <a-radio-button value="text">{{ $t('media.preset.logoText') }}</a-radio-button>
+            <a-radio-button value="image">{{ $t('media.type.image') }}</a-radio-button>
           </a-radio-group>
           <div v-if="frameConfig.logoMode === 'image'" class="placeholder-tip">
-            Logo 图片模式暂占位
+            {{ $t('media.preset.logoPlaceholder') }}
           </div>
         </div>
 
         <div class="section">
           <div class="param-row">
-            <span>显示 EXIF</span>
+            <span>{{ $t('media.preset.showExif') }}</span>
             <a-switch v-model:checked="frameConfig.showExif" />
           </div>
         </div>
 
         <div class="section">
-          <div class="section-title">参数设定</div>
+          <div class="section-title">{{ $t('media.preset.paramsSection') }}</div>
           <a-form layout="vertical" size="small">
-            <a-form-item label="品牌">
+            <a-form-item :label="$t('media.preset.make')">
               <a-input v-model:value="displayParams.make" />
             </a-form-item>
-            <a-form-item label="型号">
+            <a-form-item :label="$t('media.preset.model')">
               <a-input v-model:value="displayParams.model" />
             </a-form-item>
-            <a-form-item label="镜头">
+            <a-form-item :label="$t('media.preset.lens')">
               <a-input v-model:value="displayParams.lens" />
             </a-form-item>
             <a-row :gutter="8">
               <a-col :span="12">
-                <a-form-item label="焦距">
+                <a-form-item :label="$t('media.preset.focalLength')">
                   <a-input v-model:value="displayParams.focalLength" />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
-                <a-form-item label="光圈">
+                <a-form-item :label="$t('media.preset.aperture')">
                   <a-input v-model:value="displayParams.aperture" />
                 </a-form-item>
               </a-col>
             </a-row>
             <a-row :gutter="8">
               <a-col :span="12">
-                <a-form-item label="快门">
+                <a-form-item :label="$t('media.preset.shutter')">
                   <a-input v-model:value="displayParams.shutter" />
                 </a-form-item>
               </a-col>
@@ -114,7 +114,7 @@
                 </a-form-item>
               </a-col>
             </a-row>
-            <a-form-item label="日期">
+            <a-form-item :label="$t('media.preset.date')">
               <a-input v-model:value="displayParams.date" />
             </a-form-item>
           </a-form>
@@ -124,14 +124,14 @@
       <!-- 中间：预览 + 预设栏 -->
       <div class="preview-area">
         <div class="canvas-wrapper">
-          <a-spin :spinning="loading" tip="加载原图中...">
+          <a-spin :spinning="loading" :tip="$t('media.preset.loadingOriginal')">
             <canvas ref="previewCanvas" class="preview-canvas" />
           </a-spin>
         </div>
 
         <div class="preset-bar">
           <div class="preset-bar-header">
-            <span>图库 ({{ presets.length }})</span>
+            <span>{{ $t('media.preset.gallery', { count: presets.length }) }}</span>
             <a-button type="text" size="small" @click="fetchPresets">
               <ReloadOutlined />
             </a-button>
@@ -162,34 +162,34 @@
       <!-- 右侧：EXIF + 预设库 + 导出 -->
       <div class="panel right-panel">
         <div class="section">
-          <div class="section-title">EXIF 信息</div>
+          <div class="section-title">{{ $t('media.preset.exifSection') }}</div>
           <div class="exif-list">
             <div class="exif-item">
-              <span class="exif-label">文件</span>
+              <span class="exif-label">{{ $t('media.preset.exifFile') }}</span>
               <span class="exif-value">{{ exifInfo.filename }}</span>
             </div>
             <div class="exif-item">
-              <span class="exif-label">分辨率</span>
+              <span class="exif-label">{{ $t('media.preset.exifResolution') }}</span>
               <span class="exif-value">{{ exifInfo.width && exifInfo.height ? `${exifInfo.width} x ${exifInfo.height}` : '-' }}</span>
             </div>
             <div class="exif-item">
-              <span class="exif-label">大小</span>
+              <span class="exif-label">{{ $t('media.preset.exifSize') }}</span>
               <span class="exif-value">{{ formatBytes(exifInfo.size) }}</span>
             </div>
             <div class="exif-item">
-              <span class="exif-label">厂商</span>
+              <span class="exif-label">{{ $t('media.preset.exifMake') }}</span>
               <span class="exif-value">{{ exifInfo.make || '--' }}</span>
             </div>
             <div class="exif-item">
-              <span class="exif-label">型号</span>
+              <span class="exif-label">{{ $t('media.preset.exifModel') }}</span>
               <span class="exif-value">{{ exifInfo.model || '--' }}</span>
             </div>
             <div class="exif-item">
-              <span class="exif-label">镜头</span>
+              <span class="exif-label">{{ $t('media.preset.lens') }}</span>
               <span class="exif-value">{{ exifInfo.lens || '--' }}</span>
             </div>
             <div class="exif-item">
-              <span class="exif-label">软件</span>
+              <span class="exif-label">{{ $t('media.preset.exifSoftware') }}</span>
               <span class="exif-value">{{ exifInfo.software || '--' }}</span>
             </div>
           </div>
@@ -214,20 +214,20 @@
         </div>
 
         <div class="section">
-          <div class="section-title">预设库</div>
-          <a-input v-model:value="presetName" placeholder="预设名称..." />
+          <div class="section-title">{{ $t('media.preset.library') }}</div>
+          <a-input v-model:value="presetName" :placeholder="$t('media.preset.namePlaceholder')" />
           <a-button type="primary" block style="margin-top: 8px" :loading="savingPreset" @click="handleSave">
-            <SaveOutlined /> 保存
+            <SaveOutlined /> {{ $t('common.actions.save') }}
           </a-button>
         </div>
 
         <div class="section">
-          <div class="section-title">导出</div>
-          <a-input v-model:value="exportName" placeholder="文件名(默认自动)">
+          <div class="section-title">{{ $t('common.actions.export') }}</div>
+          <a-input v-model:value="exportName" :placeholder="$t('media.preset.exportNamePlaceholder')">
             <template #addonAfter>.JPG</template>
           </a-input>
           <a-button type="primary" block style="margin-top: 8px" :loading="savingExport" @click="handleExport">
-            <DownloadOutlined /> 下载
+            <DownloadOutlined /> {{ $t('common.actions.download') }}
           </a-button>
         </div>
       </div>
@@ -237,6 +237,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, nextTick, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   ReloadOutlined,
@@ -248,6 +249,8 @@ import exifr from 'exifr'
 import piexif from 'piexifjs'
 import { mediaApi } from '@/api/media'
 import type { MediaPreset, FrameConfig, DisplayParams, ExifInfo } from '@/types/api'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   mediaId: string
@@ -368,7 +371,7 @@ async function loadOriginal() {
       loading.value = false
     }
     img.onerror = () => {
-      message.error('原图加载失败，请检查对象存储 CORS 配置')
+      message.error(t('media.preset.originalLoadError'))
       loading.value = false
     }
     img.src = workbenchUrl()
@@ -379,7 +382,7 @@ async function loadOriginal() {
     // 异步读取 EXIF，失败不影响预览
     readExif().catch(() => {})
   } catch (err) {
-    message.error('加载原图失败')
+    message.error(t('media.preset.originalLoadFailed'))
     loading.value = false
   }
 }
@@ -529,26 +532,26 @@ function applyPreset(preset: MediaPreset) {
     Object.assign(displayParams, dp)
     presetName.value = preset.name
   } catch {
-    message.error('应用预设失败')
+    message.error(t('media.preset.applyFailed'))
   }
 }
 
 async function handleDeletePreset(id: string) {
   try {
     await mediaApi.deletePreset(id)
-    message.success('删除成功')
+    message.success(t('common.message.deleteSuccess'))
     fetchPresets()
   } catch {
-    message.error('删除失败')
+    message.error(t('media.delete.failed'))
   }
 }
 
 async function handleSave() {
-  const name = presetName.value.trim() || '未命名预设'
+  const name = presetName.value.trim() || t('media.preset.untitledPreset')
   savingPreset.value = true
   try {
     const blob = await renderFinalBlob()
-    if (!blob) throw new Error('合成图片失败')
+    if (!blob) throw new Error(t('media.preset.renderFailed'))
 
     await mediaApi.createPreset({
       media_id: props.mediaId,
@@ -557,12 +560,12 @@ async function handleSave() {
       display_params: JSON.stringify(displayParams),
       file: blob,
     })
-    message.success('保存成功')
+    message.success(t('common.message.saveSuccess'))
     presetName.value = ''
     emit('saved')
     fetchPresets()
   } catch (err) {
-    message.error(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`)
+    message.error(t('media.preset.saveFailed', { reason: err instanceof Error ? err.message : t('media.preset.unknownError') }))
   } finally {
     savingPreset.value = false
   }
@@ -572,9 +575,9 @@ async function handleExport() {
   savingExport.value = true
   try {
     const blob = await renderFinalBlob()
-    if (!blob) throw new Error('合成图片失败')
+    if (!blob) throw new Error(t('media.preset.renderFailed'))
 
-    const filename = (exportName.value.trim() || presetName.value.trim() || '未命名') + '.jpg'
+    const filename = (exportName.value.trim() || presetName.value.trim() || t('media.preset.untitledFile')) + '.jpg'
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -583,9 +586,9 @@ async function handleExport() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    message.success('导出成功')
+    message.success(t('media.preset.exportSuccess'))
   } catch (err) {
-    message.error(`导出失败: ${err instanceof Error ? err.message : '未知错误'}`)
+    message.error(t('media.preset.exportFailed', { reason: err instanceof Error ? err.message : t('media.preset.unknownError') }))
   } finally {
     savingExport.value = false
   }
@@ -595,7 +598,7 @@ async function renderFinalBlob(): Promise<Blob | null> {
   return new Promise((resolve, reject) => {
     const img = originalImage.value
     if (!img) {
-      reject(new Error('原图未加载'))
+      reject(new Error(t('media.preset.originalNotLoaded')))
       return
     }
 
@@ -613,7 +616,7 @@ async function renderFinalBlob(): Promise<Blob | null> {
 
     const ctx = canvas.getContext('2d')
     if (!ctx) {
-      reject(new Error('创建 canvas 失败'))
+      reject(new Error(t('media.preset.canvasFailed')))
       return
     }
 
@@ -664,7 +667,7 @@ async function renderFinalBlob(): Promise<Blob | null> {
 
     canvas.toBlob(async (blob) => {
       if (!blob) {
-        reject(new Error('导出 Blob 失败'))
+        reject(new Error(t('media.preset.blobFailed')))
         return
       }
       if (!frameConfig.showExif || originalMime.value !== 'image/jpeg' || !originalBuffer.value) {
@@ -713,7 +716,7 @@ async function injectExif(blob: Blob): Promise<Blob> {
       const dataUrl = piexif.insert(exifDump, base64)
       const newBlob = dataURLToBlob(dataUrl)
       if (!newBlob) {
-        reject(new Error('写入 EXIF 失败'))
+        reject(new Error(t('media.preset.exifWriteFailed')))
         return
       }
       resolve(newBlob)

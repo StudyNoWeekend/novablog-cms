@@ -1,7 +1,7 @@
 <template>
   <a-modal
     v-model:open="visible"
-    :title="isEdit ? '编辑歌单' : '添加第三方歌单'"
+    :title="isEdit ? $t('playlist.form.editTitle') : $t('playlist.form.addTitle')"
     :confirm-loading="saving"
     width="600px"
     @ok="handleSave"
@@ -9,8 +9,8 @@
   >
     <a-form layout="vertical">
       <!-- 平台选择 -->
-      <a-form-item label="平台" required>
-        <a-select v-model:value="formState.platform" placeholder="选择平台">
+      <a-form-item :label="$t('playlist.form.platform')" required>
+        <a-select v-model:value="formState.platform" :placeholder="$t('playlist.form.platformPlaceholder')">
           <a-select-option v-for="p in platformOptions" :key="p.id" :value="p.id">
             <div class="platform-option">
               <span class="platform-dot" :style="{ background: p.color }">{{ p.icon }}</span>
@@ -21,28 +21,28 @@
       </a-form-item>
 
       <!-- 歌单链接 -->
-      <a-form-item label="歌单链接" required>
+      <a-form-item :label="$t('playlist.form.url')" required>
         <a-input
           v-model:value="formState.platform_url"
-          placeholder="输入第三方平台歌单链接，如 https://music.163.com/playlist/..."
+          :placeholder="$t('playlist.form.urlPlaceholder')"
         />
       </a-form-item>
 
       <!-- 歌单名称 -->
-      <a-form-item label="歌单名称" required>
-        <a-input v-model:value="formState.title" placeholder="输入歌单名称" />
+      <a-form-item :label="$t('playlist.form.name')" required>
+        <a-input v-model:value="formState.title" :placeholder="$t('playlist.form.namePlaceholder')" />
       </a-form-item>
 
       <!-- 封面URL -->
-      <a-form-item label="封面图 URL">
-        <a-input v-model:value="formState.cover_url" placeholder="歌单封面图片URL（可选）" />
+      <a-form-item :label="$t('playlist.form.coverUrl')">
+        <a-input v-model:value="formState.cover_url" :placeholder="$t('playlist.form.coverUrlPlaceholder')" />
       </a-form-item>
 
       <!-- 描述 -->
-      <a-form-item label="描述">
+      <a-form-item :label="$t('common.field.description')">
         <a-textarea
           v-model:value="formState.description"
-          placeholder="简短描述这个歌单（可选）"
+          :placeholder="$t('playlist.form.descriptionPlaceholder')"
           :rows="2"
           :maxlength="500"
           show-count
@@ -50,12 +50,12 @@
       </a-form-item>
 
       <!-- 排序 -->
-      <a-form-item label="排序">
+      <a-form-item :label="$t('common.field.sort')">
         <a-input-number v-model:value="formState.sort_order" :min="0" :max="9999" style="width: 120px" />
       </a-form-item>
 
       <!-- 是否展示 -->
-      <a-form-item label="前台展示">
+      <a-form-item :label="$t('playlist.form.showOnFront')">
         <a-switch v-model:checked="formState.enabled" />
       </a-form-item>
     </a-form>
@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { playlistApi } from '@/api/playlist'
 import { PLATFORM_CONFIGS } from '@/utils/platformConfig'
@@ -78,6 +79,8 @@ const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
   (e: 'saved'): void
 }>()
+
+const { t } = useI18n()
 
 const visible = computed({
   get: () => props.open,
@@ -128,15 +131,15 @@ watch(
 
 async function handleSave() {
   if (!formState.title.trim()) {
-    message.warning('请输入歌单名称')
+    message.warning(t('playlist.form.nameRequired'))
     return
   }
   if (!formState.platform) {
-    message.warning('请选择平台')
+    message.warning(t('playlist.form.platformRequired'))
     return
   }
   if (!formState.platform_url.trim()) {
-    message.warning('请输入歌单链接')
+    message.warning(t('playlist.form.urlRequired'))
     return
   }
 
@@ -153,7 +156,7 @@ async function handleSave() {
         enabled: formState.enabled,
       }
       await playlistApi.update(props.playlist.id, data)
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     } else {
       const data: CreatePlaylistReq = {
         title: formState.title,
@@ -165,7 +168,7 @@ async function handleSave() {
         enabled: formState.enabled,
       }
       await playlistApi.create(data)
-      message.success('添加成功')
+      message.success(t('playlist.form.addSuccess'))
     }
     emit('saved')
     emit('update:open', false)

@@ -1,0 +1,28 @@
+{
+  "thirdParty": "Third-party Playlists",
+  "addPlaylist": "Add Playlist",
+  "total": "{total} playlists in total",
+  "empty": "No third-party playlists yet. Click add to get started",
+  "errorSubtitle": "Failed to load playlists. Please try again",
+  "card": {
+    "viewOn": "View playlist on {platform}"
+  },
+  "form": {
+    "addTitle": "Add Third-party Playlist",
+    "editTitle": "Edit Playlist",
+    "platform": "Platform",
+    "platformPlaceholder": "Select a platform",
+    "platformRequired": "Please select a platform",
+    "url": "Playlist URL",
+    "urlPlaceholder": "Enter a third-party platform playlist URL, e.g. https://music.163.com/playlist/...",
+    "urlRequired": "Please enter the playlist URL",
+    "name": "Playlist Name",
+    "namePlaceholder": "Enter playlist name",
+    "nameRequired": "Please enter a playlist name",
+    "coverUrl": "Cover Image URL",
+    "coverUrlPlaceholder": "Playlist cover image URL (optional)",
+    "descriptionPlaceholder": "Briefly describe this playlist (optional)",
+    "showOnFront": "Show on Front Site",
+    "addSuccess": "Added successfully"
+  }
+}

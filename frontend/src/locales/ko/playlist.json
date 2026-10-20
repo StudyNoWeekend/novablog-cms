@@ -1,0 +1,28 @@
+{
+  "thirdParty": "서드파티 재생목록",
+  "addPlaylist": "재생목록 추가",
+  "total": "총 {total}개의 재생목록",
+  "empty": "아직 서드파티 재생목록이 없습니다. 추가해 보세요",
+  "errorSubtitle": "재생목록을 가져오는 중 오류가 발생했습니다. 다시 시도해 주세요",
+  "card": {
+    "viewOn": "{platform}에서 재생목록 보기"
+  },
+  "form": {
+    "addTitle": "서드파티 재생목록 추가",
+    "editTitle": "재생목록 편집",
+    "platform": "플랫폼",
+    "platformPlaceholder": "플랫폼 선택",
+    "platformRequired": "플랫폼을 선택해 주세요",
+    "url": "재생목록 링크",
+    "urlPlaceholder": "서드파티 플랫폼의 재생목록 링크를 입력하세요. 예: https://music.163.com/playlist/...",
+    "urlRequired": "재생목록 링크를 입력해 주세요",
+    "name": "재생목록 이름",
+    "namePlaceholder": "재생목록 이름을 입력하세요",
+    "nameRequired": "재생목록 이름을 입력해 주세요",
+    "coverUrl": "커버 이미지 URL",
+    "coverUrlPlaceholder": "재생목록 커버 이미지 URL(선택 사항)",
+    "descriptionPlaceholder": "이 재생목록에 대한 간단한 설명(선택 사항)",
+    "showOnFront": "프론트 노출",
+    "addSuccess": "추가되었습니다"
+  }
+}

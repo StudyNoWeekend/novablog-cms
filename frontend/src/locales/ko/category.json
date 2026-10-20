@@ -1,0 +1,19 @@
+{
+  "add": "카테고리 추가",
+  "edit": "카테고리 수정",
+  "selectPlaceholder": "카테고리 선택",
+  "form": {
+    "name": "카테고리 이름",
+    "namePlaceholder": "카테고리 이름을 입력",
+    "nameRequired": "카테고리 이름을 입력해 주세요",
+    "descriptionPlaceholder": "카테고리 설명 (선택)",
+    "sortPlaceholder": "숫자가 작을수록 앞에 표시됩니다"
+  },
+  "message": {
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "카테고리 \"{name}\"을(를) 삭제하시겠습니까?",
+    "deleteSuccess": "카테고리가 삭제되었습니다",
+    "updateSuccess": "카테고리가 수정되었습니다",
+    "createSuccess": "카테고리가 생성되었습니다"
+  }
+}

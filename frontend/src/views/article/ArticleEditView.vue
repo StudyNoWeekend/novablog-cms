@@ -6,11 +6,11 @@
     <!-- 顶部工具栏 -->
     <div class="editor-toolbar">
       <a-button type="text" @click="isEdit ? router.push('/articles') : router.back()">
-        <ArrowLeftOutlined /> {{ isEdit ? '返回列表' : '返回' }}
+        <ArrowLeftOutlined /> {{ isEdit ? $t('article.edit.backToList') : $t('common.actions.back') }}
       </a-button>
       <a-input
         v-model:value="form.title"
-        placeholder="输入文章标题..."
+        :placeholder="$t('article.edit.titlePlaceholder')"
         class="title-input"
         size="large"
       />
@@ -21,14 +21,14 @@
           <FileMarkdownOutlined /> Markdown
         </a-radio-button>
         <a-radio-button :value="2">
-          <FileTextOutlined /> 富文本
+          <FileTextOutlined /> {{ $t('article.edit.richText') }}
         </a-radio-button>
       </a-radio-group>
 
       <div class="toolbar-actions">
-        <a-button @click="handleSaveDraft" :loading="saving">保存草稿</a-button>
+        <a-button @click="handleSaveDraft" :loading="saving">{{ $t('article.edit.saveDraft') }}</a-button>
         <a-button type="primary" @click="handlePublish" :loading="saving">
-          <SendOutlined /> 发布
+          <SendOutlined /> {{ $t('common.actions.publish') }}
         </a-button>
         <PushSyncButton
           v-if="isEdit"
@@ -53,8 +53,9 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted, watchEffect } from 'vue'
-import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { ArrowLeftOutlined, SendOutlined, FileMarkdownOutlined, FileTextOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useArticleStore } from '@/stores/article'
@@ -62,13 +63,15 @@ import MarkdownEditor from '@/components/editor/MarkdownEditor.vue'
 import RichTextEditor from '@/components/editor/RichTextEditor.vue'
 import ArticleForm from '@/components/article/ArticleForm.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const store = useArticleStore()
 const saving = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
-const title = computed(() => (isEdit.value ? '编辑文章' : '新建文章'))
+// 页面标题复用 menu.article.*（与侧边栏/路由 meta 共用同一批 key）
+const title = computed(() => (isEdit.value ? t('menu.article.edit') : t('menu.article.create')))
 
 watchEffect(() => {
   document.title = title.value
@@ -112,17 +115,17 @@ onMounted(async () => {
 
 async function handleSaveDraft() {
   if (!form.title.trim()) {
-    message.warning('请输入文章标题')
+    message.warning(t('article.edit.titleRequired'))
     return
   }
   saving.value = true
   try {
     if (isEdit.value) {
       await store.update(route.params.id as string, { ...form, status: 1 })
-      message.success('草稿已保存')
+      message.success(t('article.edit.draftSaved'))
     } else {
       const article = await store.create({ ...form, status: 1 })
-      message.success('草稿已保存')
+      message.success(t('article.edit.draftSaved'))
       router.replace(`/articles/${article.id}/edit`)
     }
   } finally {
@@ -132,7 +135,7 @@ async function handleSaveDraft() {
 
 async function handlePublish() {
   if (!form.title.trim()) {
-    message.warning('请输入文章标题')
+    message.warning(t('article.edit.titleRequired'))
     return
   }
   saving.value = true
@@ -142,7 +145,7 @@ async function handlePublish() {
     } else {
       await store.create({ ...form, status: 2 })
     }
-    message.success('文章已发布')
+    message.success(t('article.edit.published'))
     router.push('/articles')
   } finally {
     saving.value = false

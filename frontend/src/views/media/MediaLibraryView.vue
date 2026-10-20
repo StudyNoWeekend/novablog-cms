@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">媒体库</h1>
+      <h1 class="page-title">{{ $t('media.library.title') }}</h1>
       <!-- 图片/视频分开上传：通配 accept 保证 iOS/安卓点击后直接进系统图库 -->
       <a-space wrap>
         <a-upload
@@ -12,7 +12,7 @@
           :accept="IMAGE_ACCEPT"
         >
           <a-button type="primary" :loading="uploading">
-            <UploadOutlined /> 上传图片
+            <UploadOutlined /> {{ $t('media.upload.image') }}
           </a-button>
         </a-upload>
         <a-upload
@@ -23,7 +23,7 @@
           :accept="VIDEO_ACCEPT"
         >
           <a-button type="primary" :loading="uploading">
-            <VideoCameraOutlined /> 上传视频
+            <VideoCameraOutlined /> {{ $t('media.upload.video') }}
           </a-button>
         </a-upload>
       </a-space>
@@ -37,19 +37,19 @@
           @navigate="enterFolder"
         />
         <a-button size="small" @click="openCreateFolder">
-          <FolderAddOutlined /> 新建文件夹
+          <FolderAddOutlined /> {{ $t('media.folder.create') }}
         </a-button>
       </div>
 
       <a-tabs v-model:activeKey="activeTab" @change="handleTabChange">
         <a-tab-pane key="1">
           <template #tab>
-            <span><PictureOutlined /> 图片</span>
+            <span><PictureOutlined /> {{ $t('media.type.image') }}</span>
           </template>
         </a-tab-pane>
         <a-tab-pane key="2">
           <template #tab>
-            <span><VideoCameraOutlined /> 视频</span>
+            <span><VideoCameraOutlined /> {{ $t('media.type.video') }}</span>
           </template>
         </a-tab-pane>
       </a-tabs>
@@ -57,16 +57,16 @@
       <div class="media-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索全部文件..."
+          :placeholder="$t('media.search.placeholder')"
           style="width: 240px"
           allow-clear
         />
         <a-radio-group v-model:value="viewType">
           <a-radio-button value="grid">
-            <AppstoreOutlined /> 图标视图
+            <AppstoreOutlined /> {{ $t('media.view.grid') }}
           </a-radio-button>
           <a-radio-button value="list">
-            <UnorderedListOutlined /> 文件视图
+            <UnorderedListOutlined /> {{ $t('media.view.list') }}
           </a-radio-button>
         </a-radio-group>
       </div>
@@ -74,7 +74,7 @@
       <a-spin :spinning="loading || folderLoading">
         <a-empty
           v-if="!loading && !searching && visibleFolders.length === 0 && list.length === 0"
-          :description="currentFolderId === 'root' ? '暂无媒体文件' : '此文件夹为空'"
+          :description="currentFolderId === 'root' ? $t('media.empty.root') : $t('media.empty.folder')"
           style="margin-top: 48px"
         />
         <template v-else>
@@ -90,11 +90,11 @@
               >
                 <div class="folder-body">
                   <FolderFilled class="folder-icon" />
-                  <span class="folder-count">{{ folder.media_count }} 项</span>
+                  <span class="folder-count">{{ $t('media.itemCount', { count: folder.media_count }) }}</span>
                 </div>
                 <div class="folder-name">
                   <span class="folder-name-text" :title="folder.name">{{ folder.name }}</span>
-                  <a-tag v-if="isSystemFolder(folder)" class="folder-system-tag" color="gold">系统</a-tag>
+                  <a-tag v-if="isSystemFolder(folder)" class="folder-system-tag" color="gold">{{ $t('media.folder.systemTag') }}</a-tag>
                 </div>
                 <a-dropdown :trigger="['click']">
                   <a-button
@@ -107,9 +107,9 @@
                   </a-button>
                   <template #overlay>
                     <a-menu @click="({ key }: any) => handleFolderMenu(key as string, folder)">
-                      <a-menu-item key="rename" :disabled="isSystemFolder(folder)"><EditOutlined /> 重命名</a-menu-item>
-                      <a-menu-item key="move" :disabled="isSystemFolder(folder)"><FolderOpenOutlined /> 移动到</a-menu-item>
-                      <a-menu-item key="delete" :disabled="isSystemFolder(folder)" danger><DeleteOutlined /> 删除</a-menu-item>
+                      <a-menu-item key="rename" :disabled="isSystemFolder(folder)"><EditOutlined /> {{ $t('media.actions.rename') }}</a-menu-item>
+                      <a-menu-item key="move" :disabled="isSystemFolder(folder)"><FolderOpenOutlined /> {{ $t('media.actions.moveTo') }}</a-menu-item>
+                      <a-menu-item key="delete" :disabled="isSystemFolder(folder)" danger><DeleteOutlined /> {{ $t('common.actions.delete') }}</a-menu-item>
                     </a-menu>
                   </template>
                 </a-dropdown>
@@ -140,13 +140,13 @@
                       class="overlay-btn"
                       @click.stop="openWorkbench(item)"
                     >
-                      <SettingOutlined /> 预设
+                      <SettingOutlined /> {{ $t('media.preset.open') }}
                     </a-button>
                     <a-button size="small" class="overlay-btn" @click.stop="openMoveForMedia(item)">
-                      <FolderOpenOutlined /> 移动
+                      <FolderOpenOutlined /> {{ $t('media.actions.move') }}
                     </a-button>
                     <a-button type="primary" danger size="small" class="overlay-btn" @click.stop="openDelete(item)">
-                      <DeleteOutlined /> 删除
+                      <DeleteOutlined /> {{ $t('common.actions.delete') }}
                     </a-button>
                   </div>
                 </div>
@@ -181,8 +181,8 @@
                 <span v-else class="media-cell">{{ record.media.filename }}</span>
               </template>
               <template v-else-if="column.key === 'type'">
-                <a-tag v-if="record.rowType === 'folder'" color="gold">文件夹</a-tag>
-                <span v-else>{{ record.media.file_type === 1 ? '图片' : '视频' }}</span>
+                <a-tag v-if="record.rowType === 'folder'" color="gold">{{ $t('media.type.folder') }}</a-tag>
+                <span v-else>{{ $t(record.media.file_type === 1 ? 'media.type.image' : 'media.type.video') }}</span>
               </template>
               <template v-else-if="column.key === 'dimensions'">
                 <span v-if="record.rowType === 'media' && record.media.width && record.media.height">
@@ -191,7 +191,7 @@
                 <span v-else>-</span>
               </template>
               <template v-else-if="column.key === 'size'">
-                <span v-if="record.rowType === 'folder'">{{ record.folder.media_count }} 项</span>
+                <span v-if="record.rowType === 'folder'">{{ $t('media.itemCount', { count: record.folder.media_count }) }}</span>
                 <span v-else>{{ formatBytes(record.media.size) }}</span>
               </template>
               <template v-else-if="column.key === 'created_at'">
@@ -199,19 +199,19 @@
               </template>
               <template v-else-if="column.key === 'actions'">
                 <template v-if="record.rowType === 'folder'">
-                  <a-tooltip :title="isSystemFolder(record.folder) ? '系统文件夹不支持重命名' : undefined">
-                    <a-button type="link" size="small" :disabled="isSystemFolder(record.folder)" @click="handleFolderMenu('rename', record.folder)">重命名</a-button>
+                  <a-tooltip :title="isSystemFolder(record.folder) ? $t('media.folder.systemRenameDenied') : undefined">
+                    <a-button type="link" size="small" :disabled="isSystemFolder(record.folder)" @click="handleFolderMenu('rename', record.folder)">{{ $t('media.actions.rename') }}</a-button>
                   </a-tooltip>
-                  <a-tooltip :title="isSystemFolder(record.folder) ? '系统文件夹不支持移动' : undefined">
-                    <a-button type="link" size="small" :disabled="isSystemFolder(record.folder)" @click="handleFolderMenu('move', record.folder)">移动</a-button>
+                  <a-tooltip :title="isSystemFolder(record.folder) ? $t('media.folder.systemMoveDenied') : undefined">
+                    <a-button type="link" size="small" :disabled="isSystemFolder(record.folder)" @click="handleFolderMenu('move', record.folder)">{{ $t('media.actions.move') }}</a-button>
                   </a-tooltip>
-                  <a-tooltip :title="isSystemFolder(record.folder) ? '系统文件夹不支持删除' : undefined">
-                    <a-button type="link" danger size="small" :disabled="isSystemFolder(record.folder)" @click="handleFolderMenu('delete', record.folder)">删除</a-button>
+                  <a-tooltip :title="isSystemFolder(record.folder) ? $t('media.folder.systemDeleteDenied') : undefined">
+                    <a-button type="link" danger size="small" :disabled="isSystemFolder(record.folder)" @click="handleFolderMenu('delete', record.folder)">{{ $t('common.actions.delete') }}</a-button>
                   </a-tooltip>
                 </template>
                 <template v-else>
-                  <a-button type="link" size="small" @click="openMoveForMedia(record.media)">移动</a-button>
-                  <a-button type="link" danger size="small" @click="openDelete(record.media)">删除</a-button>
+                  <a-button type="link" size="small" @click="openMoveForMedia(record.media)">{{ $t('media.actions.move') }}</a-button>
+                  <a-button type="link" danger size="small" @click="openDelete(record.media)">{{ $t('common.actions.delete') }}</a-button>
                 </template>
               </template>
             </template>
@@ -226,7 +226,7 @@
           :total="total"
           :page-size-options="[20, 40, 60]"
           show-size-changer
-          :show-total="(t: number) => `共 ${t} 条`"
+          :show-total="(count: number) => $t('common.table.total', { total: count })"
           @change="handlePageChange"
           @show-size-change="handlePageChange"
         />
@@ -258,20 +258,20 @@
 
     <a-modal
       v-model:visible="folderModalVisible"
-      :title="folderModalMode === 'create' ? '新建文件夹' : '重命名文件夹'"
+      :title="folderModalMode === 'create' ? $t('media.folder.create') : $t('media.folder.rename')"
       :confirm-loading="folderSubmitting"
       @ok="handleFolderModalOk"
     >
       <a-form layout="vertical">
-        <a-form-item label="文件夹名称" required>
+        <a-form-item :label="$t('media.folder.name')" required>
           <a-input
             v-model:value="folderModalName"
-            placeholder="请输入文件夹名称"
+            :placeholder="$t('media.folder.namePlaceholder')"
             :maxlength="50"
             @press-enter="handleFolderModalOk"
           />
         </a-form-item>
-        <p class="folder-modal-hint">创建于「{{ folderModalParentName }}」内；名称不能包含 / \ : * ? " &lt; &gt; |</p>
+        <p class="folder-modal-hint">{{ $t('media.folder.nameRule', { name: folderModalParentName }) }}</p>
       </a-form>
     </a-modal>
   </div>
@@ -279,6 +279,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal, type TableColumnsType } from 'ant-design-vue'
 import {
   PictureOutlined,
@@ -299,6 +300,7 @@ import { mediaApi } from '@/api/media'
 import type { MediaItem, MediaFolderNode } from '@/api/media'
 import { getThumbUrl } from '@/utils/image'
 import { IMAGE_ACCEPT, VIDEO_ACCEPT, MAX_UPLOAD_SIZE } from '@/utils/upload'
+import { formatDateTime } from '@/utils/datetime'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 import { useMediaFolders } from '@/composables/useMediaFolders'
@@ -306,6 +308,8 @@ import MediaFolderBreadcrumbs from '@/components/media/MediaFolderBreadcrumbs.vu
 import MediaPresetWorkbench from '@/components/media/MediaPresetWorkbench.vue'
 import MediaDeleteModal from '@/components/media/MediaDeleteModal.vue'
 import MoveMediaModal from '@/components/media/MoveMediaModal.vue'
+
+const { t } = useI18n()
 
 const activeTab = ref<'1' | '2'>('1')
 const fileType = computed(() => Number(activeTab.value))
@@ -370,11 +374,11 @@ const folderModalParentName = computed(() => {
     const parent = folderModalTarget.value.parent_id
       ? findFolder(folderTree.value, folderModalTarget.value.parent_id!)?.name
       : null
-    return parent || '全部文件'
+    return parent || t('media.folder.rootName')
   }
   return currentFolderId.value === 'root'
-    ? '全部文件'
-    : findFolder(folderTree.value, currentFolderId.value)?.name || '全部文件'
+    ? t('media.folder.rootName')
+    : findFolder(folderTree.value, currentFolderId.value)?.name || t('media.folder.rootName')
 })
 
 type FolderRow = { rowType: 'folder'; folder: MediaFolderNode; key: string }
@@ -394,14 +398,14 @@ const tableRows = computed<TableRow[]>(() => {
   return rows
 })
 
-const columns: TableColumnsType = [
-  { title: '名称', key: 'name', ellipsis: true },
-  { title: '类型', key: 'type', width: 100 },
-  { title: '尺寸', key: 'dimensions', width: 120 },
-  { title: '大小', key: 'size', width: 120 },
-  { title: '上传时间', key: 'created_at', width: 180 },
-  { title: '操作', key: 'actions', width: 180 },
-]
+const columns = computed<TableColumnsType>(() => [
+  { title: t('common.field.name'), key: 'name', ellipsis: true },
+  { title: t('common.field.type'), key: 'type', width: 100 },
+  { title: t('media.columns.dimensions'), key: 'dimensions', width: 120 },
+  { title: t('media.columns.size'), key: 'size', width: 120 },
+  { title: t('media.columns.uploadedAt'), key: 'created_at', width: 180 },
+  { title: t('common.table.actions'), key: 'actions', width: 180 },
+])
 
 watch(keyword, setDebounce)
 
@@ -463,7 +467,7 @@ function refreshAll() {
 
 function handleBeforeUpload(file: File) {
   if (file.size > MAX_UPLOAD_SIZE) {
-    message.error('文件大小不能超过 100MB')
+    message.error(t('media.upload.sizeLimit'))
     return false
   }
   return true
@@ -498,7 +502,7 @@ function handleCustomUpload({ file, onSuccess, onError }: any) {
     })
     .catch(() => {
       uploadBatch.failedNames.push(raw.name)
-      onError?.(new Error('上传失败'))
+      onError?.(new Error(t('media.upload.failed')))
     })
     .finally(() => {
       uploadBatch.activePercents.delete(taskKey)
@@ -515,7 +519,11 @@ function updateUploadProgress() {
   const sum = [...uploadBatch.activePercents.values()].reduce((acc, cur) => acc + cur, 0)
   const percent = Math.min(99, Math.floor(((uploadBatch.done + sum / 100) / uploadBatch.total) * 100))
   message.loading({
-    content: `上传中 ${percent}%（${uploadBatch.done}/${uploadBatch.total}）`,
+    content: t('media.upload.progress', {
+      percent,
+      done: uploadBatch.done,
+      total: uploadBatch.total,
+    }),
     key: 'upload',
     duration: 0,
   })
@@ -524,12 +532,16 @@ function updateUploadProgress() {
 function finishUploadBatch() {
   const { total, failedNames } = uploadBatch
   if (failedNames.length === 0) {
-    message.success({ content: `上传完成，共 ${total} 个文件`, key: 'upload' })
+    message.success({ content: t('media.upload.batchComplete', { total }), key: 'upload' })
   } else {
-    const preview = failedNames.slice(0, 3).join('、')
-    const more = failedNames.length > 3 ? ` 等 ${failedNames.length} 个` : ''
+    const preview = failedNames.slice(0, 3).join(t('media.upload.nameSeparator'))
+    const more = failedNames.length > 3 ? t('media.upload.moreSuffix', { count: failedNames.length }) : ''
     message.warning({
-      content: `成功 ${total - failedNames.length} 个，失败 ${failedNames.length} 个：${preview}${more}`,
+      content: t('media.upload.partialFailed', {
+        success: total - failedNames.length,
+        failed: failedNames.length,
+        names: preview + more,
+      }),
       key: 'upload',
       duration: 5,
     })
@@ -545,7 +557,7 @@ function finishUploadBatch() {
 function handleFolderMenu(key: string, folder: MediaFolderNode) {
   // 兜底拦截（防陈旧树数据/绕过禁用态）：系统文件夹三种操作一律拒绝
   if (isSystemFolder(folder)) {
-    message.warning('系统文件夹由模块固定使用，不支持重命名、移动或删除')
+    message.warning(t('media.folder.systemRestricted'))
     return
   }
   if (key === 'rename') {
@@ -576,7 +588,7 @@ function openRenameFolder(folder: MediaFolderNode) {
 async function handleFolderModalOk() {
   const name = folderModalName.value.trim()
   if (!name) {
-    message.warning('请输入文件夹名称')
+    message.warning(t('media.folder.nameRequired'))
     return
   }
   folderSubmitting.value = true
@@ -584,15 +596,15 @@ async function handleFolderModalOk() {
     if (folderModalMode.value === 'create') {
       const parentId = currentFolderId.value === 'root' ? null : currentFolderId.value
       await mediaApi.createFolder({ name, parent_id: parentId })
-      message.success('文件夹已创建')
+      message.success(t('media.folder.created'))
     } else if (folderModalTarget.value) {
       await mediaApi.updateFolder(folderModalTarget.value.id, { name })
-      message.success('重命名成功')
+      message.success(t('media.folder.renameSuccess'))
     }
     folderModalVisible.value = false
     fetchFolderTree()
   } catch (err: any) {
-    message.error(err?.message || '操作失败')
+    message.error(err?.message || t('common.message.operationFailed'))
   } finally {
     folderSubmitting.value = false
   }
@@ -601,22 +613,22 @@ async function handleFolderModalOk() {
 function confirmDeleteFolder(folder: MediaFolderNode) {
   const subtree = collectSubtreeIds(folder).length
   Modal.confirm({
-    title: '删除文件夹',
+    title: t('media.folder.deleteTitle'),
     content:
       subtree > 1
-        ? `「${folder.name}」包含子文件夹，仅允许删除空文件夹，确定继续？`
-        : `确定删除文件夹「${folder.name}」？仅允许删除空文件夹。`,
-    okText: '删除',
+        ? t('media.folder.deleteConfirmWithChildren', { name: folder.name })
+        : t('media.folder.deleteConfirm', { name: folder.name }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
     onOk: async () => {
       try {
         await mediaApi.deleteFolder(folder.id)
-        message.success('文件夹已删除')
+        message.success(t('media.folder.deleteSuccess'))
         // 若删除的是当前所在文件夹（理论上不可发生，兜底回到根目录）
         if (currentFolderId.value === folder.id) enterFolder(null)
         else fetchFolderTree()
       } catch (err: any) {
-        message.error(err?.message || '删除失败')
+        message.error(err?.message || t('media.delete.failed'))
       }
     },
   })
@@ -656,13 +668,6 @@ function formatBytes(bytes?: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
-}
-
-function formatDateTime(time?: string): string {
-  if (!time) return '-'
-  const d = new Date(time)
-  if (Number.isNaN(d.getTime())) return time
-  return d.toLocaleString('zh-CN')
 }
 </script>
 

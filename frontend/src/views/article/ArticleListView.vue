@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">文章管理</h1>
+      <h1 class="page-title">{{ $t('article.list.title') }}</h1>
       <a-button type="primary" @click="router.push('/articles/create')">
-        <PlusOutlined /> 写文章
+        <PlusOutlined /> {{ $t('article.list.writeArticle') }}
       </a-button>
     </div>
 
@@ -14,20 +14,20 @@
     <div class="filter-bar">
       <a-select
         v-model:value="filterStatus"
-        placeholder="全部状态"
+        :placeholder="$t('article.filter.allStatus')"
         allow-clear
         style="width: 140px"
         @change="handleFilterChange"
       >
-        <a-select-option :value="undefined">全部状态</a-select-option>
-        <a-select-option :value="1">草稿</a-select-option>
-        <a-select-option :value="2">已发布</a-select-option>
-        <a-select-option :value="3">已下架</a-select-option>
+        <a-select-option :value="undefined">{{ $t('article.filter.allStatus') }}</a-select-option>
+        <a-select-option :value="1">{{ $t('article.status.draft') }}</a-select-option>
+        <a-select-option :value="2">{{ $t('article.status.published') }}</a-select-option>
+        <a-select-option :value="3">{{ $t('article.status.unpublished') }}</a-select-option>
       </a-select>
 
       <a-input-search
         v-model:value="filterKeyword"
-        placeholder="搜索文章标题..."
+        :placeholder="$t('article.list.searchPlaceholder')"
         style="width: 240px"
         @search="handleFilterChange"
         :loading="store.loading"
@@ -45,21 +45,21 @@
     <a-result
       v-else-if="error"
       status="error"
-      title="加载失败"
-      sub-title="获取文章列表时出错，请重试"
+      :title="$t('common.state.error')"
+      :sub-title="$t('article.list.loadError')"
     >
       <template #extra>
-        <a-button type="primary" @click="retry">重试</a-button>
+        <a-button type="primary" @click="retry">{{ $t('common.actions.retry') }}</a-button>
       </template>
     </a-result>
 
     <!-- 空状态 -->
     <a-empty
       v-else-if="!store.loading && (!store.list || store.list.length === 0)"
-      description="还没有文章，开始创作吧"
+      :description="$t('article.list.empty')"
     >
       <a-button type="primary" @click="router.push('/articles/create')">
-        写第一篇文章
+        {{ $t('article.list.writeFirst') }}
       </a-button>
     </a-empty>
 
@@ -83,7 +83,7 @@
         :page-size="store.pagination.pageSize"
         :total="store.total"
         :show-size-changer="true"
-        :show-total="(total: number) => `共 ${total} 篇`"
+        :show-total="(total: number) => $t('article.list.totalArticles', { total })"
         @change="handlePageChange"
         @show-size-change="handlePageSizeChange"
       />
@@ -94,12 +94,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
 import { useArticleStore } from '@/stores/article'
 import ArticleCard from '@/components/article/ArticleCard.vue'
 import CategoryBar from '@/components/common/CategoryBar.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const store = useArticleStore()
 
@@ -157,11 +159,11 @@ function handleEdit(id: string) {
 
 function handleDelete(id: string) {
   Modal.confirm({
-    title: '确认删除',
-    content: '删除后文章将无法恢复，确定要删除吗？',
-    okText: '删除',
+    title: t('article.list.deleteTitle'),
+    content: t('article.list.deleteConfirm'),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: () => store.remove(id),
   })
 }

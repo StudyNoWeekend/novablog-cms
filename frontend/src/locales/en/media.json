@@ -1,0 +1,192 @@
+{
+  "library": {
+    "title": "Media Library"
+  },
+  "upload": {
+    "image": "Upload Image",
+    "video": "Upload Video",
+    "progress": "Uploading {percent}% ({done}/{total})",
+    "batchComplete": "Upload complete: {total} files",
+    "partialFailed": "{success} succeeded, {failed} failed: {names}",
+    "moreSuffix": " and {count} more",
+    "nameSeparator": ", ",
+    "sizeLimit": "File size cannot exceed 100MB",
+    "failed": "Upload failed"
+  },
+  "type": {
+    "image": "Image",
+    "video": "Video",
+    "folder": "Folder"
+  },
+  "search": {
+    "placeholder": "Search all files..."
+  },
+  "view": {
+    "grid": "Grid View",
+    "list": "List View"
+  },
+  "empty": {
+    "root": "No media files",
+    "folder": "This folder is empty"
+  },
+  "itemCount": "{count} items",
+  "columns": {
+    "dimensions": "Dimensions",
+    "size": "Size",
+    "uploadedAt": "Uploaded"
+  },
+  "actions": {
+    "rename": "Rename",
+    "move": "Move",
+    "moveTo": "Move to"
+  },
+  "folder": {
+    "rootName": "All Files",
+    "create": "New Folder",
+    "rename": "Rename Folder",
+    "name": "Folder Name",
+    "namePlaceholder": "Enter a folder name",
+    "nameRequired": "Enter a folder name",
+    "nameRule": "Created in \"{name}\". The name cannot contain / \\ : * ? \" vertical bars, or angle brackets",
+    "systemTag": "System",
+    "systemRestricted": "System folders are used by modules and cannot be renamed, moved, or deleted",
+    "systemRenameDenied": "System folders cannot be renamed",
+    "systemMoveDenied": "System folders cannot be moved",
+    "systemDeleteDenied": "System folders cannot be deleted",
+    "created": "Folder created",
+    "renameSuccess": "Renamed successfully",
+    "deleteTitle": "Delete Folder",
+    "deleteConfirm": "Delete folder \"{name}\"? Only empty folders can be deleted.",
+    "deleteConfirmWithChildren": "\"{name}\" contains subfolders. Only empty folders can be deleted. Continue?",
+    "deleteSuccess": "Folder deleted",
+    "empty": "No folders",
+    "moved": "Folder moved"
+  },
+  "move": {
+    "title": "Move to Folder",
+    "folderHint": "Move folder \"{name}\" to the selected location (defaults to the root)",
+    "filesHint": "Move {count} selected files to the selected location (defaults to the root)",
+    "filesMoved": "Files moved",
+    "failed": "Move failed"
+  },
+  "delete": {
+    "title": "Delete Media File",
+    "force": "Delete Anyway",
+    "usedWarning": "This file is referenced by {total} items and will no longer display there after deletion",
+    "permanentWarning": "The file will be permanently removed from storage and cannot be recovered",
+    "usageCount": "{count} usages",
+    "failed": "Delete failed"
+  },
+  "picker": {
+    "title": "Select Image",
+    "confirm": "Confirm Selection"
+  },
+  "chooser": {
+    "title": "Select Image Version",
+    "tip": "Click an image to open its preset workbench (create/edit framed EXIF renders), then click \"Use\" to pick a version.",
+    "managePresets": "Manage presets in Media Library",
+    "openWorkbench": "Open preset workbench",
+    "openWorkbenchAria": "Open preset workbench for \"{name}\"",
+    "use": "Use",
+    "inUse": "In use",
+    "useAria": "Use {name}",
+    "createPreset": "Create Preset",
+    "createPresetAria": "Create a new preset",
+    "original": "Use Original"
+  },
+  "field": {
+    "previewAlt": "Image preview",
+    "noImage": "No image",
+    "searchOnline": "Search Online",
+    "searchOnlineAria": "Search images online",
+    "uploadLocal": "Upload Locally",
+    "uploadLocalAria": "Upload image from local device",
+    "clear": "Clear",
+    "clearAria": "Clear image",
+    "urlPlaceholder": "Or paste an image URL directly"
+  },
+  "external": {
+    "searchLabel": "Search keywords",
+    "selectIconAria": "Select icon {name}",
+    "selectImageAria": "Select image {name}",
+    "candidate": "Candidate image",
+    "searchFailed": "Search failed. Please try again later or upload locally instead",
+    "noResults": "No results found. Try a different keyword",
+    "savedWithTransfer": "Image selected and saved to library",
+    "picked": "Image selected",
+    "tech": {
+      "title": "Search Brand Icons",
+      "placeholder": "Enter a technology, e.g. Vue / Docker / PostgreSQL",
+      "hint": "From Simple Icons brand icon library"
+    },
+    "game": {
+      "title": "Search Game Covers",
+      "placeholder": "Enter a game title, e.g. Zelda / Black Myth",
+      "hint": "From Bangumi"
+    },
+    "book": {
+      "title": "Search Book Covers",
+      "placeholder": "Enter a book title, e.g. The Three-Body Problem",
+      "hint": "From Douban Books"
+    },
+    "recipe": {
+      "title": "Search Food Photos",
+      "placeholder": "Enter a dish name, e.g. Braised Pork / Kung Pao Chicken",
+      "hint": "From Bing Image Search"
+    }
+  },
+  "preset": {
+    "open": "Presets",
+    "templateStyle": "Template Style",
+    "templateGallery": "Gallery",
+    "templateMovie": "Movie",
+    "templateFloating": "Floating",
+    "styleParams": "Style Parameters",
+    "fontSize": "Font Size",
+    "borderSize": "Border Size",
+    "borderColor": "Border Background",
+    "textColor": "Text Color",
+    "colorAuto": "Auto",
+    "colorBlack": "Black",
+    "colorWhite": "White",
+    "font": "Font",
+    "brandSection": "Brand/Model",
+    "logoText": "Text",
+    "logoPlaceholder": "Logo image mode is a placeholder for now",
+    "showExif": "Show EXIF",
+    "paramsSection": "Parameters",
+    "make": "Brand",
+    "model": "Model",
+    "lens": "Lens",
+    "focalLength": "Focal Length",
+    "aperture": "Aperture",
+    "shutter": "Shutter",
+    "date": "Date",
+    "loadingOriginal": "Loading original...",
+    "gallery": "Library ({count})",
+    "exifSection": "EXIF Info",
+    "exifFile": "File",
+    "exifResolution": "Resolution",
+    "exifSize": "Size",
+    "exifMake": "Make",
+    "exifModel": "Model",
+    "exifSoftware": "Software",
+    "library": "Preset Library",
+    "namePlaceholder": "Preset name...",
+    "untitledPreset": "Untitled preset",
+    "untitledFile": "untitled",
+    "exportNamePlaceholder": "Filename (auto by default)",
+    "originalLoadError": "Failed to load original image. Please check the object storage CORS configuration",
+    "originalLoadFailed": "Failed to load original image",
+    "applyFailed": "Failed to apply preset",
+    "renderFailed": "Failed to render image",
+    "saveFailed": "Save failed: {reason}",
+    "exportSuccess": "Exported successfully",
+    "exportFailed": "Export failed: {reason}",
+    "unknownError": "Unknown error",
+    "originalNotLoaded": "Original image not loaded",
+    "canvasFailed": "Failed to create canvas",
+    "blobFailed": "Failed to export Blob",
+    "exifWriteFailed": "Failed to write EXIF"
+  }
+}

@@ -6,7 +6,7 @@
       class="playlist-tabs"
       :tab-bar-gutter="32"
     >
-      <a-tab-pane key="audio" tab="音频导入">
+      <a-tab-pane key="audio" :tab="$t('music.tabs.audioImport')">
         <div class="playlist-content">
           <!-- 左侧分类侧边栏 -->
           <MusicCategorySidebar
@@ -17,9 +17,9 @@
           <!-- 右侧歌曲列表 -->
           <div class="song-list-area">
             <div class="page-header">
-              <h1 class="page-title">音乐播放列表</h1>
+              <h1 class="page-title">{{ $t('music.list.title') }}</h1>
               <a-button type="primary" @click="openAddModal">
-                <PlusOutlined /> 添加歌曲
+                <PlusOutlined /> {{ $t('music.addSong') }}
               </a-button>
             </div>
 
@@ -34,21 +34,21 @@
             <a-result
               v-else-if="error"
               status="error"
-              title="加载失败"
-              sub-title="获取歌曲列表时出错，请重试"
+              :title="$t('common.state.error')"
+              :sub-title="$t('music.list.errorSubtitle')"
             >
               <template #extra>
-                <a-button type="primary" @click="loadSongs">重试</a-button>
+                <a-button type="primary" @click="loadSongs">{{ $t('common.actions.retry') }}</a-button>
               </template>
             </a-result>
 
             <!-- 空状态 -->
             <a-empty
               v-else-if="songs.length === 0"
-              description="还没有歌曲，点击添加吧"
+              :description="$t('music.list.empty')"
             >
               <a-button type="primary" @click="openAddModal">
-                <PlusOutlined /> 添加歌曲
+                <PlusOutlined /> {{ $t('music.addSong') }}
               </a-button>
             </a-empty>
 
@@ -84,7 +84,7 @@
                 :page-size="pageSize"
                 :total="total"
                 :show-size-changer="true"
-                :show-total="(total: number) => `共 ${total} 首`"
+                :show-total="(total: number) => $t('music.list.total', { total })"
                 @change="onPageChange"
                 @show-size-change="handlePageSizeChange"
               />
@@ -111,12 +111,12 @@
         />
       </a-tab-pane>
 
-      <a-tab-pane key="third-party" tab="第三方歌单">
+      <a-tab-pane key="third-party" :tab="$t('playlist.thirdParty')">
         <div class="third-party-area">
           <div class="page-header">
-            <h1 class="page-title">第三方歌单</h1>
+            <h1 class="page-title">{{ $t('playlist.thirdParty') }}</h1>
             <a-button type="primary" @click="showPlaylistModal = true">
-              <PlusOutlined /> 添加歌单
+              <PlusOutlined /> {{ $t('playlist.addPlaylist') }}
             </a-button>
           </div>
 
@@ -131,21 +131,21 @@
           <a-result
             v-else-if="playlistError"
             status="error"
-            title="加载失败"
-            sub-title="获取歌单列表时出错，请重试"
+            :title="$t('common.state.error')"
+            :sub-title="$t('playlist.errorSubtitle')"
           >
             <template #extra>
-              <a-button type="primary" @click="loadPlaylists">重试</a-button>
+              <a-button type="primary" @click="loadPlaylists">{{ $t('common.actions.retry') }}</a-button>
             </template>
           </a-result>
 
           <!-- 空状态 -->
           <a-empty
             v-else-if="playlists.length === 0"
-            description="还没有第三方歌单，点击添加吧"
+            :description="$t('playlist.empty')"
           >
             <a-button type="primary" @click="showPlaylistModal = true">
-              <PlusOutlined /> 添加歌单
+              <PlusOutlined /> {{ $t('playlist.addPlaylist') }}
             </a-button>
           </a-empty>
 
@@ -168,8 +168,8 @@
               :page-size="playlistPageSize"
               :total="playlistTotal"
               :show-size-changer="true"
-              :show-total="(total: number) => `共 ${total} 个歌单`"
-              @change="onPlaylistPageChange"
+                :show-total="(total: number) => $t('playlist.total', { total })"
+                @change="onPlaylistPageChange"
               @show-size-change="handlePlaylistPageSizeChange"
             />
           </div>
@@ -188,6 +188,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 import { musicApi } from '@/api/music'
@@ -203,6 +204,8 @@ import SongFormModal from '@/components/music/SongFormModal.vue'
 import MusicPlayerBar from '@/components/music/MusicPlayerBar.vue'
 import ThirdPartyPlaylistCard from '@/components/playlist/ThirdPartyPlaylistCard.vue'
 import PlaylistFormModal from '@/components/playlist/PlaylistFormModal.vue'
+
+const { t } = useI18n()
 
 // ---- 标签页 ----
 const activeTab = ref('audio')
@@ -320,15 +323,15 @@ function onSongSaved() {
 
 function handleDeleteSong(song: Song) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除歌曲「${song.title}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('common.message.deleteConfirm'),
+    content: t('music.list.deleteConfirm', { name: song.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await musicApi.deleteSong(song.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         loadSongs()
       } catch {
         // 错误由拦截器处理
@@ -350,7 +353,7 @@ async function handleChangeCategory(song: Song, categoryId: string) {
   }
   try {
     await musicApi.updateSong(song.id, { category_id: categoryId })
-    message.success('分类已更新')
+    message.success(t('music.list.categoryUpdated'))
   } catch {
     // 更新失败回滚并重拉列表
     song.category_id = prev
@@ -422,7 +425,7 @@ async function persistSortWithMove(from: number, to: number) {
     await musicApi.sortSongs({
       items: all.map((s, idx) => ({ id: s.id, sort_order: idx + 1 })),
     })
-    message.success('排序已更新')
+    message.success(t('music.list.sortUpdated'))
   } catch {
     // 错误由拦截器提示，finally 中回滚到服务端顺序
   } finally {
@@ -436,7 +439,7 @@ function handleTopSong(song: Song) {
   if (localIndex < 0) return
   const globalIndex = toGlobalIndex(localIndex)
   if (globalIndex === 0) {
-    message.info('该歌曲已在最前')
+    message.info(t('music.list.alreadyFirst'))
     return
   }
   persistSortWithMove(globalIndex, 0)
@@ -491,15 +494,15 @@ function editPlaylist(pl: ThirdPartyPlaylist) {
 
 function handleDeletePlaylist(pl: ThirdPartyPlaylist) {
   Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除歌单「${pl.title}」吗？`,
-    okText: '删除',
+    title: t('common.message.deleteConfirm'),
+    content: t('common.message.deleteConfirmNamed', { name: pl.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await playlistApi.delete(pl.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         loadPlaylists()
       } catch {
         // 错误由拦截器处理

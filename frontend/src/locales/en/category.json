@@ -1,0 +1,19 @@
+{
+  "add": "Add Category",
+  "edit": "Edit Category",
+  "selectPlaceholder": "Select category",
+  "form": {
+    "name": "Category Name",
+    "namePlaceholder": "Enter category name",
+    "nameRequired": "Please enter a category name",
+    "descriptionPlaceholder": "Category description (optional)",
+    "sortPlaceholder": "Lower numbers appear first"
+  },
+  "message": {
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "Are you sure you want to delete the category \"{name}\"?",
+    "deleteSuccess": "Category deleted",
+    "updateSuccess": "Category updated",
+    "createSuccess": "Category created"
+  }
+}

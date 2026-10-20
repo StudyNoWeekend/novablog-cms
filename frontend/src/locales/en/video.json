@@ -1,0 +1,57 @@
+{
+  "actions": {
+    "create": "New Video",
+    "edit": "Edit Video",
+    "parse": "Fetch",
+    "overwrite": "Overwrite"
+  },
+  "status": {
+    "published": "Published",
+    "draft": "Draft"
+  },
+  "list": {
+    "searchPlaceholder": "Search video titles...",
+    "empty": "No videos yet. Start by adding one.",
+    "noDescription": "No description",
+    "noPlatforms": "No platform links",
+    "total": "{total} videos in total"
+  },
+  "form": {
+    "coverUrl": "Cover URL",
+    "coverUrlPlaceholder": "Enter the cover image URL (optional), or click the button on the right to pick one from the media library",
+    "selectCoverFromMedia": "Choose cover from media library",
+    "mediaLibrary": "Media Library",
+    "intro": "Description",
+    "titlePlaceholder": "Enter the video title",
+    "introPlaceholder": "Enter the video description (optional)",
+    "categoryPlaceholder": "Select a category (optional)",
+    "platforms": "Platforms",
+    "platformLinkPlaceholder": "Enter the {name} video link",
+    "publishedHint": "This video will be publicly visible on the blog after publishing",
+    "draftHint": "Visible in the admin console only; hidden from the blog"
+  },
+  "message": {
+    "linkRequired": "Please enter the video link first",
+    "parseSuccess": "Fetched successfully",
+    "overwriteTitle": "Confirm Overwrite",
+    "overwriteContent": "The form already has content. Overwrite it with the fetched result?",
+    "titleRequired": "Please enter the video title",
+    "platformRequired": "Please add at least one platform link",
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "“{name}” will be permanently deleted. Are you sure?"
+  },
+  "platforms": {
+    "bilibili": "Bilibili",
+    "youtube": "YouTube",
+    "xigua": "Xigua Video",
+    "douyin": "Douyin",
+    "xiaohongshu": "Xiaohongshu",
+    "kuaishou": "Kuaishou",
+    "wechat_channels": "WeChat Channels",
+    "tiktok": "TikTok",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "vimeo": "Vimeo",
+    "facebook": "Facebook"
+  }
+}

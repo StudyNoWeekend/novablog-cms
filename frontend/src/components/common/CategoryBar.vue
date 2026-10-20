@@ -6,7 +6,7 @@
         :class="{ active: !selectedId }"
         @click="handleSelect(undefined)"
       >
-        全部
+        {{ $t('common.status.all') }}
       </span>
       <a-dropdown
         v-for="cat in categories"
@@ -22,13 +22,13 @@
         </span>
         <template #overlay>
           <a-menu @click="handleMenuClick($event, cat)">
-            <a-menu-item key="edit">编辑</a-menu-item>
-            <a-menu-item key="delete">删除</a-menu-item>
+            <a-menu-item key="edit">{{ $t('common.actions.edit') }}</a-menu-item>
+            <a-menu-item key="delete">{{ $t('common.actions.delete') }}</a-menu-item>
           </a-menu>
         </template>
       </a-dropdown>
       <a-button type="dashed" size="small" @click="showAddModal" class="add-btn">
-        <PlusOutlined /> 新增分类
+        <PlusOutlined /> {{ $t('category.add') }}
       </a-button>
     </div>
 
@@ -43,13 +43,13 @@
     <!-- Delete Confirmation -->
     <a-modal
       v-model:open="deleteVisible"
-      title="确认删除"
-      ok-text="删除"
+      :title="$t('category.message.deleteTitle')"
+      :ok-text="$t('common.actions.delete')"
       ok-type="danger"
-      cancel-text="取消"
+      :cancel-text="$t('common.actions.cancel')"
       @ok="handleDelete"
     >
-      <p>确定要删除分类「{{ deletingCategory?.name }}」吗？</p>
+      <p>{{ $t('category.message.deleteConfirm', { name: deletingCategory?.name }) }}</p>
     </a-modal>
   </div>
 </template>
@@ -58,9 +58,12 @@
 import { ref, onMounted } from 'vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { categoryApi } from '@/api/category'
 import type { Category } from '@/types/category'
 import CategoryEditModal from '@/components/common/CategoryEditModal.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   type: string
@@ -121,7 +124,7 @@ async function handleDelete() {
   if (!deletingCategory.value) return
   try {
     await categoryApi.remove(deletingCategory.value.id)
-    message.success('分类已删除')
+    message.success(t('category.message.deleteSuccess'))
     if (selectedId.value === deletingCategory.value.id) {
       handleSelect(undefined)
     }

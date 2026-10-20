@@ -1,0 +1,36 @@
+{
+  "title": "评论管理",
+  "filter": {
+    "allSources": "全部来源",
+    "searchPlaceholder": "搜索评论内容..."
+  },
+  "source": {
+    "article": "文章",
+    "travel": "旅行攻略"
+  },
+  "columns": {
+    "commenter": "评论者",
+    "source": "来源",
+    "time": "时间"
+  },
+  "blogger": "博主",
+  "empty": "暂无评论",
+  "action": {
+    "reply": "回复"
+  },
+  "error": {
+    "getListFailed": "获取评论列表时出错，请重试"
+  },
+  "reply": {
+    "title": "回复评论",
+    "okText": "发送回复",
+    "replyTo": "回复 {name}：",
+    "placeholder": "请输入回复内容..."
+  },
+  "message": {
+    "replyEmpty": "请输入回复内容",
+    "replySuccess": "回复成功",
+    "deleteTitle": "确认删除",
+    "deleteContent": "删除后评论将无法恢复，确定要删除吗？"
+  }
+}

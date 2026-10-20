@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "Articles",
+    "writeArticle": "Write",
+    "searchPlaceholder": "Search article titles...",
+    "empty": "No articles yet. Start writing!",
+    "writeFirst": "Write your first article",
+    "loadError": "Failed to load articles. Please try again.",
+    "totalArticles": "{total} articles",
+    "deleteTitle": "Delete Article",
+    "deleteConfirm": "Once deleted, the article cannot be recovered. Are you sure?"
+  },
+  "filter": {
+    "allStatus": "All statuses"
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published",
+    "unpublished": "Unpublished"
+  },
+  "editorType": {
+    "markdown": "MD",
+    "html": "HTML"
+  },
+  "edit": {
+    "backToList": "Back to List",
+    "titlePlaceholder": "Enter article title...",
+    "richText": "Rich Text",
+    "saveDraft": "Save Draft",
+    "titleRequired": "Please enter the article title",
+    "draftSaved": "Draft saved",
+    "published": "Article published"
+  },
+  "form": {
+    "summaryPlaceholder": "Article summary, shown in lists and SEO...",
+    "pinToTop": "Pin to Top",
+    "comment": "Comments"
+  },
+  "card": {
+    "moveToDraft": "Move to Draft",
+    "minutesAgo": "{count} min ago",
+    "hoursAgo": "{count} hr ago",
+    "daysAgo": "{count} d ago"
+  }
+}

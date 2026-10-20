@@ -1,0 +1,19 @@
+{
+  "add": "カテゴリーを追加",
+  "edit": "カテゴリーを編集",
+  "selectPlaceholder": "カテゴリーを選択",
+  "form": {
+    "name": "カテゴリー名",
+    "namePlaceholder": "カテゴリー名を入力",
+    "nameRequired": "カテゴリー名を入力してください",
+    "descriptionPlaceholder": "カテゴリーの説明（任意）",
+    "sortPlaceholder": "数値が小さいほど先頭に表示されます"
+  },
+  "message": {
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "カテゴリー「{name}」を削除してもよろしいですか？",
+    "deleteSuccess": "カテゴリーを削除しました",
+    "updateSuccess": "カテゴリーを更新しました",
+    "createSuccess": "カテゴリーを作成しました"
+  }
+}

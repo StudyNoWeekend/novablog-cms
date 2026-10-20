@@ -1,0 +1,19 @@
+{
+  "add": "新增分类",
+  "edit": "编辑分类",
+  "selectPlaceholder": "选择分类",
+  "form": {
+    "name": "分类名称",
+    "namePlaceholder": "请输入分类名称",
+    "nameRequired": "请输入分类名称",
+    "descriptionPlaceholder": "分类描述（可选）",
+    "sortPlaceholder": "数字越小越靠前"
+  },
+  "message": {
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "确定要删除分类「{name}」吗？",
+    "deleteSuccess": "分类已删除",
+    "updateSuccess": "分类已更新",
+    "createSuccess": "分类已创建"
+  }
+}

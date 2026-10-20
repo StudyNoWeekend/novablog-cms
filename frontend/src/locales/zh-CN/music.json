@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "audioImport": "音频导入"
+  },
+  "addSong": "添加歌曲",
+  "list": {
+    "title": "音乐播放列表",
+    "total": "共 {total} 首",
+    "empty": "还没有歌曲，点击添加吧",
+    "errorSubtitle": "获取歌曲列表时出错，请重试",
+    "deleteConfirm": "删除歌曲「{name}」后无法恢复，确定要删除吗？",
+    "categoryUpdated": "分类已更新",
+    "sortUpdated": "排序已更新",
+    "alreadyFirst": "该歌曲已在最前"
+  },
+  "song": {
+    "dragSort": "拖拽排序",
+    "viewOnBilibili": "在B站查看",
+    "changeCategory": "点击修改分类",
+    "uncategorized": "未分类",
+    "play": "播放",
+    "pinTop": "置顶"
+  },
+  "player": {
+    "source": "B 站播放器",
+    "prev": "上一首",
+    "next": "下一首",
+    "close": "关闭播放器",
+    "loading": "正在加载播放器…",
+    "frameTitle": "B站视频播放器",
+    "loadFailed": "获取播放地址失败，请稍后重试"
+  },
+  "form": {
+    "editTitle": "编辑歌曲",
+    "biliUrl": "B站视频链接",
+    "biliUrlPlaceholder": "粘贴B站视频链接，如 https://www.bilibili.com/video/BV...",
+    "biliUrlRequired": "请输入B站视频链接",
+    "parse": "解析",
+    "parseProcessing": "正在解析，请稍候...",
+    "parseSuccess": "解析成功",
+    "parseSuccessStatus": "解析成功，已自动填充信息",
+    "parseFailed": "解析失败",
+    "parseFirst": "请先解析B站视频链接",
+    "songName": "歌曲名称",
+    "songNamePlaceholder": "请输入歌曲名称",
+    "songNameRequired": "请输入歌曲名称",
+    "artist": "歌手",
+    "artistPlaceholder": "请输入歌手名称",
+    "artistRequired": "请输入歌手名称",
+    "coverPreviewAlt": "封面预览",
+    "chooseCover": "选择封面",
+    "coverUrlPlaceholder": "封面图片URL，或从左侧媒体库选择",
+    "coverHint": "点击缩略图可从媒体库选择，也可直接粘贴外部图片 URL（B站封面会自动保存到存储）。",
+    "categoryPlaceholder": "选择已有分类或输入新分类名称（不存在时自动创建）",
+    "categoryTooLong": "分类名称不能超过 50 个字符",
+    "selectAll": "全选",
+    "batchSummary": "共 {total} 首，已选 {selected} 首",
+    "batchCategory": "统一分类",
+    "selectAtLeastOne": "请至少选择一首歌曲",
+    "batchAddSuccess": "成功添加 {count} 首歌曲",
+    "addSuccess": "添加成功"
+  }
+}
