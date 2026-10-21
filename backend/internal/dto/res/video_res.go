@@ -14,16 +14,18 @@ type VideoPlatformLinkRes struct {
 
 // VideoWorkRes 视频作品响应结构体。
 type VideoWorkRes struct {
-	ID          string                 `json:"id"`
-	Title       string                 `json:"title"`
-	CoverURL    string                 `json:"cover_url"`
-	Description string                 `json:"description"`
-	Status      int                    `json:"status"`
-	SortOrder   int                    `json:"sort_order"`
-	Platforms   []VideoPlatformLinkRes `json:"platforms"`
-	ViewCount   int64                  `json:"view_count"` // 浏览量
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	ID           string                 `json:"id"`
+	Title        string                 `json:"title"`
+	CoverURL     string                 `json:"cover_url"`
+	Description  string                 `json:"description"`
+	Status       int                    `json:"status"`
+	SortOrder    int                    `json:"sort_order"`
+	CategoryID   string                 `json:"category_id"`
+	CategoryName string                 `json:"category_name"`
+	Platforms    []VideoPlatformLinkRes `json:"platforms"`
+	ViewCount    int64                  `json:"view_count"` // 浏览量
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
 }
 
 // VideoWorkListRes 视频作品列表响应结构体。

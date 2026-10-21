@@ -21,6 +21,8 @@ export interface Recipe {
   tags: string
   status: number
   sort_order: number
+  category_id: string
+  category_name: string
   created_at: string
   updated_at: string
 }
@@ -43,6 +45,7 @@ export interface CreateRecipeReq {
   minutes?: number
   servings?: number
   tags?: string
+  category_id?: string
   status?: number
   sort_order?: number
 }

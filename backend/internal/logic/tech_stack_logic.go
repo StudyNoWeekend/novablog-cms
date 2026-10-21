@@ -14,12 +14,16 @@ import (
 
 // TechStackLogic 技术栈业务逻辑结构体。
 type TechStackLogic struct {
-	itemModel *model.TechStackItemModel
+	itemModel     *model.TechStackItemModel
+	categoryModel *model.CategoryModel
 }
 
 // NewTechStackLogic 创建 TechStackLogic 实例。
 func NewTechStackLogic() *TechStackLogic {
-	return &TechStackLogic{itemModel: model.NewTechStackItem()}
+	return &TechStackLogic{
+		itemModel:     model.NewTechStackItem(),
+		categoryModel: model.NewCategory(),
+	}
 }
 
 // Create 创建技术栈条目。
@@ -40,6 +44,15 @@ func (l *TechStackLogic) Create(ctx context.Context, r *req.CreateTechStackReq) 
 	if r.SortOrder != nil {
 		m.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil && *r.CategoryID != "" {
+		// 结构化分类优先：legacy Category 镜像为分类 slug，保证公开 ?category= 筛选与主题分组兼容
+		cat, fetchErr := l.categoryModel.GetByID(ctx, *r.CategoryID)
+		if fetchErr != nil {
+			return nil, fmt.Errorf("分类不存在")
+		}
+		m.CategoryID = r.CategoryID
+		m.Category = cat.Slug
+	}
 
 	if err := l.itemModel.Create(ctx, m); err != nil {
 		return nil, fmt.Errorf("创建技术栈条目失败: %w", err)
@@ -50,7 +63,7 @@ func (l *TechStackLogic) Create(ctx context.Context, r *req.CreateTechStackReq) 
 
 // GetList 分页查询技术栈条目列表。
 func (l *TechStackLogic) GetList(ctx context.Context, r *req.TechStackListReq) (*res.TechStackListRes, error) {
-	list, total, err := l.itemModel.GetList(ctx, r.Keyword, r.Category, r.Level, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.itemModel.GetList(ctx, r.Keyword, r.Category, r.CategoryID, r.Level, r.Status, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询技术栈列表失败: %w", err)
 	}
@@ -90,6 +103,15 @@ func (l *TechStackLogic) Update(ctx context.Context, id string, r *req.UpdateTec
 	}
 	if r.Category != nil {
 		m.Category = *r.Category
+	}
+	if r.CategoryID != nil && *r.CategoryID != "" {
+		// 结构化分类优先：legacy Category 镜像为分类 slug
+		cat, fetchErr := l.categoryModel.GetByID(ctx, *r.CategoryID)
+		if fetchErr != nil {
+			return nil, fmt.Errorf("分类不存在")
+		}
+		m.CategoryID = r.CategoryID
+		m.Category = cat.Slug
 	}
 	if r.Icon != nil {
 		m.Icon = *r.Icon
@@ -135,15 +157,17 @@ func (l *TechStackLogic) GetPublicList(ctx context.Context, r *req.TechStackList
 // toRes 转换为技术栈条目响应。
 func (l *TechStackLogic) toRes(m *model.TechStackItem) res.TechStackItemRes {
 	return res.TechStackItemRes{
-		ID:          m.ID,
-		Name:        m.Name,
-		Category:    m.Category,
-		Icon:        m.Icon,
-		Level:       m.Level,
-		Description: m.Description,
-		Status:      m.Status,
-		SortOrder:   m.SortOrder,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		ID:           m.ID,
+		Name:         m.Name,
+		Category:     m.Category,
+		CategoryID:   categoryIDOf(m.CategoryID),
+		CategoryName: categoryNameOf(m.CategoryInfo),
+		Icon:         m.Icon,
+		Level:        m.Level,
+		Description:  m.Description,
+		Status:       m.Status,
+		SortOrder:    m.SortOrder,
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 }

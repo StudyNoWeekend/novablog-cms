@@ -15,6 +15,8 @@ type OpenSourceRes struct {
 	Homepage        string     `json:"homepage"`
 	Status          int        `json:"status"`
 	SortOrder       int        `json:"sort_order"`
+	CategoryID      string     `json:"category_id"`
+	CategoryName    string     `json:"category_name"`
 	ReadmeUpdatedAt *time.Time `json:"readme_updated_at"` // README 最近拉取时间，null 表示尚未拉取
 	ViewCount       int64      `json:"view_count"`        // 浏览量
 	CreatedAt       time.Time  `json:"created_at"`
@@ -23,19 +25,21 @@ type OpenSourceRes struct {
 
 // OpenSourceCardRes 开源作品列表响应结构体（不含 README 大字段）。
 type OpenSourceCardRes struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	RepoURL   string    `json:"repo_url"`
-	Summary   string    `json:"summary"`
-	Language  string    `json:"language"`
-	Topics    string    `json:"topics"`
-	Stars     int       `json:"stars"`
-	Homepage  string    `json:"homepage"`
-	Status    int       `json:"status"`
-	SortOrder int       `json:"sort_order"`
-	ViewCount int64     `json:"view_count"` // 浏览量
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	RepoURL      string    `json:"repo_url"`
+	Summary      string    `json:"summary"`
+	Language     string    `json:"language"`
+	Topics       string    `json:"topics"`
+	Stars        int       `json:"stars"`
+	Homepage     string    `json:"homepage"`
+	Status       int       `json:"status"`
+	SortOrder    int       `json:"sort_order"`
+	CategoryID   string    `json:"category_id"`
+	CategoryName string    `json:"category_name"`
+	ViewCount    int64     `json:"view_count"` // 浏览量
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // OpenSourceListRes 开源作品列表响应结构体。

@@ -272,8 +272,14 @@ func (ctrl *PublicController) GetArticleBySlug(ctx *gin.Context) {
 }
 
 // GetCategories 公开分类列表 GET /api/v1/public/categories
+// 支持按分类类型过滤：?type=，合法值见 enum.CategoryTypes（article/travel/portfolio/music/video/
+// book/recipe/game/project/open_source/tech_stack/fitness）；缺省或非法值回退 article（向后兼容）
 func (ctrl *PublicController) GetCategories(ctx *gin.Context) {
-	result, err := ctrl.categoryLogic.GetAll(ctx, "article")
+	categoryType := ctx.Query("type")
+	if categoryType == "" || !enum.IsValidCategoryType(categoryType) {
+		categoryType = enum.CategoryTypeArticle
+	}
+	result, err := ctrl.categoryLogic.GetAll(ctx, categoryType)
 	if err != nil {
 		response.HandleError(ctx, err)
 		return

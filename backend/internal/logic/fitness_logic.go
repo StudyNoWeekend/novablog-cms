@@ -15,12 +15,16 @@ import (
 
 // FitnessLogic 健身训练业务逻辑结构体。
 type FitnessLogic struct {
-	recordModel *model.FitnessRecordModel
+	recordModel   *model.FitnessRecordModel
+	categoryModel *model.CategoryModel
 }
 
 // NewFitnessLogic 创建 FitnessLogic 实例。
 func NewFitnessLogic() *FitnessLogic {
-	return &FitnessLogic{recordModel: model.NewFitnessRecord()}
+	return &FitnessLogic{
+		recordModel:   model.NewFitnessRecord(),
+		categoryModel: model.NewCategory(),
+	}
 }
 
 // Create 创建训练记录。
@@ -39,6 +43,15 @@ func (l *FitnessLogic) Create(ctx context.Context, r *req.CreateFitnessReq) (*re
 	}
 	if r.Type != "" {
 		m.Type = r.Type
+	}
+	if r.CategoryID != nil && *r.CategoryID != "" {
+		// 结构化分类优先：legacy Type 镜像为分类 slug，保证公开接口 ?type= 筛选与主题分组兼容
+		cat, fetchErr := l.categoryModel.GetByID(ctx, *r.CategoryID)
+		if fetchErr != nil {
+			return nil, fmt.Errorf("分类不存在")
+		}
+		m.CategoryID = r.CategoryID
+		m.Type = cat.Slug
 	}
 	if r.DurationMin != nil {
 		m.DurationMin = *r.DurationMin
@@ -61,7 +74,7 @@ func (l *FitnessLogic) Create(ctx context.Context, r *req.CreateFitnessReq) (*re
 
 // GetList 分页查询训练记录列表。
 func (l *FitnessLogic) GetList(ctx context.Context, r *req.FitnessListReq) (*res.FitnessListRes, error) {
-	list, total, err := l.recordModel.GetList(ctx, r.Keyword, r.Type, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.recordModel.GetList(ctx, r.Keyword, r.Type, r.CategoryID, r.Status, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询训练记录列表失败: %w", err)
 	}
@@ -103,6 +116,15 @@ func (l *FitnessLogic) Update(ctx context.Context, id string, r *req.UpdateFitne
 	}
 	if r.Type != nil {
 		m.Type = *r.Type
+	}
+	if r.CategoryID != nil && *r.CategoryID != "" {
+		// 结构化分类优先：legacy Type 镜像为分类 slug
+		cat, fetchErr := l.categoryModel.GetByID(ctx, *r.CategoryID)
+		if fetchErr != nil {
+			return nil, fmt.Errorf("分类不存在")
+		}
+		m.CategoryID = r.CategoryID
+		m.Type = cat.Slug
 	}
 	if r.DurationMin != nil {
 		m.DurationMin = *r.DurationMin
@@ -150,33 +172,37 @@ func (l *FitnessLogic) GetPublicList(ctx context.Context, r *req.FitnessListReq)
 // toRes 转换为训练记录详情响应。
 func (l *FitnessLogic) toRes(m *model.FitnessRecord) *res.FitnessRes {
 	return &res.FitnessRes{
-		ID:          m.ID,
-		Date:        m.Date,
-		Title:       m.Title,
-		Type:        m.Type,
-		DurationMin: m.DurationMin,
-		Calories:    m.Calories,
-		Content:     m.Content,
-		Notes:       m.Notes,
-		Status:      m.Status,
-		SortOrder:   m.SortOrder,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		ID:           m.ID,
+		Date:         m.Date,
+		Title:        m.Title,
+		Type:         m.Type,
+		DurationMin:  m.DurationMin,
+		Calories:     m.Calories,
+		Content:      m.Content,
+		Notes:        m.Notes,
+		Status:       m.Status,
+		SortOrder:    m.SortOrder,
+		CategoryID:   categoryIDOf(m.CategoryID),
+		CategoryName: categoryNameOf(m.Category),
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 }
 
 // toCard 转换为训练记录列表卡片响应。
 func (l *FitnessLogic) toCard(m *model.FitnessRecord) res.FitnessCardRes {
 	return res.FitnessCardRes{
-		ID:          m.ID,
-		Date:        m.Date,
-		Title:       m.Title,
-		Type:        m.Type,
-		DurationMin: m.DurationMin,
-		Calories:    m.Calories,
-		Status:      m.Status,
-		SortOrder:   m.SortOrder,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		ID:           m.ID,
+		Date:         m.Date,
+		Title:        m.Title,
+		Type:         m.Type,
+		DurationMin:  m.DurationMin,
+		Calories:     m.Calories,
+		Status:       m.Status,
+		SortOrder:    m.SortOrder,
+		CategoryID:   categoryIDOf(m.CategoryID),
+		CategoryName: categoryNameOf(m.Category),
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 }

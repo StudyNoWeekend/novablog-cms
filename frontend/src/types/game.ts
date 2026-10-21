@@ -10,6 +10,8 @@ export interface Game {
   short_review: string
   status: number
   sort_order: number
+  category_id: string
+  category_name: string
   created_at: string
   updated_at: string
 }
@@ -31,6 +33,7 @@ export interface CreateGameReq {
   play_hours?: number
   rating?: number
   short_review?: string
+  category_id?: string
   status?: number
   sort_order?: number
 }

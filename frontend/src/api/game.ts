@@ -2,7 +2,7 @@ import request from './request'
 import type { Game, GameListRes, CreateGameReq, UpdateGameReq } from '@/types/game'
 
 export const gameApi = {
-  getList(params?: { page?: number; page_size?: number; keyword?: string; platform?: string; genre?: string; play_status?: string; status?: number }) {
+  getList(params?: { page?: number; page_size?: number; keyword?: string; platform?: string; genre?: string; play_status?: string; category_id?: string; status?: number }) {
     return request.get<GameListRes>('/games', { params })
   },
   getById(id: string) {

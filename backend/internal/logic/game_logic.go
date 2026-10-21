@@ -48,6 +48,9 @@ func (l *GameLogic) Create(ctx context.Context, r *req.CreateGameReq) (*res.Game
 	if r.SortOrder != nil {
 		m.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil {
+		m.CategoryID = r.CategoryID
+	}
 
 	if err := l.gameModel.Create(ctx, m); err != nil {
 		return nil, fmt.Errorf("创建游戏失败: %w", err)
@@ -57,7 +60,7 @@ func (l *GameLogic) Create(ctx context.Context, r *req.CreateGameReq) (*res.Game
 
 // GetList 分页查询游戏列表。
 func (l *GameLogic) GetList(ctx context.Context, r *req.GameListReq) (*res.GameListRes, error) {
-	list, total, err := l.gameModel.GetList(ctx, r.Keyword, r.Platform, r.Genre, r.PlayStatus, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.gameModel.GetList(ctx, r.Keyword, r.Platform, r.Genre, r.PlayStatus, r.CategoryID, r.Status, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询游戏列表失败: %w", err)
 	}
@@ -121,6 +124,9 @@ func (l *GameLogic) Update(ctx context.Context, id string, r *req.UpdateGameReq)
 	if r.SortOrder != nil {
 		m.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil {
+		m.CategoryID = r.CategoryID
+	}
 
 	if err := l.gameModel.Update(ctx, m); err != nil {
 		return nil, fmt.Errorf("更新游戏失败: %w", err)
@@ -158,38 +164,42 @@ func (l *GameLogic) GetPublicDetail(ctx context.Context, id string) (*res.GameRe
 // toRes 转换为游戏详情响应。
 func (l *GameLogic) toRes(m *model.Game) *res.GameRes {
 	return &res.GameRes{
-		ID:          m.ID,
-		Title:       m.Title,
-		Cover:       m.Cover,
-		Platform:    m.Platform,
-		Genre:       m.Genre,
-		PlayStatus:  m.PlayStatus,
-		PlayHours:   m.PlayHours,
-		Rating:      m.Rating,
-		ShortReview: m.ShortReview,
-		Status:      m.Status,
-		SortOrder:   m.SortOrder,
-		ViewCount:   int64(m.ViewCount),
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		ID:           m.ID,
+		Title:        m.Title,
+		Cover:        m.Cover,
+		Platform:     m.Platform,
+		Genre:        m.Genre,
+		PlayStatus:   m.PlayStatus,
+		PlayHours:    m.PlayHours,
+		Rating:       m.Rating,
+		ShortReview:  m.ShortReview,
+		Status:       m.Status,
+		SortOrder:    m.SortOrder,
+		CategoryID:   categoryIDOf(m.CategoryID),
+		CategoryName: categoryNameOf(m.Category),
+		ViewCount:    int64(m.ViewCount),
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 }
 
 // toCard 转换为游戏列表卡片响应。
 func (l *GameLogic) toCard(m *model.Game) res.GameCardRes {
 	return res.GameCardRes{
-		ID:         m.ID,
-		Title:      m.Title,
-		Cover:      m.Cover,
-		Platform:   m.Platform,
-		Genre:      m.Genre,
-		PlayStatus: m.PlayStatus,
-		PlayHours:  m.PlayHours,
-		Rating:     m.Rating,
-		Status:     m.Status,
-		SortOrder:  m.SortOrder,
-		ViewCount:  int64(m.ViewCount),
-		CreatedAt:  m.CreatedAt,
-		UpdatedAt:  m.UpdatedAt,
+		ID:           m.ID,
+		Title:        m.Title,
+		Cover:        m.Cover,
+		Platform:     m.Platform,
+		Genre:        m.Genre,
+		PlayStatus:   m.PlayStatus,
+		PlayHours:    m.PlayHours,
+		Rating:       m.Rating,
+		Status:       m.Status,
+		SortOrder:    m.SortOrder,
+		CategoryID:   categoryIDOf(m.CategoryID),
+		CategoryName: categoryNameOf(m.Category),
+		ViewCount:    int64(m.ViewCount),
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 }

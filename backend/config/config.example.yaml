@@ -67,7 +67,7 @@ geoip:
 # NovaBlog 官方站点地址：社区推送与主题市场统一入口（出厂默认值；后台「社区推送配置」页修改后
 # 持久化到 DB 并覆盖此值，服务端直连。旧版 themes.market_base_url 仍会被读取作存量兜底，可删除）
 community:
-  base_url: "http://novablogapi.ditancafebar.cn"
+  base_url: "http://api.novablog.cn"
 
 # 博客主题模块：安装/切换/静态托管
 themes:

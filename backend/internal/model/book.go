@@ -21,6 +21,8 @@ type Book struct {
 	Status        int            `gorm:"type:int;default:0" json:"status"` // 0=草稿, 1=已发布
 	SortOrder     int            `gorm:"column:sort_order;type:int;default:0" json:"sort_order"`
 	ViewCount     int            `gorm:"column:view_count;type:int;default:0" json:"view_count"`
+	CategoryID    *string        `gorm:"type:uuid;column:category_id" json:"category_id"`
+	Category      *Category      `gorm:"foreignKey:CategoryID" json:"-"`
 	CreatedAt     time.Time      `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time      `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
@@ -55,15 +57,15 @@ func (m *BookModel) Create(ctx context.Context, b *Book) error {
 // GetByID 根据 ID 查询书籍。
 func (m *BookModel) GetByID(ctx context.Context, id string) (*Book, error) {
 	var b Book
-	err := m.db.WithContext(ctx).Where("id = ?", id).First(&b).Error
+	err := m.db.WithContext(ctx).Preload("Category").Where("id = ?", id).First(&b).Error
 	if err != nil {
 		return nil, err
 	}
 	return &b, nil
 }
 
-// GetList 分页查询书籍列表，支持 keyword 模糊搜索书名/作者、readingStatus 筛选、status 过滤。
-func (m *BookModel) GetList(ctx context.Context, keyword *string, readingStatus *string, status *int, page, pageSize int) ([]Book, int64, error) {
+// GetList 分页查询书籍列表，支持 keyword 模糊搜索书名/作者、readingStatus 筛选、按分类过滤、status 过滤。
+func (m *BookModel) GetList(ctx context.Context, keyword *string, readingStatus *string, categoryID *string, status *int, page, pageSize int) ([]Book, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&Book{})
 
@@ -73,6 +75,9 @@ func (m *BookModel) GetList(ctx context.Context, keyword *string, readingStatus 
 	}
 	if readingStatus != nil && *readingStatus != "" && *readingStatus != "all" {
 		query = query.Where("reading_status = ?", *readingStatus)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("category_id = ?", *categoryID)
 	}
 	if status != nil {
 		query = query.Where("status = ?", *status)
@@ -88,6 +93,7 @@ func (m *BookModel) GetList(ctx context.Context, keyword *string, readingStatus 
 		Order("sort_order ASC, updated_at DESC").
 		Offset(offset).
 		Limit(pageSize).
+		Preload("Category").
 		Find(&list).Error
 	if err != nil {
 		return nil, 0, err

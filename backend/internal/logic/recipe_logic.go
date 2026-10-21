@@ -48,6 +48,9 @@ func (l *RecipeLogic) Create(ctx context.Context, r *req.CreateRecipeReq) (*res.
 	if r.SortOrder != nil {
 		m.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil {
+		m.CategoryID = r.CategoryID
+	}
 
 	if err := l.recipeModel.Create(ctx, m); err != nil {
 		return nil, fmt.Errorf("创建菜谱失败: %w", err)
@@ -58,7 +61,7 @@ func (l *RecipeLogic) Create(ctx context.Context, r *req.CreateRecipeReq) (*res.
 
 // GetList 分页查询菜谱列表。
 func (l *RecipeLogic) GetList(ctx context.Context, r *req.RecipeListReq) (*res.RecipeListRes, error) {
-	list, total, err := l.recipeModel.GetList(ctx, r.Keyword, r.Difficulty, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.recipeModel.GetList(ctx, r.Keyword, r.Difficulty, r.CategoryID, r.Status, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询菜谱列表失败: %w", err)
 	}
@@ -125,6 +128,9 @@ func (l *RecipeLogic) Update(ctx context.Context, id string, r *req.UpdateRecipe
 	if r.SortOrder != nil {
 		m.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil {
+		m.CategoryID = r.CategoryID
+	}
 
 	if err := l.recipeModel.Update(ctx, m); err != nil {
 		return nil, fmt.Errorf("更新菜谱失败: %w", err)
@@ -172,39 +178,43 @@ func emptyIfNil(items []map[string]any) []map[string]any {
 // toRes 转换为菜谱详情响应。
 func (l *RecipeLogic) toRes(m *model.Recipe) *res.RecipeRes {
 	return &res.RecipeRes{
-		ID:          m.ID,
-		Title:       m.Title,
-		Cover:       m.Cover,
-		Summary:     m.Summary,
-		Ingredients: m.Ingredients,
-		Steps:       m.Steps,
-		Difficulty:  m.Difficulty,
-		Minutes:     m.Minutes,
-		Servings:    m.Servings,
-		Tags:        m.Tags,
-		Status:      m.Status,
-		SortOrder:   m.SortOrder,
-		ViewCount:   int64(m.ViewCount),
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		ID:           m.ID,
+		Title:        m.Title,
+		Cover:        m.Cover,
+		Summary:      m.Summary,
+		Ingredients:  m.Ingredients,
+		Steps:        m.Steps,
+		Difficulty:   m.Difficulty,
+		Minutes:      m.Minutes,
+		Servings:     m.Servings,
+		Tags:         m.Tags,
+		Status:       m.Status,
+		SortOrder:    m.SortOrder,
+		CategoryID:   categoryIDOf(m.CategoryID),
+		CategoryName: categoryNameOf(m.Category),
+		ViewCount:    int64(m.ViewCount),
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 }
 
 // toCard 转换为菜谱列表卡片响应。
 func (l *RecipeLogic) toCard(m *model.Recipe) res.RecipeCardRes {
 	return res.RecipeCardRes{
-		ID:         m.ID,
-		Title:      m.Title,
-		Cover:      m.Cover,
-		Summary:    m.Summary,
-		Difficulty: m.Difficulty,
-		Minutes:    m.Minutes,
-		Servings:   m.Servings,
-		Tags:       m.Tags,
-		Status:     m.Status,
-		SortOrder:  m.SortOrder,
-		ViewCount:  int64(m.ViewCount),
-		CreatedAt:  m.CreatedAt,
-		UpdatedAt:  m.UpdatedAt,
+		ID:           m.ID,
+		Title:        m.Title,
+		Cover:        m.Cover,
+		Summary:      m.Summary,
+		Difficulty:   m.Difficulty,
+		Minutes:      m.Minutes,
+		Servings:     m.Servings,
+		Tags:         m.Tags,
+		Status:       m.Status,
+		SortOrder:    m.SortOrder,
+		CategoryID:   categoryIDOf(m.CategoryID),
+		CategoryName: categoryNameOf(m.Category),
+		ViewCount:    int64(m.ViewCount),
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
 	}
 }

@@ -12,6 +12,7 @@ type CreateBookReq struct {
 	Review        string     `json:"review" binding:"omitempty,max=65535"`
 	StartedAt     *time.Time `json:"started_at"`
 	FinishedAt    *time.Time `json:"finished_at"`
+	CategoryID    *string    `json:"category_id"`
 	Status        *int       `json:"status" binding:"omitempty,oneof=0 1"`
 	SortOrder     *int       `json:"sort_order"`
 }
@@ -26,6 +27,7 @@ type UpdateBookReq struct {
 	Review        *string    `json:"review" binding:"omitempty,max=65535"`
 	StartedAt     *time.Time `json:"started_at"`
 	FinishedAt    *time.Time `json:"finished_at"`
+	CategoryID    *string    `json:"category_id"`
 	Status        *int       `json:"status" binding:"omitempty,oneof=0 1"`
 	SortOrder     *int       `json:"sort_order"`
 }
@@ -35,5 +37,6 @@ type BookListReq struct {
 	PageReq
 	Keyword       *string `form:"keyword" json:"keyword"`
 	ReadingStatus *string `form:"reading_status" json:"reading_status"`
+	CategoryID    *string `form:"category_id" json:"category_id"`
 	Status        *int    `form:"status" json:"status"`
 }

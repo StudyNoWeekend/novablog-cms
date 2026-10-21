@@ -8,12 +8,14 @@ import (
 )
 
 // Category 分类模型，对应 categories 数据表。
+// Type/Slug 组成 (type, slug) 联合唯一索引：不同模块允许同名分类；
+// 旧库的全局 slug 唯一约束/索引由 bootstrap 的 backfillCategories 启动时移除。
 type Category struct {
 	ID          string    `gorm:"type:uuid;primaryKey"`
 	Name        string    `gorm:"type:varchar(100);not null"`
-	Slug        string    `gorm:"type:varchar(100);uniqueIndex"`
+	Slug        string    `gorm:"type:varchar(100);uniqueIndex:uq_categories_type_slug,priority:2"`
 	Description string    `gorm:"type:varchar(500)"`
-	Type        string    `gorm:"type:varchar(50);default:article" json:"type"`
+	Type        string    `gorm:"type:varchar(50);default:article;uniqueIndex:uq_categories_type_slug,priority:1" json:"type"`
 	SortOrder   int       `gorm:"column:sort_order;default:0"`
 	CreatedAt   time.Time `gorm:"type:timestamptz;autoCreateTime"`
 }
@@ -120,6 +122,86 @@ func (m *CategoryModel) HasPortfolios(ctx context.Context, id string) (bool, err
 func (m *CategoryModel) HasTravelGuides(ctx context.Context, id string) (bool, error) {
 	var count int64
 	err := m.db.WithContext(ctx).Model(&TravelGuide{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasVideos 检查分类下是否有视频作品。
+func (m *CategoryModel) HasVideos(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&VideoWork{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasBooks 检查分类下是否有书籍。
+func (m *CategoryModel) HasBooks(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&Book{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasRecipes 检查分类下是否有菜谱。
+func (m *CategoryModel) HasRecipes(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&Recipe{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasGames 检查分类下是否有游戏。
+func (m *CategoryModel) HasGames(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&Game{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasProjects 检查分类下是否有项目经历。
+func (m *CategoryModel) HasProjects(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&Project{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasOpenSourceWorks 检查分类下是否有开源作品。
+func (m *CategoryModel) HasOpenSourceWorks(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&OpenSourceWork{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasTechStackItems 检查分类下是否有技术栈条目。
+func (m *CategoryModel) HasTechStackItems(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&TechStackItem{}).Where("category_id = ?", id).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasFitnessRecords 检查分类下是否有健身训练记录。
+func (m *CategoryModel) HasFitnessRecords(ctx context.Context, id string) (bool, error) {
+	var count int64
+	err := m.db.WithContext(ctx).Model(&FitnessRecord{}).Where("category_id = ?", id).Count(&count).Error
 	if err != nil {
 		return false, err
 	}
