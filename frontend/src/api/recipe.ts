@@ -2,7 +2,7 @@ import request from './request'
 import type { Recipe, RecipeListRes, CreateRecipeReq, UpdateRecipeReq } from '@/types/recipe'
 
 export const recipeApi = {
-  getList(params?: { page?: number; page_size?: number; keyword?: string; difficulty?: number; status?: number }) {
+  getList(params?: { page?: number; page_size?: number; keyword?: string; difficulty?: number; category_id?: string; status?: number }) {
     return request.get<RecipeListRes>('/recipes', { params })
   },
   getById(id: string) {

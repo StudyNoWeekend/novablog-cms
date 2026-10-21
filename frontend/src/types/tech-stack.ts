@@ -1,7 +1,10 @@
 export interface TechStackItem {
   id: string
   name: string
+  /** 兼容镜像：通常等于分类 slug（language/framework/tool/database 等） */
   category: string
+  category_id: string
+  category_name: string
   icon: string
   level: number
   description: string
@@ -21,6 +24,8 @@ export interface TechStackListRes {
 
 export interface CreateTechStackReq {
   name: string
+  category_id?: string
+  /** 兼容保留，建议用 category_id */
   category?: string
   icon?: string
   level?: number

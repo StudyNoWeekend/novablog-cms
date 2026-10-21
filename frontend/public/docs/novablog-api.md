@@ -222,7 +222,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
   "code": 0,
   "msg": "success",
   "data": {
-    "market_base_url": "http://novablogapi.ditancafebar.cn"
+    "market_base_url": "http://api.novablog.cn"
   }
 }
 ```
@@ -477,9 +477,13 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 #### GET /api/v1/public/categories
 
-获取分类列表（默认返回 type=article 的分类）。
+获取分类列表，支持 `?type=` 按分类类型过滤。
 
-**请求参数:** 无
+**查询参数:**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| type | string | 否 | article | 分类类型，可选值：article / travel / portfolio / music / video / book / recipe / game / project / open_source / tech_stack / fitness；缺省或非法值回退 article |
 
 **响应 data 字段（数组）:**
 
@@ -489,11 +493,11 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | name | string | 分类名称 |
 | slug | string | URL 标识 |
 | description | string | 分类描述 |
-| type | string | 分类类型 |
+| type | string | 分类类型（见上方可选值） |
 | sort_order | int | 排序 |
 | created_at | time | 创建时间 |
 
-> **注意:** 公开接口固定返回 type=article 的分类。
+> **注意:** 缺省或非法 `type` 回退为 article（向后兼容）。各内容模块（文章/旅行/作品集/音乐/视频/读书/菜谱/游戏/项目经历/开源作品）的分类均存于同一张分类表，按 `type` 区分；配合各模块列表接口的 `category_id` 筛选参数使用。
 
 ---
 
@@ -872,7 +876,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | page | int | 否 | 1 | 页码 |
 | page_size | int | 否 | 20 | 每页条数 |
 | keyword | string | 否 | - | 模糊搜索标题/简介 |
-| category | string | 否 | - | 按领域分类筛选（摄影/视频剪辑/技术开发等） |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=project` 使用） |
+| category | string | 否 | - | 旧自由文本领域分类筛选（兼容保留，新数据建议用 category_id） |
 
 **响应 data 字段（分页），list 中每项:**
 
@@ -880,7 +885,9 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 |------|------|------|
 | id | string | 项目 ID |
 | title | string | 项目名称 |
-| category | string | 领域分类 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
+| category | string | 旧自由文本分类，仅兼容读取（新数据为空串） |
 | role | string | 担任角色 |
 | client | string | 客户/所属组织 |
 | cover_url | string | 封面 URL（`AfterFind` 自动拼接为绝对 URL） |
@@ -917,7 +924,9 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 |------|------|------|
 | id | string | 项目 ID |
 | title | string | 项目名称 |
-| category | string | 领域分类 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
+| category | string | 旧自由文本分类，仅兼容读取（新数据为空串） |
 | role | string | 担任角色 |
 | client | string | 客户/所属组织 |
 | cover_url | string | 封面 URL |
@@ -948,6 +957,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | page | int | 否 | 1 | 页码 |
 | page_size | int | 否 | 20 | 每页条数 |
 | keyword | string | 否 | - | 模糊搜索标题 |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=video` 使用） |
 
 **响应 data 字段（分页），list 中每项:**
 
@@ -959,6 +969,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | description | string | 描述 |
 | status | int | 状态（公开接口固定 1=已发布） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | platforms | array | 平台链接列表 |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
@@ -989,7 +1001,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 |------|------|------|------|
 | id | string | 是 | 视频 ID |
 
-**响应 data:** 同列表项字段结构
+**响应 data:** 同列表项字段结构（含 `category_id`/`category_name`）
 
 ---
 
@@ -1174,6 +1186,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | page | int | 否 | 1 | 页码 |
 | page_size | int | 否 | 20 | 每页条数（最大 100） |
 | keyword | string | 否 | - | 模糊搜索仓库名称/一句话介绍 |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=open_source` 使用） |
 | status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
 
 **响应 data 字段（分页），list 中每项:**
@@ -1190,6 +1203,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | homepage | string | 主页/演示地址 |
 | status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
@@ -1224,6 +1239,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | homepage | string | 主页/演示地址 |
 | status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | readme_updated_at | time | README 最近拉取时间（null 表示尚未拉取） |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
@@ -1244,6 +1261,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | page_size | int | 否 | 20 | 每页条数（最大 100） |
 | keyword | string | 否 | - | 模糊搜索标题/摘要/标签 |
 | difficulty | int | 否 | - | 按难度筛选（1=简单, 2=中等, 3=困难） |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=recipe` 使用） |
 | status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
 
 **响应 data 字段（分页），list 中每项:**
@@ -1260,6 +1278,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | tags | string | 标签，逗号分隔 |
 | status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
@@ -1295,6 +1315,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | tags | string | 标签，逗号分隔 |
 | status | int | 状态（1=已发布） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
@@ -1316,6 +1338,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | page_size | int | 否 | 20 | 每页条数（min=1，max=100） |
 | keyword | string | 否 | - | 模糊搜索书名/作者（title ILIKE / author ILIKE） |
 | reading_status | string | 否 | - | 按阅读状态筛选（want=想读 / reading=在读 / done=读完），留空或传 `all` 表示不过滤 |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=book` 使用） |
 | status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
 
 **响应 data 字段（分页），list 中每项:**
@@ -1330,6 +1353,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | reading_status | string | 阅读状态（want=想读，reading=在读，done=读完） |
 | status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
@@ -1364,6 +1389,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | finished_at | time | 读完时间（可为 null） |
 | status | int | 状态（1=已发布） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
@@ -1387,6 +1414,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | platform | string | 否 | - | 按平台模糊筛选（PC/PS5/Switch/Xbox/移动端等） |
 | genre | string | 否 | - | 按游戏类型模糊筛选（RPG/FPS/独立游戏等） |
 | play_status | string | 否 | - | 按游玩状态精确筛选：want=想玩 / playing=在玩 / played=玩过（传 all 时不过滤） |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=game` 使用） |
 | status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
 
 **响应 data 字段（分页），list 中每项:**
@@ -1403,6 +1431,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | rating | int | 评分（0-10 分，0=未评分） |
 | status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
@@ -1437,6 +1467,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | short_review | string | 短评 |
 | status | int | 状态（1=已发布） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
@@ -1444,18 +1476,13 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 ### 6.16 健身训练模块（公开）
 
-#### GET /api/v1/public/fitness
-
-获取已发布训练记录列表（仅返回 status=1）。
-
-**查询参数:**
-
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | page | int | 否 | 1 | 页码 |
 | page_size | int | 否 | 20 | 每页条数（最大 100） |
 | keyword | string | 否 | - | 模糊搜索标题 |
-| type | string | 否 | - | 训练类型筛选：strength=力量 / cardio=有氧 / stretch=拉伸；传 `all` 或留空查询全部 |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=fitness` 使用） |
+| type | string | 否 | - | 训练类型筛选（兼容保留，按 legacy 镜像值精确匹配）：strength=力量 / cardio=有氧 / stretch=拉伸；传 `all` 或留空查询全部 |
 | status | int | 否 | - | 状态筛选；公开接口强制覆盖为 1，传入其他值不生效 |
 
 **响应 data 字段（分页），list 中每项:**
@@ -1465,17 +1492,20 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | id | string | 训练记录 ID |
 | date | time | 训练日期 |
 | title | string | 训练标题 |
-| type | string | 训练类型（strength=力量 / cardio=有氧 / stretch=拉伸） |
+| type | string | 兼容镜像：通常等于分类 slug（strength=力量 / cardio=有氧 / stretch=拉伸） |
 | duration_min | int | 训练时长（分钟） |
 | calories | int | 消耗热量（千卡） |
 | status | int | 状态（公开接口固定 1=已发布；0=草稿不返回） |
 | sort_order | int | 排序 |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | created_at | time | 创建时间 |
 | updated_at | time | 更新时间 |
 
 > **排序规则**：`date DESC, created_at DESC`（按训练日期倒序，同日再按创建时间倒序）。
 > **status 强制**: logic 层强制覆盖为 1，仅返回已发布训练记录。
 > **字段裁剪**: 列表项为卡片结构，不含 `content`（动作清单 `[{name,sets,reps,note}]`）与 `notes`（备注）大字段；本模块未提供公开详情路由。模型无 `AfterFind` 钩子，所有字段原样返回，不涉及 URL 自动拼接。
+> **分类体系**：训练类型已迁入统一分类表（type=fitness，默认含 力量/有氧/拉伸）；`type` 字段为 legacy 兼容镜像（等于分类 slug），推荐使用 `category_id` 筛选与 `category_name` 展示。
 
 ---
 
@@ -1492,7 +1522,8 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 | page | int | 否 | 1 | 页码 |
 | page_size | int | 否 | 20 | 每页条数，max=100 |
 | keyword | string | 否 | - | 模糊搜索名称 |
-| category | string | 否 | - | 按分类精确筛选（全等匹配，非模糊），如 language/framework/tool/database；分类为管理端维护的自由文本，无固定枚举 |
+| category_id | string | 否 | - | 按分类筛选（配合 `/public/categories?type=tech_stack` 使用） |
+| category | string | 否 | - | 兼容筛选：按 legacy 镜像值精确匹配（通常等于分类 slug，如 language/framework/tool/database） |
 | level | int | 否 | - | 按熟练度筛选（1=了解, 2=熟悉, 3=熟练, 4=精通） |
 | status | int | 否 | - | 公开接口忽略该参数，强制覆盖为 1 |
 
@@ -1502,7 +1533,9 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 |------|------|------|
 | id | string | 技术栈条目 ID |
 | name | string | 技术名称 |
-| category | string | 分类（language/framework/tool/database 等） |
+| category | string | 兼容镜像：通常等于分类 slug（language/framework/tool/database 等） |
+| category_id | string | 分类 ID，无分类时为空串 `""` |
+| category_name | string | 分类名称，无分类时为空串 `""` |
 | icon | string | 图标 URL（`AfterFind` 自动拼接为绝对 URL，相对路径追加 `/files/` 前缀） |
 | level | int | 熟练度（1=了解, 2=熟悉, 3=熟练, 4=精通） |
 | description | string | 描述 |
@@ -1513,6 +1546,7 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 > **排序规则**：`sort_order ASC, created_at DESC`。
 > **status 强制**: logic 层强制覆盖为 1（查询参数中的 status 不生效），仅返回已发布技术栈条目。
+> **分类体系**：分类已迁入统一分类表（`type=tech_stack`，默认含 语言/框架/工具/数据库/其他），`category` 字段为 legacy 兼容镜像（等于分类 slug）；新接入建议使用 `category_id` 筛选与 `category_name` 展示。
 
 ---
 
@@ -1693,12 +1727,22 @@ description: novablog 全部公开接口完整参考文档，涵盖公开接口�
 
 ### 分类类型
 
-| 类型值 | 说明 |
-|--------|------|
-| article | 文章分类 |
-| travel | 旅行攻略分类 |
-| portfolio | 作品集分类 |
-| music | 音乐分类 |
+分类列表接口 `GET /api/v1/public/categories?type=` 支持的类型值：
+
+| 类型值 | 说明 | 对应模块列表筛选参数 |
+|--------|------|----------------------|
+| article | 文章分类 | `/public/articles?category_id=` |
+| travel | 旅行攻略分类 | `/public/travels?category_id=` |
+| portfolio | 作品集分类 | `/public/portfolios?category_id=` |
+| music | 音乐分类 | `/public/music/songs?category_id=` |
+| video | 视频作品分类 | `/public/videos?category_id=` |
+| book | 读书书架分类 | `/public/books?category_id=` |
+| recipe | 美食菜谱分类 | `/public/recipes?category_id=` |
+| game | 游戏库分类 | `/public/games?category_id=` |
+| project | 项目经历分类 | `/public/projects?category_id=` |
+| open_source | 开源作品分类 | `/public/open-sources?category_id=` |
+| tech_stack | 技术栈分类（默认：语言/框架/工具/数据库/其他） | `/public/tech-stacks?category_id=` |
+| fitness | 健身训练分类（默认含 力量/有氧/拉伸） | `/public/fitness?category_id=` |
 
 ### 安全配置项
 

@@ -79,6 +79,9 @@ func (l *OpenSourceLogic) Create(ctx context.Context, r *req.CreateOpenSourceReq
 		Status:    status,
 		SortOrder: sortOrder,
 	}
+	if r.CategoryID != nil {
+		w.CategoryID = r.CategoryID
+	}
 
 	if r.FetchRemote == nil || *r.FetchRemote {
 		if err := l.syncRemote(ctx, w, owner, repoName); err != nil {
@@ -96,7 +99,7 @@ func (l *OpenSourceLogic) Create(ctx context.Context, r *req.CreateOpenSourceReq
 
 // GetList 分页查询开源作品列表（不含 README）。
 func (l *OpenSourceLogic) GetList(ctx context.Context, r *req.OpenSourceListReq) (*res.OpenSourceListRes, error) {
-	list, total, err := l.workModel.GetList(ctx, r.Keyword, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.workModel.GetList(ctx, r.Keyword, r.CategoryID, r.Status, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询开源作品列表失败: %w", err)
 	}
@@ -157,6 +160,9 @@ func (l *OpenSourceLogic) Update(ctx context.Context, id string, r *req.UpdateOp
 	}
 	if r.SortOrder != nil {
 		w.SortOrder = *r.SortOrder
+	}
+	if r.CategoryID != nil {
+		w.CategoryID = r.CategoryID
 	}
 
 	owner, repoName, parseErr := githubartifact.ParseRepoURL(w.RepoURL)
@@ -295,6 +301,8 @@ func (l *OpenSourceLogic) toOpenSourceRes(w *model.OpenSourceWork) *res.OpenSour
 		Homepage:        w.Homepage,
 		Status:          w.Status,
 		SortOrder:       w.SortOrder,
+		CategoryID:      categoryIDOf(w.CategoryID),
+		CategoryName:    categoryNameOf(w.Category),
 		ReadmeUpdatedAt: w.ReadmeUpdatedAt,
 		ViewCount:       int64(w.ViewCount),
 		CreatedAt:       w.CreatedAt,
@@ -305,18 +313,20 @@ func (l *OpenSourceLogic) toOpenSourceRes(w *model.OpenSourceWork) *res.OpenSour
 // toOpenSourceCard 转换为开源作品列表卡片响应（不含 README）。
 func (l *OpenSourceLogic) toOpenSourceCard(w *model.OpenSourceWork) res.OpenSourceCardRes {
 	return res.OpenSourceCardRes{
-		ID:        w.ID,
-		Name:      w.Name,
-		RepoURL:   w.RepoURL,
-		Summary:   w.Summary,
-		Language:  w.Language,
-		Topics:    w.Topics,
-		Stars:     w.Stars,
-		Homepage:  w.Homepage,
-		Status:    w.Status,
-		SortOrder: w.SortOrder,
-		ViewCount: int64(w.ViewCount),
-		CreatedAt: w.CreatedAt,
-		UpdatedAt: w.UpdatedAt,
+		ID:           w.ID,
+		Name:         w.Name,
+		RepoURL:      w.RepoURL,
+		Summary:      w.Summary,
+		Language:     w.Language,
+		Topics:       w.Topics,
+		Stars:        w.Stars,
+		Homepage:     w.Homepage,
+		Status:       w.Status,
+		SortOrder:    w.SortOrder,
+		CategoryID:   categoryIDOf(w.CategoryID),
+		CategoryName: categoryNameOf(w.Category),
+		ViewCount:    int64(w.ViewCount),
+		CreatedAt:    w.CreatedAt,
+		UpdatedAt:    w.UpdatedAt,
 	}
 }

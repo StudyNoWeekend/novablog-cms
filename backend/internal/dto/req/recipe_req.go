@@ -11,6 +11,7 @@ type CreateRecipeReq struct {
 	Minutes     *int             `json:"minutes" binding:"omitempty,min=0"`
 	Servings    *int             `json:"servings" binding:"omitempty,min=1"`
 	Tags        string           `json:"tags" binding:"omitempty,max=500"` // 标签，逗号分隔
+	CategoryID  *string          `json:"category_id"`
 	Status      *int             `json:"status" binding:"omitempty,oneof=0 1"`
 	SortOrder   *int             `json:"sort_order"`
 }
@@ -26,6 +27,7 @@ type UpdateRecipeReq struct {
 	Minutes     *int             `json:"minutes" binding:"omitempty,min=0"`
 	Servings    *int             `json:"servings" binding:"omitempty,min=1"`
 	Tags        *string          `json:"tags" binding:"omitempty,max=500"`
+	CategoryID  *string          `json:"category_id"`
 	Status      *int             `json:"status" binding:"omitempty,oneof=0 1"`
 	SortOrder   *int             `json:"sort_order"`
 }
@@ -35,5 +37,6 @@ type RecipeListReq struct {
 	PageReq
 	Keyword    *string `form:"keyword" json:"keyword"`
 	Difficulty *int    `form:"difficulty" json:"difficulty"`
+	CategoryID *string `form:"category_id" json:"category_id"`
 	Status     *int    `form:"status" json:"status"`
 }

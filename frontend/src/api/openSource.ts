@@ -7,7 +7,7 @@ import type {
 } from '@/types/openSource'
 
 export const openSourceApi = {
-  getList(params?: { page?: number; page_size?: number; keyword?: string; status?: number }) {
+  getList(params?: { page?: number; page_size?: number; keyword?: string; category_id?: string; status?: number }) {
     return request.get<OpenSourceListRes>('/open-sources', { params })
   },
   getById(id: string) {

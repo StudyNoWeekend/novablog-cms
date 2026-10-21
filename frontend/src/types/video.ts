@@ -14,6 +14,8 @@ export interface VideoWork {
   description: string
   status: number
   sort_order: number
+  category_id: string
+  category_name: string
   platforms: VideoPlatformLink[]
   created_at: string
   updated_at: string
@@ -36,6 +38,7 @@ export interface CreateVideoReq {
   title: string
   cover_url?: string
   description?: string
+  category_id?: string
   status?: number
   platforms: PlatformLinkReq[]
 }
@@ -44,6 +47,7 @@ export interface UpdateVideoReq {
   title?: string
   cover_url?: string
   description?: string
+  category_id?: string
   status?: number
   platforms?: PlatformLinkReq[]
 }

@@ -1,7 +1,10 @@
 export interface Project {
   id: string
   title: string
+  /** 旧自由文本分类，仅兼容读取，新数据为空 */
   category: string
+  category_id: string
+  category_name: string
   role: string
   client: string
   cover_url: string
@@ -32,7 +35,7 @@ export interface ProjectListRes {
 
 export interface CreateProjectReq {
   title: string
-  category?: string
+  category_id?: string
   role?: string
   client?: string
   cover_url?: string
@@ -49,7 +52,7 @@ export interface CreateProjectReq {
 
 export interface UpdateProjectReq {
   title?: string
-  category?: string
+  category_id?: string
   role?: string
   client?: string
   cover_url?: string

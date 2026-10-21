@@ -37,6 +37,9 @@ func (l *VideoLogic) Create(ctx context.Context, r *req.CreateVideoReq) (*res.Vi
 	if r.Status != nil {
 		video.Status = *r.Status
 	}
+	if r.CategoryID != nil {
+		video.CategoryID = r.CategoryID
+	}
 
 	links := make([]model.VideoPlatformLink, 0, len(r.Platforms))
 	for _, p := range r.Platforms {
@@ -65,7 +68,7 @@ func (l *VideoLogic) Create(ctx context.Context, r *req.CreateVideoReq) (*res.Vi
 
 // GetList 分页查询视频作品列表，含每个视频的平台链接。
 func (l *VideoLogic) GetList(ctx context.Context, r *req.VideoListReq) (*res.VideoWorkListRes, error) {
-	list, total, err := l.videoModel.GetList(ctx, r.Keyword, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.videoModel.GetList(ctx, r.Keyword, r.Status, r.CategoryID, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询视频作品列表失败: %w", err)
 	}
@@ -152,6 +155,9 @@ func (l *VideoLogic) Update(ctx context.Context, id string, r *req.UpdateVideoRe
 	if r.Status != nil {
 		video.Status = *r.Status
 	}
+	if r.CategoryID != nil {
+		video.CategoryID = r.CategoryID
+	}
 
 	if r.Platforms != nil {
 		links := make([]model.VideoPlatformLink, 0, len(r.Platforms))
@@ -237,15 +243,17 @@ func (l *VideoLogic) toVideoWorkRes(v *model.VideoWork, links []model.VideoPlatf
 		})
 	}
 	return &res.VideoWorkRes{
-		ID:          v.ID,
-		Title:       v.Title,
-		CoverURL:    v.CoverURL,
-		Description: v.Description,
-		Status:      v.Status,
-		SortOrder:   v.SortOrder,
-		Platforms:   platforms,
-		ViewCount:   int64(v.ViewCount),
-		CreatedAt:   v.CreatedAt,
-		UpdatedAt:   v.UpdatedAt,
+		ID:           v.ID,
+		Title:        v.Title,
+		CoverURL:     v.CoverURL,
+		Description:  v.Description,
+		Status:       v.Status,
+		SortOrder:    v.SortOrder,
+		CategoryID:   categoryIDOf(v.CategoryID),
+		CategoryName: categoryNameOf(v.Category),
+		Platforms:    platforms,
+		ViewCount:    int64(v.ViewCount),
+		CreatedAt:    v.CreatedAt,
+		UpdatedAt:    v.UpdatedAt,
 	}
 }

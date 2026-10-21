@@ -22,6 +22,8 @@ type OpenSourceWork struct {
 	Status          int            `gorm:"type:int;default:0"`                          // 0=草稿, 1=已发布
 	SortOrder       int            `gorm:"column:sort_order;type:int;default:0"`
 	ViewCount       int            `gorm:"column:view_count;type:int;default:0"`
+	CategoryID      *string        `gorm:"type:uuid;column:category_id"` // 分类ID，关联 categories 表（type=open_source）
+	Category        *Category      `gorm:"foreignKey:CategoryID"`
 	ReadmeUpdatedAt *time.Time     `gorm:"column:readme_updated_at;type:timestamptz"` // README 最近拉取时间
 	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt       time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
@@ -51,22 +53,25 @@ func (m *OpenSourceWorkModel) Create(ctx context.Context, w *OpenSourceWork) err
 // GetByID 根据 ID 查询开源作品。
 func (m *OpenSourceWorkModel) GetByID(ctx context.Context, id string) (*OpenSourceWork, error) {
 	var w OpenSourceWork
-	err := m.db.WithContext(ctx).Where("id = ?", id).First(&w).Error
+	err := m.db.WithContext(ctx).Preload("Category").Where("id = ?", id).First(&w).Error
 	if err != nil {
 		return nil, err
 	}
 	return &w, nil
 }
 
-// GetList 分页查询开源作品列表，支持按 keyword 模糊搜索名称/简介、按 status 过滤。
+// GetList 分页查询开源作品列表，支持按 keyword 模糊搜索名称/简介、按分类过滤、按 status 过滤。
 // 列表查询统一不返回 readme 大字段，需要 README 时用 GetByID。
-func (m *OpenSourceWorkModel) GetList(ctx context.Context, keyword *string, status *int, page, pageSize int) ([]OpenSourceWork, int64, error) {
+func (m *OpenSourceWorkModel) GetList(ctx context.Context, keyword *string, categoryID *string, status *int, page, pageSize int) ([]OpenSourceWork, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&OpenSourceWork{}).Omit("readme")
 
 	if keyword != nil && *keyword != "" {
 		like := "%" + *keyword + "%"
 		query = query.Where("name ILIKE ? OR summary ILIKE ?", like, like)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("category_id = ?", *categoryID)
 	}
 	if status != nil {
 		query = query.Where("status = ?", *status)
@@ -82,6 +87,7 @@ func (m *OpenSourceWorkModel) GetList(ctx context.Context, keyword *string, stat
 		Order("sort_order ASC, stars DESC, created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
+		Preload("Category").
 		Find(&list).Error
 	if err != nil {
 		return nil, 0, err

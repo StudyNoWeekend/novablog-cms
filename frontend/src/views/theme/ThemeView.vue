@@ -475,7 +475,7 @@ async function handleUpdate(theme: InstalledTheme) {
 /** 用户主动关闭登录弹窗后的占位态（内存态，刷新页面后未登录仍会重新弹出） */
 const loginModalDismissed = ref(false)
 /** 官方站点注册页（去注册按钮跳转地址） */
-const OFFICIAL_REGISTER_URL = 'http://novablog.ditancafebar.cn/register'
+const OFFICIAL_REGISTER_URL = 'http://www.novablog.cn/register'
 const loginLoading = ref(false)
 const loginForm = reactive({
   email: '',

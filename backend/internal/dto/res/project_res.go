@@ -4,24 +4,26 @@ import "time"
 
 // ProjectRes 项目经历响应结构体。
 type ProjectRes struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Category    string    `json:"category"`
-	Role        string    `json:"role"`
-	Client      string    `json:"client"`
-	CoverURL    string    `json:"cover_url"`
-	Summary     string    `json:"summary"`
-	Description string    `json:"description"`
-	TechStack   string    `json:"tech_stack"`
-	StartDate   string    `json:"start_date"` // YYYY-MM，空表示未设置
-	EndDate     string    `json:"end_date"`   // YYYY-MM，空表示至今或未设置
-	ProjectURL  string    `json:"project_url"`
-	RepoURL     string    `json:"repo_url"`
-	Status      int       `json:"status"`
-	SortOrder   int       `json:"sort_order"`
-	ViewCount   int64     `json:"view_count"` // 浏览量
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Title        string    `json:"title"`
+	Category     string    `json:"category"` // 旧自由文本分类，仅保留兼容读取，新数据为空
+	CategoryID   string    `json:"category_id"`
+	CategoryName string    `json:"category_name"`
+	Role         string    `json:"role"`
+	Client       string    `json:"client"`
+	CoverURL     string    `json:"cover_url"`
+	Summary      string    `json:"summary"`
+	Description  string    `json:"description"`
+	TechStack    string    `json:"tech_stack"`
+	StartDate    string    `json:"start_date"` // YYYY-MM，空表示未设置
+	EndDate      string    `json:"end_date"`   // YYYY-MM，空表示至今或未设置
+	ProjectURL   string    `json:"project_url"`
+	RepoURL      string    `json:"repo_url"`
+	Status       int       `json:"status"`
+	SortOrder    int       `json:"sort_order"`
+	ViewCount    int64     `json:"view_count"` // 浏览量
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // ProjectListRes 项目经历列表响应结构体。

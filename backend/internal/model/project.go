@@ -10,25 +10,27 @@ import (
 // Project 项目经历模型，对应 projects 数据表。
 // 通用项目经历展示，覆盖摄影、视频剪辑、技术开发等任意行业。
 type Project struct {
-	ID          string         `gorm:"type:uuid;primaryKey"`
-	Title       string         `gorm:"type:varchar(255);not null"`
-	Category    string         `gorm:"type:varchar(100);default:''"` // 领域分类：摄影/视频剪辑/技术开发/设计等
-	Role        string         `gorm:"type:varchar(100);default:''"` // 担任角色
-	Client      string         `gorm:"type:varchar(255);default:''"` // 客户/所属组织
-	CoverURL    string         `gorm:"column:cover_url;type:varchar(1024)"`
-	Summary     string         `gorm:"type:varchar(500);default:''"` // 一句话简介
-	Description string         `gorm:"type:text"`
-	TechStack   string         `gorm:"type:varchar(500);default:''"` // 技能/工具标签，逗号分隔
-	StartDate   *time.Time     `gorm:"type:date"`                    // 开始时间（按月粒度，存当月 1 号）
-	EndDate     *time.Time     `gorm:"type:date"`                    // 结束时间，null 表示至今
-	ProjectURL  string         `gorm:"column:project_url;type:varchar(1024)"`
-	RepoURL     string         `gorm:"column:repo_url;type:varchar(1024)"`
-	Status      int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
-	SortOrder   int            `gorm:"column:sort_order;type:int;default:0"`
-	ViewCount   int            `gorm:"column:view_count;type:int;default:0"`
-	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
-	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
-	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	ID           string         `gorm:"type:uuid;primaryKey"`
+	Title        string         `gorm:"type:varchar(255);not null"`
+	Category     string         `gorm:"type:varchar(100);default:''"` // 领域分类：摄影/视频剪辑/技术开发/设计等
+	Role         string         `gorm:"type:varchar(100);default:''"` // 担任角色
+	Client       string         `gorm:"type:varchar(255);default:''"` // 客户/所属组织
+	CoverURL     string         `gorm:"column:cover_url;type:varchar(1024)"`
+	Summary      string         `gorm:"type:varchar(500);default:''"` // 一句话简介
+	Description  string         `gorm:"type:text"`
+	TechStack    string         `gorm:"type:varchar(500);default:''"` // 技能/工具标签，逗号分隔
+	StartDate    *time.Time     `gorm:"type:date"`                    // 开始时间（按月粒度，存当月 1 号）
+	EndDate      *time.Time     `gorm:"type:date"`                    // 结束时间，null 表示至今
+	ProjectURL   string         `gorm:"column:project_url;type:varchar(1024)"`
+	RepoURL      string         `gorm:"column:repo_url;type:varchar(1024)"`
+	Status       int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
+	SortOrder    int            `gorm:"column:sort_order;type:int;default:0"`
+	ViewCount    int            `gorm:"column:view_count;type:int;default:0"`
+	CategoryID   *string        `gorm:"type:uuid;column:category_id"` // 结构化分类ID（type=project），替代原自由文本 Category
+	CategoryInfo *Category      `gorm:"foreignKey:CategoryID"`
+	CreatedAt    time.Time      `gorm:"type:timestamptz;autoCreateTime"`
+	UpdatedAt    time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
 
 // TableName 指定数据表名称。
@@ -60,15 +62,16 @@ func (m *ProjectModel) Create(ctx context.Context, p *Project) error {
 // GetByID 根据 ID 查询项目经历。
 func (m *ProjectModel) GetByID(ctx context.Context, id string) (*Project, error) {
 	var p Project
-	err := m.db.WithContext(ctx).Where("id = ?", id).First(&p).Error
+	err := m.db.WithContext(ctx).Preload("CategoryInfo").Where("id = ?", id).First(&p).Error
 	if err != nil {
 		return nil, err
 	}
 	return &p, nil
 }
 
-// GetList 分页查询项目经历列表，支持按 keyword 模糊搜索标题/简介、按 category 过滤、按 status 过滤。
-func (m *ProjectModel) GetList(ctx context.Context, keyword, category *string, status *int, page, pageSize int) ([]Project, int64, error) {
+// GetList 分页查询项目经历列表，支持按 keyword 模糊搜索标题/简介、按旧自由文本 category 过滤（兼容）、
+// 按结构化分类 categoryID 过滤、按 status 过滤。
+func (m *ProjectModel) GetList(ctx context.Context, keyword, category, categoryID *string, status *int, page, pageSize int) ([]Project, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&Project{})
 
@@ -78,6 +81,9 @@ func (m *ProjectModel) GetList(ctx context.Context, keyword, category *string, s
 	}
 	if category != nil && *category != "" {
 		query = query.Where("category = ?", *category)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("category_id = ?", *categoryID)
 	}
 	if status != nil {
 		query = query.Where("status = ?", *status)
@@ -93,6 +99,7 @@ func (m *ProjectModel) GetList(ctx context.Context, keyword, category *string, s
 		Order("sort_order ASC, start_date DESC, created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
+		Preload("CategoryInfo").
 		Find(&list).Error
 	if err != nil {
 		return nil, 0, err

@@ -46,6 +46,9 @@ func (l *BookLogic) Create(ctx context.Context, r *req.CreateBookReq) (*res.Book
 	if r.SortOrder != nil {
 		m.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil {
+		m.CategoryID = r.CategoryID
+	}
 
 	if err := l.bookModel.Create(ctx, m); err != nil {
 		return nil, fmt.Errorf("创建书籍失败: %w", err)
@@ -55,7 +58,7 @@ func (l *BookLogic) Create(ctx context.Context, r *req.CreateBookReq) (*res.Book
 
 // GetList 分页查询书籍列表。
 func (l *BookLogic) GetList(ctx context.Context, r *req.BookListReq) (*res.BookListRes, error) {
-	list, total, err := l.bookModel.GetList(ctx, r.Keyword, r.ReadingStatus, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.bookModel.GetList(ctx, r.Keyword, r.ReadingStatus, r.CategoryID, r.Status, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询书籍列表失败: %w", err)
 	}
@@ -119,6 +122,9 @@ func (l *BookLogic) Update(ctx context.Context, id string, r *req.UpdateBookReq)
 	if r.SortOrder != nil {
 		m.SortOrder = *r.SortOrder
 	}
+	if r.CategoryID != nil {
+		m.CategoryID = r.CategoryID
+	}
 
 	if err := l.bookModel.Update(ctx, m); err != nil {
 		return nil, fmt.Errorf("更新书籍失败: %w", err)
@@ -167,6 +173,8 @@ func (l *BookLogic) toRes(m *model.Book) *res.BookRes {
 		FinishedAt:    m.FinishedAt,
 		Status:        m.Status,
 		SortOrder:     m.SortOrder,
+		CategoryID:    categoryIDOf(m.CategoryID),
+		CategoryName:  categoryNameOf(m.Category),
 		ViewCount:     int64(m.ViewCount),
 		CreatedAt:     m.CreatedAt,
 		UpdatedAt:     m.UpdatedAt,
@@ -184,6 +192,8 @@ func (l *BookLogic) toCard(m *model.Book) res.BookCardRes {
 		ReadingStatus: m.ReadingStatus,
 		Status:        m.Status,
 		SortOrder:     m.SortOrder,
+		CategoryID:    categoryIDOf(m.CategoryID),
+		CategoryName:  categoryNameOf(m.Category),
 		ViewCount:     int64(m.ViewCount),
 		CreatedAt:     m.CreatedAt,
 		UpdatedAt:     m.UpdatedAt,

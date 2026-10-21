@@ -4,16 +4,18 @@ import "time"
 
 // TechStackItemRes 技术栈条目响应结构体。
 type TechStackItemRes struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Category    string    `json:"category"`
-	Icon        string    `json:"icon"`
-	Level       int       `json:"level"`
-	Description string    `json:"description"`
-	Status      int       `json:"status"`
-	SortOrder   int       `json:"sort_order"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	Category     string    `json:"category"` // 兼容镜像：通常等于分类 slug
+	CategoryID   string    `json:"category_id"`
+	CategoryName string    `json:"category_name"`
+	Icon         string    `json:"icon"`
+	Level        int       `json:"level"`
+	Description  string    `json:"description"`
+	Status       int       `json:"status"`
+	SortOrder    int       `json:"sort_order"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // TechStackListRes 技术栈条目列表响应结构体。

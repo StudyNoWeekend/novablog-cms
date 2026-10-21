@@ -12,7 +12,7 @@ type FitnessRecord struct {
 	ID          string           `gorm:"type:uuid;primaryKey" json:"id"`
 	Date        time.Time        `gorm:"type:timestamptz;not null" json:"date"` // 训练日期
 	Title       string           `gorm:"type:varchar(255);not null" json:"title"`
-	Type        string           `gorm:"type:varchar(20);default:'strength'" json:"type"`            // strength=力量, cardio=有氧, stretch=拉伸
+	Type        string           `gorm:"type:varchar(20);default:'strength'" json:"type"`            // 兼容镜像：通常等于关联分类的 slug（strength=力量, cardio=有氧, stretch=拉伸）
 	DurationMin int              `gorm:"column:duration_min;type:int;default:0" json:"duration_min"` // 时长（分钟）
 	Calories    int              `gorm:"type:int;default:0" json:"calories"`                         // 消耗热量（千卡）
 	Content     []map[string]any `gorm:"type:jsonb;serializer:json" json:"content"`                  // 动作清单 [{name,sets,reps,note}]
@@ -20,6 +20,8 @@ type FitnessRecord struct {
 	Status      int              `gorm:"type:int;default:0" json:"status"` // 0=草稿, 1=已发布
 	SortOrder   int              `gorm:"column:sort_order;type:int;default:0" json:"sort_order"`
 	ViewCount   int              `gorm:"column:view_count;type:int;default:0" json:"view_count"`
+	CategoryID  *string          `gorm:"type:uuid;column:category_id" json:"category_id"`
+	Category    *Category        `gorm:"foreignKey:CategoryID" json:"-"`
 	CreatedAt   time.Time        `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time        `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"-"`
@@ -48,15 +50,15 @@ func (m *FitnessRecordModel) Create(ctx context.Context, r *FitnessRecord) error
 // GetByID 根据 ID 查询训练记录。
 func (m *FitnessRecordModel) GetByID(ctx context.Context, id string) (*FitnessRecord, error) {
 	var r FitnessRecord
-	err := m.db.WithContext(ctx).Where("id = ?", id).First(&r).Error
+	err := m.db.WithContext(ctx).Preload("Category").Where("id = ?", id).First(&r).Error
 	if err != nil {
 		return nil, err
 	}
 	return &r, nil
 }
 
-// GetList 分页查询训练记录列表，支持 keyword 模糊搜索标题、type 筛选、status 过滤，按训练日期倒序。
-func (m *FitnessRecordModel) GetList(ctx context.Context, keyword *string, recordType *string, status *int, page, pageSize int) ([]FitnessRecord, int64, error) {
+// GetList 分页查询训练记录列表，支持 keyword 模糊搜索标题、type 筛选（兼容镜像）、按分类过滤、status 过滤，按训练日期倒序。
+func (m *FitnessRecordModel) GetList(ctx context.Context, keyword *string, recordType *string, categoryID *string, status *int, page, pageSize int) ([]FitnessRecord, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&FitnessRecord{})
 
@@ -65,6 +67,9 @@ func (m *FitnessRecordModel) GetList(ctx context.Context, keyword *string, recor
 	}
 	if recordType != nil && *recordType != "" && *recordType != "all" {
 		query = query.Where("type = ?", *recordType)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("category_id = ?", *categoryID)
 	}
 	if status != nil {
 		query = query.Where("status = ?", *status)
@@ -80,6 +85,7 @@ func (m *FitnessRecordModel) GetList(ctx context.Context, keyword *string, recor
 		Order("date DESC, created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
+		Preload("Category").
 		Find(&list).Error
 	if err != nil {
 		return nil, 0, err

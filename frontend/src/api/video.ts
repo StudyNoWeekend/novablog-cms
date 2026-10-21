@@ -7,6 +7,7 @@ export const videoApi = {
     page_size?: number
     keyword?: string
     status?: number
+    category_id?: string
   }) {
     return request.get<VideoListRes>('/videos', { params })
   },

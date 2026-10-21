@@ -30,13 +30,19 @@ const communityPushTestDBName = "novablog_push_cms_test"
 type fakeCommunity struct {
 	server *httptest.Server
 
-	mu           sync.Mutex
-	lastUpsert   map[string]any
-	upsertCount  int
-	deleteCalled []string
-	nextID       uint
-	result       string // created | updated
-	failWith     *struct {
+	mu             sync.Mutex
+	lastUpsert     map[string]any
+	upsertCount    int
+	deleteCalled   []string
+	nextID         uint
+	result         string // created | updated
+	lastVerifyCode string
+	verifyCount    int
+	verifyFailWith *struct {
+		code int
+		body string
+	}
+	failWith *struct {
 		code int
 		body string
 	}
@@ -55,6 +61,27 @@ func newFakeCommunity() *fakeCommunity {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"code": 200, "message": "success",
 			"data": map[string]any{"username": "alice", "blog_url": "https://blog.example.com", "credential_name": "测试"},
+		})
+	})
+
+	mux.HandleFunc("/api/v1/verify/blog", func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		code, _ := body["verify_code"].(string)
+		fake.mu.Lock()
+		fake.lastVerifyCode = code
+		fake.verifyCount++
+		fail := fake.verifyFailWith
+		fake.verifyFailWith = nil
+		fake.mu.Unlock()
+		if fail != nil {
+			w.WriteHeader(fail.code)
+			_ = json.NewEncoder(w).Encode(map[string]any{"code": fail.code, "message": fail.body})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"code": 200, "message": "success",
+			"data": map[string]any{"verified": true, "username": "alice"},
 		})
 	})
 
@@ -122,6 +149,27 @@ func (f *fakeCommunity) setFail(code int, body string) {
 		code int
 		body string
 	}{code, body}
+}
+
+func (f *fakeCommunity) setVerifyFail(code int, body string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.verifyFailWith = &struct {
+		code int
+		body string
+	}{code, body}
+}
+
+func (f *fakeCommunity) getLastVerifyCode() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.lastVerifyCode
+}
+
+func (f *fakeCommunity) getVerifyCount() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.verifyCount
 }
 
 func (f *fakeCommunity) getLastUpsert() map[string]any {
@@ -489,6 +537,53 @@ func TestCommunityPushConfigRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, updated2.HasPushKey)
 	assert.Equal(t, "nbk_abcdef12", updated2.PushKeyPrefix)
+}
+
+func TestCommunityPushVerifyCode(t *testing.T) {
+	ctx, fake, _ := setupCommunityPushTest(t)
+	l := NewCommunityPushLogic()
+
+	t.Run("save with verify code submits to community", func(t *testing.T) {
+		result, err := l.UpdatePushConfig(ctx, &UpdatePushConfigRequest{
+			BaseURL:    fake.server.URL,
+			SiteURL:    "https://blog.example.com",
+			VerifyCode: "verify-code-123",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "verified", result.VerifyStatus)
+		assert.Contains(t, result.VerifyMessage, "alice")
+		assert.Equal(t, "verify-code-123", result.VerifyCode)
+		assert.Equal(t, "verify-code-123", fake.getLastVerifyCode())
+	})
+
+	t.Run("save without verify code skips submission", func(t *testing.T) {
+		count := fake.getVerifyCount()
+		result, err := l.UpdatePushConfig(ctx, &UpdatePushConfigRequest{
+			BaseURL: fake.server.URL,
+			SiteURL: "https://blog.example.com",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "skipped", result.VerifyStatus)
+		assert.Empty(t, result.VerifyMessage)
+		assert.Equal(t, count, fake.getVerifyCount())
+	})
+
+	t.Run("community rejection surfaces message but keeps saved code", func(t *testing.T) {
+		fake.setVerifyFail(400, "验证码无效，请在社区重新复制")
+		result, err := l.UpdatePushConfig(ctx, &UpdatePushConfigRequest{
+			BaseURL:    fake.server.URL,
+			SiteURL:    "https://blog.example.com",
+			VerifyCode: "bad-code",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "failed", result.VerifyStatus)
+		assert.Contains(t, result.VerifyMessage, "验证码无效")
+
+		// 验证码仍保存，修正后重新保存即可重试
+		config, err := l.GetPushConfig(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, "bad-code", config.VerifyCode)
+	})
 }
 
 // openRootPostgres 连接本地默认库（用于创建测试数据库）。

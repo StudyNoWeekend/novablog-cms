@@ -16,6 +16,8 @@ type VideoWork struct {
 	Status      int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
 	SortOrder   int            `gorm:"column:sort_order;type:int;default:0"`
 	ViewCount   int            `gorm:"column:view_count;type:int;default:0"`
+	CategoryID  *string        `gorm:"type:uuid;column:category_id"`
+	Category    *Category      `gorm:"foreignKey:CategoryID"`
 	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
@@ -50,15 +52,15 @@ func (m *VideoWorkModel) Create(ctx context.Context, video *VideoWork) error {
 // GetByID 根据 ID 查询视频作品。
 func (m *VideoWorkModel) GetByID(ctx context.Context, id string) (*VideoWork, error) {
 	var video VideoWork
-	err := m.db.WithContext(ctx).Where("id = ?", id).First(&video).Error
+	err := m.db.WithContext(ctx).Preload("Category").Where("id = ?", id).First(&video).Error
 	if err != nil {
 		return nil, err
 	}
 	return &video, nil
 }
 
-// GetList 分页查询视频作品列表，支持按 keyword 模糊搜索标题、按 status 过滤。
-func (m *VideoWorkModel) GetList(ctx context.Context, keyword *string, status *int, page, pageSize int) ([]VideoWork, int64, error) {
+// GetList 分页查询视频作品列表，支持按 keyword 模糊搜索标题、按 status 过滤、按分类过滤。
+func (m *VideoWorkModel) GetList(ctx context.Context, keyword *string, status *int, categoryID *string, page, pageSize int) ([]VideoWork, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&VideoWork{})
 
@@ -67,6 +69,9 @@ func (m *VideoWorkModel) GetList(ctx context.Context, keyword *string, status *i
 	}
 	if status != nil {
 		query = query.Where("status = ?", *status)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("category_id = ?", *categoryID)
 	}
 
 	if err := query.Count(&total).Error; err != nil {
@@ -79,6 +84,7 @@ func (m *VideoWorkModel) GetList(ctx context.Context, keyword *string, status *i
 		Order("sort_order ASC, created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
+		Preload("Category").
 		Find(&list).Error
 	if err != nil {
 		return nil, 0, err

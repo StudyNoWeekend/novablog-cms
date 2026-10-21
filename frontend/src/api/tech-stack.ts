@@ -2,7 +2,7 @@ import request from './request'
 import type { TechStackItem, TechStackListRes, CreateTechStackReq, UpdateTechStackReq } from '@/types/tech-stack'
 
 export const techStackApi = {
-  getList(params?: { page?: number; page_size?: number; keyword?: string; category?: string; level?: number; status?: number }) {
+  getList(params?: { page?: number; page_size?: number; keyword?: string; category_id?: string; category?: string; level?: number; status?: number }) {
     return request.get<TechStackListRes>('/tech-stacks', { params })
   },
   getById(id: string) {

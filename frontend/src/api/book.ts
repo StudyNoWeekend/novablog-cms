@@ -2,7 +2,7 @@ import request from './request'
 import type { Book, BookListRes, CreateBookReq, UpdateBookReq } from '@/types/book'
 
 export const bookApi = {
-  getList(params?: { page?: number; page_size?: number; keyword?: string; reading_status?: string; status?: number }) {
+  getList(params?: { page?: number; page_size?: number; keyword?: string; reading_status?: string; category_id?: string; status?: number }) {
     return request.get<BookListRes>('/books', { params })
   },
   getById(id: string) {

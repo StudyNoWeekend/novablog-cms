@@ -6,6 +6,8 @@ export const projectApi = {
     page?: number
     page_size?: number
     keyword?: string
+    category_id?: string
+    /** 旧自由文本分类筛选（兼容保留） */
     category?: string
     status?: number
   }) {

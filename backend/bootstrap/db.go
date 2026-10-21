@@ -62,6 +62,10 @@ func InitDB(cfg *DBConfig) (*gorm.DB, error) {
 		return nil, fmt.Errorf("自动迁移失败: %w", err)
 	}
 
+	// 4.5 分类数据幂等回填：项目经历/技术栈/健身的旧分类值播种为统一分类并回填 category_id
+	//（项目没有自动执行 migrations/*.sql 的机制，数据级迁移在此完成，详见 category_backfill.go）
+	backfillCategories(db)
+
 	// 5. 数据一致性回填（幂等）：用真实评论数校正 comment_count/review_count 计数
 	backfillCounters(db)
 

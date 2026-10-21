@@ -19,6 +19,8 @@ export interface OpenSourceWork {
   /** 0=草稿, 1=已发布 */
   status: number
   sort_order: number
+  category_id: string
+  category_name: string
   /** README 最近拉取时间，null 表示尚未拉取 */
   readme_updated_at?: string | null
   created_at: string
@@ -40,6 +42,7 @@ export interface CreateOpenSourceReq {
   language?: string
   topics?: string
   homepage?: string
+  category_id?: string
   status?: number
   sort_order?: number
   /** 是否拉取远端仓库元数据与 README（默认 true） */
@@ -53,6 +56,7 @@ export interface UpdateOpenSourceReq {
   language?: string
   topics?: string
   homepage?: string
+  category_id?: string
   status?: number
   sort_order?: number
 }

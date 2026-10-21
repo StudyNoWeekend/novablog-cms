@@ -9,18 +9,20 @@ import (
 
 // TechStackItem 技术栈条目模型，对应 tech_stack_items 数据表。
 type TechStackItem struct {
-	ID          string         `gorm:"type:uuid;primaryKey" json:"id"`
-	Name        string         `gorm:"type:varchar(100);not null" json:"name"`
-	Category    string         `gorm:"type:varchar(50);default:''" json:"category"` // language/framework/tool/database 等
-	Icon        string         `gorm:"type:varchar(500)" json:"icon"`               // 图标 URL
-	Level       int            `gorm:"type:int;default:1" json:"level"`             // 1=了解, 2=熟悉, 3=熟练, 4=精通
-	Description string         `gorm:"type:varchar(500)" json:"description"`
-	Status      int            `gorm:"type:int;default:0" json:"status"` // 0=草稿, 1=已发布
-	SortOrder   int            `gorm:"column:sort_order;type:int;default:0" json:"sort_order"`
-	ViewCount   int            `gorm:"column:view_count;type:int;default:0" json:"view_count"`
-	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	ID           string         `gorm:"type:uuid;primaryKey" json:"id"`
+	Name         string         `gorm:"type:varchar(100);not null" json:"name"`
+	Category     string         `gorm:"type:varchar(50);default:''" json:"category"` // 兼容镜像：通常等于关联分类的 slug（language/framework/tool/database 等）
+	Icon         string         `gorm:"type:varchar(500)" json:"icon"`               // 图标 URL
+	Level        int            `gorm:"type:int;default:1" json:"level"`             // 1=了解, 2=熟悉, 3=熟练, 4=精通
+	Description  string         `gorm:"type:varchar(500)" json:"description"`
+	Status       int            `gorm:"type:int;default:0" json:"status"` // 0=草稿, 1=已发布
+	SortOrder    int            `gorm:"column:sort_order;type:int;default:0" json:"sort_order"`
+	ViewCount    int            `gorm:"column:view_count;type:int;default:0" json:"view_count"`
+	CategoryID   *string        `gorm:"type:uuid;column:category_id" json:"category_id"`
+	CategoryInfo *Category      `gorm:"foreignKey:CategoryID" json:"-"`
+	CreatedAt    time.Time      `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
+	UpdatedAt    time.Time      `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 // TableName 指定数据表名称。
@@ -52,15 +54,16 @@ func (m *TechStackItemModel) Create(ctx context.Context, t *TechStackItem) error
 // GetByID 根据 ID 查询技术栈条目。
 func (m *TechStackItemModel) GetByID(ctx context.Context, id string) (*TechStackItem, error) {
 	var t TechStackItem
-	err := m.db.WithContext(ctx).Where("id = ?", id).First(&t).Error
+	err := m.db.WithContext(ctx).Preload("CategoryInfo").Where("id = ?", id).First(&t).Error
 	if err != nil {
 		return nil, err
 	}
 	return &t, nil
 }
 
-// GetList 分页查询技术栈条目列表，支持 keyword 模糊搜索名称、category/level 筛选、status 过滤。
-func (m *TechStackItemModel) GetList(ctx context.Context, keyword *string, category *string, level *int, status *int, page, pageSize int) ([]TechStackItem, int64, error) {
+// GetList 分页查询技术栈条目列表，支持 keyword 模糊搜索名称、category 筛选（兼容镜像）、
+// 按分类过滤、level 筛选、status 过滤。
+func (m *TechStackItemModel) GetList(ctx context.Context, keyword *string, category *string, categoryID *string, level *int, status *int, page, pageSize int) ([]TechStackItem, int64, error) {
 	var total int64
 	query := m.db.WithContext(ctx).Model(&TechStackItem{})
 
@@ -69,6 +72,9 @@ func (m *TechStackItemModel) GetList(ctx context.Context, keyword *string, categ
 	}
 	if category != nil && *category != "" {
 		query = query.Where("category = ?", *category)
+	}
+	if categoryID != nil && *categoryID != "" {
+		query = query.Where("category_id = ?", *categoryID)
 	}
 	if level != nil && *level > 0 {
 		query = query.Where("level = ?", *level)
@@ -87,6 +93,7 @@ func (m *TechStackItemModel) GetList(ctx context.Context, keyword *string, categ
 		Order("sort_order ASC, created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
+		Preload("CategoryInfo").
 		Find(&list).Error
 	if err != nil {
 		return nil, 0, err

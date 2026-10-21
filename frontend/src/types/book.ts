@@ -10,6 +10,8 @@ export interface Book {
   finished_at: string | null
   status: number
   sort_order: number
+  category_id: string
+  category_name: string
   created_at: string
   updated_at: string
 }
@@ -31,6 +33,7 @@ export interface CreateBookReq {
   review?: string
   started_at?: string | null
   finished_at?: string | null
+  category_id?: string
   status?: number
   sort_order?: number
 }

@@ -11,6 +11,7 @@ type CreateVideoReq struct {
 	Title       string            `json:"title" binding:"required,min=1,max=255"`
 	CoverURL    string            `json:"cover_url"`
 	Description string            `json:"description"`
+	CategoryID  *string           `json:"category_id"`
 	Status      *int              `json:"status"`
 	Platforms   []PlatformLinkReq `json:"platforms" binding:"required,min=1,dive"`
 }
@@ -20,6 +21,7 @@ type UpdateVideoReq struct {
 	Title       *string           `json:"title" binding:"omitempty,min=1,max=255"`
 	CoverURL    *string           `json:"cover_url"`
 	Description *string           `json:"description"`
+	CategoryID  *string           `json:"category_id"`
 	Status      *int              `json:"status"`
 	Platforms   []PlatformLinkReq `json:"platforms" binding:"omitempty,dive"`
 }
@@ -27,8 +29,9 @@ type UpdateVideoReq struct {
 // VideoListReq 视频作品列表查询请求参数。
 type VideoListReq struct {
 	PageReq
-	Keyword *string `form:"keyword" json:"keyword"`
-	Status  *int    `form:"status" json:"status"`
+	Keyword    *string `form:"keyword" json:"keyword"`
+	Status     *int    `form:"status" json:"status"`
+	CategoryID *string `form:"category_id" json:"category_id"`
 }
 
 // ParseVideoReq 视频元信息解析请求参数。

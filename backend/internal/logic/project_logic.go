@@ -50,7 +50,6 @@ func (l *ProjectLogic) Create(ctx context.Context, r *req.CreateProjectReq) (*re
 	p := &model.Project{
 		ID:          uuid.New().String(),
 		Title:       r.Title,
-		Category:    r.Category,
 		Role:        r.Role,
 		Client:      r.Client,
 		CoverURL:    r.CoverURL,
@@ -63,6 +62,9 @@ func (l *ProjectLogic) Create(ctx context.Context, r *req.CreateProjectReq) (*re
 		RepoURL:     r.RepoURL,
 		Status:      status,
 		SortOrder:   sortOrder,
+	}
+	if r.CategoryID != nil {
+		p.CategoryID = r.CategoryID
 	}
 	if err := validateProjectRange(p); err != nil {
 		return nil, err
@@ -77,7 +79,7 @@ func (l *ProjectLogic) Create(ctx context.Context, r *req.CreateProjectReq) (*re
 
 // GetList 分页查询项目经历列表。
 func (l *ProjectLogic) GetList(ctx context.Context, r *req.ProjectListReq) (*res.ProjectListRes, error) {
-	list, total, err := l.projectModel.GetList(ctx, r.Keyword, r.Category, r.Status, r.GetPage(), r.GetPageSize())
+	list, total, err := l.projectModel.GetList(ctx, r.Keyword, r.Category, r.CategoryID, r.Status, r.GetPage(), r.GetPageSize())
 	if err != nil {
 		return nil, fmt.Errorf("查询项目经历列表失败: %w", err)
 	}
@@ -116,8 +118,8 @@ func (l *ProjectLogic) Update(ctx context.Context, id string, r *req.UpdateProje
 	if r.Title != nil {
 		p.Title = *r.Title
 	}
-	if r.Category != nil {
-		p.Category = *r.Category
+	if r.CategoryID != nil {
+		p.CategoryID = r.CategoryID
 	}
 	if r.Role != nil {
 		p.Role = *r.Role
@@ -210,24 +212,26 @@ func (l *ProjectLogic) GetPublicDetail(ctx context.Context, id string) (*res.Pro
 // toProjectRes 转换为项目经历响应。
 func (l *ProjectLogic) toProjectRes(p *model.Project) *res.ProjectRes {
 	return &res.ProjectRes{
-		ID:          p.ID,
-		Title:       p.Title,
-		Category:    p.Category,
-		Role:        p.Role,
-		Client:      p.Client,
-		CoverURL:    p.CoverURL,
-		Summary:     p.Summary,
-		Description: p.Description,
-		TechStack:   p.TechStack,
-		StartDate:   formatMonthPtr(p.StartDate),
-		EndDate:     formatMonthPtr(p.EndDate),
-		ProjectURL:  p.ProjectURL,
-		RepoURL:     p.RepoURL,
-		Status:      p.Status,
-		SortOrder:   p.SortOrder,
-		ViewCount:   int64(p.ViewCount),
-		CreatedAt:   p.CreatedAt,
-		UpdatedAt:   p.UpdatedAt,
+		ID:           p.ID,
+		Title:        p.Title,
+		Category:     p.Category,
+		CategoryID:   categoryIDOf(p.CategoryID),
+		CategoryName: categoryNameOf(p.CategoryInfo),
+		Role:         p.Role,
+		Client:       p.Client,
+		CoverURL:     p.CoverURL,
+		Summary:      p.Summary,
+		Description:  p.Description,
+		TechStack:    p.TechStack,
+		StartDate:    formatMonthPtr(p.StartDate),
+		EndDate:      formatMonthPtr(p.EndDate),
+		ProjectURL:   p.ProjectURL,
+		RepoURL:      p.RepoURL,
+		Status:       p.Status,
+		SortOrder:    p.SortOrder,
+		ViewCount:    int64(p.ViewCount),
+		CreatedAt:    p.CreatedAt,
+		UpdatedAt:    p.UpdatedAt,
 	}
 }
 

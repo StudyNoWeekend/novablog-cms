@@ -2,7 +2,7 @@ import request from './request'
 import type { FitnessRecord, FitnessListRes, CreateFitnessReq, UpdateFitnessReq } from '@/types/fitness'
 
 export const fitnessApi = {
-  getList(params?: { page?: number; page_size?: number; keyword?: string; type?: string; status?: number }) {
+  getList(params?: { page?: number; page_size?: number; keyword?: string; category_id?: string; type?: string; status?: number }) {
     return request.get<FitnessListRes>('/fitness', { params })
   },
   getById(id: string) {
