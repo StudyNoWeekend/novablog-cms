@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">个人设备</h1>
+      <h1 class="page-title">{{ t('menu.equipment.list') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 新建设备
+        <PlusOutlined /> {{ t('equipment.actions.create') }}
       </a-button>
     </div>
 
@@ -11,7 +11,7 @@
       <div class="equipment-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索设备名称..."
+          :placeholder="t('equipment.list.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
@@ -20,7 +20,7 @@
       <a-spin :spinning="loading">
         <a-empty
           v-if="!loading && list.length === 0"
-          description="还没有个人设备，开始添加吧"
+          :description="t('equipment.list.empty')"
           style="margin-top: 48px"
         />
         <div v-else class="equipment-grid">
@@ -40,21 +40,21 @@
               <div class="equipment-title" :title="item.name">{{ item.name }}</div>
               <div class="equipment-brand">
                 <span class="brand-badge" :class="{ 'no-brand': !item.brand }">
-                  {{ item.brand || '未设置品牌' }}
+                  {{ item.brand || t('equipment.list.noBrand') }}
                 </span>
               </div>
               <div class="equipment-desc" :title="item.description">
-                {{ item.description || '暂无介绍' }}
+                {{ item.description || t('equipment.list.noDescription') }}
               </div>
               <div class="equipment-meta">
                 <span class="meta-item">{{ formatDateTime(item.created_at) }}</span>
               </div>
               <div class="equipment-actions">
                 <a-button type="link" size="small" @click="handleEdit(item)">
-                  <EditOutlined /> 编辑
+                  <EditOutlined /> {{ t('common.actions.edit') }}
                 </a-button>
                 <a-button type="link" size="small" danger @click="handleDelete(item)">
-                  <DeleteOutlined /> 删除
+                  <DeleteOutlined /> {{ t('common.actions.delete') }}
                 </a-button>
               </div>
             </div>
@@ -69,7 +69,7 @@
           :total="total"
           :page-size-options="[12, 24, 48]"
           show-size-changer
-          :show-total="(t: number) => `共 ${t} 个设备`"
+          :show-total="(count: number) => t('equipment.list.total', { total: count })"
           @change="handlePageChange"
           @show-size-change="handlePageChange"
         />
@@ -79,48 +79,48 @@
     <!-- 新建/编辑设备弹窗 -->
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '新建设备' : '编辑设备'"
+      :title="modalMode === 'create' ? t('equipment.actions.create') : t('equipment.actions.edit')"
       :confirm-loading="modalLoading"
       width="640px"
       @ok="handleSubmit"
     >
       <a-form layout="vertical">
-        <a-form-item label="名称" required>
+        <a-form-item :label="t('common.field.name')" required>
           <a-input
             v-model:value="form.name"
-            placeholder="请输入设备名称"
+            :placeholder="t('equipment.form.namePlaceholder')"
             :maxlength="100"
             show-count
           />
         </a-form-item>
-        <a-form-item label="图片">
+        <a-form-item :label="t('common.field.image')">
           <div class="image-picker">
             <div v-if="form.image_url" class="image-preview">
               <img
                 :src="getThumbUrl(form.image_url, 400)"
-                alt="设备图片"
+                :alt="t('equipment.form.imageAlt')"
                 referrerpolicy="no-referrer"
               />
               <a-button size="small" @click="mediaPickerVisible = true">
-                <PictureOutlined /> 更换图片
+                <PictureOutlined /> {{ t('equipment.form.changeImage') }}
               </a-button>
             </div>
             <a-button v-else @click="mediaPickerVisible = true">
-              <PictureOutlined /> 选择图片
+              <PictureOutlined /> {{ t('equipment.form.selectImage') }}
             </a-button>
           </div>
         </a-form-item>
-        <a-form-item label="品牌">
+        <a-form-item :label="t('equipment.form.brand')">
           <a-input
             v-model:value="form.brand"
-            placeholder="请输入品牌（可选）"
+            :placeholder="t('equipment.form.brandPlaceholder')"
             :maxlength="100"
           />
         </a-form-item>
-        <a-form-item label="描述">
+        <a-form-item :label="t('common.field.description')">
           <a-textarea
             v-model:value="form.description"
-            placeholder="请输入设备描述（可选）"
+            :placeholder="t('equipment.form.descriptionPlaceholder')"
             :rows="3"
             :maxlength="500"
             show-count
@@ -136,6 +136,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import {
   PlusOutlined,
   EditOutlined,
@@ -149,6 +150,9 @@ import { getThumbUrl } from '@/utils/image'
 import MediaPicker from '@/components/media/MediaPicker.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
+import { formatDateTime } from '@/utils/datetime'
+
+const { t } = useI18n()
 
 const keyword = ref('')
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
@@ -237,7 +241,7 @@ function handleMediaSelected(media: { url: string }) {
 
 async function handleSubmit() {
   if (!form.name.trim()) {
-    message.warning('请输入设备名称')
+    message.warning(t('equipment.message.nameRequired'))
     return
   }
   modalLoading.value = true
@@ -249,7 +253,7 @@ async function handleSubmit() {
         brand: form.brand.trim() || undefined,
         description: form.description.trim() || undefined,
       })
-      message.success('创建成功')
+      message.success(t('common.message.createSuccess'))
     } else {
       await equipmentApi.update(editingId.value, {
         name: form.name.trim(),
@@ -257,7 +261,7 @@ async function handleSubmit() {
         brand: form.brand.trim() || undefined,
         description: form.description.trim() || undefined,
       })
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -270,15 +274,15 @@ async function handleSubmit() {
 
 function handleDelete(item: Equipment) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${item.name}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('equipment.message.deleteTitle'),
+    content: t('equipment.message.deleteConfirm', { name: item.name }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await equipmentApi.remove(item.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }
@@ -288,13 +292,6 @@ function handleDelete(item: Equipment) {
       }
     },
   })
-}
-
-function formatDateTime(time?: string): string {
-  if (!time) return '-'
-  const d = new Date(time)
-  if (Number.isNaN(d.getTime())) return time
-  return d.toLocaleString('zh-CN')
 }
 </script>
 

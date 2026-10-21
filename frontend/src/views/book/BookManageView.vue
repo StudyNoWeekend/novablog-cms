@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">读书书架</h1>
+      <h1 class="page-title">{{ t('menu.book.list') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 添加书籍
+        <PlusOutlined /> {{ t('book.actions.create') }}
       </a-button>
     </div>
 
@@ -14,14 +14,14 @@
       <div class="toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索书名/作者..."
+          :placeholder="t('book.list.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
         <a-select v-model:value="readingStatusFilter" style="width: 140px" allow-clear>
-          <a-select-option value="want">想读</a-select-option>
-          <a-select-option value="reading">在读</a-select-option>
-          <a-select-option value="done">读完</a-select-option>
+          <a-select-option value="want">{{ t('book.readingStatus.want') }}</a-select-option>
+          <a-select-option value="reading">{{ t('book.readingStatus.reading') }}</a-select-option>
+          <a-select-option value="done">{{ t('book.readingStatus.done') }}</a-select-option>
         </a-select>
       </div>
 
@@ -41,7 +41,7 @@
               <div>
                 <div class="title-text">{{ record.title }}</div>
                 <div class="sub-text">
-                  {{ [record.author, record.category_name].filter(Boolean).join(' · ') || '未知作者' }}
+                  {{ [record.author, record.category_name].filter(Boolean).join(' · ') || t('book.list.unknownAuthor') }}
                 </div>
               </div>
             </div>
@@ -54,15 +54,15 @@
           </template>
           <template v-else-if="column.key === 'status'">
             <a-tag :color="record.status === 1 ? 'success' : 'default'">
-              {{ record.status === 1 ? '已发布' : '草稿' }}
+              {{ record.status === 1 ? t('book.status.published') : t('book.status.draft') }}
             </a-tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-button type="link" size="small" @click="toggleStatus(record)">
-              {{ record.status === 1 ? '下架' : '发布' }}
+              {{ record.status === 1 ? t('common.actions.offline') : t('common.actions.publish') }}
             </a-button>
-            <a-button type="link" size="small" @click="handleEdit(record)">编辑</a-button>
-            <a-button type="link" size="small" danger @click="handleDelete(record)">删除</a-button>
+            <a-button type="link" size="small" @click="handleEdit(record)">{{ t('common.actions.edit') }}</a-button>
+            <a-button type="link" size="small" danger @click="handleDelete(record)">{{ t('common.actions.delete') }}</a-button>
           </template>
         </template>
       </a-table>
@@ -70,60 +70,60 @@
 
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '添加书籍' : '编辑书籍'"
+      :title="modalMode === 'create' ? t('book.actions.create') : t('book.actions.edit')"
       :confirm-loading="modalLoading"
       width="640px"
       @ok="handleSubmit"
     >
       <a-form layout="vertical">
-        <a-form-item label="书名" required>
-          <a-input v-model:value="form.title" placeholder="请输入书名" :maxlength="255" />
+        <a-form-item :label="t('book.form.title')" required>
+          <a-input v-model:value="form.title" :placeholder="t('book.form.titlePlaceholder')" :maxlength="255" />
         </a-form-item>
         <div class="form-row">
-          <a-form-item label="作者">
-            <a-input v-model:value="form.author" placeholder="请输入作者" :maxlength="255" />
+          <a-form-item :label="t('book.form.author')">
+            <a-input v-model:value="form.author" :placeholder="t('book.form.authorPlaceholder')" :maxlength="255" />
           </a-form-item>
-          <a-form-item label="阅读状态">
+          <a-form-item :label="t('book.form.readingStatus')">
             <a-select v-model:value="form.reading_status">
-              <a-select-option value="want">想读</a-select-option>
-              <a-select-option value="reading">在读</a-select-option>
-              <a-select-option value="done">读完</a-select-option>
+            <a-select-option value="want">{{ t('book.readingStatus.want') }}</a-select-option>
+            <a-select-option value="reading">{{ t('book.readingStatus.reading') }}</a-select-option>
+            <a-select-option value="done">{{ t('book.readingStatus.done') }}</a-select-option>
             </a-select>
           </a-form-item>
-          <a-form-item label="评分">
+          <a-form-item :label="t('book.form.rating')">
             <a-rate v-model:value="form.rating" :count="5" />
           </a-form-item>
         </div>
         <div class="form-row">
-          <a-form-item label="分类">
-            <CategorySelect v-model="form.category_id" type="book" placeholder="选择分类（可选）" />
+          <a-form-item :label="t('common.field.category')">
+            <CategorySelect v-model="form.category_id" type="book" :placeholder="t('book.form.categoryPlaceholder')" />
           </a-form-item>
         </div>
-        <a-form-item label="封面图">
+        <a-form-item :label="t('book.form.cover')">
           <MediaPicker v-model:visible="mediaPickerVisible" module="book" @selected="handleMediaSelected" />
-          <ImageField v-model="form.cover" type="book" with-preset :search-keyword="form.title" placeholder="或直接粘贴封面地址">
+          <ImageField v-model="form.cover" type="book" with-preset :search-keyword="form.title" :placeholder="t('book.form.coverUrlPlaceholder')">
             <template #extra>
               <a-button size="small" @click="mediaPickerVisible = true">
-                <PictureOutlined /> 媒体库
+                <PictureOutlined /> {{ t('book.form.mediaLibrary') }}
               </a-button>
             </template>
           </ImageField>
         </a-form-item>
         <div class="form-row">
-          <a-form-item label="开始阅读">
+          <a-form-item :label="t('book.form.startedAt')">
             <a-date-picker v-model:value="startedAt" style="width: 100%" />
           </a-form-item>
-          <a-form-item label="读完">
+          <a-form-item :label="t('book.form.finishedAt')">
             <a-date-picker v-model:value="finishedAt" style="width: 100%" />
           </a-form-item>
         </div>
-        <a-form-item label="书评">
-          <a-textarea v-model:value="form.review" placeholder="写点什么（Markdown）" :rows="5" />
+        <a-form-item :label="t('book.form.review')">
+          <a-textarea v-model:value="form.review" :placeholder="t('book.form.reviewPlaceholder')" :rows="5" />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.field.status')">
           <a-radio-group v-model:value="form.status">
-            <a-radio :value="0">草稿</a-radio>
-            <a-radio :value="1">发布</a-radio>
+            <a-radio :value="0">{{ t('book.status.draft') }}</a-radio>
+            <a-radio :value="1">{{ t('common.actions.publish') }}</a-radio>
           </a-radio-group>
         </a-form-item>
       </a-form>
@@ -134,6 +134,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined, PictureOutlined, ReadOutlined } from '@ant-design/icons-vue'
 import dayjs, { type Dayjs } from 'dayjs'
 import { bookApi } from '@/api/book'
@@ -144,6 +145,8 @@ import CategoryBar from '@/components/common/CategoryBar.vue'
 import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
+
+const { t } = useI18n()
 
 const keyword = ref('')
 const readingStatusFilter = ref<string | undefined>(undefined)
@@ -173,21 +176,21 @@ const form = reactive({
   status: 0,
 })
 
-const columns = [
-  { key: 'title', title: '书籍', ellipsis: true },
-  { key: 'rating', title: '评分', width: 160 },
-  { key: 'reading_status', title: '状态', width: 90 },
-  { key: 'status', title: '发布', width: 90 },
-  { key: 'updated_at', title: '更新时间', width: 170 },
-  { key: 'action', title: '操作', width: 200 },
-]
+const columns = computed(() => [
+  { key: 'title', title: t('book.columns.book'), ellipsis: true },
+  { key: 'rating', title: t('book.columns.rating'), width: 160 },
+  { key: 'reading_status', title: t('common.field.status'), width: 90 },
+  { key: 'status', title: t('book.columns.publish'), width: 90 },
+  { key: 'updated_at', title: t('common.field.updateTime'), width: 170 },
+  { key: 'action', title: t('common.table.actions'), width: 200 },
+])
 
 const paginationConfig = computed(() => ({
   current: page.value,
   pageSize: pageSize.value,
   total: total.value,
   showSizeChanger: true,
-  showTotal: (t: number) => `共 ${t} 本`,
+  showTotal: (count: number) => t('book.list.total', { total: count }),
 }))
 
 watch(keyword, setDebounce)
@@ -231,8 +234,15 @@ function handleTableChange(p: { current?: number; pageSize?: number }) {
   fetchList()
 }
 
+const READING_STATUS_LABEL_KEYS: Record<string, string> = {
+  want: 'book.readingStatus.want',
+  reading: 'book.readingStatus.reading',
+  done: 'book.readingStatus.done',
+}
+
 function statusLabel(s: string): string {
-  return { want: '想读', reading: '在读', done: '读完' }[s] || s
+  const key = READING_STATUS_LABEL_KEYS[s]
+  return key ? t(key) : s
 }
 
 function statusColor(s: string): string {
@@ -297,17 +307,17 @@ function buildPayload() {
 
 async function handleSubmit() {
   if (!form.title.trim()) {
-    message.warning('请输入书名')
+    message.warning(t('book.message.titleRequired'))
     return
   }
   modalLoading.value = true
   try {
     if (modalMode.value === 'create') {
       await bookApi.create(buildPayload())
-      message.success('创建成功')
+      message.success(t('common.message.createSuccess'))
     } else {
       await bookApi.update(editingId.value, buildPayload())
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -321,7 +331,7 @@ async function handleSubmit() {
 async function toggleStatus(record: Book) {
   try {
     await bookApi.update(record.id, { status: record.status === 1 ? 0 : 1 })
-    message.success(record.status === 1 ? '已下架' : '已发布')
+    message.success(record.status === 1 ? t('book.status.unpublished') : t('book.status.published'))
     fetchList()
   } catch {
     // 错误由拦截器处理
@@ -330,15 +340,15 @@ async function toggleStatus(record: Book) {
 
 function handleDelete(record: Book) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${record.title}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('book.message.deleteTitle'),
+    content: t('book.message.deleteConfirm', { name: record.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await bookApi.remove(record.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }

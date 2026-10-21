@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "トレーニングを記録",
+    "edit": "トレーニングを編集"
+  },
+  "status": {
+    "published": "公開済み",
+    "draft": "下書き",
+    "offline": "非公開"
+  },
+  "type": {
+    "strength": "筋トレ",
+    "cardio": "カーディオ",
+    "stretch": "ストレッチ"
+  },
+  "columns": {
+    "title": "トレーニング",
+    "duration": "時間",
+    "calories": "カロリー",
+    "status": "公開"
+  },
+  "unit": {
+    "minutes": "分",
+    "kcal": "kcal"
+  },
+  "list": {
+    "searchPlaceholder": "トレーニングを検索..."
+  },
+  "form": {
+    "date": "トレーニング日",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "titlePlaceholder": "例：ベンチプレス＋ローイングデー",
+    "duration": "時間（分）",
+    "calories": "カロリー（kcal）",
+    "exerciseList": "種目リスト",
+    "exerciseNamePlaceholder": "種目（例：ベンチプレス）",
+    "setsPlaceholder": "セット数（例：4）",
+    "repsPlaceholder": "回数（例：8-12）",
+    "addExercise": "種目を追加",
+    "notesPlaceholder": "感想や重量の記録など"
+  },
+  "message": {
+    "titleRequired": "トレーニングタイトルを入力してください",
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

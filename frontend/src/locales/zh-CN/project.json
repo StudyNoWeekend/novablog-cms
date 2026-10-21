@@ -1,0 +1,57 @@
+{
+  "list": {
+    "title": "项目经历",
+    "create": "新建项目",
+    "edit": "编辑项目",
+    "searchPlaceholder": "搜索项目名称/简介...",
+    "allStatus": "全部状态",
+    "empty": "还没有项目经历，开始添加吧",
+    "uncategorized": "未分类",
+    "noSummary": "暂无简介",
+    "projectLinkTitle": "项目/作品链接",
+    "repoTitle": "代码仓库",
+    "total": "共 {total} 个项目"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已发布"
+  },
+  "form": {
+    "titleLabel": "项目名称",
+    "titlePlaceholder": "请输入项目名称",
+    "titleRequired": "请输入项目名称",
+    "categoryPlaceholder": "选择分类（可选）",
+    "roleLabel": "担任角色",
+    "rolePlaceholder": "如：摄影师 / 剪辑师 / 全栈开发",
+    "clientLabel": "客户 / 所属组织",
+    "clientPlaceholder": "请输入客户或所属组织（可选）",
+    "coverLabel": "封面图",
+    "coverAlt": "项目封面",
+    "changeCover": "更换封面",
+    "selectCover": "选择封面",
+    "summaryLabel": "一句话简介",
+    "summaryPlaceholder": "用一句话介绍这个项目（列表卡片展示用）",
+    "descLabel": "详细描述",
+    "descPlaceholder": "项目背景、职责、成果亮点等（可选）",
+    "techLabel": "技能 / 工具标签",
+    "techPlaceholder": "输入后回车添加，如 Go、Vue、Lightroom、Premiere",
+    "startDateLabel": "开始时间",
+    "monthPlaceholder": "选择月份",
+    "endDateLabel": "结束时间",
+    "endDatePlaceholder": "留空表示至今",
+    "projectUrlLabel": "项目 / 作品链接",
+    "urlPlaceholder": "https://（可选）",
+    "repoUrlLabel": "代码仓库链接",
+    "repoUrlPlaceholder": "https://github.com/...（可选）",
+    "sortWeight": "排序权重"
+  },
+  "meta": {
+    "timeTbd": "时间待定",
+    "present": "至今"
+  },
+  "message": {
+    "dateRangeInvalid": "开始时间不能晚于结束时间",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

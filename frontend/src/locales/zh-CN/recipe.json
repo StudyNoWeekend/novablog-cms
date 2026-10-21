@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "create": "新建菜谱",
+    "edit": "编辑菜谱"
+  },
+  "status": {
+    "published": "已发布",
+    "draft": "草稿",
+    "unpublished": "已下架"
+  },
+  "difficulty": {
+    "easy": "简单",
+    "medium": "中等",
+    "hard": "困难"
+  },
+  "columns": {
+    "recipe": "菜谱",
+    "difficulty": "难度",
+    "minutes": "耗时(分)",
+    "publish": "发布"
+  },
+  "list": {
+    "searchPlaceholder": "搜索菜谱...",
+    "total": "共 {total} 篇"
+  },
+  "form": {
+    "title": "菜谱名称",
+    "titlePlaceholder": "请输入菜谱名称",
+    "categoryPlaceholder": "选择分类（可选）",
+    "cover": "封面图",
+    "coverUrlPlaceholder": "或直接粘贴封面地址",
+    "mediaLibrary": "媒体库",
+    "summary": "简介",
+    "summaryPlaceholder": "一句话介绍这道菜",
+    "difficulty": "难度",
+    "minutes": "耗时（分钟）",
+    "servings": "份量（人份）",
+    "tags": "标签（逗号分隔）",
+    "tagsPlaceholder": "如：家常菜,下饭菜",
+    "ingredients": "食材清单",
+    "ingredientNamePlaceholder": "食材名，如：番茄",
+    "ingredientAmountPlaceholder": "用量，如：2个",
+    "addIngredient": "添加食材",
+    "steps": "烹饪步骤",
+    "stepPlaceholder": "这一步做什么",
+    "addStep": "添加步骤"
+  },
+  "message": {
+    "titleRequired": "请输入菜谱名称",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

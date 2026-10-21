@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "create": "ゲームを追加",
+    "edit": "ゲームを編集"
+  },
+  "status": {
+    "published": "公開済み",
+    "draft": "下書き",
+    "unpublished": "公開停止"
+  },
+  "playStatus": {
+    "want": "やりたい",
+    "playing": "プレイ中",
+    "played": "プレイ済み"
+  },
+  "columns": {
+    "game": "ゲーム",
+    "playHours": "プレイ時間",
+    "rating": "評価",
+    "publish": "公開"
+  },
+  "list": {
+    "searchPlaceholder": "ゲームを検索...",
+    "total": "全 {total} タイトル"
+  },
+  "form": {
+    "title": "ゲーム名",
+    "titlePlaceholder": "ゲーム名を入力してください",
+    "platform": "プラットフォーム",
+    "platformPlaceholder": "例：PC / PS5 / Switch",
+    "genre": "ジャンル",
+    "genrePlaceholder": "例：RPG / FPS",
+    "playStatus": "プレイ状況",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "playHours": "プレイ時間（時間）",
+    "rating": "評価（0-10）",
+    "cover": "カバー画像",
+    "coverUrlPlaceholder": "またはカバー画像の URL を直接貼り付け",
+    "mediaLibrary": "メディアライブラリ",
+    "shortReview": "レビュー",
+    "shortReviewPlaceholder": "ひとことレビュー"
+  },
+  "message": {
+    "titleRequired": "ゲーム名を入力してください",
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

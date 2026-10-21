@@ -1,0 +1,27 @@
+{
+  "actions": {
+    "create": "デバイスを追加",
+    "edit": "デバイスを編集"
+  },
+  "list": {
+    "searchPlaceholder": "デバイス名を検索...",
+    "empty": "まだ個人デバイスがありません。追加しましょう",
+    "noBrand": "ブランド未設定",
+    "noDescription": "説明なし",
+    "total": "合計 {total} 件のデバイス"
+  },
+  "form": {
+    "namePlaceholder": "デバイス名を入力",
+    "imageAlt": "デバイスの画像",
+    "changeImage": "画像を変更",
+    "selectImage": "画像を選択",
+    "brand": "ブランド",
+    "brandPlaceholder": "ブランドを入力（任意）",
+    "descriptionPlaceholder": "デバイスの説明を入力（任意）"
+  },
+  "message": {
+    "nameRequired": "デバイス名を入力してください",
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

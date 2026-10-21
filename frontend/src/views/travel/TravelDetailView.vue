@@ -2,12 +2,12 @@
   <div class="page-container">
     <div class="page-header">
       <a-button type="text" @click="router.back()">
-        <ArrowLeftOutlined /> 返回
+        <ArrowLeftOutlined /> {{ $t('common.actions.back') }}
       </a-button>
-      <h1 class="page-title">攻略详情</h1>
+      <h1 class="page-title">{{ $t('travel.detail.title') }}</h1>
     </div>
     <a-card>
-      <a-empty description="攻略详情页开发中">
+      <a-empty :description="$t('travel.detail.developing')">
         <template #image>
           <CompassOutlined style="font-size: 64px; color: #8A93A8;" />
         </template>

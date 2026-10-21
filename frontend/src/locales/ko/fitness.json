@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "운동 기록",
+    "edit": "운동 편집"
+  },
+  "status": {
+    "published": "게시됨",
+    "draft": "초안",
+    "offline": "게시 중단됨"
+  },
+  "type": {
+    "strength": "근력",
+    "cardio": "유산소",
+    "stretch": "스트레칭"
+  },
+  "columns": {
+    "title": "운동",
+    "duration": "시간",
+    "calories": "칼로리",
+    "status": "게시"
+  },
+  "unit": {
+    "minutes": "분",
+    "kcal": "kcal"
+  },
+  "list": {
+    "searchPlaceholder": "운동 검색..."
+  },
+  "form": {
+    "date": "운동 날짜",
+    "categoryPlaceholder": "카테고리 선택 (선택 사항)",
+    "titlePlaceholder": "예: 벤치프레스 + 로우 데이",
+    "duration": "시간 (분)",
+    "calories": "칼로리 (kcal)",
+    "exerciseList": "운동 목록",
+    "exerciseNamePlaceholder": "운동, 예: 벤치프레스",
+    "setsPlaceholder": "세트 수, 예: 4",
+    "repsPlaceholder": "횟수, 예: 8-12",
+    "addExercise": "운동 추가",
+    "notesPlaceholder": "운동 느낌, 중량 기록 등"
+  },
+  "message": {
+    "titleRequired": "운동 제목을 입력해 주세요",
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "\"{name}\"(을)를 삭제하면 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  }
+}

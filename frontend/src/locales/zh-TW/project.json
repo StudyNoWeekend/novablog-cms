@@ -1,0 +1,57 @@
+{
+  "list": {
+    "title": "專案經歷",
+    "create": "新增專案",
+    "edit": "編輯專案",
+    "searchPlaceholder": "搜尋專案名稱/簡介...",
+    "allStatus": "全部狀態",
+    "empty": "還沒有專案經歷，開始新增吧",
+    "uncategorized": "未分類",
+    "noSummary": "暫無簡介",
+    "projectLinkTitle": "專案/作品連結",
+    "repoTitle": "程式碼倉庫",
+    "total": "共 {total} 個專案"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已發布"
+  },
+  "form": {
+    "titleLabel": "專案名稱",
+    "titlePlaceholder": "請輸入專案名稱",
+    "titleRequired": "請輸入專案名稱",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "roleLabel": "擔任角色",
+    "rolePlaceholder": "如：攝影師 / 剪輯師 / 全端開發",
+    "clientLabel": "客戶 / 所屬組織",
+    "clientPlaceholder": "請輸入客戶或所屬組織（可選）",
+    "coverLabel": "封面圖",
+    "coverAlt": "專案封面",
+    "changeCover": "更換封面",
+    "selectCover": "選擇封面",
+    "summaryLabel": "一句話簡介",
+    "summaryPlaceholder": "用一句話介紹這個專案（列表卡片展示用）",
+    "descLabel": "詳細描述",
+    "descPlaceholder": "專案背景、職責、成果亮點等（可選）",
+    "techLabel": "技能 / 工具標籤",
+    "techPlaceholder": "輸入後按 Enter 新增，如 Go、Vue、Lightroom、Premiere",
+    "startDateLabel": "開始時間",
+    "monthPlaceholder": "選擇月份",
+    "endDateLabel": "結束時間",
+    "endDatePlaceholder": "留空表示至今",
+    "projectUrlLabel": "專案 / 作品連結",
+    "urlPlaceholder": "https://（可選）",
+    "repoUrlLabel": "程式碼倉庫連結",
+    "repoUrlPlaceholder": "https://github.com/...（可選）",
+    "sortWeight": "排序權重"
+  },
+  "meta": {
+    "timeTbd": "時間待定",
+    "present": "至今"
+  },
+  "message": {
+    "dateRangeInvalid": "開始時間不能晚於結束時間",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，確定要刪除嗎？"
+  }
+}

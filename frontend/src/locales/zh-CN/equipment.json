@@ -1,0 +1,27 @@
+{
+  "actions": {
+    "create": "新建设备",
+    "edit": "编辑设备"
+  },
+  "list": {
+    "searchPlaceholder": "搜索设备名称...",
+    "empty": "还没有个人设备，开始添加吧",
+    "noBrand": "未设置品牌",
+    "noDescription": "暂无介绍",
+    "total": "共 {total} 个设备"
+  },
+  "form": {
+    "namePlaceholder": "请输入设备名称",
+    "imageAlt": "设备图片",
+    "changeImage": "更换图片",
+    "selectImage": "选择图片",
+    "brand": "品牌",
+    "brandPlaceholder": "请输入品牌（可选）",
+    "descriptionPlaceholder": "请输入设备描述（可选）"
+  },
+  "message": {
+    "nameRequired": "请输入设备名称",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

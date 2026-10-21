@@ -2,13 +2,13 @@
   <div class="travel-basic-form">
     <div class="section-title">
       <span class="title-bar" aria-hidden="true" />
-      <h3 class="title-text">基础信息</h3>
+      <h3 class="title-text">{{ $t('travel.form.basicInfo') }}</h3>
     </div>
 
     <a-form layout="vertical" class="basic-form">
       <!-- 攻略标题 -->
       <a-form-item
-        label="攻略标题"
+        :label="$t('travel.form.titleLabel')"
         :help="errors.title"
         :validate-status="errors.title ? 'error' : ''"
         class="form-item-full"
@@ -17,7 +17,7 @@
           v-model:value="form.title"
           maxlength="80"
           show-count
-          placeholder="请输入攻略标题"
+          :placeholder="$t('travel.form.titlePlaceholder')"
           aria-required="true"
           :aria-invalid="!!errors.title"
           :aria-describedby="errors.title ? 'basic-form-title-error' : undefined"
@@ -28,14 +28,14 @@
       <div class="form-row">
         <!-- 目的地 -->
         <a-form-item
-          label="目的地"
+          :label="$t('travel.form.destinationLabel')"
           :help="errors.destination"
           :validate-status="errors.destination ? 'error' : ''"
           class="form-item-half"
         >
           <a-input
             v-model:value="form.destination"
-            placeholder="如：西藏拉萨"
+            :placeholder="$t('travel.form.destinationPlaceholder')"
             aria-required="true"
             :aria-invalid="!!errors.destination"
             :aria-describedby="errors.destination ? 'basic-form-destination-error' : undefined"
@@ -45,27 +45,27 @@
 
         <!-- 地区分类 -->
         <a-form-item
-          label="地区分类"
+          :label="$t('travel.form.regionLabel')"
           :help="errors.region"
           :validate-status="errors.region ? 'error' : ''"
           class="form-item-half"
         >
           <a-cascader
-            :options="regionTree"
+            :options="regionOptions"
             :value="findRegionPath(form.region)"
-            placeholder="选择地区分类"
+            :placeholder="$t('travel.form.regionPlaceholder')"
             allow-clear
             class="region-cascader"
             @change="onRegionChange"
           />
-          <div v-if="form.region" class="region-path">{{ getRegionPath(form.region) }}</div>
+          <div v-if="form.region" class="region-path">{{ regionPath(form.region) }}</div>
         </a-form-item>
       </div>
 
       <div class="form-row">
         <!-- 行程天数 -->
         <a-form-item
-          label="行程天数"
+          :label="$t('travel.form.daysLabel')"
           :help="errors.days"
           :validate-status="errors.days ? 'error' : ''"
           class="form-item-half"
@@ -74,7 +74,7 @@
             v-model:value="form.days"
             :min="1"
             :max="30"
-            placeholder="请输入天数"
+            :placeholder="$t('travel.form.daysPlaceholder')"
             class="days-input"
             aria-required="true"
             :aria-invalid="!!errors.days"
@@ -84,17 +84,17 @@
         </a-form-item>
 
         <!-- 最佳出行月份 -->
-        <a-form-item label="最佳出行月份" class="form-item-half">
-          <a-input v-model:value="form.bestMonth" placeholder="如：3-5月" />
+        <a-form-item :label="$t('travel.form.bestMonthLabel')" class="form-item-half">
+          <a-input v-model:value="form.bestMonth" :placeholder="$t('travel.form.bestMonthPlaceholder')" />
         </a-form-item>
       </div>
 
       <div class="form-row">
         <!-- 分类 -->
-        <a-form-item label="攻略分类" class="form-item-half">
+        <a-form-item :label="$t('travel.form.categoryLabel')" class="form-item-half">
           <a-select
             v-model:value="form.categoryId"
-            placeholder="选择分类（可选）"
+            :placeholder="$t('travel.form.categoryPlaceholder')"
             allow-clear
             :loading="categoriesLoading"
           >
@@ -107,28 +107,28 @@
       </div>
 
       <!-- 封面图 -->
-      <a-form-item label="封面图" class="form-item-full">
+      <a-form-item :label="$t('common.field.cover')" class="form-item-full">
         <div class="cover-field">
           <div
             class="cover-card"
             :class="{ 'has-image': !!form.coverImage }"
             role="button"
             tabindex="0"
-            aria-label="点击选择封面图"
+            :aria-label="$t('travel.form.selectCoverAria')"
             @click="pickerVisible = true"
             @keydown.enter.space.prevent="pickerVisible = true"
           >
             <template v-if="form.coverImage">
-              <img :src="form.coverImage" alt="封面图" />
+              <img :src="form.coverImage" :alt="$t('common.field.cover')" />
               <div class="cover-overlay">
-                <span>更换封面</span>
+                <span>{{ $t('travel.form.changeCover') }}</span>
               </div>
               <a-button
                 type="text"
                 danger
                 size="small"
                 class="cover-remove"
-                aria-label="移除封面图"
+                :aria-label="$t('travel.form.removeCoverAria')"
                 @click.stop="form.coverImage = null"
               >
                 <template #icon>
@@ -139,7 +139,7 @@
             <template v-else>
               <div class="cover-placeholder">
                 <PictureOutlined class="cover-placeholder-icon" />
-                <span class="cover-placeholder-text">点击选择封面图</span>
+                <span class="cover-placeholder-text">{{ $t('travel.form.selectCoverAria') }}</span>
               </div>
             </template>
           </div>
@@ -151,13 +151,13 @@
       </a-form-item>
 
       <!-- 攻略摘要 -->
-      <a-form-item label="攻略摘要" class="form-item-full">
+      <a-form-item :label="$t('travel.form.summaryLabel')" class="form-item-full">
         <a-textarea
           v-model:value="form.summary"
           :rows="3"
           maxlength="200"
           show-count
-          placeholder="请输入攻略摘要"
+          :placeholder="$t('travel.form.summaryPlaceholder')"
         />
       </a-form-item>
     </a-form>
@@ -166,12 +166,15 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, watch, nextTick, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PictureOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import TravelCoverPicker from '@/components/travel/editor/TravelCoverPicker.vue'
 import { categoryApi } from '@/api/category'
-import { findRegionPath, getRegionPath, regionTree } from '@/types/travel'
-import type { TravelGuideFormData, TravelRegion } from '@/types/travel'
+import { findRegionPath, getRegionLabelKeys, regionTree } from '@/types/travel'
+import type { TravelGuideFormData, TravelRegion, TravelRegionFilter } from '@/types/travel'
 import type { Category } from '@/types/category'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: TravelGuideFormData
@@ -191,11 +194,29 @@ const touched = reactive({
   days: false,
 })
 
+// 地区级联选项（labelKey → 当前语言文案）
+const regionOptions = computed(() =>
+  regionTree.map((continent) => ({
+    value: continent.value,
+    label: t(continent.labelKey),
+    children: continent.children?.map((child) => ({
+      value: child.value,
+      label: t(child.labelKey),
+    })),
+  })),
+)
+
+// 地区路径（大洲 / 地区，跟随当前语言）
+function regionPath(region: TravelRegionFilter): string {
+  return getRegionLabelKeys(region).map((key) => t(key)).join(' / ')
+}
+
+// 校验文案（跟随当前语言）
 const errors = computed(() => ({
-  title: touched.title && !form.title.trim() ? '请输入攻略标题' : '',
-  destination: touched.destination && !form.destination.trim() ? '请输入目的地' : '',
-  region: touched.region && !form.region ? '请选择地区分类' : '',
-  days: touched.days && (!form.days || form.days < 1) ? '请输入行程天数' : '',
+  title: touched.title && !form.title.trim() ? t('travel.form.titleRequired') : '',
+  destination: touched.destination && !form.destination.trim() ? t('travel.form.destinationRequired') : '',
+  region: touched.region && !form.region ? t('travel.form.regionRequired') : '',
+  days: touched.days && (!form.days || form.days < 1) ? t('travel.form.daysRequired') : '',
 }))
 
 const pickerVisible = ref(false)

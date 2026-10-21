@@ -18,7 +18,7 @@
           <img
             v-if="guide.coverImage"
             :src="guide.coverImage"
-            :alt="`${guide.title} 封面`"
+            :alt="$t('travel.common.coverAlt', { title: guide.title })"
           />
           <div v-else class="travel-detail-cover-placeholder">
             <PictureOutlined />
@@ -28,8 +28,8 @@
           <h2 class="travel-detail-title">{{ guide.title }}</h2>
           <div class="travel-detail-meta">
             <a-tag color="blue">{{ guide.destination }}</a-tag>
-            <a-tag>{{ getRegionPath(guide.region) }}</a-tag>
-            <a-tag>{{ guide.days }} 天</a-tag>
+            <a-tag>{{ regionPath(guide.region) }}</a-tag>
+            <a-tag>{{ $t('travel.common.days', { days: guide.days }) }}</a-tag>
             <span class="travel-detail-rating">
               <StarFilled class="travel-detail-rating-icon" />
               <span>{{ guide.rating }}</span>
@@ -45,15 +45,15 @@
       </header>
 
       <section class="travel-detail-section" aria-labelledby="itinerary-title">
-        <h3 id="itinerary-title" class="travel-detail-section-title">行程安排</h3>
+        <h3 id="itinerary-title" class="travel-detail-section-title">{{ $t('travel.section.itinerary') }}</h3>
         <div class="travel-detail-map">
           <EnvironmentOutlined class="travel-detail-map-icon" />
-          <span>地图轨迹（占位）</span>
+          <span>{{ $t('travel.drawer.mapPlaceholder') }}</span>
         </div>
         <a-timeline>
           <a-timeline-item v-for="day in guide.itinerary" :key="day.day">
             <div class="travel-detail-day">
-              <div class="travel-detail-day-label">第 {{ day.day }} 天</div>
+              <div class="travel-detail-day-label">{{ $t('travel.common.dayN', { day: day.day }) }}</div>
               <div class="travel-detail-day-title">{{ day.title }}</div>
               <div class="travel-detail-day-desc">{{ day.description }}</div>
               <div v-if="getDayAttractions(day).length > 0" class="travel-detail-day-attractions">
@@ -76,14 +76,14 @@
                   </div>
                 </div>
               </div>
-              <div v-else class="travel-detail-day-empty">当天暂无景点安排</div>
+              <div v-else class="travel-detail-day-empty">{{ $t('travel.drawer.dayEmpty') }}</div>
             </div>
           </a-timeline-item>
         </a-timeline>
       </section>
 
       <section class="travel-detail-section" aria-labelledby="attractions-title">
-        <h3 id="attractions-title" class="travel-detail-section-title">景点推荐</h3>
+        <h3 id="attractions-title" class="travel-detail-section-title">{{ $t('travel.section.attractions') }}</h3>
         <div class="travel-detail-attractions">
           <div
             v-for="attraction in guide.attractions"
@@ -105,10 +105,14 @@
       </section>
 
       <section class="travel-detail-section" aria-labelledby="reviews-title">
-        <h3 id="reviews-title" class="travel-detail-section-title">用户评价</h3>
+        <h3 id="reviews-title" class="travel-detail-section-title">{{ $t('travel.section.reviews') }}</h3>
         <div class="travel-detail-reviews">
           <div v-for="review in guide.reviews" :key="review.id" class="travel-detail-review">
-            <img :src="review.avatar" :alt="`${review.username} 头像`" class="travel-detail-review-avatar" />
+            <img
+              :src="review.avatar"
+              :alt="$t('travel.drawer.avatarAlt', { name: review.username })"
+              class="travel-detail-review-avatar"
+            />
             <div class="travel-detail-review-body">
               <div class="travel-detail-review-header">
                 <span class="travel-detail-review-user">{{ review.username }}</span>
@@ -140,8 +144,12 @@ import {
   StarFilled,
   StarOutlined,
 } from '@ant-design/icons-vue'
-import { getRegionPath } from '@/types/travel'
-import type { TravelGuide, TravelItineraryDay, TravelAttraction } from '@/types/travel'
+import { useI18n } from 'vue-i18n'
+import { getRegionLabelKeys } from '@/types/travel'
+import { formatDate } from '@/utils/datetime'
+import type { TravelGuide, TravelItineraryDay, TravelAttraction, TravelRegionFilter } from '@/types/travel'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean
@@ -182,9 +190,9 @@ function startLoading() {
   }, 300)
 }
 
-function formatDate(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleDateString('zh-CN')
+// 地区路径（大洲 / 地区，跟随当前语言）
+function regionPath(region: TravelRegionFilter): string {
+  return getRegionLabelKeys(region).map((key) => t(key)).join(' / ')
 }
 
 function getDayAttractions(day: TravelItineraryDay): TravelAttraction[] {

@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">开源作品</h1>
+      <h1 class="page-title">{{ t('openSource.list.title') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 添加仓库
+        <PlusOutlined /> {{ t('openSource.list.addRepo') }}
       </a-button>
     </div>
 
@@ -14,13 +14,13 @@
       <div class="opensource-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索仓库名称/简介..."
+          :placeholder="t('openSource.list.searchPlaceholder')"
           style="width: 220px"
           allow-clear
         />
         <a-select
           v-model:value="filterStatus"
-          placeholder="全部状态"
+          :placeholder="t('openSource.list.allStatus')"
           style="width: 120px"
           allow-clear
           :options="statusOptions"
@@ -30,7 +30,7 @@
       <a-spin :spinning="loading">
         <a-empty
           v-if="!loading && list.length === 0"
-          description="还没有开源作品，点击右上角添加 GitHub 仓库"
+          :description="t('openSource.list.empty')"
           style="margin-top: 48px"
         />
         <div v-else class="opensource-grid">
@@ -39,11 +39,11 @@
               <GithubOutlined class="repo-icon" />
               <div class="repo-name" :title="item.name">{{ item.name }}</div>
               <a-tag :color="item.status === 1 ? 'green' : 'default'" class="status-tag">
-                {{ item.status === 1 ? '已发布' : '草稿' }}
+                {{ item.status === 1 ? t('openSource.status.published') : t('openSource.status.draft') }}
               </a-tag>
             </div>
             <div class="repo-summary" :title="item.summary">
-              {{ item.summary || '暂无简介，保存后自动回填仓库描述' }}
+              {{ item.summary || t('openSource.list.noSummary') }}
             </div>
             <div class="repo-tags">
               <a-tag v-if="item.category_name" class="topic-tag" color="purple">{{ item.category_name }}</a-tag>
@@ -53,7 +53,7 @@
               </a-tag>
             </div>
             <div class="repo-meta">
-              <span class="meta-item" title="Star 数（同步时快照）">
+              <span class="meta-item" :title="t('openSource.list.starsTitle')">
                 <StarOutlined /> {{ formatStars(item.stars) }}
               </span>
               <span class="meta-links">
@@ -65,7 +65,7 @@
                   :href="item.homepage"
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="主页/演示地址"
+                  :title="t('openSource.list.homepageTitle')"
                 >
                   <LinkOutlined />
                 </a>
@@ -73,7 +73,7 @@
                   :href="item.repo_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="仓库链接"
+                  :title="t('openSource.list.repoTitle')"
                 >
                   <ExportOutlined />
                 </a>
@@ -81,10 +81,10 @@
             </div>
             <div class="repo-actions">
               <a-button type="link" size="small" :loading="refreshingId === item.id" @click="handleRefresh(item)">
-                <SyncOutlined /> 同步
+                <SyncOutlined /> {{ t('common.actions.sync') }}
               </a-button>
               <a-button type="link" size="small" @click="handleEdit(item)">
-                <EditOutlined /> 编辑
+                <EditOutlined /> {{ t('common.actions.edit') }}
               </a-button>
               <PushSyncButton
                 target-type="open_source"
@@ -93,7 +93,7 @@
                 @updated="fetchList"
               />
               <a-button type="link" size="small" danger @click="handleDelete(item)">
-                <DeleteOutlined /> 删除
+                <DeleteOutlined /> {{ t('common.actions.delete') }}
               </a-button>
             </div>
           </div>
@@ -107,7 +107,7 @@
           :total="total"
           :page-size-options="[12, 24, 48]"
           show-size-changer
-          :show-total="(t: number) => `共 ${t} 个仓库`"
+          :show-total="(count: number) => t('openSource.list.total', { total: count })"
           @change="handlePageChange"
           @show-size-change="handlePageChange"
         />
@@ -117,7 +117,7 @@
     <!-- 添加/编辑仓库弹窗 -->
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '添加仓库' : '编辑仓库'"
+      :title="modalMode === 'create' ? t('openSource.list.addRepo') : t('openSource.list.editRepo')"
       :confirm-loading="modalLoading"
       width="640px"
       @ok="handleSubmit"
@@ -127,77 +127,77 @@
         class="fetch-tip"
         type="info"
         show-icon
-        message="保存时将自动拉取仓库的 README 与元数据（描述/语言/Star 等），请确保服务器可访问 GitHub"
+        :message="t('openSource.modal.fetchTip')"
       />
       <a-form layout="vertical">
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="仓库名称" required>
+            <a-form-item :label="t('openSource.form.nameLabel')" required>
               <a-input
                 v-model:value="form.name"
-                placeholder="如 novablog"
+                :placeholder="t('openSource.form.namePlaceholder')"
                 :maxlength="255"
               />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="主语言">
+            <a-form-item :label="t('openSource.form.languageLabel')">
               <a-auto-complete
                 v-model:value="form.language"
                 :options="presetLanguageOptions"
-                placeholder="如 Go / Vue，保存时自动回填"
+                :placeholder="t('openSource.form.languagePlaceholder')"
                 allow-clear
               />
             </a-form-item>
           </a-col>
         </a-row>
-        <a-form-item label="仓库链接" required>
+        <a-form-item :label="t('openSource.form.repoUrlLabel')" required>
           <a-input
             v-model:value="form.repo_url"
-            placeholder="https://github.com/owner/repo"
+            :placeholder="t('openSource.form.repoUrlPlaceholder')"
             :maxlength="1024"
           />
         </a-form-item>
-        <a-form-item label="一句话介绍">
+        <a-form-item :label="t('openSource.form.summaryLabel')">
           <a-textarea
             v-model:value="form.summary"
-            placeholder="留空则保存时自动回填仓库描述（列表卡片展示用）"
+            :placeholder="t('openSource.form.summaryPlaceholder')"
             :rows="2"
             :maxlength="500"
             show-count
           />
         </a-form-item>
-        <a-form-item label="主题标签">
+        <a-form-item :label="t('openSource.form.topicsLabel')">
           <a-select
             v-model:value="form.topics"
             mode="tags"
-            placeholder="输入后回车添加，保存时自动回填仓库 topics"
+            :placeholder="t('openSource.form.topicsPlaceholder')"
             :max-tag-count="8"
           />
         </a-form-item>
         <div class="form-row">
-          <a-form-item label="分类">
-            <CategorySelect v-model="form.category_id" type="open_source" placeholder="选择分类（可选）" />
+          <a-form-item :label="t('common.field.category')">
+            <CategorySelect v-model="form.category_id" type="open_source" :placeholder="t('openSource.form.categoryPlaceholder')" />
           </a-form-item>
-          <a-form-item label="主页 / 演示地址">
+          <a-form-item :label="t('openSource.form.homepageLabel')">
             <a-input
               v-model:value="form.homepage"
-              placeholder="https://（可选）"
+              :placeholder="t('openSource.form.homepagePlaceholder')"
               :maxlength="1024"
             />
           </a-form-item>
         </div>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="状态">
+            <a-form-item :label="t('common.field.status')">
               <a-radio-group v-model:value="form.status">
-                <a-radio :value="0">草稿</a-radio>
-                <a-radio :value="1">已发布</a-radio>
+                <a-radio :value="0">{{ t('openSource.status.draft') }}</a-radio>
+                <a-radio :value="1">{{ t('openSource.status.published') }}</a-radio>
               </a-radio-group>
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="排序权重">
+            <a-form-item :label="t('openSource.form.sortWeight')">
               <a-input-number
                 v-model:value="form.sort_order"
                 :min="0"
@@ -223,16 +223,16 @@
           :loading="readmeLoading"
           @click="readmeWork && openReadme(readmeWork, true)"
         >
-          <SyncOutlined /> 重新加载
+          <SyncOutlined /> {{ t('openSource.readme.reload') }}
         </a-button>
       </template>
       <a-spin :spinning="readmeLoading">
         <div v-if="readmeWork?.readme_updated_at" class="readme-meta">
-          最近拉取：{{ formatDateTime(readmeWork.readme_updated_at) }}
+          {{ t('openSource.readme.fetchedAt', { time: formatDateTime(readmeWork.readme_updated_at) }) }}
         </div>
         <a-empty
           v-if="!readmeLoading && !readmeWork?.readme"
-          description="尚未拉取到 README，试试「同步」按钮"
+          :description="t('openSource.readme.empty')"
         />
         <MarkdownViewer v-else-if="readmeWork?.readme" :value="readmeWork.readme" />
       </a-spin>
@@ -241,8 +241,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import PushSyncButton from '@/components/community/PushSyncButton.vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -262,11 +263,14 @@ import CategoryBar from '@/components/common/CategoryBar.vue'
 import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
+import { formatDateTime } from '@/utils/datetime'
 
-const statusOptions = [
-  { value: 0, label: '草稿' },
-  { value: 1, label: '已发布' },
-]
+const { t } = useI18n()
+
+const statusOptions = computed(() => [
+  { value: 0, label: t('openSource.status.draft') },
+  { value: 1, label: t('openSource.status.published') },
+])
 
 /** 常见语言预设项，支持自由输入；实际值保存时以远端仓库为准回填 */
 const PRESET_LANGUAGES = ['Go', 'Vue', 'TypeScript', 'JavaScript', 'Python', 'Rust', 'Java', 'Kotlin', 'Swift', 'Shell']
@@ -396,18 +400,13 @@ function formatStars(stars: number): string {
   return String(stars)
 }
 
-function formatDateTime(value?: string | null): string {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('zh-CN', { hour12: false })
-}
-
 async function handleSubmit() {
   if (!form.name.trim()) {
-    message.warning('请输入仓库名称')
+    message.warning(t('openSource.form.nameRequired'))
     return
   }
   if (!form.repo_url.trim()) {
-    message.warning('请输入仓库链接')
+    message.warning(t('openSource.form.repoUrlRequired'))
     return
   }
   modalLoading.value = true
@@ -424,7 +423,7 @@ async function handleSubmit() {
         status: form.status,
         sort_order: form.sort_order,
       })
-      message.success('添加成功，README 已自动拉取')
+      message.success(t('openSource.message.addSuccess'))
     } else {
       await openSourceApi.update(editingId.value, {
         name: form.name.trim(),
@@ -437,7 +436,7 @@ async function handleSubmit() {
         status: form.status,
         sort_order: form.sort_order,
       })
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -453,7 +452,7 @@ async function handleRefresh(item: OpenSourceWork) {
   refreshingId.value = item.id
   try {
     await openSourceApi.refresh(item.id)
-    message.success(`「${item.name}」已同步`)
+    message.success(t('openSource.message.synced', { name: item.name }))
     fetchList()
   } catch {
     // 错误由拦截器处理
@@ -481,15 +480,15 @@ async function openReadme(item: OpenSourceWork, reload = false) {
 
 function handleDelete(item: OpenSourceWork) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${item.name}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('openSource.message.deleteTitle'),
+    content: t('openSource.message.deleteConfirm', { name: item.name }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await openSourceApi.remove(item.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }

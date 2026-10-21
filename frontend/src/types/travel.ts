@@ -44,69 +44,70 @@ export type TravelRegionFilter = TravelRegion | TravelContinent | 'all'
 
 export interface RegionTreeNode {
   value: string
-  label: string
+  /** 地区名称的 i18n key（文案见 travel.regions.*），由消费方用 t() 渲染 */
+  labelKey: string
   children?: RegionTreeNode[]
 }
 
 export const regionTree: RegionTreeNode[] = [
   {
     value: 'asia',
-    label: '亚洲',
+    labelKey: 'travel.regions.asia',
     children: [
-      { value: 'china', label: '中国' },
-      { value: 'japan', label: '日本' },
-      { value: 'korea', label: '韩国' },
-      { value: 'southeast-asia', label: '东南亚' },
-      { value: 'south-asia', label: '南亚' },
-      { value: 'central-asia', label: '中亚' },
-      { value: 'middle-east', label: '中东' },
+      { value: 'china', labelKey: 'travel.regions.china' },
+      { value: 'japan', labelKey: 'travel.regions.japan' },
+      { value: 'korea', labelKey: 'travel.regions.korea' },
+      { value: 'southeast-asia', labelKey: 'travel.regions.southeast-asia' },
+      { value: 'south-asia', labelKey: 'travel.regions.south-asia' },
+      { value: 'central-asia', labelKey: 'travel.regions.central-asia' },
+      { value: 'middle-east', labelKey: 'travel.regions.middle-east' },
     ],
   },
   {
     value: 'europe',
-    label: '欧洲',
+    labelKey: 'travel.regions.europe',
     children: [
-      { value: 'western-europe', label: '西欧' },
-      { value: 'southern-europe', label: '南欧' },
-      { value: 'northern-europe', label: '北欧' },
-      { value: 'eastern-europe', label: '东欧' },
-      { value: 'uk-ireland', label: '英国与爱尔兰' },
+      { value: 'western-europe', labelKey: 'travel.regions.western-europe' },
+      { value: 'southern-europe', labelKey: 'travel.regions.southern-europe' },
+      { value: 'northern-europe', labelKey: 'travel.regions.northern-europe' },
+      { value: 'eastern-europe', labelKey: 'travel.regions.eastern-europe' },
+      { value: 'uk-ireland', labelKey: 'travel.regions.uk-ireland' },
     ],
   },
   {
     value: 'americas',
-    label: '美洲',
+    labelKey: 'travel.regions.americas',
     children: [
-      { value: 'north-america', label: '北美' },
-      { value: 'central-caribbean', label: '中美与加勒比' },
-      { value: 'south-america', label: '南美' },
+      { value: 'north-america', labelKey: 'travel.regions.north-america' },
+      { value: 'central-caribbean', labelKey: 'travel.regions.central-caribbean' },
+      { value: 'south-america', labelKey: 'travel.regions.south-america' },
     ],
   },
   {
     value: 'oceania',
-    label: '大洋洲',
+    labelKey: 'travel.regions.oceania',
     children: [
-      { value: 'australia', label: '澳大利亚' },
-      { value: 'new-zealand', label: '新西兰' },
-      { value: 'pacific-islands', label: '太平洋岛屿' },
+      { value: 'australia', labelKey: 'travel.regions.australia' },
+      { value: 'new-zealand', labelKey: 'travel.regions.new-zealand' },
+      { value: 'pacific-islands', labelKey: 'travel.regions.pacific-islands' },
     ],
   },
   {
     value: 'africa',
-    label: '非洲',
+    labelKey: 'travel.regions.africa',
     children: [
-      { value: 'north-africa', label: '北非' },
-      { value: 'east-africa', label: '东非' },
-      { value: 'southern-africa', label: '南非' },
-      { value: 'west-central-africa', label: '西非与中非' },
+      { value: 'north-africa', labelKey: 'travel.regions.north-africa' },
+      { value: 'east-africa', labelKey: 'travel.regions.east-africa' },
+      { value: 'southern-africa', labelKey: 'travel.regions.southern-africa' },
+      { value: 'west-central-africa', labelKey: 'travel.regions.west-central-africa' },
     ],
   },
   {
     value: 'polar',
-    label: '极地',
+    labelKey: 'travel.regions.polar',
     children: [
-      { value: 'antarctica', label: '南极洲' },
-      { value: 'arctic', label: '北极' },
+      { value: 'antarctica', labelKey: 'travel.regions.antarctica' },
+      { value: 'arctic', labelKey: 'travel.regions.arctic' },
     ],
   },
 ]
@@ -138,38 +139,39 @@ const regionToContinentMap: Record<TravelRegion, TravelContinent> = {
   arctic: 'polar',
 }
 
+// 地区枚举 → i18n key 映射（只存 key 字符串，禁止在此调用 t()；文案见 travel.regions.*）
 const regionLabelMap: Record<TravelRegionFilter, string> = {
-  all: '全部',
-  asia: '亚洲',
-  europe: '欧洲',
-  americas: '美洲',
-  oceania: '大洋洲',
-  africa: '非洲',
-  polar: '极地',
-  china: '中国',
-  japan: '日本',
-  korea: '韩国',
-  'southeast-asia': '东南亚',
-  'south-asia': '南亚',
-  'central-asia': '中亚',
-  'middle-east': '中东',
-  'western-europe': '西欧',
-  'southern-europe': '南欧',
-  'northern-europe': '北欧',
-  'eastern-europe': '东欧',
-  'uk-ireland': '英国与爱尔兰',
-  'north-america': '北美',
-  'central-caribbean': '中美与加勒比',
-  'south-america': '南美',
-  australia: '澳大利亚',
-  'new-zealand': '新西兰',
-  'pacific-islands': '太平洋岛屿',
-  'north-africa': '北非',
-  'east-africa': '东非',
-  'southern-africa': '南非',
-  'west-central-africa': '西非与中非',
-  antarctica: '南极洲',
-  arctic: '北极',
+  all: 'travel.regions.all',
+  asia: 'travel.regions.asia',
+  europe: 'travel.regions.europe',
+  americas: 'travel.regions.americas',
+  oceania: 'travel.regions.oceania',
+  africa: 'travel.regions.africa',
+  polar: 'travel.regions.polar',
+  china: 'travel.regions.china',
+  japan: 'travel.regions.japan',
+  korea: 'travel.regions.korea',
+  'southeast-asia': 'travel.regions.southeast-asia',
+  'south-asia': 'travel.regions.south-asia',
+  'central-asia': 'travel.regions.central-asia',
+  'middle-east': 'travel.regions.middle-east',
+  'western-europe': 'travel.regions.western-europe',
+  'southern-europe': 'travel.regions.southern-europe',
+  'northern-europe': 'travel.regions.northern-europe',
+  'eastern-europe': 'travel.regions.eastern-europe',
+  'uk-ireland': 'travel.regions.uk-ireland',
+  'north-america': 'travel.regions.north-america',
+  'central-caribbean': 'travel.regions.central-caribbean',
+  'south-america': 'travel.regions.south-america',
+  australia: 'travel.regions.australia',
+  'new-zealand': 'travel.regions.new-zealand',
+  'pacific-islands': 'travel.regions.pacific-islands',
+  'north-africa': 'travel.regions.north-africa',
+  'east-africa': 'travel.regions.east-africa',
+  'southern-africa': 'travel.regions.southern-africa',
+  'west-central-africa': 'travel.regions.west-central-africa',
+  antarctica: 'travel.regions.antarctica',
+  arctic: 'travel.regions.arctic',
 }
 
 export function getContinent(region: TravelRegion): TravelContinent
@@ -184,20 +186,19 @@ export function getContinent(region: TravelRegionFilter): TravelContinent | unde
   return undefined
 }
 
-export function getRegionPath(region: TravelRegionFilter): string {
-  if (region === 'all') return '全部'
+// 返回地区路径对应的 i18n key 列表（大洲在前，如 ['travel.regions.asia', 'travel.regions.china']），
+// 消费方用 t() 逐项渲染后以「 / 」连接展示（跟随当前语言）
+export function getRegionLabelKeys(region: TravelRegionFilter): string[] {
+  if (region === 'all') return [regionLabelMap.all]
 
   const continent = getContinent(region)
-  if (!continent) return regionLabelMap[region] ?? region
-
-  const continentLabel = regionLabelMap[continent] ?? continent
-  const regionLabel = regionLabelMap[region] ?? region
+  if (!continent) return [regionLabelMap[region] ?? region]
 
   if (region === continent) {
-    return continentLabel
+    return [regionLabelMap[continent]]
   }
 
-  return `${continentLabel} / ${regionLabel}`
+  return [regionLabelMap[continent], regionLabelMap[region]]
 }
 
 export function findRegionPath(region: TravelRegionFilter): string[] {

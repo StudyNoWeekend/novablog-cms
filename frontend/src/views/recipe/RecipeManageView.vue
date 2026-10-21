@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">美食菜谱</h1>
+      <h1 class="page-title">{{ t('menu.recipe.list') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 新建菜谱
+        <PlusOutlined /> {{ t('recipe.actions.create') }}
       </a-button>
     </div>
 
@@ -14,7 +14,7 @@
       <div class="toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索菜谱..."
+          :placeholder="t('recipe.list.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
@@ -44,21 +44,21 @@
           </template>
           <template v-else-if="column.key === 'status'">
             <a-tag :color="record.status === 1 ? 'success' : 'default'">
-              {{ record.status === 1 ? '已发布' : '草稿' }}
+              {{ record.status === 1 ? t('recipe.status.published') : t('recipe.status.draft') }}
             </a-tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-button type="link" size="small" @click="toggleStatus(record)">
-              {{ record.status === 1 ? '下架' : '发布' }}
+              {{ record.status === 1 ? t('common.actions.offline') : t('common.actions.publish') }}
             </a-button>
-            <a-button type="link" size="small" @click="handleEdit(record)">编辑</a-button>
+            <a-button type="link" size="small" @click="handleEdit(record)">{{ t('common.actions.edit') }}</a-button>
             <PushSyncButton
               target-type="recipe"
               :target-id="record.id"
               :published="record.status === 1"
               @updated="fetchList"
             />
-            <a-button type="link" size="small" danger @click="handleDelete(record)">删除</a-button>
+            <a-button type="link" size="small" danger @click="handleDelete(record)">{{ t('common.actions.delete') }}</a-button>
           </template>
         </template>
       </a-table>
@@ -66,86 +66,86 @@
 
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '新建菜谱' : '编辑菜谱'"
+      :title="modalMode === 'create' ? t('recipe.actions.create') : t('recipe.actions.edit')"
       :confirm-loading="modalLoading"
       width="720px"
       @ok="handleSubmit"
     >
       <a-form layout="vertical">
-        <a-form-item label="菜谱名称" required>
-          <a-input v-model:value="form.title" placeholder="请输入菜谱名称" :maxlength="255" />
+        <a-form-item :label="t('recipe.form.title')" required>
+          <a-input v-model:value="form.title" :placeholder="t('recipe.form.titlePlaceholder')" :maxlength="255" />
         </a-form-item>
-        <a-form-item label="封面图">
+        <a-form-item :label="t('recipe.form.cover')">
           <MediaPicker v-model:visible="mediaPickerVisible" module="recipe" @selected="handleMediaSelected" />
-          <ImageField v-model="form.cover" type="recipe" with-preset :search-keyword="form.title" placeholder="或直接粘贴封面地址">
+          <ImageField v-model="form.cover" type="recipe" with-preset :search-keyword="form.title" :placeholder="t('recipe.form.coverUrlPlaceholder')">
             <template #extra>
               <a-button size="small" @click="mediaPickerVisible = true">
-                <PictureOutlined /> 媒体库
+                <PictureOutlined /> {{ t('recipe.form.mediaLibrary') }}
               </a-button>
             </template>
           </ImageField>
         </a-form-item>
-        <a-form-item label="简介">
-          <a-textarea v-model:value="form.summary" placeholder="一句话介绍这道菜" :rows="2" :maxlength="500" />
+        <a-form-item :label="t('recipe.form.summary')">
+          <a-textarea v-model:value="form.summary" :placeholder="t('recipe.form.summaryPlaceholder')" :rows="2" :maxlength="500" />
         </a-form-item>
         <div class="form-row">
-          <a-form-item label="难度">
+          <a-form-item :label="t('recipe.form.difficulty')">
             <a-select v-model:value="form.difficulty">
-              <a-select-option :value="1">简单</a-select-option>
-              <a-select-option :value="2">中等</a-select-option>
-              <a-select-option :value="3">困难</a-select-option>
+              <a-select-option :value="1">{{ t('recipe.difficulty.easy') }}</a-select-option>
+              <a-select-option :value="2">{{ t('recipe.difficulty.medium') }}</a-select-option>
+              <a-select-option :value="3">{{ t('recipe.difficulty.hard') }}</a-select-option>
             </a-select>
           </a-form-item>
-          <a-form-item label="耗时（分钟）">
+          <a-form-item :label="t('recipe.form.minutes')">
             <a-input-number v-model:value="form.minutes" :min="0" style="width: 100%" />
           </a-form-item>
-          <a-form-item label="份量（人份）">
+          <a-form-item :label="t('recipe.form.servings')">
             <a-input-number v-model:value="form.servings" :min="1" style="width: 100%" />
           </a-form-item>
         </div>
         <div class="form-row">
-          <a-form-item label="分类">
-            <CategorySelect v-model="form.category_id" type="recipe" placeholder="选择分类（可选）" />
+          <a-form-item :label="t('common.field.category')">
+            <CategorySelect v-model="form.category_id" type="recipe" :placeholder="t('recipe.form.categoryPlaceholder')" />
           </a-form-item>
-          <a-form-item label="标签（逗号分隔）" class="span-2">
-            <a-input v-model:value="form.tags" placeholder="如：家常菜,下饭菜" :maxlength="500" />
+          <a-form-item :label="t('recipe.form.tags')" class="span-2">
+            <a-input v-model:value="form.tags" :placeholder="t('recipe.form.tagsPlaceholder')" :maxlength="500" />
           </a-form-item>
         </div>
 
-        <a-form-item label="食材清单">
+        <a-form-item :label="t('recipe.form.ingredients')">
           <div class="dynamic-list">
             <div v-for="(item, index) in form.ingredients" :key="index" class="dynamic-row">
-              <a-input v-model:value="item.name" placeholder="食材名，如：番茄" />
-              <a-input v-model:value="item.amount" placeholder="用量，如：2个" />
+              <a-input v-model:value="item.name" :placeholder="t('recipe.form.ingredientNamePlaceholder')" />
+              <a-input v-model:value="item.amount" :placeholder="t('recipe.form.ingredientAmountPlaceholder')" />
               <a-button type="text" danger @click="form.ingredients.splice(index, 1)">
                 <DeleteOutlined />
               </a-button>
             </div>
             <a-button type="dashed" block @click="form.ingredients.push({ name: '', amount: '' })">
-              <PlusOutlined /> 添加食材
+              <PlusOutlined /> {{ t('recipe.form.addIngredient') }}
             </a-button>
           </div>
         </a-form-item>
 
-        <a-form-item label="烹饪步骤">
+        <a-form-item :label="t('recipe.form.steps')">
           <div class="dynamic-list">
             <div v-for="(item, index) in form.steps" :key="index" class="dynamic-row">
               <span class="step-index">{{ index + 1 }}</span>
-              <a-textarea v-model:value="item.text" placeholder="这一步做什么" :rows="1" :auto-size="true" />
+              <a-textarea v-model:value="item.text" :placeholder="t('recipe.form.stepPlaceholder')" :rows="1" :auto-size="true" />
               <a-button type="text" danger @click="form.steps.splice(index, 1)">
                 <DeleteOutlined />
               </a-button>
             </div>
             <a-button type="dashed" block @click="form.steps.push({ text: '' })">
-              <PlusOutlined /> 添加步骤
+              <PlusOutlined /> {{ t('recipe.form.addStep') }}
             </a-button>
           </div>
         </a-form-item>
 
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.field.status')">
           <a-radio-group v-model:value="form.status">
-            <a-radio :value="0">草稿</a-radio>
-            <a-radio :value="1">发布</a-radio>
+            <a-radio :value="0">{{ t('recipe.status.draft') }}</a-radio>
+            <a-radio :value="1">{{ t('common.actions.publish') }}</a-radio>
           </a-radio-group>
         </a-form-item>
       </a-form>
@@ -157,6 +157,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { message, Modal } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -171,6 +172,8 @@ import CategoryBar from '@/components/common/CategoryBar.vue'
 import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
+
+const { t } = useI18n()
 
 const keyword = ref('')
 const categoryFilter = ref<string | undefined>(undefined)
@@ -200,21 +203,21 @@ const form = reactive({
   status: 0,
 })
 
-const columns = [
-  { key: 'title', title: '菜谱', ellipsis: true },
-  { key: 'difficulty', title: '难度', width: 90 },
-  { key: 'minutes', title: '耗时(分)', width: 100 },
-  { key: 'status', title: '状态', width: 90 },
-  { key: 'updated_at', title: '更新时间', width: 170 },
-  { key: 'action', title: '操作', width: 200 },
-]
+const columns = computed(() => [
+  { key: 'title', title: t('recipe.columns.recipe'), ellipsis: true },
+  { key: 'difficulty', title: t('recipe.columns.difficulty'), width: 90 },
+  { key: 'minutes', title: t('recipe.columns.minutes'), width: 100 },
+  { key: 'status', title: t('common.field.status'), width: 90 },
+  { key: 'updated_at', title: t('common.field.updateTime'), width: 170 },
+  { key: 'action', title: t('common.table.actions'), width: 200 },
+])
 
 const paginationConfig = computed(() => ({
   current: page.value,
   pageSize: pageSize.value,
   total: total.value,
   showSizeChanger: true,
-  showTotal: (t: number) => `共 ${t} 篇`,
+  showTotal: (count: number) => t('recipe.list.total', { total: count }),
 }))
 
 watch(keyword, setDebounce)
@@ -257,8 +260,10 @@ function handleTableChange(p: { current?: number; pageSize?: number }) {
   fetchList()
 }
 
+const DIFFICULTY_LABEL_KEYS = ['recipe.difficulty.easy', 'recipe.difficulty.medium', 'recipe.difficulty.hard']
+
 function difficultyLabel(d: number): string {
-  return ['简单', '中等', '困难'][d - 1] || '简单'
+  return t(DIFFICULTY_LABEL_KEYS[d - 1] || DIFFICULTY_LABEL_KEYS[0])
 }
 
 function resetForm() {
@@ -322,17 +327,17 @@ function buildPayload() {
 
 async function handleSubmit() {
   if (!form.title.trim()) {
-    message.warning('请输入菜谱名称')
+    message.warning(t('recipe.message.titleRequired'))
     return
   }
   modalLoading.value = true
   try {
     if (modalMode.value === 'create') {
       await recipeApi.create(buildPayload())
-      message.success('创建成功')
+      message.success(t('common.message.createSuccess'))
     } else {
       await recipeApi.update(editingId.value, buildPayload())
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -346,7 +351,7 @@ async function handleSubmit() {
 async function toggleStatus(record: Recipe) {
   try {
     await recipeApi.update(record.id, { status: record.status === 1 ? 0 : 1 })
-    message.success(record.status === 1 ? '已下架' : '已发布')
+    message.success(record.status === 1 ? t('recipe.status.unpublished') : t('recipe.status.published'))
     fetchList()
   } catch {
     // 错误由拦截器处理
@@ -355,15 +360,15 @@ async function toggleStatus(record: Recipe) {
 
 function handleDelete(record: Recipe) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${record.title}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('recipe.message.deleteTitle'),
+    content: t('recipe.message.deleteConfirm', { name: record.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await recipeApi.remove(record.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }

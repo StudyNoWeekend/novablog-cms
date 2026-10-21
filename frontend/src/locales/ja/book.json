@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "書籍を追加",
+    "edit": "書籍を編集"
+  },
+  "status": {
+    "published": "公開済み",
+    "draft": "下書き",
+    "unpublished": "公開停止"
+  },
+  "readingStatus": {
+    "want": "読みたい",
+    "reading": "読書中",
+    "done": "読了"
+  },
+  "columns": {
+    "book": "書籍",
+    "rating": "評価",
+    "publish": "公開"
+  },
+  "list": {
+    "searchPlaceholder": "書名・作者を検索...",
+    "unknownAuthor": "作者不明",
+    "total": "全 {total} 冊"
+  },
+  "form": {
+    "title": "書名",
+    "titlePlaceholder": "書名を入力してください",
+    "author": "作者",
+    "authorPlaceholder": "作者を入力してください",
+    "readingStatus": "読書状態",
+    "rating": "評価",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "cover": "カバー画像",
+    "coverUrlPlaceholder": "またはカバー画像の URL を直接貼り付け",
+    "mediaLibrary": "メディアライブラリ",
+    "startedAt": "読書開始日",
+    "finishedAt": "読了日",
+    "review": "書評",
+    "reviewPlaceholder": "何か書いてみましょう（Markdown）"
+  },
+  "message": {
+    "titleRequired": "書名を入力してください",
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

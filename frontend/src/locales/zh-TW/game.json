@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "create": "新增遊戲",
+    "edit": "編輯遊戲"
+  },
+  "status": {
+    "published": "已發佈",
+    "draft": "草稿",
+    "unpublished": "已下架"
+  },
+  "playStatus": {
+    "want": "想玩",
+    "playing": "在玩",
+    "played": "玩過"
+  },
+  "columns": {
+    "game": "遊戲",
+    "playHours": "時長",
+    "rating": "評分",
+    "publish": "發佈"
+  },
+  "list": {
+    "searchPlaceholder": "搜尋遊戲...",
+    "total": "共 {total} 款"
+  },
+  "form": {
+    "title": "遊戲名稱",
+    "titlePlaceholder": "請輸入遊戲名稱",
+    "platform": "平台",
+    "platformPlaceholder": "如：PC / PS5 / Switch",
+    "genre": "類型",
+    "genrePlaceholder": "如：RPG / FPS",
+    "playStatus": "遊玩狀態",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "playHours": "時長（小時）",
+    "rating": "評分（0-10）",
+    "cover": "封面圖",
+    "coverUrlPlaceholder": "或直接貼上封面網址",
+    "mediaLibrary": "媒體庫",
+    "shortReview": "短評",
+    "shortReviewPlaceholder": "一句話短評"
+  },
+  "message": {
+    "titleRequired": "請輸入遊戲名稱",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，確定要刪除嗎？"
+  }
+}

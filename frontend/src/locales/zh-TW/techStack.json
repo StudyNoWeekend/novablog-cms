@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "技術棧",
+    "addTech": "新增技術",
+    "editTech": "編輯技術",
+    "searchPlaceholder": "搜尋技術...",
+    "total": "共 {total} 項"
+  },
+  "columns": {
+    "tech": "技術",
+    "level": "熟練度",
+    "publish": "發布"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已發布"
+  },
+  "level": {
+    "aware": "了解",
+    "familiar": "熟悉",
+    "proficient": "熟練",
+    "expert": "精通"
+  },
+  "category": {
+    "language": "語言",
+    "framework": "框架",
+    "tool": "工具",
+    "database": "資料庫",
+    "other": "其他"
+  },
+  "form": {
+    "namePlaceholder": "如：Go / Vue 3 / PostgreSQL",
+    "nameRequired": "請輸入技術名稱",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "levelLabel": "熟練度",
+    "iconPlaceholder": "或直接貼上圖示網址",
+    "descPlaceholder": "使用經驗、代表作品等"
+  },
+  "message": {
+    "offlineSuccess": "已下架",
+    "publishSuccess": "已發布",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，確定要刪除嗎？"
+  }
+}

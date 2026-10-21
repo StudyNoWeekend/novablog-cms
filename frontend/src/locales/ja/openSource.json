@@ -1,0 +1,51 @@
+{
+  "list": {
+    "title": "オープンソース作品",
+    "addRepo": "リポジトリを追加",
+    "editRepo": "リポジトリを編集",
+    "searchPlaceholder": "リポジトリ名/概要を検索...",
+    "allStatus": "すべてのステータス",
+    "empty": "オープンソース作品はまだありません。右上の「リポジトリを追加」から GitHub リポジトリを追加しましょう",
+    "noSummary": "概要なし。保存後にリポジトリの説明が自動入力されます",
+    "starsTitle": "Star 数（同期時のスナップショット）",
+    "homepageTitle": "ホームページ / デモ",
+    "repoTitle": "リポジトリリンク",
+    "total": "全 {total} 件のリポジトリ"
+  },
+  "modal": {
+    "fetchTip": "保存時にリポジトリの README とメタデータ（説明/言語/Star など）を自動取得します。サーバーから GitHub にアクセスできることを確認してください"
+  },
+  "status": {
+    "draft": "下書き",
+    "published": "公開済み"
+  },
+  "form": {
+    "nameLabel": "リポジトリ名",
+    "namePlaceholder": "例：novablog",
+    "nameRequired": "リポジトリ名を入力してください",
+    "languageLabel": "主な言語",
+    "languagePlaceholder": "例：Go / Vue。保存時に自動入力",
+    "repoUrlLabel": "リポジトリリンク",
+    "repoUrlPlaceholder": "https://github.com/owner/repo",
+    "repoUrlRequired": "リポジトリリンクを入力してください",
+    "summaryLabel": "一言紹介",
+    "summaryPlaceholder": "空欄の場合、保存時にリポジトリの説明が自動入力されます（リストカード表示用）",
+    "topicsLabel": "トピックタグ",
+    "topicsPlaceholder": "入力して Enter で追加。保存時にリポジトリの topics を自動入力",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "homepageLabel": "ホームページ / デモ",
+    "homepagePlaceholder": "https://（任意）",
+    "sortWeight": "表示順"
+  },
+  "readme": {
+    "reload": "再読み込み",
+    "fetchedAt": "最終取得：{time}",
+    "empty": "まだ README を取得していません。「同期」ボタンを試してください"
+  },
+  "message": {
+    "addSuccess": "追加しました。README を自動取得しました",
+    "synced": "「{name}」を同期しました",
+    "deleteTitle": "リポジトリを削除",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

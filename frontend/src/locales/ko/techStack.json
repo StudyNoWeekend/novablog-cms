@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "기술 스택",
+    "addTech": "기술 추가",
+    "editTech": "기술 편집",
+    "searchPlaceholder": "기술 검색...",
+    "total": "총 {total}개"
+  },
+  "columns": {
+    "tech": "기술",
+    "level": "숙련도",
+    "publish": "게시"
+  },
+  "status": {
+    "draft": "초안",
+    "published": "게시됨"
+  },
+  "level": {
+    "aware": "기초",
+    "familiar": "익숙",
+    "proficient": "능숙",
+    "expert": "전문가"
+  },
+  "category": {
+    "language": "언어",
+    "framework": "프레임워크",
+    "tool": "도구",
+    "database": "데이터베이스",
+    "other": "기타"
+  },
+  "form": {
+    "namePlaceholder": "예: Go / Vue 3 / PostgreSQL",
+    "nameRequired": "기술 이름을 입력해 주세요",
+    "categoryPlaceholder": "카테고리 선택 (선택)",
+    "levelLabel": "숙련도",
+    "iconPlaceholder": "또는 아이콘 URL을 직접 붙여넣기",
+    "descPlaceholder": "사용 경험, 대표 작품 등"
+  },
+  "message": {
+    "offlineSuccess": "게시 취소됨",
+    "publishSuccess": "게시되었습니다",
+    "deleteTitle": "기술 삭제",
+    "deleteConfirm": "{name}을(를) 삭제하면 복구할 수 없습니다. 삭제하시겠습니까?"
+  }
+}

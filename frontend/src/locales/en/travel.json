@@ -1,0 +1,217 @@
+{
+  "list": {
+    "title": "Travel Guides",
+    "create": "New Guide",
+    "statsAria": "Guide statistics",
+    "empty": "No matching guides found",
+    "totalItems": "{total} guides"
+  },
+  "stats": {
+    "total": "Total Guides",
+    "thisMonth": "New This Month",
+    "totalViews": "Total Views",
+    "avgRating": "Average Rating"
+  },
+  "filter": {
+    "regionPlaceholder": "Select region",
+    "daysAria": "Filter by days",
+    "sortAria": "Sort by",
+    "searchPlaceholder": "Search guide titles, destinations...",
+    "searchAria": "Search guides",
+    "days1To3": "1-3 days",
+    "days4To7": "4-7 days",
+    "days8To14": "8-14 days",
+    "days15Plus": "15+ days"
+  },
+  "sort": {
+    "latest": "Newest",
+    "mostViewed": "Most Viewed",
+    "topRated": "Top Rated",
+    "mostLiked": "Most Liked"
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published",
+    "archived": "Archived"
+  },
+  "actions": {
+    "toDraft": "Move to Draft",
+    "addAttraction": "Add Attraction",
+    "editAttraction": "Edit Attraction",
+    "deleteAttraction": "Delete Attraction",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removeAttraction": "Remove Attraction"
+  },
+  "card": {
+    "coverAlt": "Cover image of {title}",
+    "viewDetail": "View Details",
+    "days": "{days} days",
+    "reviewCount": "({count} reviews)"
+  },
+  "common": {
+    "days": "{days} days",
+    "dayN": "Day {day}",
+    "coverAlt": "Cover of {title}"
+  },
+  "section": {
+    "itinerary": "Itinerary",
+    "attractions": "Recommended Attractions",
+    "reviews": "Reviews"
+  },
+  "drawer": {
+    "mapPlaceholder": "Map route (placeholder)",
+    "dayEmpty": "No attractions planned for this day",
+    "avatarAlt": "Avatar of {name}"
+  },
+  "detail": {
+    "title": "Guide Details",
+    "developing": "The guide detail page is under development"
+  },
+  "edit": {
+    "createTitle": "New Guide",
+    "editTitle": "Edit Guide",
+    "notFoundTitle": "Guide Not Found",
+    "notFoundSubtitle": "The guide you are looking for may have been deleted or never created",
+    "backToList": "Back to Guides",
+    "saveDraft": "Save Draft",
+    "publishAria": "Publish guide",
+    "openPreview": "Open preview",
+    "leaveTitle": "Leave this page?",
+    "leaveConfirm": "You have unsaved changes. Leave anyway?",
+    "leaveOk": "Leave"
+  },
+  "form": {
+    "basicInfo": "Basic Info",
+    "titleLabel": "Guide Title",
+    "titlePlaceholder": "Enter guide title",
+    "titleRequired": "Please enter the guide title",
+    "destinationLabel": "Destination",
+    "destinationPlaceholder": "e.g. Lhasa, Tibet",
+    "destinationRequired": "Please enter the destination",
+    "regionLabel": "Region",
+    "regionPlaceholder": "Select a region",
+    "regionRequired": "Please select a region",
+    "daysLabel": "Trip Days",
+    "daysPlaceholder": "Enter number of days",
+    "daysRequired": "Please enter the trip days",
+    "bestMonthLabel": "Best Travel Months",
+    "bestMonthPlaceholder": "e.g. Mar-May",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Select a category (optional)",
+    "selectCoverAria": "Click to select a cover image",
+    "changeCover": "Change Cover",
+    "removeCoverAria": "Remove cover image",
+    "summaryLabel": "Summary",
+    "summaryPlaceholder": "Enter guide summary"
+  },
+  "builder": {
+    "dayTitleLabel": "Day {day} title",
+    "dayTitlePlaceholder": "Enter a title for this day",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter the plan for this day",
+    "attractionCount": "{count} attractions",
+    "emptyAttractions": "No attractions yet. Click \"Add Attraction\" or drag one here",
+    "attractionListAria": "Attractions of day {day}",
+    "emptyDays": "No trip days yet",
+    "noAvailableAttractions": "No attractions available to add",
+    "unknownAttraction": "Unknown attraction"
+  },
+  "pool": {
+    "title": "Attraction Pool",
+    "subtitle": "Add attractions first, then drag or pick them into a day",
+    "listAria": "Attraction list",
+    "attractionAria": "Attraction: {name}",
+    "imageAlt": "Image of {name}",
+    "dayRef": "Day {day}",
+    "empty": "No attractions yet. Use the button above to add one",
+    "namePlaceholder": "Enter attraction name",
+    "descriptionPlaceholder": "Enter attraction description",
+    "selectImageAria": "Select image",
+    "attractionImageAlt": "Attraction image",
+    "changeImage": "Change Image",
+    "removeImageAria": "Remove image",
+    "selectImageText": "Click to select an image",
+    "durationLabel": "Visit Duration",
+    "durationPlaceholder": "e.g. 1 day, 2 days",
+    "locationLabel": "Location",
+    "reselect": "Reselect",
+    "selectLocationRequired": "Select a location",
+    "notesPlaceholder": "Additional notes",
+    "incompleteWarning": "Please complete the attraction name, visit duration and location",
+    "daySeparator": ", ",
+    "coordsTitle": "Lng: {lng}, Lat: {lat}"
+  },
+  "delete": {
+    "confirmTitle": "Delete Guide",
+    "guideConfirm": "Delete \"{name}\"? This cannot be undone.",
+    "attractionInUse": "This attraction is referenced by day(s) {days} and will be removed from all days of the itinerary. Continue?"
+  },
+  "message": {
+    "statusUpdated": "Status updated",
+    "draftSaved": "Draft saved",
+    "publishSuccess": "Published successfully",
+    "completeRequired": "Please complete the required fields"
+  },
+  "coverPicker": {
+    "title": "Select Cover Image",
+    "searchPlaceholder": "Search image file names",
+    "selectImageAria": "Select image {name}",
+    "noImages": "No images",
+    "selected": "Selected",
+    "selectedAlt": "Selected cover",
+    "notSelected": "Nothing selected",
+    "uploadLocal": "Upload from Device",
+    "confirm": "Confirm Selection",
+    "uploadFailed": "Upload failed. Please try again"
+  },
+  "preview": {
+    "title": "Live Preview",
+    "updating": "Updating preview",
+    "reviewsPending": "Reviews will be shown after publishing"
+  },
+  "location": {
+    "title": "Select Location",
+    "providerAmap": "Amap",
+    "providerGoogle": "Google Maps",
+    "providerOsm": "OSM Keyless Mode",
+    "hintAmap": "Amap is used for the current region",
+    "hintGoogle": "Google Maps is used for the current region",
+    "hintOsm": "No map key configured or loading failed. Switched to OSM keyless mode (WGS-84 coordinates)",
+    "searchPlaceholder": "Search places by name or address",
+    "coords": "Lng: {lng}, Lat: {lat}"
+  },
+  "regions": {
+    "all": "All",
+    "asia": "Asia",
+    "europe": "Europe",
+    "americas": "Americas",
+    "oceania": "Oceania",
+    "africa": "Africa",
+    "polar": "Polar Regions",
+    "china": "China",
+    "japan": "Japan",
+    "korea": "Korea",
+    "southeast-asia": "Southeast Asia",
+    "south-asia": "South Asia",
+    "central-asia": "Central Asia",
+    "middle-east": "Middle East",
+    "western-europe": "Western Europe",
+    "southern-europe": "Southern Europe",
+    "northern-europe": "Northern Europe",
+    "eastern-europe": "Eastern Europe",
+    "uk-ireland": "UK and Ireland",
+    "north-america": "North America",
+    "central-caribbean": "Central America and Caribbean",
+    "south-america": "South America",
+    "australia": "Australia",
+    "new-zealand": "New Zealand",
+    "pacific-islands": "Pacific Islands",
+    "north-africa": "North Africa",
+    "east-africa": "East Africa",
+    "southern-africa": "Southern Africa",
+    "west-central-africa": "West and Central Africa",
+    "antarctica": "Antarctica",
+    "arctic": "Arctic"
+  }
+}

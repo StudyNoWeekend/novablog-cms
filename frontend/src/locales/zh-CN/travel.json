@@ -1,0 +1,217 @@
+{
+  "list": {
+    "title": "旅行攻略",
+    "create": "新建攻略",
+    "statsAria": "攻略统计",
+    "empty": "没有找到匹配的攻略",
+    "totalItems": "共 {total} 篇"
+  },
+  "stats": {
+    "total": "攻略总数",
+    "thisMonth": "本月新增",
+    "totalViews": "总浏览量",
+    "avgRating": "平均评分"
+  },
+  "filter": {
+    "regionPlaceholder": "选择地区",
+    "daysAria": "天数筛选",
+    "sortAria": "排序方式",
+    "searchPlaceholder": "搜索攻略标题、目的地...",
+    "searchAria": "搜索攻略",
+    "days1To3": "1-3 天",
+    "days4To7": "4-7 天",
+    "days8To14": "8-14 天",
+    "days15Plus": "15 天以上"
+  },
+  "sort": {
+    "latest": "最新发布",
+    "mostViewed": "最多浏览",
+    "topRated": "最高评分",
+    "mostLiked": "最多点赞"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已发布",
+    "archived": "已下架"
+  },
+  "actions": {
+    "toDraft": "转为草稿",
+    "addAttraction": "添加景点",
+    "editAttraction": "编辑景点",
+    "deleteAttraction": "删除景点",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "removeAttraction": "移除景点"
+  },
+  "card": {
+    "coverAlt": "{title} 封面图",
+    "viewDetail": "查看详情",
+    "days": "{days}天",
+    "reviewCount": "({count}条评价)"
+  },
+  "common": {
+    "days": "{days} 天",
+    "dayN": "第 {day} 天",
+    "coverAlt": "{title} 封面"
+  },
+  "section": {
+    "itinerary": "行程安排",
+    "attractions": "景点推荐",
+    "reviews": "用户评价"
+  },
+  "drawer": {
+    "mapPlaceholder": "地图轨迹（占位）",
+    "dayEmpty": "当天暂无景点安排",
+    "avatarAlt": "{name} 头像"
+  },
+  "detail": {
+    "title": "攻略详情",
+    "developing": "攻略详情页开发中"
+  },
+  "edit": {
+    "createTitle": "新建攻略",
+    "editTitle": "编辑攻略",
+    "notFoundTitle": "攻略不存在",
+    "notFoundSubtitle": "您访问的攻略可能已被删除或从未创建",
+    "backToList": "返回攻略列表",
+    "saveDraft": "保存草稿",
+    "publishAria": "发布攻略",
+    "openPreview": "打开预览",
+    "leaveTitle": "确认离开",
+    "leaveConfirm": "有未保存的修改，是否确认离开？",
+    "leaveOk": "离开"
+  },
+  "form": {
+    "basicInfo": "基础信息",
+    "titleLabel": "攻略标题",
+    "titlePlaceholder": "请输入攻略标题",
+    "titleRequired": "请输入攻略标题",
+    "destinationLabel": "目的地",
+    "destinationPlaceholder": "如：西藏拉萨",
+    "destinationRequired": "请输入目的地",
+    "regionLabel": "地区分类",
+    "regionPlaceholder": "选择地区分类",
+    "regionRequired": "请选择地区分类",
+    "daysLabel": "行程天数",
+    "daysPlaceholder": "请输入天数",
+    "daysRequired": "请输入行程天数",
+    "bestMonthLabel": "最佳出行月份",
+    "bestMonthPlaceholder": "如：3-5月",
+    "categoryLabel": "攻略分类",
+    "categoryPlaceholder": "选择分类（可选）",
+    "selectCoverAria": "点击选择封面图",
+    "changeCover": "更换封面",
+    "removeCoverAria": "移除封面图",
+    "summaryLabel": "攻略摘要",
+    "summaryPlaceholder": "请输入攻略摘要"
+  },
+  "builder": {
+    "dayTitleLabel": "第 {day} 天标题",
+    "dayTitlePlaceholder": "请输入当天标题",
+    "descriptionLabel": "行程描述",
+    "descriptionPlaceholder": "请输入当天行程描述",
+    "attractionCount": "景点 {count}",
+    "emptyAttractions": "暂无景点，点击“添加景点”或将景点拖拽到此处",
+    "attractionListAria": "第 {day} 天景点列表",
+    "emptyDays": "暂无行程天数",
+    "noAvailableAttractions": "没有可添加的景点",
+    "unknownAttraction": "未知景点"
+  },
+  "pool": {
+    "title": "景点池",
+    "subtitle": "先添加景点，再拖拽或选择到对应日期",
+    "listAria": "景点列表",
+    "attractionAria": "景点：{name}",
+    "imageAlt": "{name} 图片",
+    "dayRef": "第{day}天",
+    "empty": "还没有景点，点击上方按钮添加",
+    "namePlaceholder": "请输入景点名称",
+    "descriptionPlaceholder": "请输入景点描述",
+    "selectImageAria": "选择图片",
+    "attractionImageAlt": "景点图片",
+    "changeImage": "更换图片",
+    "removeImageAria": "移除图片",
+    "selectImageText": "点击选择图片",
+    "durationLabel": "游玩天数",
+    "durationPlaceholder": "例如：1天、2天",
+    "locationLabel": "选择定位",
+    "reselect": "重新选择",
+    "selectLocationRequired": "请选择定位",
+    "notesPlaceholder": "其他补充信息",
+    "incompleteWarning": "请完善景点名称、游玩天数，并完成选择定位",
+    "daySeparator": "、",
+    "coordsTitle": "经度: {lng}, 纬度: {lat}"
+  },
+  "delete": {
+    "confirmTitle": "确认删除",
+    "guideConfirm": "确定要删除「{name}」吗？删除后无法恢复。",
+    "attractionInUse": "该景点已被第 {days} 天引用，删除后会从所有日行程中移除。是否继续？"
+  },
+  "message": {
+    "statusUpdated": "状态更新成功",
+    "draftSaved": "保存草稿成功",
+    "publishSuccess": "发布成功",
+    "completeRequired": "请完善必填信息"
+  },
+  "coverPicker": {
+    "title": "选择封面图",
+    "searchPlaceholder": "搜索图片文件名",
+    "selectImageAria": "选择图片 {name}",
+    "noImages": "暂无图片",
+    "selected": "已选择",
+    "selectedAlt": "已选封面",
+    "notSelected": "未选择",
+    "uploadLocal": "本地上传",
+    "confirm": "确认选择",
+    "uploadFailed": "上传失败，请重试"
+  },
+  "preview": {
+    "title": "实时预览",
+    "updating": "预览更新中",
+    "reviewsPending": "评价将在发布后展示"
+  },
+  "location": {
+    "title": "选择定位",
+    "providerAmap": "高德地图",
+    "providerGoogle": "Google Maps",
+    "providerOsm": "OSM 免 Key 模式",
+    "hintAmap": "当前地区使用高德地图",
+    "hintGoogle": "当前地区使用 Google Maps",
+    "hintOsm": "未配置地图 Key 或加载失败，已切换 OSM 免 Key 模式（WGS-84 坐标）",
+    "searchPlaceholder": "搜索地点名称或地址",
+    "coords": "经度: {lng}, 纬度: {lat}"
+  },
+  "regions": {
+    "all": "全部",
+    "asia": "亚洲",
+    "europe": "欧洲",
+    "americas": "美洲",
+    "oceania": "大洋洲",
+    "africa": "非洲",
+    "polar": "极地",
+    "china": "中国",
+    "japan": "日本",
+    "korea": "韩国",
+    "southeast-asia": "东南亚",
+    "south-asia": "南亚",
+    "central-asia": "中亚",
+    "middle-east": "中东",
+    "western-europe": "西欧",
+    "southern-europe": "南欧",
+    "northern-europe": "北欧",
+    "eastern-europe": "东欧",
+    "uk-ireland": "英国与爱尔兰",
+    "north-america": "北美",
+    "central-caribbean": "中美与加勒比",
+    "south-america": "南美",
+    "australia": "澳大利亚",
+    "new-zealand": "新西兰",
+    "pacific-islands": "太平洋岛屿",
+    "north-africa": "北非",
+    "east-africa": "东非",
+    "southern-africa": "南非",
+    "west-central-africa": "西非与中非",
+    "antarctica": "南极洲",
+    "arctic": "北极"
+  }
+}

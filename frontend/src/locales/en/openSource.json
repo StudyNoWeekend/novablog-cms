@@ -1,0 +1,51 @@
+{
+  "list": {
+    "title": "Open Source",
+    "addRepo": "Add Repository",
+    "editRepo": "Edit Repository",
+    "searchPlaceholder": "Search repositories...",
+    "allStatus": "All statuses",
+    "empty": "No open-source works yet. Click \"Add Repository\" at the top right to add a GitHub repo",
+    "noSummary": "No summary yet. The repo description fills in automatically after saving",
+    "starsTitle": "Stars (snapshot at sync)",
+    "homepageTitle": "Homepage / Demo",
+    "repoTitle": "Repository link",
+    "total": "{total} repositories in total"
+  },
+  "modal": {
+    "fetchTip": "The repo README and metadata (description, language, stars, etc.) will be fetched automatically on save. Make sure the server can access GitHub"
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published"
+  },
+  "form": {
+    "nameLabel": "Repository Name",
+    "namePlaceholder": "e.g. novablog",
+    "nameRequired": "Please enter the repository name",
+    "languageLabel": "Primary Language",
+    "languagePlaceholder": "e.g. Go / Vue; filled in automatically on save",
+    "repoUrlLabel": "Repository Link",
+    "repoUrlPlaceholder": "https://github.com/owner/repo",
+    "repoUrlRequired": "Please enter the repository link",
+    "summaryLabel": "One-line Summary",
+    "summaryPlaceholder": "Leave empty to fill in the repo description automatically on save (shown on list cards)",
+    "topicsLabel": "Topics",
+    "topicsPlaceholder": "Type and press Enter to add; repo topics fill in automatically on save",
+    "categoryPlaceholder": "Select a category (optional)",
+    "homepageLabel": "Homepage / Demo",
+    "homepagePlaceholder": "https:// (optional)",
+    "sortWeight": "Sort Weight"
+  },
+  "readme": {
+    "reload": "Reload",
+    "fetchedAt": "Last fetched: {time}",
+    "empty": "README not fetched yet. Try the \"Sync\" button"
+  },
+  "message": {
+    "addSuccess": "Added. README has been fetched automatically",
+    "synced": "\"{name}\" synced",
+    "deleteTitle": "Delete Repository",
+    "deleteConfirm": "Repository \"{name}\" will be permanently deleted. Are you sure?"
+  }
+}

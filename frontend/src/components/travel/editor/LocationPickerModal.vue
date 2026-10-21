@@ -1,7 +1,7 @@
 <template>
   <a-modal
     :open="visible"
-    title="选择定位"
+    :title="$t('travel.location.title')"
     :width="800"
     :footer="null"
     destroy-on-close
@@ -22,8 +22,8 @@
       <div class="search-bar">
         <a-input-search
           v-model:value="searchKeyword"
-          placeholder="搜索地点名称或地址"
-          enter-button="搜索"
+          :placeholder="$t('travel.location.searchPlaceholder')"
+          :enter-button="$t('common.actions.search')"
           :loading="searching"
           @search="handleSearch"
         />
@@ -55,15 +55,15 @@
           <span>{{ selectedAddress }}</span>
         </div>
         <div class="selected-coords">
-          经度: {{ selectedLongitude?.toFixed(6) }}, 纬度: {{ selectedLatitude?.toFixed(6) }}
+          {{ $t('travel.location.coords', { lng: selectedLongitude?.toFixed(6), lat: selectedLatitude?.toFixed(6) }) }}
         </div>
       </div>
 
       <!-- 操作按钮 -->
       <div class="actions">
-        <a-button @click="handleCancel">取消</a-button>
+        <a-button @click="handleCancel">{{ $t('common.actions.cancel') }}</a-button>
         <a-button type="primary" :disabled="!selectedAddress" @click="handleConfirm">
-          确认
+          {{ $t('common.actions.confirm') }}
         </a-button>
       </div>
     </div>
@@ -72,6 +72,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { EnvironmentOutlined } from '@ant-design/icons-vue'
 import { useAmap } from '@/composables/useAmap'
 import { useGoogleMap } from '@/composables/useGoogleMap'
@@ -90,6 +91,8 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
+const { t } = useI18n()
+
 type MapProvider = 'amap' | 'google' | 'osm'
 
 const mapContainer = ref<HTMLElement | null>(null)
@@ -101,18 +104,19 @@ const selectedLatitude = ref<number | null>(null)
 const selectedLongitude = ref<number | null>(null)
 const provider = ref<MapProvider>('amap')
 
+// 地图服务名称与提示（跟随当前语言）
 const providerLabel = computed(() =>
-  provider.value === 'amap' ? '高德地图' : provider.value === 'google' ? 'Google Maps' : 'OSM 免 Key 模式',
+  provider.value === 'amap' ? t('travel.location.providerAmap') : provider.value === 'google' ? t('travel.location.providerGoogle') : t('travel.location.providerOsm'),
 )
 const providerColor = computed(() =>
   provider.value === 'amap' ? 'green' : provider.value === 'google' ? 'blue' : 'orange',
 )
 const providerHint = computed(() =>
   provider.value === 'amap'
-    ? '当前地区使用高德地图'
+    ? t('travel.location.hintAmap')
     : provider.value === 'google'
-      ? '当前地区使用 Google Maps'
-      : '未配置地图 Key 或加载失败，已切换 OSM 免 Key 模式（WGS-84 坐标）',
+      ? t('travel.location.hintGoogle')
+      : t('travel.location.hintOsm'),
 )
 
 // 区域中心坐标映射 (高德用 [lng, lat], 谷歌/OSM 用 {lat, lng})

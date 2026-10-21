@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "create": "New Recipe",
+    "edit": "Edit Recipe"
+  },
+  "status": {
+    "published": "Published",
+    "draft": "Draft",
+    "unpublished": "Unpublished"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "columns": {
+    "recipe": "Recipe",
+    "difficulty": "Difficulty",
+    "minutes": "Time (min)",
+    "publish": "Publish"
+  },
+  "list": {
+    "searchPlaceholder": "Search recipes...",
+    "total": "{total} recipes in total"
+  },
+  "form": {
+    "title": "Recipe Name",
+    "titlePlaceholder": "Enter the recipe name",
+    "categoryPlaceholder": "Select a category (optional)",
+    "cover": "Cover",
+    "coverUrlPlaceholder": "Or paste a cover image URL directly",
+    "mediaLibrary": "Media Library",
+    "summary": "Summary",
+    "summaryPlaceholder": "Introduce this dish in one sentence",
+    "difficulty": "Difficulty",
+    "minutes": "Time (minutes)",
+    "servings": "Servings",
+    "tags": "Tags (comma separated)",
+    "tagsPlaceholder": "e.g. home-style,rice bowl",
+    "ingredients": "Ingredients",
+    "ingredientNamePlaceholder": "Ingredient name, e.g. tomato",
+    "ingredientAmountPlaceholder": "Amount, e.g. 2",
+    "addIngredient": "Add Ingredient",
+    "steps": "Steps",
+    "stepPlaceholder": "What to do in this step",
+    "addStep": "Add Step"
+  },
+  "message": {
+    "titleRequired": "Please enter the recipe name",
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "“{name}” will be permanently deleted. Are you sure?"
+  }
+}

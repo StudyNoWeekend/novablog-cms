@@ -1,10 +1,10 @@
 <template>
   <div v-if="notFound" class="not-found-wrapper">
-    <a-result status="404" title="攻略不存在" sub-title="您访问的攻略可能已被删除或从未创建">
+    <a-result status="404" :title="$t('travel.edit.notFoundTitle')" :sub-title="$t('travel.edit.notFoundSubtitle')">
       <template #extra>
-        <a-button type="primary" aria-label="返回攻略列表" @click="router.push('/travels')">
+        <a-button type="primary" :aria-label="$t('travel.edit.backToList')" @click="router.push('/travels')">
           <ArrowLeftOutlined />
-          返回攻略列表
+          {{ $t('travel.edit.backToList') }}
         </a-button>
       </template>
     </a-result>
@@ -15,7 +15,7 @@
       <div class="action-bar-left">
         <a-button
           type="text"
-          aria-label="返回"
+          :aria-label="$t('common.actions.back')"
           @click="handleBack"
         >
           <ArrowLeftOutlined />
@@ -27,31 +27,31 @@
 
       <div class="action-bar-right">
         <a-button
-          aria-label="保存草稿"
+          :aria-label="$t('travel.edit.saveDraft')"
           :loading="saving"
           @click="handleSaveDraft"
         >
           <SaveOutlined />
-          保存草稿
+          {{ $t('travel.edit.saveDraft') }}
         </a-button>
 
         <a-button
           v-show="!isDesktop"
-          aria-label="预览"
+          :aria-label="$t('common.actions.preview')"
           @click="previewVisible = true"
         >
           <EyeOutlined />
-          预览
+          {{ $t('common.actions.preview') }}
         </a-button>
 
         <a-button
           type="primary"
-          aria-label="发布攻略"
+          :aria-label="$t('travel.edit.publishAria')"
           :loading="saving"
           @click="handlePublish"
         >
           <SendOutlined />
-          发布
+          {{ $t('common.actions.publish') }}
         </a-button>
 
         <PushSyncButton
@@ -99,7 +99,7 @@
       shape="circle"
       size="large"
       class="mobile-preview-float"
-      aria-label="打开预览"
+      :aria-label="$t('travel.edit.openPreview')"
       @click="previewVisible = true"
     >
       <EyeOutlined />
@@ -117,6 +117,7 @@ import {
   ref,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   ArrowLeftOutlined,
@@ -137,13 +138,14 @@ import PushSyncButton from '@/components/community/PushSyncButton.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const basicFormRef = ref<InstanceType<typeof TravelBasicForm> | null>(null)
 const pageTitleRef = ref<HTMLElement | null>(null)
 
 const isCreateMode = route.path === '/travels/create'
 const pageTitle = computed(() =>
-  isCreateMode ? '新建攻略' : '编辑攻略',
+  isCreateMode ? t('travel.edit.createTitle') : t('travel.edit.editTitle'),
 )
 
 const guide = reactive<TravelGuideFormData>(createEmptyGuide())
@@ -232,7 +234,7 @@ async function handleSaveDraft() {
   saving.value = true
   try {
     await persistGuide(TravelStatus.Draft)
-    message.success('保存草稿成功')
+    message.success(t('travel.message.draftSaved'))
     router.push('/travels')
   } catch {
     // 错误已由拦截器处理
@@ -244,14 +246,14 @@ async function handleSaveDraft() {
 async function handlePublish() {
   const valid = basicFormRef.value?.isValid()
   if (!valid) {
-    message.warning('请完善必填信息')
+    message.warning(t('travel.message.completeRequired'))
     return
   }
 
   saving.value = true
   try {
     await persistGuide(TravelStatus.Published)
-    message.success('发布成功')
+    message.success(t('travel.message.publishSuccess'))
     router.push('/travels')
   } catch {
     // 错误已由拦截器处理
@@ -263,10 +265,10 @@ async function handlePublish() {
 function handleBack() {
   if (hasUnsavedChanges.value) {
     Modal.confirm({
-      title: '确认离开',
-      content: '有未保存的修改，是否确认离开？',
-      okText: '离开',
-      cancelText: '取消',
+      title: t('travel.edit.leaveTitle'),
+      content: t('travel.edit.leaveConfirm'),
+      okText: t('travel.edit.leaveOk'),
+      cancelText: t('common.actions.cancel'),
       onOk: () => {
         router.back()
       },

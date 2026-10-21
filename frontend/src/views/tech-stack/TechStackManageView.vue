@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">技术栈</h1>
+      <h1 class="page-title">{{ t('techStack.list.title') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 添加技术
+        <PlusOutlined /> {{ t('techStack.list.addTech') }}
       </a-button>
     </div>
 
@@ -14,7 +14,7 @@
       <div class="toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索技术..."
+          :placeholder="t('techStack.list.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
@@ -41,15 +41,15 @@
           </template>
           <template v-else-if="column.key === 'status'">
             <a-tag :color="record.status === 1 ? 'success' : 'default'">
-              {{ record.status === 1 ? '已发布' : '草稿' }}
+              {{ record.status === 1 ? t('techStack.status.published') : t('techStack.status.draft') }}
             </a-tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-button type="link" size="small" @click="toggleStatus(record)">
-              {{ record.status === 1 ? '下架' : '发布' }}
+              {{ record.status === 1 ? t('common.actions.offline') : t('common.actions.publish') }}
             </a-button>
-            <a-button type="link" size="small" @click="handleEdit(record)">编辑</a-button>
-            <a-button type="link" size="small" danger @click="handleDelete(record)">删除</a-button>
+            <a-button type="link" size="small" @click="handleEdit(record)">{{ t('common.actions.edit') }}</a-button>
+            <a-button type="link" size="small" danger @click="handleDelete(record)">{{ t('common.actions.delete') }}</a-button>
           </template>
         </template>
       </a-table>
@@ -57,43 +57,43 @@
 
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '添加技术' : '编辑技术'"
+      :title="modalMode === 'create' ? t('techStack.list.addTech') : t('techStack.list.editTech')"
       :confirm-loading="modalLoading"
       width="560px"
       @ok="handleSubmit"
     >
       <a-form layout="vertical">
-        <a-form-item label="名称" required>
-          <a-input v-model:value="form.name" placeholder="如：Go / Vue 3 / PostgreSQL" :maxlength="100" />
+        <a-form-item :label="t('common.field.name')" required>
+          <a-input v-model:value="form.name" :placeholder="t('techStack.form.namePlaceholder')" :maxlength="100" />
         </a-form-item>
         <div class="form-row">
-          <a-form-item label="分类">
-            <CategorySelect v-model="form.category_id" type="tech_stack" placeholder="选择分类（可选）" />
+          <a-form-item :label="t('common.field.category')">
+            <CategorySelect v-model="form.category_id" type="tech_stack" :placeholder="t('techStack.form.categoryPlaceholder')" />
           </a-form-item>
-          <a-form-item label="熟练度">
+          <a-form-item :label="t('techStack.form.levelLabel')">
             <a-select v-model:value="form.level">
-              <a-select-option :value="1">了解</a-select-option>
-              <a-select-option :value="2">熟悉</a-select-option>
-              <a-select-option :value="3">熟练</a-select-option>
-              <a-select-option :value="4">精通</a-select-option>
+              <a-select-option :value="1">{{ t('techStack.level.aware') }}</a-select-option>
+              <a-select-option :value="2">{{ t('techStack.level.familiar') }}</a-select-option>
+              <a-select-option :value="3">{{ t('techStack.level.proficient') }}</a-select-option>
+              <a-select-option :value="4">{{ t('techStack.level.expert') }}</a-select-option>
             </a-select>
           </a-form-item>
         </div>
-        <a-form-item label="图标">
+        <a-form-item :label="t('common.field.icon')">
           <ImageField
             v-model="form.icon"
             type="tech"
             :search-keyword="form.name"
-            placeholder="或直接粘贴图标地址"
+            :placeholder="t('techStack.form.iconPlaceholder')"
           />
         </a-form-item>
-        <a-form-item label="描述">
-          <a-textarea v-model:value="form.description" placeholder="使用经验、代表作品等" :rows="3" :maxlength="500" />
+        <a-form-item :label="t('common.field.description')">
+          <a-textarea v-model:value="form.description" :placeholder="t('techStack.form.descPlaceholder')" :rows="3" :maxlength="500" />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.field.status')">
           <a-radio-group v-model:value="form.status">
-            <a-radio :value="0">草稿</a-radio>
-            <a-radio :value="1">发布</a-radio>
+            <a-radio :value="0">{{ t('techStack.status.draft') }}</a-radio>
+            <a-radio :value="1">{{ t('common.actions.publish') }}</a-radio>
           </a-radio-group>
         </a-form-item>
       </a-form>
@@ -103,6 +103,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { techStackApi } from '@/api/tech-stack'
@@ -112,6 +113,8 @@ import CategoryBar from '@/components/common/CategoryBar.vue'
 import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
+
+const { t } = useI18n()
 
 const keyword = ref('')
 const categoryFilter = ref<string | undefined>(undefined)
@@ -135,20 +138,20 @@ const form = reactive({
   status: 0,
 })
 
-const columns = [
-  { key: 'name', title: '技术', ellipsis: true },
-  { key: 'level', title: '熟练度', width: 100 },
-  { key: 'description', title: '描述', ellipsis: true },
-  { key: 'status', title: '发布', width: 90 },
-  { key: 'action', title: '操作', width: 200 },
-]
+const columns = computed(() => [
+  { key: 'name', title: t('techStack.columns.tech'), ellipsis: true },
+  { key: 'level', title: t('techStack.columns.level'), width: 100 },
+  { key: 'description', title: t('common.field.description'), ellipsis: true },
+  { key: 'status', title: t('techStack.columns.publish'), width: 90 },
+  { key: 'action', title: t('common.table.actions'), width: 200 },
+])
 
 const paginationConfig = computed(() => ({
   current: page.value,
   pageSize: pageSize.value,
   total: total.value,
   showSizeChanger: true,
-  showTotal: (t: number) => `共 ${t} 项`,
+  showTotal: (count: number) => t('techStack.list.total', { total: count }),
 }))
 
 watch(keyword, setDebounce)
@@ -191,12 +194,27 @@ function handleTableChange(p: { current?: number; pageSize?: number }) {
   fetchList()
 }
 
+const categoryLabels = computed<Record<string, string>>(() => ({
+  language: t('techStack.category.language'),
+  framework: t('techStack.category.framework'),
+  tool: t('techStack.category.tool'),
+  database: t('techStack.category.database'),
+  other: t('techStack.category.other'),
+}))
+
 function categoryLabel(c: string): string {
-  return { language: '语言', framework: '框架', tool: '工具', database: '数据库', other: '其他' }[c] || c
+  return categoryLabels.value[c] || c
 }
 
+const levelLabels = computed<Record<number, string>>(() => ({
+  1: t('techStack.level.aware'),
+  2: t('techStack.level.familiar'),
+  3: t('techStack.level.proficient'),
+  4: t('techStack.level.expert'),
+}))
+
 function levelLabel(l: number): string {
-  return { 1: '了解', 2: '熟悉', 3: '熟练', 4: '精通' }[l] || '了解'
+  return levelLabels.value[l] || t('techStack.level.aware')
 }
 
 function levelColor(l: number): string {
@@ -245,17 +263,17 @@ function buildPayload() {
 
 async function handleSubmit() {
   if (!form.name.trim()) {
-    message.warning('请输入技术名称')
+    message.warning(t('techStack.form.nameRequired'))
     return
   }
   modalLoading.value = true
   try {
     if (modalMode.value === 'create') {
       await techStackApi.create(buildPayload())
-      message.success('创建成功')
+      message.success(t('common.message.createSuccess'))
     } else {
       await techStackApi.update(editingId.value, buildPayload())
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -269,7 +287,7 @@ async function handleSubmit() {
 async function toggleStatus(record: TechStackItem) {
   try {
     await techStackApi.update(record.id, { status: record.status === 1 ? 0 : 1 })
-    message.success(record.status === 1 ? '已下架' : '已发布')
+    message.success(record.status === 1 ? t('techStack.message.offlineSuccess') : t('techStack.message.publishSuccess'))
     fetchList()
   } catch {
     // 错误由拦截器处理
@@ -278,15 +296,15 @@ async function toggleStatus(record: TechStackItem) {
 
 function handleDelete(record: TechStackItem) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${record.name}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('techStack.message.deleteTitle'),
+    content: t('techStack.message.deleteConfirm', { name: record.name }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await techStackApi.remove(record.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }

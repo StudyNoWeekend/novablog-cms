@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "记录训练",
+    "edit": "编辑训练"
+  },
+  "status": {
+    "published": "已发布",
+    "draft": "草稿",
+    "offline": "已下架"
+  },
+  "type": {
+    "strength": "力量",
+    "cardio": "有氧",
+    "stretch": "拉伸"
+  },
+  "columns": {
+    "title": "训练",
+    "duration": "时长",
+    "calories": "消耗",
+    "status": "发布"
+  },
+  "unit": {
+    "minutes": "分钟",
+    "kcal": "千卡"
+  },
+  "list": {
+    "searchPlaceholder": "搜索训练..."
+  },
+  "form": {
+    "date": "训练日期",
+    "categoryPlaceholder": "选择分类（可选）",
+    "titlePlaceholder": "如：卧推 + 划船日",
+    "duration": "时长（分钟）",
+    "calories": "消耗（千卡）",
+    "exerciseList": "动作清单",
+    "exerciseNamePlaceholder": "动作，如：卧推",
+    "setsPlaceholder": "组数，如：4",
+    "repsPlaceholder": "次数，如：8-12",
+    "addExercise": "添加动作",
+    "notesPlaceholder": "训练感受、重量记录等"
+  },
+  "message": {
+    "titleRequired": "请输入训练标题",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

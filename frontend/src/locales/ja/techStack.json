@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "技術スタック",
+    "addTech": "技術を追加",
+    "editTech": "技術を編集",
+    "searchPlaceholder": "技術を検索...",
+    "total": "全 {total} 件"
+  },
+  "columns": {
+    "tech": "技術",
+    "level": "習熟度",
+    "publish": "公開"
+  },
+  "status": {
+    "draft": "下書き",
+    "published": "公開済み"
+  },
+  "level": {
+    "aware": "知っている",
+    "familiar": "使える",
+    "proficient": "得意",
+    "expert": "エキスパート"
+  },
+  "category": {
+    "language": "言語",
+    "framework": "フレームワーク",
+    "tool": "ツール",
+    "database": "データベース",
+    "other": "その他"
+  },
+  "form": {
+    "namePlaceholder": "例：Go / Vue 3 / PostgreSQL",
+    "nameRequired": "技術名を入力してください",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "levelLabel": "習熟度",
+    "iconPlaceholder": "またはアイコン URL を直接貼り付け",
+    "descPlaceholder": "使用経験、代表作品など"
+  },
+  "message": {
+    "offlineSuccess": "非公開にしました",
+    "publishSuccess": "公開しました",
+    "deleteTitle": "技術を削除",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

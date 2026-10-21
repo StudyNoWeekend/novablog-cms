@@ -1,0 +1,51 @@
+{
+  "list": {
+    "title": "오픈 소스 작품",
+    "addRepo": "저장소 추가",
+    "editRepo": "저장소 편집",
+    "searchPlaceholder": "저장소 이름/소개 검색...",
+    "allStatus": "전체 상태",
+    "empty": "아직 오픈 소스 작품이 없습니다. 오른쪽 위의 \"저장소 추가\"를 눌러 GitHub 저장소를 추가하세요",
+    "noSummary": "소개 없음. 저장 후 저장소 설명이 자동으로 채워집니다",
+    "starsTitle": "Star 수 (동기화 시점 스냅샷)",
+    "homepageTitle": "홈페이지 / 데모",
+    "repoTitle": "저장소 링크",
+    "total": "총 {total}개의 저장소"
+  },
+  "modal": {
+    "fetchTip": "저장 시 저장소의 README와 메타데이터(설명/언어/Star 등)를 자동으로 가져옵니다. 서버가 GitHub에 접근할 수 있어야 합니다"
+  },
+  "status": {
+    "draft": "초안",
+    "published": "게시됨"
+  },
+  "form": {
+    "nameLabel": "저장소 이름",
+    "namePlaceholder": "예: novablog",
+    "nameRequired": "저장소 이름을 입력해 주세요",
+    "languageLabel": "주 언어",
+    "languagePlaceholder": "예: Go / Vue, 저장 시 자동으로 채워짐",
+    "repoUrlLabel": "저장소 링크",
+    "repoUrlPlaceholder": "https://github.com/owner/repo",
+    "repoUrlRequired": "저장소 링크를 입력해 주세요",
+    "summaryLabel": "한 줄 소개",
+    "summaryPlaceholder": "비워 두면 저장 시 저장소 설명이 자동으로 채워집니다 (목록 카드 표시용)",
+    "topicsLabel": "토픽 태그",
+    "topicsPlaceholder": "입력 후 Enter로 추가. 저장 시 저장소 topics가 자동으로 채워짐",
+    "categoryPlaceholder": "카테고리 선택 (선택)",
+    "homepageLabel": "홈페이지 / 데모",
+    "homepagePlaceholder": "https:// (선택)",
+    "sortWeight": "정렬 가중치"
+  },
+  "readme": {
+    "reload": "다시 불러오기",
+    "fetchedAt": "마지막 가져오기: {time}",
+    "empty": "아직 README를 가져오지 않았습니다. \"동기화\" 버튼을 이용해 보세요"
+  },
+  "message": {
+    "addSuccess": "추가되었습니다. README가 자동으로 가져와졌습니다",
+    "synced": "{name} 동기화 완료",
+    "deleteTitle": "저장소 삭제",
+    "deleteConfirm": "{name}을(를) 삭제하면 복구할 수 없습니다. 삭제하시겠습니까?"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "actions": {
+    "create": "New Device",
+    "edit": "Edit Device"
+  },
+  "list": {
+    "searchPlaceholder": "Search devices...",
+    "empty": "No personal devices yet. Start adding!",
+    "noBrand": "No brand set",
+    "noDescription": "No description",
+    "total": "Total {total} devices"
+  },
+  "form": {
+    "namePlaceholder": "Enter device name",
+    "imageAlt": "Device image",
+    "changeImage": "Change image",
+    "selectImage": "Select image",
+    "brand": "Brand",
+    "brandPlaceholder": "Enter brand (optional)",
+    "descriptionPlaceholder": "Enter device description (optional)"
+  },
+  "message": {
+    "nameRequired": "Please enter the device name",
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "\"{name}\" cannot be recovered after deletion. Are you sure?"
+  }
+}

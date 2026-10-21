@@ -3,17 +3,17 @@
   <aside
     v-show="isDesktop"
     class="travel-editor-preview travel-editor-preview--desktop"
-    aria-label="实时预览"
+    :aria-label="$t('travel.preview.title')"
   >
     <div class="travel-editor-preview-header">
-      <span class="travel-editor-preview-title">实时预览</span>
+      <span class="travel-editor-preview-title">{{ $t('travel.preview.title') }}</span>
       <span
         v-if="debouncing"
         class="travel-editor-preview-updating"
         aria-live="polite"
       >
         <SyncOutlined spin />
-        预览更新中
+        {{ $t('travel.preview.updating') }}
       </span>
     </div>
     <div class="travel-editor-preview-body">
@@ -22,7 +22,7 @@
           <img
             v-if="previewGuide.coverImage"
             :src="previewGuide.coverImage"
-            :alt="`${previewGuide.title} 封面`"
+            :alt="$t('travel.common.coverAlt', { title: previewGuide.title })"
           />
           <div v-else class="travel-editor-preview-cover-placeholder">
             <PictureOutlined />
@@ -32,8 +32,8 @@
           <h2 class="travel-editor-preview-title-text">{{ previewGuide.title }}</h2>
           <div class="travel-editor-preview-meta">
             <a-tag color="blue">{{ previewGuide.destination }}</a-tag>
-            <a-tag>{{ getRegionPath(previewGuide.region) }}</a-tag>
-            <a-tag>{{ previewGuide.days }} 天</a-tag>
+            <a-tag>{{ regionPath(previewGuide.region) }}</a-tag>
+            <a-tag>{{ $t('travel.common.days', { days: previewGuide.days }) }}</a-tag>
             <span class="travel-editor-preview-rating">
               <StarFilled class="travel-editor-preview-rating-icon" />
               <span>{{ previewGuide.rating }}</span>
@@ -53,12 +53,12 @@
         aria-labelledby="preview-itinerary-title"
       >
         <h3 id="preview-itinerary-title" class="travel-editor-preview-section-title">
-          行程安排
+          {{ $t('travel.section.itinerary') }}
         </h3>
         <a-timeline>
           <a-timeline-item v-for="day in previewGuide.itinerary" :key="day.day">
             <div class="travel-editor-preview-day">
-              <div class="travel-editor-preview-day-label">第 {{ day.day }} 天</div>
+              <div class="travel-editor-preview-day-label">{{ $t('travel.common.dayN', { day: day.day }) }}</div>
               <div class="travel-editor-preview-day-title">{{ day.title }}</div>
               <div class="travel-editor-preview-day-desc">{{ day.description }}</div>
               <div
@@ -101,7 +101,7 @@
         aria-labelledby="preview-attractions-title"
       >
         <h3 id="preview-attractions-title" class="travel-editor-preview-section-title">
-          景点推荐
+          {{ $t('travel.section.attractions') }}
         </h3>
         <div class="travel-editor-preview-attractions">
           <div
@@ -140,10 +140,10 @@
         aria-labelledby="preview-reviews-title"
       >
         <h3 id="preview-reviews-title" class="travel-editor-preview-section-title">
-          用户评价
+          {{ $t('travel.section.reviews') }}
         </h3>
         <div class="travel-editor-preview-reviews-placeholder">
-          评价将在发布后展示
+          {{ $t('travel.preview.reviewsPending') }}
         </div>
       </section>
     </div>
@@ -153,20 +153,20 @@
   <a-drawer
     :open="visible && !isDesktop"
     placement="bottom"
-    title="实时预览"
+    :title="$t('travel.preview.title')"
     height="85%"
     destroy-on-close
     @update:open="handleUpdateVisible"
   >
     <template #title>
-      <span>实时预览</span>
+      <span>{{ $t('travel.preview.title') }}</span>
       <span
         v-if="debouncing"
         class="travel-editor-preview-updating"
         aria-live="polite"
       >
         <SyncOutlined spin />
-        预览更新中
+        {{ $t('travel.preview.updating') }}
       </span>
     </template>
     <div class="travel-editor-preview-body">
@@ -175,7 +175,7 @@
           <img
             v-if="previewGuide.coverImage"
             :src="previewGuide.coverImage"
-            :alt="`${previewGuide.title} 封面`"
+            :alt="$t('travel.common.coverAlt', { title: previewGuide.title })"
           />
           <div v-else class="travel-editor-preview-cover-placeholder">
             <PictureOutlined />
@@ -185,8 +185,8 @@
           <h2 class="travel-editor-preview-title-text">{{ previewGuide.title }}</h2>
           <div class="travel-editor-preview-meta">
             <a-tag color="blue">{{ previewGuide.destination }}</a-tag>
-            <a-tag>{{ getRegionPath(previewGuide.region) }}</a-tag>
-            <a-tag>{{ previewGuide.days }} 天</a-tag>
+            <a-tag>{{ regionPath(previewGuide.region) }}</a-tag>
+            <a-tag>{{ $t('travel.common.days', { days: previewGuide.days }) }}</a-tag>
             <span class="travel-editor-preview-rating">
               <StarFilled class="travel-editor-preview-rating-icon" />
               <span>{{ previewGuide.rating }}</span>
@@ -209,12 +209,12 @@
           id="preview-itinerary-title-mobile"
           class="travel-editor-preview-section-title"
         >
-          行程安排
+          {{ $t('travel.section.itinerary') }}
         </h3>
         <a-timeline>
           <a-timeline-item v-for="day in previewGuide.itinerary" :key="day.day">
             <div class="travel-editor-preview-day">
-              <div class="travel-editor-preview-day-label">第 {{ day.day }} 天</div>
+              <div class="travel-editor-preview-day-label">{{ $t('travel.common.dayN', { day: day.day }) }}</div>
               <div class="travel-editor-preview-day-title">{{ day.title }}</div>
               <div class="travel-editor-preview-day-desc">{{ day.description }}</div>
               <div
@@ -260,7 +260,7 @@
           id="preview-attractions-title-mobile"
           class="travel-editor-preview-section-title"
         >
-          景点推荐
+          {{ $t('travel.section.attractions') }}
         </h3>
         <div class="travel-editor-preview-attractions">
           <div
@@ -302,10 +302,10 @@
           id="preview-reviews-title-mobile"
           class="travel-editor-preview-section-title"
         >
-          用户评价
+          {{ $t('travel.section.reviews') }}
         </h3>
         <div class="travel-editor-preview-reviews-placeholder">
-          评价将在发布后展示
+          {{ $t('travel.preview.reviewsPending') }}
         </div>
       </section>
     </div>
@@ -314,6 +314,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   ClockCircleOutlined,
   EnvironmentOutlined,
@@ -323,13 +324,16 @@ import {
   StarFilled,
   SyncOutlined,
 } from '@ant-design/icons-vue'
-import { getRegionPath, toTravelGuide } from '@/types/travel'
+import { getRegionLabelKeys, toTravelGuide } from '@/types/travel'
 import type {
   TravelAttraction,
   TravelGuide,
   TravelGuideFormData,
   TravelItineraryDay,
+  TravelRegionFilter,
 } from '@/types/travel'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   guide: TravelGuideFormData
@@ -339,6 +343,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
 }>()
+
+// 地区路径（大洲 / 地区，跟随当前语言）
+function regionPath(region: TravelRegionFilter): string {
+  return getRegionLabelKeys(region).map((key) => t(key)).join(' / ')
+}
 
 const previewGuide = ref<TravelGuide>(toTravelGuide(props.guide))
 const debouncing = ref(false)
