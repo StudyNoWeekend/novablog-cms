@@ -1,0 +1,49 @@
+{
+  "blacklist": {
+    "title": "Blacklist Management",
+    "add": "Add Blacklist Entry",
+    "searchPlaceholder": "Search IP address",
+    "editRemark": "Edit Remark",
+    "editTitle": "Edit Blacklist Remark",
+    "deleteConfirm": "Delete this blacklist entry?",
+    "columns": {
+      "ip": "IP Address",
+      "reason": "Remark / Reason"
+    },
+    "form": {
+      "ip": "IP Address",
+      "ipPlaceholder": "Enter IP address",
+      "reason": "Remark / Reason",
+      "reasonPlaceholder": "Enter remark or ban reason"
+    },
+    "message": {
+      "ipRequired": "Please enter an IP address",
+      "remarkUpdated": "Remark updated",
+      "addSuccess": "Blacklist entry added"
+    }
+  },
+  "monitor": {
+    "title": "Access Statistics",
+    "desc": "Tracks visitor IP access on the public blog APIs. Admin operations are not included; logs are kept for 7 days.",
+    "searchIpPlaceholder": "Search IP address",
+    "searchRegionPlaceholder": "Search region",
+    "block": "Block",
+    "blockTitle": "Block IP",
+    "confirmBlock": "Confirm Block",
+    "columns": {
+      "ip": "IP Address",
+      "region": "Region",
+      "totalCount": "Total Requests",
+      "errorCount": "Errors",
+      "lastAccess": "Last Access"
+    },
+    "form": {
+      "reason": "Block Reason",
+      "reasonPlaceholder": "Enter block reason"
+    },
+    "message": {
+      "reasonRequired": "Please enter a block reason",
+      "blockSuccess": "IP blocked successfully"
+    }
+  }
+}

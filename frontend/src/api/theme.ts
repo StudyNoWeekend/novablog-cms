@@ -1,4 +1,5 @@
 import request from './request'
+import i18n from '@/locales'
 import { marketStorage } from '@/utils/storage'
 import { MARKET_AUTH_EXPIRED_CODE } from '@/types/theme'
 import type { ApiResponse } from '@/types/api'
@@ -65,7 +66,7 @@ export function abortMarketRetries() {
   const queue = pendingRetries
   pendingRetries = []
   for (const item of queue) {
-    item.reject(new Error('已取消，未重新登录官方账号'))
+    item.reject(new Error(i18n.global.t('theme.error.marketAuthCancelled')))
   }
 }
 

@@ -1,0 +1,168 @@
+{
+  "page": {
+    "title": "テーマ"
+  },
+  "header": {
+    "officialUrl": "公式 URL",
+    "logout": "ログアウト"
+  },
+  "stats": {
+    "total": "テーマ総数",
+    "authors": "作成者数",
+    "downloads": "インストール数",
+    "downloadTitle": "{count} 回ダウンロード",
+    "likeTitle": "いいね {count} 件",
+    "ratingTitle": "評価 {rating}",
+    "listedAt": "公開日時：{time}"
+  },
+  "tabs": {
+    "favorites": "お気に入り",
+    "installed": "インストール済みテーマ"
+  },
+  "filter": {
+    "allTypes": "すべてのタイプ",
+    "styles": "スタイルで絞り込み",
+    "price": "無料/有料",
+    "searchPlaceholder": "テーマ名や説明を検索..."
+  },
+  "sort": {
+    "latest": "新着順",
+    "downloads": "ダウンロード数順",
+    "rating": "評価順"
+  },
+  "price": {
+    "free": "無料",
+    "paid": "有料"
+  },
+  "type": {
+    "personal": "個人ブログ",
+    "tech": "技術ブログ",
+    "photo": "写真ブログ",
+    "travel": "旅行ブログ",
+    "music": "音楽ブログ",
+    "team": "企業/チーム"
+  },
+  "status": {
+    "reviewing": "審査中",
+    "listed": "公開中",
+    "offline": "公開停止"
+  },
+  "action": {
+    "install": "インストール",
+    "installed": "インストール済み",
+    "uninstall": "アンインストール",
+    "inUse": "使用中",
+    "like": "いいね",
+    "liked": "いいね済み",
+    "favorite": "お気に入り",
+    "favorited": "お気に入り済み",
+    "download": "テーマをダウンロード",
+    "backToMarket": "テーママーケットに戻る"
+  },
+  "update": {
+    "newVersion": "新バージョンあり",
+    "available": "更新できます",
+    "latest": "最新です",
+    "tooltipOutdated": "ローカル v{local}、公式最新 v{market}",
+    "tooltipLatest": "ローカル v{local} は公式の最新バージョンと一致しています",
+    "tooltipDefault": "公式マーケットから最新版を取得"
+  },
+  "modal": {
+    "installTitle": "「{name}」をインストールしますか？",
+    "installContent": "公式マーケットからビルド済みアーティファクトをダウンロードしてインストールします。完了後「インストール済みテーマ」で有効化できます",
+    "installSuccess": "「{name}」をインストールしました。「インストール済みテーマ」で有効化できます",
+    "activateTitle": "「{name} v{version}」を有効化しますか？",
+    "activateContent": "切り替えるとブログのフロント側の外観が即座に更新されます。よろしいですか？",
+    "activateSuccess": "「{name}」を有効化しました。訪問者側に即時反映されています",
+    "uninstallSuccess": "「{name} v{version}」をアンインストールしました",
+    "uninstallConfirm": "アンインストールするとテーマのディレクトリと記録が削除されます。解除しますか？",
+    "updateTitle": "「{name}」を更新しますか？",
+    "updateContent": "公式マーケットから最新版を取得して再デプロイします。使用中の場合は自動的に再有効化されます。",
+    "updateSuccess": "「{name}」を更新しました",
+    "logoutTitle": "公式アカウントからログアウトしますか？",
+    "logoutContent": "ログアウト後、テーママーケットの閲覧には再ログインが必要です",
+    "logoutOk": "ログアウト"
+  },
+  "message": {
+    "loginSuccess": "公式テーママーケットに接続しました",
+    "favorited": "お気に入りに追加しました",
+    "unfavorited": "お気に入りを解除しました",
+    "rateSuccess": "評価を送信しました",
+    "downloadLinkAt": "ダウンロードリンク：{url}",
+    "downloadMissing": "このテーマにはダウンロード URL が設定されていません"
+  },
+  "validation": {
+    "emailRequired": "メールアドレスを入力してください",
+    "emailInvalid": "メールアドレスの形式が正しくありません",
+    "passwordRequired": "パスワードを入力してください",
+    "apiURLFormat": "API URL は http:// または https:// で始める必要があります。空欄の場合は同一ドメインから取得します"
+  },
+  "login": {
+    "title": "NovaBlog 公式アカウントにログイン",
+    "desc": "公式テーママーケットに接続すると、テーマの閲覧やいいね・お気に入り・評価・ダウンロードができます",
+    "officialLoading": "公式 URL を読み込み中…",
+    "officialMissing": "公式 URL が未設定です",
+    "goModify": "変更",
+    "officialHint": "公式 URL は「システム設定 → コミュニティ送信」で統一管理され、コミュニティ送信とテーママーケットで共用します",
+    "email": "メールアドレス",
+    "emailPlaceholder": "公式アカウントのメールアドレスを入力",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力",
+    "submit": "ログイン",
+    "goRegister": "新規登録",
+    "required": "テーママーケットの利用にはログインが必要です",
+    "action": "ログイン"
+  },
+  "apiModal": {
+    "title": "ブログ API URL",
+    "label": "ブログ API URL（任意）",
+    "placeholder": "https://api.example.com（空欄 = 同一ドメインから取得）",
+    "tip": "ブログ API URL はテーマのフロント側が公開 API にアクセスするために使用します。独立した API ドメインを入力して保存すると、インストール済みテーマに取得 URL が即時再注入され、テーマの再インストールは不要です。空欄の場合は同一ドメインの相対パスで取得します。",
+    "officialLink": "公式サイト URL（コミュニティ送信とテーママーケットで共用）は「システム設定 → コミュニティ送信」から変更してください",
+    "saved": "ブログ API URL を保存し、全体に適用しました"
+  },
+  "error": {
+    "marketLoad": "公式テーママーケットのデータ取得中にエラーが発生しました。再試行してください",
+    "favoritesLoad": "お気に入りリストの取得中にエラーが発生しました。再試行してください",
+    "installedLoad": "インストール済みテーマの取得中にエラーが発生しました。再試行してください",
+    "detailLoad": "テーマ詳細の取得中にエラーが発生しました。再試行してください",
+    "releasesLoad": "バージョン履歴の読み込みに失敗しました",
+    "notFound": "テーマが存在しないか公開停止です",
+    "marketAuthCancelled": "キャンセルされました。公式アカウントに再ログインしていません"
+  },
+  "empty": {
+    "noMatch": "条件に一致するテーマがありません",
+    "noFavorites": "お気に入りはまだありません",
+    "goMarket": "テーママーケットを見る",
+    "noInstalled": "インストール済みのテーマはありません",
+    "goInstall": "テーママーケットでインストール",
+    "noDescription": "説明はありません",
+    "noReleases": "バージョン記録はありません",
+    "noNotes": "更新内容はありません",
+    "noIntro": "説明はありません"
+  },
+  "pagination": {
+    "totalThemes": "テーマ {total} 件",
+    "totalFavorites": "お気に入り {total} 件"
+  },
+  "installedTip": "有効化すると訪問者側に即時反映されます。「プレビュー」は新しいウィンドウでテーマのプレビューを開き、有効化前に実際の見た目を確認できます",
+  "section": {
+    "features": "機能",
+    "releases": "バージョン履歴"
+  },
+  "info": {
+    "author": "作者",
+    "latestVersion": "最新バージョン",
+    "price": "価格",
+    "downloads": "ダウンロード数",
+    "likes": "いいね",
+    "rating": "総合評価",
+    "publishedAt": "公開日時"
+  },
+  "rate": {
+    "myRating": "自分の評価",
+    "score": "{score} 点",
+    "hint": "クリックして評価（1〜5 点、上書き可能）",
+    "none": "なし"
+  }
+}

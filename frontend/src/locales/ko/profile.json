@@ -1,0 +1,118 @@
+{
+  "field": {
+    "avatar": "아바타",
+    "blogIcon": "블로그 아이콘",
+    "pageBackground": "페이지 배경 이미지",
+    "email": "이메일",
+    "city": "거주 도시",
+    "blogTitle": "블로그 제목",
+    "personality": "성격",
+    "zodiac": "별자리",
+    "bio": "소개",
+    "blogDescription": "블로그 설명",
+    "socialLinks": "소셜 링크"
+  },
+  "upload": {
+    "changeImage": "이미지 변경",
+    "uploadImage": "이미지 업로드",
+    "remove": "제거",
+    "changeAvatar": "아바타 변경",
+    "uploadAvatar": "아바타 업로드",
+    "changeBlogIcon": "블로그 아이콘 변경",
+    "uploadBlogIcon": "블로그 아이콘 업로드",
+    "changeBackground": "배경 이미지 변경",
+    "uploadBackground": "배경 이미지 업로드",
+    "sizeLimit": "파일 크기는 {limit}을(를) 초과할 수 없습니다",
+    "formatUnsupported": "{formats} 형식만 지원합니다"
+  },
+  "placeholder": {
+    "name": "이름을 입력하세요",
+    "email": "이메일을 입력하세요",
+    "city": "시/도를 선택하세요",
+    "blogTitle": "블로그 제목을 입력하세요",
+    "personality": "성격(MBTI) 선택",
+    "personalitySearch": "성격 유형 검색",
+    "zodiac": "별자리 선택",
+    "zodiacSearch": "별자리 검색",
+    "bio": "소개를 입력하세요",
+    "blogDescription": "블로그 설명을 입력하세요",
+    "platform": "플랫폼 선택",
+    "socialUrl": "개인 페이지 URL을 입력하세요"
+  },
+  "tooltip": {
+    "publicDisplay": "사용하면 블로그에 공개 표시됩니다"
+  },
+  "aria": {
+    "publicToggle": "{field} 공개 여부",
+    "choosePersonality": "성격 선택",
+    "chooseZodiac": "별자리 선택"
+  },
+  "action": {
+    "addTag": "태그 추가",
+    "addSocialLink": "소셜 링크 추가"
+  },
+  "social": {
+    "github": "GitHub",
+    "gitlab": "GitLab",
+    "juejin": "Juejin",
+    "zhihu": "Zhihu",
+    "csdn": "CSDN",
+    "weibo": "Weibo",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "bilibili": "Bilibili",
+    "youtube": "YouTube",
+    "douyin": "Douyin",
+    "xiaohongshu": "Xiaohongshu",
+    "kuaishou": "Kuaishou",
+    "tiktok": "TikTok",
+    "wechat": "WeChat",
+    "qq": "QQ",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "steam": "Steam",
+    "email": "Email",
+    "website": "개인 웹사이트"
+  },
+  "picker": {
+    "placeholder": "선택하세요",
+    "searchPlaceholder": "검색",
+    "ariaLabel": "선택",
+    "noMatch": "일치하는 항목이 없습니다",
+    "clearSelection": "선택 지우기"
+  },
+  "cors": {
+    "title": "허용된 오리진(Origin) 화이트리스트",
+    "desc": "API 접근을 허용할 교차 출처 주소를 설정합니다. 한 줄에 하나씩, 포트 번호를 지원합니다. 저장 후 즉시 적용됩니다.",
+    "inputPlaceholder": "주소 입력 후 Enter를 눌러 추가, 예: http://localhost:3001",
+    "saveConfig": "설정 저장",
+    "invalidUrl": "유효한 URL(http:// 또는 https://로 시작)을 입력해 주세요",
+    "duplicate": "이 주소는 이미 목록에 있습니다",
+    "updateSuccess": "CORS 설정이 업데이트되어 즉시 적용되었습니다",
+    "saveFailed": "저장에 실패했습니다. 다시 시도해 주세요"
+  },
+  "avatarCrop": {
+    "title": "아바타 자르기",
+    "previewAlt": "아바타 자르기 미리보기",
+    "zoomOut": "축소",
+    "zoomIn": "확대",
+    "rotateLeft": "왼쪽으로 회전",
+    "rotateRight": "오른쪽으로 회전",
+    "hint": "이미지를 드래그해 위치를 조정하고, 휠이나 버튼으로 확대/축소하세요",
+    "cropFailed": "이미지 자르기에 실패했습니다. 다시 시도해 주세요",
+    "exportFailed": "이미지 내보내기에 실패했습니다. 다시 시도해 주세요"
+  },
+  "editor": {
+    "uploadFileFailed": "{name} 업로드에 실패했습니다",
+    "contentPlaceholder": "게시글 내용을 입력하세요...",
+    "imageUploadFailed": "이미지 업로드에 실패했습니다",
+    "videoUploadFailed": "동영상 업로드에 실패했습니다"
+  },
+  "message": {
+    "loadFailed": "프로필을 불러오지 못했습니다",
+    "saveFailed": "저장에 실패했습니다",
+    "uploadFailed": "업로드에 실패했습니다"
+  }
+}

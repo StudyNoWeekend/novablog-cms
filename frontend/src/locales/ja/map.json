@@ -1,0 +1,23 @@
+{
+  "title": "地図設定",
+  "desc": "旅行ガイドのスポット選択に使用する地図サービスの Key を設定します。未設定または読み込み失敗の場合、スポット選択ダイアログは自動的に OSM のキー不要モード（WGS-84 座標）にフォールバックします。ブログ側の地図表示には影響せず、常にキー不要の方式を使用します。",
+  "form": {
+    "amapKey": "AMap Key",
+    "amapKeyPlaceholder": "AMap オープンプラットフォーム Web(JS API) Key",
+    "amapConsoleLink": "AMap オープンプラットフォーム コンソール",
+    "amapKeyTipBefore": "",
+    "amapKeyTipAfter": "で「Web(JS API)」タイプの Key を作成して入力してください。設定すると、中国地域のスポット選択には AMap（GCJ-02 座標）が使用されます。",
+    "amapSecurityCode": "AMap セキュリティキー（securityJsCode）",
+    "amapSecurityCodePlaceholder": "AMap Key とペアになるセキュリティキー。空欄の場合はサーバーに保存済みの値を維持します",
+    "amapSecurityCodeTip": "2021-12 以降に申請した AMap Key に必要です。保存後に暗号化して保管され、閲覧は管理画面へのログイン時のみ可能です。",
+    "googleKey": "Google Maps Key",
+    "googleKeyPlaceholder": "Google Maps JavaScript API Key",
+    "googleKeyTip": "設定すると、中国国外のスポット選択には Google Maps（WGS-84 座標）が使用されます。"
+  },
+  "actions": {
+    "save": "設定を保存"
+  },
+  "message": {
+    "saveSuccess": "地図設定を更新しました。スポット選択ダイアログは次回開くときに反映されます"
+  }
+}

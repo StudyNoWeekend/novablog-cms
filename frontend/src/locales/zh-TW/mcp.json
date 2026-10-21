@@ -1,0 +1,70 @@
+{
+  "title": "MCP 服務",
+  "desc": "透過 MCP 協定讓 AI 用戶端直接發布和管理部落格內容",
+  "action": {
+    "createKey": "新增金鑰",
+    "copyKey": "複製金鑰"
+  },
+  "access": {
+    "title": "接入資訊",
+    "endpoint": "服務端點",
+    "authPrefix": "驗證方式：請求標頭攜帶",
+    "authSuffix": "，金鑰在下方建立。",
+    "capabilities": "可用能力：建立 / 更新 / 發布 / 下架 / 刪除文章（Markdown），上傳圖片到媒體庫，查詢分類與標籤，共 9 個工具。",
+    "security": "安全限制：每把金鑰限流 120 次/分鐘；刪除文章需要 AI 明確確認；金鑰明文僅在建立時顯示一次。"
+  },
+  "keys": {
+    "title": "API 金鑰",
+    "searchPlaceholder": "搜尋金鑰名稱",
+    "callCount": "{count} 次",
+    "neverUsed": "從未使用",
+    "neverExpires": "永久有效",
+    "columns": {
+      "key": "金鑰",
+      "callCount": "呼叫次數",
+      "lastUsed": "最近使用",
+      "expiresAt": "有效期限"
+    }
+  },
+  "empty": {
+    "title": "還沒有 API 金鑰，三步接入：",
+    "step1": "點擊「新增金鑰」產生金鑰",
+    "step2": "複製 MCP 設定到 AI 用戶端",
+    "step3": "在 AI 用戶端裡讓它發布文章",
+    "create": "立即建立"
+  },
+  "clientConfig": {
+    "title": "用戶端接入設定",
+    "placeholderTip": "設定中的金鑰為佔位符，建立金鑰後可取得預填完整設定"
+  },
+  "create": {
+    "title": "新增 MCP 金鑰",
+    "okText": "建立",
+    "nameLabel": "金鑰名稱",
+    "namePlaceholder": "例如：我的工作電腦",
+    "expireLabel": "有效期限",
+    "permanent": "永久",
+    "days": "{days} 天"
+  },
+  "created": {
+    "title": "金鑰建立成功",
+    "alertTitle": "請立即儲存金鑰，關閉後將無法再次查看",
+    "alertDesc": "金鑰僅顯示這一次。建議直接複製下方用戶端設定使用。"
+  },
+  "config": {
+    "label": "MCP 設定 JSON",
+    "copy": "複製設定",
+    "hint": "加入 mcpServers 設定並重新啟動用戶端後，即可讓 AI 透過 MCP 工具發布內容"
+  },
+  "message": {
+    "disabledNotice": "已停用，使用該金鑰的用戶端將無法呼叫",
+    "deleteConfirm": "刪除後使用該金鑰的 AI 用戶端將立即失去存取權限，確定刪除？",
+    "deleteSuccess": "金鑰已刪除",
+    "nameRequired": "請輸入金鑰名稱",
+    "endpointCopied": "端點位址已複製",
+    "keyCopied": "金鑰已複製",
+    "configCopied": "MCP 設定已複製",
+    "copyFailedManual": "複製失敗，請手動複製",
+    "copyFailedSelect": "複製失敗，請手動選取複製"
+  }
+}

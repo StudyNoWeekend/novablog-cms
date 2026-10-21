@@ -1,0 +1,168 @@
+{
+  "page": {
+    "title": "Themes"
+  },
+  "header": {
+    "officialUrl": "Official URL",
+    "logout": "Sign Out"
+  },
+  "stats": {
+    "total": "Themes",
+    "authors": "Authors",
+    "downloads": "Installs",
+    "downloadTitle": "Downloaded {count} times",
+    "likeTitle": "{count} likes",
+    "ratingTitle": "Rating {rating}",
+    "listedAt": "Listed: {time}"
+  },
+  "tabs": {
+    "favorites": "My Favorites",
+    "installed": "Installed Themes"
+  },
+  "filter": {
+    "allTypes": "All Types",
+    "styles": "Styles",
+    "price": "Free/Paid",
+    "searchPlaceholder": "Search themes by name or description..."
+  },
+  "sort": {
+    "latest": "Newest",
+    "downloads": "Most Downloaded",
+    "rating": "Top Rated"
+  },
+  "price": {
+    "free": "Free",
+    "paid": "Paid"
+  },
+  "type": {
+    "personal": "Personal Blog",
+    "tech": "Tech Blog",
+    "photo": "Photo Blog",
+    "travel": "Travel Blog",
+    "music": "Music Blog",
+    "team": "Company & Team"
+  },
+  "status": {
+    "reviewing": "Under Review",
+    "listed": "Listed",
+    "offline": "Delisted"
+  },
+  "action": {
+    "install": "Install",
+    "installed": "Installed",
+    "uninstall": "Uninstall",
+    "inUse": "In Use",
+    "like": "Like",
+    "liked": "Liked",
+    "favorite": "Favorite",
+    "favorited": "Favorited",
+    "download": "Download Theme",
+    "backToMarket": "Back to Theme Market"
+  },
+  "update": {
+    "newVersion": "New Version",
+    "available": "Update Available",
+    "latest": "Up to Date",
+    "tooltipOutdated": "Local v{local}, latest v{market}",
+    "tooltipLatest": "Local v{local} is already the latest version",
+    "tooltipDefault": "Pull the latest version from the official market"
+  },
+  "modal": {
+    "installTitle": "Install \"{name}\"?",
+    "installContent": "The pre-built artifact will be downloaded from the official market and installed. You can enable it under \"Installed Themes\" afterwards",
+    "installSuccess": "\"{name}\" installed. Enable it under \"Installed Themes\"",
+    "activateTitle": "Enable \"{name} v{version}\"?",
+    "activateContent": "The blog front end will update its appearance immediately. Continue?",
+    "activateSuccess": "\"{name}\" enabled. The change is live for visitors",
+    "uninstallSuccess": "\"{name} v{version}\" uninstalled",
+    "uninstallConfirm": "The theme directory and its records will be deleted. Uninstall?",
+    "updateTitle": "Update \"{name}\"?",
+    "updateContent": "The latest version will be pulled from the official market and redeployed. If it is currently in use, it will be reactivated automatically.",
+    "updateSuccess": "\"{name}\" updated",
+    "logoutTitle": "Sign out of the official account?",
+    "logoutContent": "Sign in again to browse the theme market",
+    "logoutOk": "Sign Out"
+  },
+  "message": {
+    "loginSuccess": "Connected to the official theme market",
+    "favorited": "Added to favorites",
+    "unfavorited": "Removed from favorites",
+    "rateSuccess": "Rating submitted",
+    "downloadLinkAt": "Download link: {url}",
+    "downloadMissing": "This theme has no download URL"
+  },
+  "validation": {
+    "emailRequired": "Please enter your email",
+    "emailInvalid": "Invalid email format",
+    "passwordRequired": "Please enter your password",
+    "apiURLFormat": "The API URL must start with http:// or https://. Leave it empty to fetch from the same domain"
+  },
+  "login": {
+    "title": "Sign in to NovaBlog Account",
+    "desc": "Connect to the official theme market to browse themes, like, favorite, rate and download",
+    "officialLoading": "Loading official URL...",
+    "officialMissing": "Official URL not configured",
+    "goModify": "Change",
+    "officialHint": "The official URL is maintained under \"System Settings → Community Push\" and shared by community push and the theme market",
+    "email": "Email",
+    "emailPlaceholder": "Enter your NovaBlog account email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "submit": "Sign In",
+    "goRegister": "Register",
+    "required": "Sign in to access the theme market",
+    "action": "Sign In"
+  },
+  "apiModal": {
+    "title": "Blog API URL",
+    "label": "Blog API URL (optional)",
+    "placeholder": "https://api.example.com (leave empty to fetch from the same domain)",
+    "tip": "The blog API URL is used by theme front ends to access public APIs. After filling in a standalone API domain and saving, installed themes will immediately re-inject the fetch URL without reinstalling. Leave it empty to fetch via a same-domain relative path.",
+    "officialLink": "To change the official site URL (shared by community push and the theme market), go to \"System Settings → Community Push\"",
+    "saved": "Blog API URL saved and applied globally"
+  },
+  "error": {
+    "marketLoad": "Failed to load the official theme market. Please retry",
+    "favoritesLoad": "Failed to load your favorites. Please retry",
+    "installedLoad": "Failed to load installed themes. Please retry",
+    "detailLoad": "Failed to load theme details. Please retry",
+    "releasesLoad": "Failed to load version history",
+    "notFound": "Theme not found or delisted",
+    "marketAuthCancelled": "Cancelled, official account not re-linked"
+  },
+  "empty": {
+    "noMatch": "No themes match your filters",
+    "noFavorites": "No favorites yet",
+    "goMarket": "Browse the Theme Market",
+    "noInstalled": "No themes installed yet",
+    "goInstall": "Install from the Theme Market",
+    "noDescription": "No description",
+    "noReleases": "No version records",
+    "noNotes": "No release notes",
+    "noIntro": "No introduction"
+  },
+  "pagination": {
+    "totalThemes": "{total} themes in total",
+    "totalFavorites": "{total} favorites in total"
+  },
+  "installedTip": "Takes effect for visitors immediately once enabled. \"Preview\" opens the theme preview page in a new window so you can compare the real look before activating",
+  "section": {
+    "features": "Features",
+    "releases": "Version History"
+  },
+  "info": {
+    "author": "Author",
+    "latestVersion": "Latest Version",
+    "price": "Price",
+    "downloads": "Downloads",
+    "likes": "Likes",
+    "rating": "Overall Rating",
+    "publishedAt": "Published"
+  },
+  "rate": {
+    "myRating": "My Rating",
+    "score": "{score} / 5",
+    "hint": "Click to rate (1-5, can be updated)",
+    "none": "N/A"
+  }
+}

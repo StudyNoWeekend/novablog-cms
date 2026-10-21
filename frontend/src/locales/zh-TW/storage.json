@@ -1,0 +1,107 @@
+{
+  "title": "物件儲存",
+  "tabs": {
+    "config": "儲存設定",
+    "migration": "素材遷移"
+  },
+  "providers": {
+    "local": "本機儲存",
+    "aliyun": "阿里雲 OSS",
+    "tencent": "騰訊雲 COS",
+    "minio": "MinIO"
+  },
+  "status": {
+    "active": "使用中",
+    "pending": "待遷移"
+  },
+  "actions": {
+    "switchPlatform": "切換儲存平台",
+    "activate": "啟用",
+    "goMigrate": "前往遷移",
+    "testConnection": "測試連線"
+  },
+  "fields": {
+    "provider": "儲存平台",
+    "filename": "檔名",
+    "currentPlatform": "目前平台",
+    "error": "錯誤資訊",
+    "typePreset": "預設",
+    "typeMedia": "素材",
+    "statusExisting": "存在 ✅",
+    "statusMissing": "缺失 ⚠️"
+  },
+  "migrate": {
+    "fromTo": "將素材從 {sources} 遷移至「{target}」",
+    "targetHint": "遷移目標：{target}，點擊「開始分析」檢查需遷移的素材",
+    "needConfig": "請先在「儲存設定」中新增儲存平台設定",
+    "addConfigFirst": "請先新增儲存平台設定",
+    "startAnalyze": "開始分析",
+    "analyzing": "正在分析素材...",
+    "analyzeResult": "分析結果",
+    "analyzeSummary": "共 {total} 筆素材，{existing} 筆已存在，{missing} 筆需要遷移",
+    "pendingLabel": "待遷移素材：",
+    "batch": "批次遷移（{count}）",
+    "migrateAll": "一鍵遷移所有",
+    "reanalyze": "重新分析",
+    "progress": "已遷移 {done} / {total} 筆",
+    "completedIn": "，遷移完成，耗時 {seconds} 秒",
+    "failedItems": "失敗項目（{count}）"
+  },
+  "modal": {
+    "createTitle": "新增儲存設定",
+    "editTitle": "編輯儲存設定"
+  },
+  "form": {
+    "providerPlaceholder": "請選擇儲存平台",
+    "example": "範例：{example}",
+    "regionExampleAliyun": "如 cn-hangzhou",
+    "regionExampleTencent": "如 ap-guangzhou",
+    "regionRequiredAliyun": "必填，如 cn-hangzhou",
+    "endpointPlaceholder": "請輸入 Endpoint",
+    "endpointExampleMinio": "play.min.io:9000（不含 scheme）",
+    "bucketPlaceholder": "請輸入 Bucket",
+    "bucketPlain": "純桶名，如 my-bucket",
+    "bucketWithAppId": "必須帶 APPID，如 examplebucket-1250000000",
+    "bucketExampleWithAppId": "examplebucket-1250000000（必須帶 APPID）",
+    "secretIdPlaceholder": "請輸入 SecretId",
+    "accessKeyPlaceholder": "請輸入 Access Key",
+    "accessSecretPlaceholder": "請輸入 Access Secret",
+    "secretKeyPlaceholder": "請輸入 SecretKey",
+    "leaveEmptyToKeep": "留空則不修改",
+    "pathPrefix": "路徑前綴",
+    "pathPrefixPlaceholder": "可選，如 media/",
+    "customDomain": "自訂網域",
+    "customDomainPlaceholder": "可選，如 https://cdn.example.com"
+  },
+  "validation": {
+    "providerRequired": "請選擇儲存平台",
+    "endpointRequired": "請輸入 Endpoint",
+    "bucketRequired": "請輸入 Bucket",
+    "accessKeyRequired": "請輸入 Access Key",
+    "accessSecretRequired": "請輸入 Access Secret",
+    "regionRequired": "Region 為必填"
+  },
+  "message": {
+    "activateTitle": "確認啟用",
+    "activateConfirm": "啟用後儲存平台將切換為「{provider}」，舊設定將被刪除。請確保已將所有素材遷移至目標平台。確定要繼續？",
+    "activated": "已啟用，舊設定已清理",
+    "activateFailed": "啟用失敗，請先完成素材遷移",
+    "activateFailedSimple": "啟用失敗",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "確定要刪除 {provider} 的設定嗎？",
+    "deleteActiveDenied": "使用中的設定無法直接刪除",
+    "changeProviderDeniedTitle": "禁止修改儲存平台",
+    "changeProviderDenied": "偵測到儲存平台類型發生變化！禁止直接修改儲存平台類型。如需切換儲存平台，請先在「素材遷移」中將既有素材遷移至目標平台，再啟用目標平台設定。",
+    "configUpdated": "設定已更新",
+    "configCreated": "設定已建立，請前往「素材遷移」完成遷移後再啟用",
+    "saveFailed": "儲存失敗",
+    "testPassed": "連線測試通過",
+    "testFailed": "連線測試失敗",
+    "analyzeFailed": "分析失敗",
+    "analyzeStartFailed": "啟動分析失敗",
+    "migrateCompleted": "遷移完成",
+    "migrateActivateConfirm": "所有素材已遷移完成，是否立即啟用「{provider}」？啟用後舊設定將被刪除。",
+    "migrateFailed": "遷移失敗",
+    "migrateStartFailed": "啟動遷移失敗"
+  }
+}

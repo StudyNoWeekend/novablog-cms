@@ -1,0 +1,70 @@
+{
+  "title": "MCP Service",
+  "desc": "Publish and manage blog content directly from AI clients via the MCP protocol",
+  "action": {
+    "createKey": "Create Key",
+    "copyKey": "Copy key"
+  },
+  "access": {
+    "title": "Access info",
+    "endpoint": "Server endpoint",
+    "authPrefix": "Authentication: send the header",
+    "authSuffix": ", and create the key below.",
+    "capabilities": "Available capabilities: create / update / publish / unpublish / delete articles (Markdown), upload images to the media library, and query categories and tags — 9 tools in total.",
+    "security": "Security limits: each key is rate-limited to 120 requests per minute; deleting an article requires explicit AI confirmation; the key secret is shown only once at creation."
+  },
+  "keys": {
+    "title": "API Keys",
+    "searchPlaceholder": "Search key names",
+    "callCount": "{count} calls",
+    "neverUsed": "Never used",
+    "neverExpires": "Never expires",
+    "columns": {
+      "key": "Key",
+      "callCount": "Calls",
+      "lastUsed": "Last used",
+      "expiresAt": "Expires at"
+    }
+  },
+  "empty": {
+    "title": "No API keys yet — connect in three steps:",
+    "step1": "Click \"Create Key\" to generate a key",
+    "step2": "Copy the MCP config to your AI client",
+    "step3": "Ask it to publish an article in your AI client",
+    "create": "Create now"
+  },
+  "clientConfig": {
+    "title": "Client configuration",
+    "placeholderTip": "Keys in this config are placeholders; create a key to get the pre-filled config"
+  },
+  "create": {
+    "title": "Create MCP Key",
+    "okText": "Create",
+    "nameLabel": "Key name",
+    "namePlaceholder": "e.g. My work laptop",
+    "expireLabel": "Validity",
+    "permanent": "Permanent",
+    "days": "{days} days"
+  },
+  "created": {
+    "title": "Key created",
+    "alertTitle": "Save the key now — it cannot be viewed again after closing",
+    "alertDesc": "The key is shown only once. Copy the client config below to use it."
+  },
+  "config": {
+    "label": "MCP config JSON",
+    "copy": "Copy config",
+    "hint": "Add it to mcpServers and restart your client, then AI can publish content through MCP tools"
+  },
+  "message": {
+    "disabledNotice": "Disabled. Clients using this key can no longer call the API",
+    "deleteConfirm": "AI clients using this key will immediately lose access. Delete it?",
+    "deleteSuccess": "Key deleted",
+    "nameRequired": "Please enter a key name",
+    "endpointCopied": "Endpoint copied",
+    "keyCopied": "Key copied",
+    "configCopied": "MCP config copied",
+    "copyFailedManual": "Copy failed. Please copy it manually",
+    "copyFailedSelect": "Copy failed. Please select and copy it manually"
+  }
+}

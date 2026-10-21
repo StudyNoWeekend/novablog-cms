@@ -1,0 +1,22 @@
+{
+  "title": "API ドキュメント",
+  "download": "Skill をダウンロード",
+  "modules": "モジュール",
+  "searchPlaceholder": "パスまたは説明を検索...",
+  "moduleTooltip": "所属モジュール：{name}",
+  "params": "リクエストパラメーター",
+  "response": "レスポンス構造",
+  "noParams": "リクエストパラメーターなし",
+  "noResponse": "レスポンス構造なし",
+  "notFound": "一致する API が見つかりません",
+  "columns": {
+    "paramName": "パラメーター名",
+    "fieldName": "フィールド名",
+    "required": "必須",
+    "desc": "説明"
+  },
+  "error": {
+    "loadFailed": "API ドキュメントの読み込みに失敗しました",
+    "downloadFailed": "ドキュメントのダウンロードに失敗しました"
+  }
+}

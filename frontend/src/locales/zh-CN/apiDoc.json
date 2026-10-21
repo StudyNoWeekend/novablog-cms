@@ -1,0 +1,22 @@
+{
+  "title": "API 文档",
+  "download": "下载skill",
+  "modules": "模块",
+  "searchPlaceholder": "搜索路径或描述...",
+  "moduleTooltip": "所属模块：{name}",
+  "params": "请求参数",
+  "response": "响应结构",
+  "noParams": "无请求参数",
+  "noResponse": "无响应结构",
+  "notFound": "未找到匹配的 API",
+  "columns": {
+    "paramName": "参数名",
+    "fieldName": "字段名",
+    "required": "必填",
+    "desc": "说明"
+  },
+  "error": {
+    "loadFailed": "加载 API 文档失败",
+    "downloadFailed": "下载文档失败"
+  }
+}

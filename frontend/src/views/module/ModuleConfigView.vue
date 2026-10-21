@@ -1,8 +1,8 @@
 <template>
   <div class="module-config-page">
     <div class="page-header">
-      <h1>模块管理</h1>
-      <p class="page-desc">控制各功能模块的开启状态。关闭后，博客前台和后台菜单将隐藏对应模块，后台也无法通过输入网址访问；重新开启请从本页操作。</p>
+      <h1>{{ $t('module.page.title') }}</h1>
+      <p class="page-desc">{{ $t('module.page.desc') }}</p>
     </div>
 
     <a-card class="config-card" :bordered="false">
@@ -17,8 +17,8 @@
               <div class="module-switch">
                 <a-switch
                   v-model:checked="formState[item.key]"
-                  :checked-children="'开启'"
-                  :un-checked-children="'关闭'"
+                  :checked-children="$t('common.status.on')"
+                  :un-checked-children="$t('common.status.off')"
                   :loading="pendingKey === item.key"
                   @change="handleToggle(item)"
                 />

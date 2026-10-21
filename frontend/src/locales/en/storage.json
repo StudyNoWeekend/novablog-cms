@@ -1,0 +1,107 @@
+{
+  "title": "Object Storage",
+  "tabs": {
+    "config": "Storage Config",
+    "migration": "Asset Migration"
+  },
+  "providers": {
+    "local": "Local Storage",
+    "aliyun": "Alibaba Cloud OSS",
+    "tencent": "Tencent Cloud COS",
+    "minio": "MinIO"
+  },
+  "status": {
+    "active": "In Use",
+    "pending": "Pending Migration"
+  },
+  "actions": {
+    "switchPlatform": "Switch Provider",
+    "activate": "Activate",
+    "goMigrate": "Go to Migration",
+    "testConnection": "Test Connection"
+  },
+  "fields": {
+    "provider": "Storage Provider",
+    "filename": "File Name",
+    "currentPlatform": "Current Provider",
+    "error": "Error Message",
+    "typePreset": "Preset",
+    "typeMedia": "Asset",
+    "statusExisting": "Exists ✅",
+    "statusMissing": "Missing ⚠️"
+  },
+  "migrate": {
+    "fromTo": "Migrate assets from {sources} to “{target}”",
+    "targetHint": "Migration target: {target}. Click “Start Analysis” to check which assets need migration",
+    "needConfig": "Please add a storage provider config in “Storage Config” first",
+    "addConfigFirst": "Please add a storage provider config first",
+    "startAnalyze": "Start Analysis",
+    "analyzing": "Analyzing assets...",
+    "analyzeResult": "Analysis Result",
+    "analyzeSummary": "{total} assets in total, {existing} already exist, {missing} need migration",
+    "pendingLabel": "Assets to migrate:",
+    "batch": "Batch Migrate ({count})",
+    "migrateAll": "Migrate All",
+    "reanalyze": "Re-analyze",
+    "progress": "Migrated {done} / {total}",
+    "completedIn": ", migration completed in {seconds}s",
+    "failedItems": "Failed Items ({count})"
+  },
+  "modal": {
+    "createTitle": "Add Storage Config",
+    "editTitle": "Edit Storage Config"
+  },
+  "form": {
+    "providerPlaceholder": "Select a storage provider",
+    "example": "Example: {example}",
+    "regionExampleAliyun": "e.g. cn-hangzhou",
+    "regionExampleTencent": "e.g. ap-guangzhou",
+    "regionRequiredAliyun": "Required, e.g. cn-hangzhou",
+    "endpointPlaceholder": "Enter Endpoint",
+    "endpointExampleMinio": "play.min.io:9000 (without scheme)",
+    "bucketPlaceholder": "Enter Bucket",
+    "bucketPlain": "Bucket name only, e.g. my-bucket",
+    "bucketWithAppId": "Must include APPID, e.g. examplebucket-1250000000",
+    "bucketExampleWithAppId": "examplebucket-1250000000 (APPID required)",
+    "secretIdPlaceholder": "Enter SecretId",
+    "accessKeyPlaceholder": "Enter Access Key",
+    "accessSecretPlaceholder": "Enter Access Secret",
+    "secretKeyPlaceholder": "Enter SecretKey",
+    "leaveEmptyToKeep": "Leave empty to keep unchanged",
+    "pathPrefix": "Path Prefix",
+    "pathPrefixPlaceholder": "Optional, e.g. media/",
+    "customDomain": "Custom Domain",
+    "customDomainPlaceholder": "Optional, e.g. https://cdn.example.com"
+  },
+  "validation": {
+    "providerRequired": "Please select a storage provider",
+    "endpointRequired": "Please enter the Endpoint",
+    "bucketRequired": "Please enter the Bucket",
+    "accessKeyRequired": "Please enter the Access Key",
+    "accessSecretRequired": "Please enter the Access Secret",
+    "regionRequired": "Region is required"
+  },
+  "message": {
+    "activateTitle": "Confirm Activation",
+    "activateConfirm": "After activation the storage provider will switch to “{provider}” and the old config will be deleted. Make sure all assets have been migrated to the target provider. Continue?",
+    "activated": "Activated. The old config has been removed",
+    "activateFailed": "Activation failed. Please complete asset migration first",
+    "activateFailedSimple": "Activation failed",
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "Delete the {provider} config?",
+    "deleteActiveDenied": "The active config cannot be deleted directly",
+    "changeProviderDeniedTitle": "Changing Provider Not Allowed",
+    "changeProviderDenied": "The storage provider type has changed! Directly modifying the provider type is not allowed. To switch providers, migrate existing assets to the target provider under “Asset Migration” first, then activate the target provider config.",
+    "configUpdated": "Config updated",
+    "configCreated": "Config created. Please go to “Asset Migration” to complete migration before activating",
+    "saveFailed": "Save failed",
+    "testPassed": "Connection test passed",
+    "testFailed": "Connection test failed",
+    "analyzeFailed": "Analysis failed",
+    "analyzeStartFailed": "Failed to start analysis",
+    "migrateCompleted": "Migration completed",
+    "migrateActivateConfirm": "All assets have been migrated. Activate “{provider}” now? The old config will be deleted after activation.",
+    "migrateFailed": "Migration failed",
+    "migrateStartFailed": "Failed to start migration"
+  }
+}

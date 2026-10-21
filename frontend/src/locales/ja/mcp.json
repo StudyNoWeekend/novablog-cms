@@ -1,0 +1,70 @@
+{
+  "title": "MCP サービス",
+  "desc": "MCP プロトコルで AI クライアントからブログコンテンツを直接公開・管理",
+  "action": {
+    "createKey": "キーを作成",
+    "copyKey": "キーをコピー"
+  },
+  "access": {
+    "title": "接続情報",
+    "endpoint": "サーバーエンドポイント",
+    "authPrefix": "認証方式：リクエストヘッダーで",
+    "authSuffix": "を送信します。キーは下で作成します。",
+    "capabilities": "利用可能な機能：記事の作成 / 更新 / 公開 / 非公開化 / 削除（Markdown）、メディアライブラリーへの画像アップロード、カテゴリーとタグの照会、合計 9 ツール。",
+    "security": "セキュリティ制限：各キーは毎分 120 リクエストに制限。記事の削除には AI の明示的な確認が必要。キーの平文は作成時に 1 回だけ表示されます。"
+  },
+  "keys": {
+    "title": "API キー",
+    "searchPlaceholder": "キー名を検索",
+    "callCount": "{count} 回",
+    "neverUsed": "未使用",
+    "neverExpires": "無期限",
+    "columns": {
+      "key": "キー",
+      "callCount": "呼び出し回数",
+      "lastUsed": "最終使用",
+      "expiresAt": "有効期限"
+    }
+  },
+  "empty": {
+    "title": "API キーがまだありません。3 ステップで接続：",
+    "step1": "「キーを作成」をクリックしてキーを生成",
+    "step2": "MCP 設定を AI クライアントにコピー",
+    "step3": "AI クライアントで記事の公開を依頼",
+    "create": "今すぐ作成"
+  },
+  "clientConfig": {
+    "title": "クライアント接続設定",
+    "placeholderTip": "設定内のキーはプレースホルダーです。キーを作成すると完全な設定が取得できます"
+  },
+  "create": {
+    "title": "MCP キーを作成",
+    "okText": "作成",
+    "nameLabel": "キー名",
+    "namePlaceholder": "例：仕事用 PC",
+    "expireLabel": "有効期間",
+    "permanent": "無期限",
+    "days": "{days} 日"
+  },
+  "created": {
+    "title": "キーを作成しました",
+    "alertTitle": "今すぐキーを保存してください。閉じると再表示できません",
+    "alertDesc": "キーはこの 1 回のみ表示されます。下のクライアント設定をコピーしてご利用ください。"
+  },
+  "config": {
+    "label": "MCP 設定 JSON",
+    "copy": "設定をコピー",
+    "hint": "mcpServers に追加してクライアントを再起動すると、AI が MCP ツールでコンテンツを公開できます"
+  },
+  "message": {
+    "disabledNotice": "無効にしました。このキーを使うクライアントは呼び出せません",
+    "deleteConfirm": "このキーを使う AI クライアントはすぐにアクセスできなくなります。削除しますか？",
+    "deleteSuccess": "キーを削除しました",
+    "nameRequired": "キー名を入力してください",
+    "endpointCopied": "エンドポイントをコピーしました",
+    "keyCopied": "キーをコピーしました",
+    "configCopied": "MCP 設定をコピーしました",
+    "copyFailedManual": "コピーに失敗しました。手動でコピーしてください",
+    "copyFailedSelect": "コピーに失敗しました。選択して手動でコピーしてください"
+  }
+}

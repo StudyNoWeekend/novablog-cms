@@ -1,0 +1,62 @@
+{
+  "nav": { "community": "社区推送" },
+  "push": {
+    "configTitle": "社区推送配置",
+    "keyConfigured": "已配置密钥",
+    "keyMissing": "未配置密钥",
+    "baseUrl": "NovaBlog 社区地址",
+    "baseUrlExtra": "社区推送与主题市场的统一官方入口，主题模块同步使用此地址",
+    "baseUrlPlaceholder": "https://community.example.com（自动补 /api/v1）",
+    "siteUrl": "博客对外地址",
+    "siteUrlExtra": "用于拼接推送内容的「阅读原文」链接",
+    "pushKey": "推送密钥",
+    "pushKeyExtra": "在 NovaBlog 个人中心「推送密钥」生成；保存后仅显示前缀，不会回显完整密钥",
+    "pushKeyKeep": "留空表示不修改已有密钥",
+    "pushKeyPlaceholder": "在 NovaBlog 个人中心生成，nbk_ 开头",
+    "verifyCode": "社区验证码",
+    "verifyCodeExtra": "在 NovaBlog 社区「个人设置 → 绑定博客」复制；保存配置时自动向社区确认博客归属，通过后社区账号获得「站长」标识",
+    "verifyCodePlaceholder": "粘贴社区个人设置页展示的验证码",
+    "saveConfig": "保存配置",
+    "testConnection": "测试连接",
+    "testSuccessTitle": "连接成功：{name}（博主 {username}）",
+    "testSuccessDesc": "社区账号博客地址：{url}",
+    "notBound": "未绑定",
+    "verifyPassed": "博客归属验证成功",
+    "verifyFailed": "博客归属验证未通过",
+    "recordsTitle": "同步记录",
+    "repush": "重新推送"
+  },
+  "record": {
+    "communityStatus": "社区状态",
+    "communityArticleId": "社区文章 ID",
+    "lastPush": "最后推送",
+    "retryCount": "重试",
+    "lastError": "错误信息"
+  },
+  "sync": { "synced": "已同步", "hidden": "已下架", "failed": "失败", "deleted": "已删除", "notPushed": "未推送" },
+  "target": { "article": "文章", "travel": "旅行攻略", "recipe": "美食食谱", "portfolio": "作品集", "openSource": "开源作品" },
+  "syncButton": { "push": "推送到社区", "unpublish": "从社区下架", "retryFailed": "推送失败，重试", "deleted": "已从社区删除" },
+  "syncTooltip": {
+    "default": "将该内容推送到 NovaBlog 社区；开启后后续修改自动同步",
+    "synced": "内容已上架社区；在 CMS 的后续修改会自动同步",
+    "hidden": "已从社区下架；点击重新推送上架",
+    "unpublished": "仅已发布的内容可推送到社区",
+    "failed": "最近一次推送失败：{error}"
+  },
+  "modal": {
+    "unpublishTitle": "从社区下架",
+    "unpublishContent": "下架后社区读者不可见，但社区数据保留；重新推送即可恢复。确认下架？",
+    "unpublishOk": "下架"
+  },
+  "message": {
+    "saveSuccess": "推送配置已保存",
+    "saveVerified": "推送配置已保存，博客归属验证通过",
+    "saveVerifyFailed": "推送配置已保存，但博客归属验证未通过",
+    "verifyRejected": "验证码被社区拒绝",
+    "repushSuccess": "已重新推送",
+    "pushed": "已推送到 NovaBlog 社区",
+    "unpublished": "已从社区下架",
+    "noChanges": "内容无变化，社区已是最新"
+  },
+  "validation": { "baseUrlRequired": "请填写社区地址" }
+}

@@ -1,49 +1,47 @@
 <template>
   <div class="map-config-page">
     <div class="page-header">
-      <h1>地图配置</h1>
+      <h1>{{ $t('map.title') }}</h1>
       <p class="page-desc">
-        配置旅行攻略选点使用的地图服务 Key。未配置或加载失败时，选点弹窗自动降级为
-        OSM 免 Key 模式（WGS-84 坐标）；博客端地图展示不受此处影响，始终使用免 Key 方案。
+        {{ $t('map.desc') }}
       </p>
     </div>
 
     <a-card class="config-card" :bordered="false">
       <a-skeleton :loading="loading" active>
         <a-form layout="vertical">
-          <a-form-item required label="高德 Key">
+          <a-form-item required :label="$t('map.form.amapKey')">
             <a-input-password
               v-model:value="form.amap_key"
-              placeholder="高德开放平台 Web端(JS API) Key"
+              :placeholder="$t('map.form.amapKeyPlaceholder')"
               autocomplete="new-password"
             />
             <div class="field-tip">
-              在 <a href="https://console.amap.com" target="_blank" rel="noopener noreferrer">高德开放平台控制台</a>
-              创建「Web端(JS API)」类型 Key 后填入；配置后中国地区选点使用高德地图（GCJ-02 坐标）。
+              {{ $t('map.form.amapKeyTipBefore') }}<a href="https://console.amap.com" target="_blank" rel="noopener noreferrer">{{ $t('map.form.amapConsoleLink') }}</a>{{ $t('map.form.amapKeyTipAfter') }}
             </div>
           </a-form-item>
 
-          <a-form-item label="高德安全密钥（securityJsCode）">
+          <a-form-item :label="$t('map.form.amapSecurityCode')">
             <a-input-password
               v-model:value="form.amap_security_code"
-              placeholder="与高德 Key 配套的安全密钥；留空表示保持后端已存值"
+              :placeholder="$t('map.form.amapSecurityCodePlaceholder')"
               autocomplete="new-password"
             />
-            <div class="field-tip">与高德 2021-12 后申请的 Key 配套；保存后加密存储，读取仅限登录后台。</div>
+            <div class="field-tip">{{ $t('map.form.amapSecurityCodeTip') }}</div>
           </a-form-item>
 
-          <a-form-item required label="Google Maps Key">
+          <a-form-item required :label="$t('map.form.googleKey')">
             <a-input-password
               v-model:value="form.google_key"
-              placeholder="Google Maps JavaScript API Key"
+              :placeholder="$t('map.form.googleKeyPlaceholder')"
               autocomplete="new-password"
             />
-            <div class="field-tip">配置后海外地区选点使用 Google Maps（WGS-84 坐标）。</div>
+            <div class="field-tip">{{ $t('map.form.googleKeyTip') }}</div>
           </a-form-item>
 
           <div class="form-actions">
             <a-button type="primary" :loading="saving" @click="handleSave">
-              保存配置
+              {{ $t('map.actions.save') }}
             </a-button>
           </div>
         </a-form>
@@ -55,8 +53,10 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { mapApi } from '@/api/map'
 
+const { t } = useI18n()
 const loading = ref(true)
 const saving = ref(false)
 
@@ -89,7 +89,7 @@ async function handleSave() {
     form.amap_key = config.amap_key || ''
     form.amap_security_code = config.amap_security_code || ''
     form.google_key = config.google_key || ''
-    message.success('地图配置已更新，选点弹窗下次打开时生效')
+    message.success(t('map.message.saveSuccess'))
   } catch {
     // Error handled by interceptor
   } finally {

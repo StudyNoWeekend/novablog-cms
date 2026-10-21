@@ -3,25 +3,25 @@
     <a-form layout="vertical" :model="form">
       <!-- 形象区：头像 / 博客 Icon / 页面背景图 横向排列 -->
       <div class="identity-row">
-        <a-form-item label="头像">
+        <a-form-item :label="$t('profile.field.avatar')">
           <div class="image-field">
             <div
               class="image-uploader avatar-uploader"
               :class="{ 'is-empty': !form.avatar || brokenImages.avatar }"
               role="button"
               tabindex="0"
-              :aria-label="form.avatar && !brokenImages.avatar ? '更换头像' : '上传头像'"
+              :aria-label="form.avatar && !brokenImages.avatar ? $t('profile.upload.changeAvatar') : $t('profile.upload.uploadAvatar')"
               @click="triggerUpload('avatar')"
               @keydown.enter.prevent="triggerUpload('avatar')"
               @keydown.space.prevent="triggerUpload('avatar')"
             >
               <template v-if="form.avatar && !brokenImages.avatar">
-                <img :src="form.avatar" alt="头像" @error="onImgError('avatar')" />
-                <div class="uploader-mask">更换图片</div>
+                <img :src="form.avatar" :alt="$t('profile.field.avatar')" @error="onImgError('avatar')" />
+                <div class="uploader-mask">{{ $t('profile.upload.changeImage') }}</div>
               </template>
               <div v-else class="uploader-empty">
                 <PlusOutlined />
-                <span class="uploader-hint">上传图片</span>
+                <span class="uploader-hint">{{ $t('profile.upload.uploadImage') }}</span>
               </div>
               <div v-if="uploadingAvatar" class="uploader-loading">
                 <a-spin size="small" />
@@ -34,30 +34,30 @@
               size="small"
               @click="clearImage('avatar')"
             >
-              移除
+              {{ $t('profile.upload.remove') }}
             </a-button>
           </div>
         </a-form-item>
 
-        <a-form-item label="博客 Icon">
+        <a-form-item :label="$t('profile.field.blogIcon')">
           <div class="image-field">
             <div
               class="image-uploader icon-uploader"
               :class="{ 'is-empty': !form.blog_icon || brokenImages.icon }"
               role="button"
               tabindex="0"
-              :aria-label="form.blog_icon && !brokenImages.icon ? '更换博客 Icon' : '上传博客 Icon'"
+              :aria-label="form.blog_icon && !brokenImages.icon ? $t('profile.upload.changeBlogIcon') : $t('profile.upload.uploadBlogIcon')"
               @click="triggerUpload('icon')"
               @keydown.enter.prevent="triggerUpload('icon')"
               @keydown.space.prevent="triggerUpload('icon')"
             >
               <template v-if="form.blog_icon && !brokenImages.icon">
-                <img :src="form.blog_icon" alt="博客 Icon" @error="onImgError('icon')" />
-                <div class="uploader-mask">更换图片</div>
+                <img :src="form.blog_icon" :alt="$t('profile.field.blogIcon')" @error="onImgError('icon')" />
+                <div class="uploader-mask">{{ $t('profile.upload.changeImage') }}</div>
               </template>
               <div v-else class="uploader-empty">
                 <PlusOutlined />
-                <span class="uploader-hint">上传图片</span>
+                <span class="uploader-hint">{{ $t('profile.upload.uploadImage') }}</span>
               </div>
               <div v-if="uploadingIcon" class="uploader-loading">
                 <a-spin size="small" />
@@ -70,30 +70,30 @@
               size="small"
               @click="clearImage('icon')"
             >
-              移除
+              {{ $t('profile.upload.remove') }}
             </a-button>
           </div>
         </a-form-item>
 
-        <a-form-item label="页面背景图">
+        <a-form-item :label="$t('profile.field.pageBackground')">
           <div class="image-field">
             <div
               class="image-uploader background-uploader"
               :class="{ 'is-empty': !form.page_background || brokenImages.background }"
               role="button"
               tabindex="0"
-              :aria-label="form.page_background && !brokenImages.background ? '更换背景图' : '上传背景图'"
+              :aria-label="form.page_background && !brokenImages.background ? $t('profile.upload.changeBackground') : $t('profile.upload.uploadBackground')"
               @click="triggerUpload('background')"
               @keydown.enter.prevent="triggerUpload('background')"
               @keydown.space.prevent="triggerUpload('background')"
             >
               <template v-if="form.page_background && !brokenImages.background">
-                <img :src="form.page_background" alt="背景图" @error="onImgError('background')" />
-                <div class="uploader-mask">更换图片</div>
+                <img :src="form.page_background" :alt="$t('profile.field.pageBackground')" @error="onImgError('background')" />
+                <div class="uploader-mask">{{ $t('profile.upload.changeImage') }}</div>
               </template>
               <div v-else class="uploader-empty">
                 <PlusOutlined />
-                <span class="uploader-hint">上传图片</span>
+                <span class="uploader-hint">{{ $t('profile.upload.uploadImage') }}</span>
               </div>
               <div v-if="uploadingBackground" class="uploader-loading">
                 <a-spin size="small" />
@@ -106,7 +106,7 @@
               size="small"
               @click="clearImage('background')"
             >
-              移除
+              {{ $t('profile.upload.remove') }}
             </a-button>
           </div>
         </a-form-item>
@@ -114,10 +114,10 @@
 
       <!-- 表单区：两列网格布局，长字段跨两列 -->
       <div class="form-grid">
-        <a-form-item label="名称">
+        <a-form-item :label="$t('common.field.name')">
           <a-input
             v-model:value="form.nickname"
-            placeholder="请输入名称"
+            :placeholder="$t('profile.placeholder.name')"
             :maxlength="50"
           />
         </a-form-item>
@@ -125,12 +125,12 @@
         <a-form-item>
           <template #label>
             <span class="label-with-switch">
-              邮箱
-              <a-tooltip title="开启后将在博客对外展示">
+              {{ $t('profile.field.email') }}
+              <a-tooltip :title="$t('profile.tooltip.publicDisplay')">
                 <a-switch
                   v-model:checked="form.show_email"
                   size="small"
-                  aria-label="邮箱是否对外展示"
+                  :aria-label="$t('profile.aria.publicToggle', { field: $t('profile.field.email') })"
                 />
               </a-tooltip>
             </span>
@@ -138,7 +138,7 @@
           <a-input
             v-model:value="form.email"
             type="email"
-            placeholder="请输入邮箱"
+            :placeholder="$t('profile.placeholder.email')"
             :maxlength="100"
           />
         </a-form-item>
@@ -146,12 +146,12 @@
         <a-form-item>
           <template #label>
             <span class="label-with-switch">
-              所在城市
-              <a-tooltip title="开启后将在博客对外展示">
+              {{ $t('profile.field.city') }}
+              <a-tooltip :title="$t('profile.tooltip.publicDisplay')">
                 <a-switch
                   v-model:checked="form.show_city"
                   size="small"
-                  aria-label="城市是否对外展示"
+                  :aria-label="$t('profile.aria.publicToggle', { field: $t('profile.field.city') })"
                 />
               </a-tooltip>
             </span>
@@ -159,17 +159,17 @@
           <a-cascader
             v-model:value="cityValue"
             :options="CHINA_REGIONS"
-            placeholder="请选择省/市"
+            :placeholder="$t('profile.placeholder.city')"
             :allow-clear="true"
             :show-search="{ filter }"
             style="width: 100%"
           />
         </a-form-item>
 
-        <a-form-item label="博客标题">
+        <a-form-item :label="$t('profile.field.blogTitle')">
           <a-input
             v-model:value="form.blog_title"
-            placeholder="请输入博客标题"
+            :placeholder="$t('profile.placeholder.blogTitle')"
             :maxlength="100"
           />
         </a-form-item>
@@ -177,12 +177,12 @@
         <a-form-item>
           <template #label>
             <span class="label-with-switch">
-              性格
-              <a-tooltip title="开启后将在博客对外展示">
+              {{ $t('profile.field.personality') }}
+              <a-tooltip :title="$t('profile.tooltip.publicDisplay')">
                 <a-switch
                   v-model:checked="form.show_personality"
                   size="small"
-                  aria-label="性格是否对外展示"
+                  :aria-label="$t('profile.aria.publicToggle', { field: $t('profile.field.personality') })"
                 />
               </a-tooltip>
             </span>
@@ -190,21 +190,21 @@
           <CardGridPicker
             v-model="form.personality"
             :options="personalityOptions"
-            placeholder="选择你的性格（MBTI）"
-            search-placeholder="搜索性格类型"
-            aria-label="选择性格"
+            :placeholder="$t('profile.placeholder.personality')"
+            :search-placeholder="$t('profile.placeholder.personalitySearch')"
+            :aria-label="$t('profile.aria.choosePersonality')"
           />
         </a-form-item>
 
         <a-form-item>
           <template #label>
             <span class="label-with-switch">
-              星座
-              <a-tooltip title="开启后将在博客对外展示">
+              {{ $t('profile.field.zodiac') }}
+              <a-tooltip :title="$t('profile.tooltip.publicDisplay')">
                 <a-switch
                   v-model:checked="form.show_zodiac"
                   size="small"
-                  aria-label="星座是否对外展示"
+                  :aria-label="$t('profile.aria.publicToggle', { field: $t('profile.field.zodiac') })"
                 />
               </a-tooltip>
             </span>
@@ -212,29 +212,29 @@
           <CardGridPicker
             v-model="form.zodiac"
             :options="zodiacOptions"
-            placeholder="选择你的星座"
-            search-placeholder="搜索星座"
-            aria-label="选择星座"
+            :placeholder="$t('profile.placeholder.zodiac')"
+            :search-placeholder="$t('profile.placeholder.zodiacSearch')"
+            :aria-label="$t('profile.aria.chooseZodiac')"
           />
         </a-form-item>
 
-        <a-form-item class="span-2" label="介绍">
+        <a-form-item class="span-2" :label="$t('profile.field.bio')">
           <a-textarea
             v-model:value="form.bio"
-            placeholder="请输入个人介绍"
+            :placeholder="$t('profile.placeholder.bio')"
             :rows="4"
           />
         </a-form-item>
 
-        <a-form-item class="span-2" label="博客描述">
+        <a-form-item class="span-2" :label="$t('profile.field.blogDescription')">
           <a-textarea
             v-model:value="form.blog_description"
-            placeholder="请输入博客描述"
+            :placeholder="$t('profile.placeholder.blogDescription')"
             :rows="3"
           />
         </a-form-item>
 
-        <a-form-item class="span-2" label="标签">
+        <a-form-item class="span-2" :label="$t('common.field.tag')">
           <div class="tags-container">
             <a-tag
               v-for="(tag, index) in tags"
@@ -254,12 +254,12 @@
               @blur="handleInputConfirm"
             />
             <a-tag v-else style="background: #F9FAFC; border: 1px dashed #E5E9F2; cursor: pointer" @click="showInput">
-              + 添加标签
+              + {{ $t('profile.action.addTag') }}
             </a-tag>
           </div>
         </a-form-item>
 
-        <a-form-item class="span-2" label="社交链接">
+        <a-form-item class="span-2" :label="$t('profile.field.socialLinks')">
           <div class="social-links-container">
             <div
               v-for="(link, index) in socialLinks"
@@ -268,7 +268,7 @@
             >
               <a-select
                 v-model:value="link.platform"
-                placeholder="选择平台"
+                :placeholder="$t('profile.placeholder.platform')"
                 style="width: 180px"
                 show-search
                 :filter-option="filterPlatform"
@@ -284,28 +284,28 @@
                         <path :d="platform.icon" />
                       </svg>
                     </span>
-                    <span>{{ platform.name }}</span>
+                    <span>{{ $t(platform.labelKey) }}</span>
                   </div>
                 </a-select-option>
               </a-select>
               <a-input
                 v-model:value="link.url"
-                placeholder="请输入个人主页 URL"
+                :placeholder="$t('profile.placeholder.socialUrl')"
                 allow-clear
                 style="flex: 1"
               />
               <a-button danger @click="removeSocialLink(index)">
-                删除
+                {{ $t('common.actions.delete') }}
               </a-button>
             </div>
             <a-button type="dashed" block @click="addSocialLink">
-              + 添加社交链接
+              + {{ $t('profile.action.addSocialLink') }}
             </a-button>
           </div>
         </a-form-item>
 
         <a-form-item class="span-2">
-          <a-button type="primary" :loading="saving" @click="handleSave">保存</a-button>
+          <a-button type="primary" :loading="saving" @click="handleSave">{{ $t('common.actions.save') }}</a-button>
         </a-form-item>
       </div>
 
@@ -346,6 +346,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, onMounted, nextTick, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { authApi } from '@/api/auth'
@@ -356,6 +357,8 @@ import CardGridPicker from '@/components/profile/CardGridPicker.vue'
 import type { PickerCardOption } from '@/components/profile/CardGridPicker.vue'
 import { CHINA_REGIONS } from '@/assets/data/china-regions'
 import type { CascaderOptionType } from 'ant-design-vue/es/cascader'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const saving = ref(false)
@@ -460,7 +463,7 @@ function handleInputConfirm() {
 
 function filterPlatform(input: string, option: { value: string }) {
   const platform = SOCIAL_PLATFORMS.find((p) => p.key === option.value)
-  return platform ? platform.name.toLowerCase().includes(input.toLowerCase()) : false
+  return platform ? t(platform.labelKey).toLowerCase().includes(input.toLowerCase()) : false
 }
 
 async function loadProfileMeta() {
@@ -497,7 +500,7 @@ async function loadProfile() {
     brokenImages.icon = false
     brokenImages.avatar = false
   } catch {
-    message.error('加载个人资料失败')
+    message.error(t('profile.message.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -507,9 +510,9 @@ async function handleSave() {
   saving.value = true
   try {
     await authApi.updateProfile({ ...form, social_links: socialLinks.value, tags: tags.value })
-    message.success('保存成功')
+    message.success(t('common.message.saveSuccess'))
   } catch {
-    message.error('保存失败')
+    message.error(t('profile.message.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -547,9 +550,9 @@ async function handleFileChange(e: Event, type: ImageField) {
       form.page_background = res.url
     }
     brokenImages[type] = false
-    message.success('上传成功')
+    message.success(t('common.message.uploadSuccess'))
   } catch {
-    message.error('上传失败')
+    message.error(t('profile.message.uploadFailed'))
   } finally {
     uploading.value = false
   }
@@ -563,11 +566,11 @@ async function handleAvatarCropped(blob: Blob) {
     const res = await authApi.uploadAvatar(file)
     form.avatar = res.url
     brokenImages.avatar = false
-    message.success('上传成功')
+    message.success(t('common.message.uploadSuccess'))
     avatarCropVisible.value = false
     avatarCropFile.value = null
   } catch {
-    message.error('上传失败')
+    message.error(t('profile.message.uploadFailed'))
   } finally {
     uploadingAvatar.value = false
   }

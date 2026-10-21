@@ -10,10 +10,10 @@
       />
       <span v-else class="installed-card__cover-text">{{ displayName.slice(0, 1) }}</span>
       <a-tag v-if="theme.active" color="success" class="installed-card__badge">
-        <CheckCircleOutlined /> 使用中
+        <CheckCircleOutlined /> {{ $t('theme.action.inUse') }}
       </a-tag>
       <a-tag v-if="updateAvailable" color="warning" class="installed-card__badge--update">
-        <ArrowUpOutlined /> 有新版本
+        <ArrowUpOutlined /> {{ $t('theme.update.newVersion') }}
       </a-tag>
     </div>
 
@@ -42,11 +42,11 @@
         :loading="activating"
         @click="emit('activate')"
       >
-        {{ theme.active ? '使用中' : '启用' }}
+        {{ theme.active ? $t('theme.action.inUse') : $t('common.actions.enable') }}
       </a-button>
       <a-button size="small" @click="emit('preview')">
         <template #icon><EyeOutlined /></template>
-        预览
+        {{ $t('common.actions.preview') }}
       </a-button>
       <a-tooltip v-if="theme.source === 'official'" :title="updateTooltip">
         <a-button
@@ -61,13 +61,13 @@
         </a-button>
       </a-tooltip>
       <a-popconfirm
-        title="卸载后主题目录与记录将被删除，确定卸载？"
-        ok-text="卸载"
-        cancel-text="取消"
+        :title="$t('theme.modal.uninstallConfirm')"
+        :ok-text="$t('theme.action.uninstall')"
+        :cancel-text="$t('common.actions.cancel')"
         :ok-button-props="{ danger: true }"
         @confirm="emit('uninstall')"
       >
-        <a-button size="small" danger :disabled="theme.active">卸载</a-button>
+        <a-button size="small" danger :disabled="theme.active">{{ $t('theme.action.uninstall') }}</a-button>
       </a-popconfirm>
     </div>
   </div>
@@ -75,14 +75,15 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ArrowUpOutlined, CheckCircleOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import type { InstalledTheme, ThemeItem } from '@/types/theme'
+import { formatDate } from '@/utils/datetime'
 import {
   hasNewVersion,
   isPreviewURL,
   themeDisplayName,
   themeGradient,
-  THEME_TYPE_LABELS,
 } from '@/utils/themeDisplay'
 
 const props = defineProps<{
@@ -100,6 +101,18 @@ const emit = defineEmits<{
   (e: 'update'): void
 }>()
 
+const { t } = useI18n()
+
+// typeLabels 主题类型展示文案（i18n），未知类型回退原始值
+const typeLabels = computed<Record<string, string>>(() => ({
+  personal: t('theme.type.personal'),
+  tech: t('theme.type.tech'),
+  photo: t('theme.type.photo'),
+  travel: t('theme.type.travel'),
+  music: t('theme.type.music'),
+  team: t('theme.type.team'),
+}))
+
 const coverFailed = ref(false)
 
 const marketPreview = computed(() => (props.market ? isPreviewURL(props.market.preview) : false))
@@ -112,7 +125,7 @@ const displayDesc = computed(() => props.market?.description || props.theme.desc
 const gradient = computed(() => themeGradient(props.market?.type || ''))
 const typeLabel = computed(() => {
   const type = props.market?.type
-  return type ? THEME_TYPE_LABELS[type] || type : ''
+  return type ? typeLabels.value[type] || type : ''
 })
 const marketStyles = computed(() => props.market?.styles?.filter(Boolean) ?? [])
 
@@ -122,14 +135,15 @@ const updateAvailable = computed(() => hasNewVersion(props.theme.version, props.
 // 本地版本与官方一致且市场元数据可用时，无需再更新
 const latest = computed(() => !!props.market && !updateAvailable.value)
 const updateButtonText = computed(() => {
-  if (updateAvailable.value) return '有新版本可更新'
-  if (latest.value) return '已是最新'
-  return '更新'
+  if (updateAvailable.value) return t('theme.update.available')
+  if (latest.value) return t('theme.update.latest')
+  return t('common.actions.update')
 })
 const updateTooltip = computed(() => {
-  if (updateAvailable.value) return `本地 v${props.theme.version}，官方最新 v${props.market?.version}`
-  if (latest.value) return `本地 v${props.theme.version} 已与官方最新版本一致`
-  return '从官方市场拉取最新版本'
+  if (updateAvailable.value)
+    return t('theme.update.tooltipOutdated', { local: props.theme.version, market: props.market?.version })
+  if (latest.value) return t('theme.update.tooltipLatest', { local: props.theme.version })
+  return t('theme.update.tooltipDefault')
 })
 
 watch(
@@ -139,10 +153,7 @@ watch(
   },
 )
 
-const installedTime = computed(() => {
-  const d = new Date(props.theme.created_at)
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('zh-CN')
-})
+const installedTime = computed(() => formatDate(props.theme.created_at))
 </script>
 
 <style scoped>

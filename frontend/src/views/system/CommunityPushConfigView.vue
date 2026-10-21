@@ -1,46 +1,46 @@
 <template>
   <div class="community-push-view">
     <!-- 连接配置 -->
-    <a-card title="社区推送配置" class="config-card">
+    <a-card :title="$t('system.push.configTitle')" class="config-card">
       <template #extra>
-        <a-tag v-if="config?.has_push_key" color="success">已配置密钥</a-tag>
-        <a-tag v-else color="warning">未配置密钥</a-tag>
+        <a-tag v-if="config?.has_push_key" color="success">{{ $t('system.push.keyConfigured') }}</a-tag>
+        <a-tag v-else color="warning">{{ $t('system.push.keyMissing') }}</a-tag>
       </template>
 
       <a-form layout="vertical" class="config-form">
-        <a-form-item label="NovaBlog 社区地址" required extra="社区推送与主题市场的统一官方入口，主题模块同步使用此地址">
+        <a-form-item :label="$t('system.push.baseUrl')" required :extra="$t('system.push.baseUrlExtra')">
           <a-input
             v-model:value="form.base_url"
-            placeholder="https://community.example.com（自动补 /api/v1）"
+            :placeholder="$t('system.push.baseUrlPlaceholder')"
             allow-clear
           />
         </a-form-item>
-        <a-form-item label="博客对外地址" extra="用于拼接推送内容的「阅读原文」链接">
+        <a-form-item :label="$t('system.push.siteUrl')" :extra="$t('system.push.siteUrlExtra')">
           <a-input v-model:value="form.site_url" placeholder="https://blog.example.com" allow-clear />
         </a-form-item>
         <a-form-item :extra="pushKeyExtra">
           <template #label>
-            推送密钥
+            {{ $t('system.push.pushKey') }}
             <a-tag v-if="config?.has_push_key" class="ml-2" color="default">{{ config.push_key_prefix }}…</a-tag>
           </template>
           <a-input-password
             v-model:value="form.push_key"
-            :placeholder="config?.has_push_key ? '留空表示不修改已有密钥' : '在 NovaBlog 个人中心生成，nbk_ 开头'"
+            :placeholder="config?.has_push_key ? $t('system.push.pushKeyKeep') : $t('system.push.pushKeyPlaceholder')"
             autocomplete="new-password"
           />
         </a-form-item>
         <a-form-item
-          label="社区验证码"
-          extra="在 NovaBlog 社区「个人设置 → 绑定博客」复制；保存配置时自动向社区确认博客归属，通过后社区账号获得「站长」标识"
+          :label="$t('system.push.verifyCode')"
+          :extra="$t('system.push.verifyCodeExtra')"
         >
-          <a-input v-model:value="form.verify_code" placeholder="粘贴社区个人设置页展示的验证码" allow-clear />
+          <a-input v-model:value="form.verify_code" :placeholder="$t('system.push.verifyCodePlaceholder')" allow-clear />
         </a-form-item>
         <div class="config-actions">
           <a-button type="primary" :loading="saving" @click="handleSave">
-            <SaveOutlined /> 保存配置
+            <SaveOutlined /> {{ $t('system.push.saveConfig') }}
           </a-button>
           <a-button :loading="testing" @click="handleTest">
-            <ApiOutlined /> 测试连接
+            <ApiOutlined /> {{ $t('system.push.testConnection') }}
           </a-button>
         </div>
         <a-alert
@@ -48,22 +48,22 @@
           type="success"
           show-icon
           class="test-result"
-          :message="`连接成功：${testResult.credential_name}（博主 ${testResult.username}）`"
-          :description="`社区账号博客地址：${testResult.blog_url || '未绑定'}`"
+          :message="$t('system.push.testSuccessTitle', { name: testResult.credential_name, username: testResult.username })"
+          :description="$t('system.push.testSuccessDesc', { url: testResult.blog_url || $t('system.push.notBound') })"
         />
         <a-alert
           v-if="verifyResult"
           :type="verifyResult.status === 'verified' ? 'success' : 'error'"
           show-icon
           class="test-result"
-          :message="verifyResult.status === 'verified' ? '博客归属验证成功' : '博客归属验证未通过'"
+          :message="verifyResult.status === 'verified' ? $t('system.push.verifyPassed') : $t('system.push.verifyFailed')"
           :description="verifyResult.message"
         />
       </a-form>
     </a-card>
 
     <!-- 同步记录 -->
-    <a-card title="同步记录" class="records-card">
+    <a-card :title="$t('system.push.recordsTitle')" class="records-card">
       <template #extra>
         <a-select
           v-model:value="statusFilter"
@@ -105,7 +105,7 @@
               :disabled="record.sync_status === 'deleted'"
               @click="handleRetry(record)"
             >
-              重新推送
+              {{ $t('system.push.repush') }}
             </a-button>
           </template>
         </template>
@@ -115,7 +115,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { ApiOutlined, SaveOutlined } from '@ant-design/icons-vue'
 
@@ -124,6 +125,8 @@ import {
   type CommunityPushConfig,
   type CommunitySyncRecord,
 } from '@/api/communityPush'
+
+const { t } = useI18n()
 
 const config = ref<CommunityPushConfig | null>(null)
 const form = reactive({ base_url: '', site_url: '', push_key: '', verify_code: '' })
@@ -139,26 +142,27 @@ const recordsLoading = ref(false)
 const statusFilter = ref('')
 const retryingId = ref('')
 
-const pushKeyExtra = '在 NovaBlog 个人中心「推送密钥」生成；保存后仅显示前缀，不会回显完整密钥'
+const pushKeyExtra = computed(() => t('system.push.pushKeyExtra'))
 
-const statusOptions = [
-  { value: '', label: '全部状态' },
-  { value: 'synced', label: '已同步' },
-  { value: 'hidden', label: '已下架' },
-  { value: 'failed', label: '失败' },
-  { value: 'deleted', label: '已删除' },
-]
+// statusOptions 同步状态下拉（含筛选全部项）
+const statusOptions = computed(() => [
+  { value: '', label: t('common.status.all') },
+  { value: 'synced', label: t('system.sync.synced') },
+  { value: 'hidden', label: t('system.sync.hidden') },
+  { value: 'failed', label: t('system.sync.failed') },
+  { value: 'deleted', label: t('system.sync.deleted') },
+])
 
-const recordColumns = [
-  { title: '内容', key: 'content_title', ellipsis: true },
-  { title: '类型', key: 'target_type', width: 90 },
-  { title: '社区状态', key: 'sync_status', width: 96 },
-  { title: '社区文章 ID', key: 'community_article_id', width: 110 },
-  { title: '最后推送', key: 'pushed_at', width: 140 },
-  { title: '重试', key: 'retry_count', width: 64 },
-  { title: '错误信息', key: 'last_error', ellipsis: true },
-  { title: '操作', key: 'action', width: 100 },
-]
+const recordColumns = computed(() => [
+  { title: t('common.field.content'), key: 'content_title', ellipsis: true },
+  { title: t('common.field.type'), key: 'target_type', width: 90 },
+  { title: t('system.record.communityStatus'), key: 'sync_status', width: 96 },
+  { title: t('system.record.communityArticleId'), key: 'community_article_id', width: 110 },
+  { title: t('system.record.lastPush'), key: 'pushed_at', width: 140 },
+  { title: t('system.record.retryCount'), key: 'retry_count', width: 64 },
+  { title: t('system.record.lastError'), key: 'last_error', ellipsis: true },
+  { title: t('common.table.actions'), key: 'action', width: 100 },
+])
 
 const recordsPagination = reactive({
   current: 1,
@@ -167,21 +171,23 @@ const recordsPagination = reactive({
   showSizeChanger: false,
 })
 
-const targetTypeLabels: Record<string, string> = {
-  article: '文章',
-  travel: '旅行攻略',
-  recipe: '美食食谱',
-  portfolio: '作品集',
-  open_source: '开源作品',
-}
+// targetTypeLabels 推送内容类型展示文案，未知类型回退原始值
+const targetTypeLabels = computed<Record<string, string>>(() => ({
+  article: t('system.target.article'),
+  travel: t('system.target.travel'),
+  recipe: t('system.target.recipe'),
+  portfolio: t('system.target.portfolio'),
+  open_source: t('system.target.openSource'),
+}))
 
-const statusLabels: Record<string, string> = {
-  synced: '已同步',
-  hidden: '已下架',
-  failed: '失败',
-  deleted: '已删除',
-  none: '未推送',
-}
+// statusLabels 同步状态展示文案，未知状态回退原始值
+const statusLabels = computed<Record<string, string>>(() => ({
+  synced: t('system.sync.synced'),
+  hidden: t('system.sync.hidden'),
+  failed: t('system.sync.failed'),
+  deleted: t('system.sync.deleted'),
+  none: t('system.sync.notPushed'),
+}))
 
 const statusColors: Record<string, string> = {
   synced: 'success',
@@ -192,11 +198,11 @@ const statusColors: Record<string, string> = {
 }
 
 function targetTypeLabel(type: string) {
-  return targetTypeLabels[type] ?? type
+  return targetTypeLabels.value[type] ?? type
 }
 
 function statusLabel(status: string) {
-  return statusLabels[status] ?? status
+  return statusLabels.value[status] ?? status
 }
 
 function statusColor(status: string) {
@@ -217,7 +223,7 @@ async function loadConfig() {
 
 async function handleSave() {
   if (!form.base_url.trim()) {
-    message.warning('请填写社区地址')
+    message.warning(t('system.validation.baseUrlRequired'))
     return
   }
   saving.value = true
@@ -233,13 +239,13 @@ async function handleSave() {
     // 验证码随保存一并提交给社区，结果单独提示
     if (result.verify_status === 'verified') {
       verifyResult.value = { status: 'verified', message: result.verify_message || '' }
-      message.success('推送配置已保存，博客归属验证通过')
+      message.success(t('system.message.saveVerified'))
     } else if (result.verify_status === 'failed') {
-      verifyResult.value = { status: 'failed', message: result.verify_message || '验证码被社区拒绝' }
-      message.warning('推送配置已保存，但博客归属验证未通过')
+      verifyResult.value = { status: 'failed', message: result.verify_message || t('system.message.verifyRejected') }
+      message.warning(t('system.message.saveVerifyFailed'))
     } else {
       verifyResult.value = null
-      message.success('推送配置已保存')
+      message.success(t('system.message.saveSuccess'))
     }
   } finally {
     saving.value = false
@@ -282,7 +288,7 @@ async function handleRetry(record: CommunitySyncRecord) {
   retryingId.value = record.target_id
   try {
     await communityPushApi.sync(record.target_type, record.target_id, 'push')
-    message.success('已重新推送')
+    message.success(t('system.message.repushSuccess'))
     await loadRecords(recordsPage.value)
   } finally {
     retryingId.value = ''

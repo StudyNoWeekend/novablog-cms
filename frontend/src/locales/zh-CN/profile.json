@@ -1,0 +1,118 @@
+{
+  "field": {
+    "avatar": "头像",
+    "blogIcon": "博客 Icon",
+    "pageBackground": "页面背景图",
+    "email": "邮箱",
+    "city": "所在城市",
+    "blogTitle": "博客标题",
+    "personality": "性格",
+    "zodiac": "星座",
+    "bio": "介绍",
+    "blogDescription": "博客描述",
+    "socialLinks": "社交链接"
+  },
+  "upload": {
+    "changeImage": "更换图片",
+    "uploadImage": "上传图片",
+    "remove": "移除",
+    "changeAvatar": "更换头像",
+    "uploadAvatar": "上传头像",
+    "changeBlogIcon": "更换博客 Icon",
+    "uploadBlogIcon": "上传博客 Icon",
+    "changeBackground": "更换背景图",
+    "uploadBackground": "上传背景图",
+    "sizeLimit": "文件大小不能超过 {limit}",
+    "formatUnsupported": "仅支持 {formats} 格式"
+  },
+  "placeholder": {
+    "name": "请输入名称",
+    "email": "请输入邮箱",
+    "city": "请选择省/市",
+    "blogTitle": "请输入博客标题",
+    "personality": "选择你的性格（MBTI）",
+    "personalitySearch": "搜索性格类型",
+    "zodiac": "选择你的星座",
+    "zodiacSearch": "搜索星座",
+    "bio": "请输入个人介绍",
+    "blogDescription": "请输入博客描述",
+    "platform": "选择平台",
+    "socialUrl": "请输入个人主页 URL"
+  },
+  "tooltip": {
+    "publicDisplay": "开启后将在博客对外展示"
+  },
+  "aria": {
+    "publicToggle": "{field}是否对外展示",
+    "choosePersonality": "选择性格",
+    "chooseZodiac": "选择星座"
+  },
+  "action": {
+    "addTag": "添加标签",
+    "addSocialLink": "添加社交链接"
+  },
+  "social": {
+    "github": "GitHub",
+    "gitlab": "GitLab",
+    "juejin": "掘金",
+    "zhihu": "知乎",
+    "csdn": "CSDN",
+    "weibo": "微博",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "bilibili": "B站",
+    "youtube": "YouTube",
+    "douyin": "抖音",
+    "xiaohongshu": "小红书",
+    "kuaishou": "快手",
+    "tiktok": "TikTok",
+    "wechat": "微信",
+    "qq": "QQ",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "steam": "Steam",
+    "email": "Email",
+    "website": "个人网站"
+  },
+  "picker": {
+    "placeholder": "请选择",
+    "searchPlaceholder": "搜索",
+    "ariaLabel": "选择",
+    "noMatch": "未找到匹配项",
+    "clearSelection": "清除选择"
+  },
+  "cors": {
+    "title": "允许的来源（Origin）白名单",
+    "desc": "设置允许访问 API 的跨域来源地址。每行一个，支持端口号。修改后点击保存即时生效。",
+    "inputPlaceholder": "输入地址后按回车添加，例如 http://localhost:3001",
+    "saveConfig": "保存配置",
+    "invalidUrl": "请输入有效的 URL（以 http:// 或 https:// 开头）",
+    "duplicate": "该地址已在列表中",
+    "updateSuccess": "跨域配置已更新，立即生效",
+    "saveFailed": "保存失败，请重试"
+  },
+  "avatarCrop": {
+    "title": "裁剪头像",
+    "previewAlt": "头像裁剪预览",
+    "zoomOut": "缩小",
+    "zoomIn": "放大",
+    "rotateLeft": "向左旋转",
+    "rotateRight": "向右旋转",
+    "hint": "拖动图片调整位置，滚轮或按钮缩放",
+    "cropFailed": "图片裁剪失败，请重试",
+    "exportFailed": "图片导出失败，请重试"
+  },
+  "editor": {
+    "uploadFileFailed": "上传 {name} 失败",
+    "contentPlaceholder": "请输入文章内容...",
+    "imageUploadFailed": "图片上传失败",
+    "videoUploadFailed": "视频上传失败"
+  },
+  "message": {
+    "loadFailed": "加载个人资料失败",
+    "saveFailed": "保存失败",
+    "uploadFailed": "上传失败"
+  }
+}

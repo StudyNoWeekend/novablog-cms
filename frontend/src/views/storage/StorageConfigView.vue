@@ -1,19 +1,19 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">对象存储</h1>
+      <h1 class="page-title">{{ $t('storage.title') }}</h1>
     </div>
 
     <a-card>
       <a-tabs v-model:activeKey="activeTab">
-        <a-tab-pane key="config" tab="存储配置" />
-        <a-tab-pane key="migration" tab="素材迁移" />
+        <a-tab-pane key="config" :tab="$t('storage.tabs.config')" />
+        <a-tab-pane key="migration" :tab="$t('storage.tabs.migration')" />
       </a-tabs>
 
       <!-- ============ Tab 1: 存储配置 ============ -->
       <template v-if="activeTab === 'config'">
         <div class="toolbar">
-          <a-button v-if="!hasPendingConfig" type="primary" @click="handleAdd">切换存储平台</a-button>
+          <a-button v-if="!hasPendingConfig" type="primary" @click="handleAdd">{{ $t('storage.actions.switchPlatform') }}</a-button>
         </div>
 
         <a-spin :spinning="configLoading">
@@ -28,8 +28,8 @@
                 {{ providerLabel(record.provider) }}
               </template>
               <template v-if="column.key === 'status'">
-                <a-tag v-if="record.is_active" color="green">使用中</a-tag>
-                <a-tag v-else color="orange">待迁移</a-tag>
+                <a-tag v-if="record.is_active" color="green">{{ $t('storage.status.active') }}</a-tag>
+                <a-tag v-else color="orange">{{ $t('storage.status.pending') }}</a-tag>
               </template>
               <template v-if="column.key === 'updated_at'">
                 {{ formatDateTime(record.updated_at) }}
@@ -40,21 +40,21 @@
                   type="link"
                   @click="handleActivate(record)"
                 >
-                  激活
+                  {{ $t('storage.actions.activate') }}
                 </a-button>
                 <a-button
                   v-if="!record.is_active"
                   type="link"
                   @click="activeTab = 'migration'"
                 >
-                  前往迁移
+                  {{ $t('storage.actions.goMigrate') }}
                 </a-button>
                 <a-button
                   v-if="record.is_active"
                   type="link"
                   @click="handleEdit(record)"
                 >
-                  编辑
+                  {{ $t('common.actions.edit') }}
                 </a-button>
                 <a-button
                   v-if="!record.is_active"
@@ -62,7 +62,7 @@
                   danger
                   @click="handleDelete(record)"
                 >
-                  取消
+                  {{ $t('common.actions.cancel') }}
                 </a-button>
                 <span v-if="record.is_active" style="color: #999; font-size: 13px">-</span>
               </template>
@@ -82,17 +82,17 @@
         >
           <template #message>
             <template v-if="sourcePlatforms.length > 0">
-              将素材从 {{ sourcePlatformLabels }} 迁移至「{{ providerLabel(targetConfig.provider) }}」
+              {{ $t('storage.migrate.fromTo', { sources: sourcePlatformLabels, target: providerLabel(targetConfig.provider) }) }}
             </template>
             <template v-else>
-              迁移目标：{{ providerLabel(targetConfig.provider) }}，点击「开始分析」检查需迁移的素材
+              {{ $t('storage.migrate.targetHint', { target: providerLabel(targetConfig.provider) }) }}
             </template>
           </template>
         </a-alert>
         <a-alert
           v-else
           type="warning"
-          message="请先在「存储配置」中添加存储平台配置"
+          :message="$t('storage.migrate.needConfig')"
           show-icon
           style="margin-bottom: 16px"
         />
@@ -101,18 +101,22 @@
         <template v-if="targetConfig && migrationState === 'idle'">
           <div v-if="analyzeState === 'idle'">
             <a-button type="primary" @click="handleAnalyze">
-              开始分析
+              {{ $t('storage.migrate.startAnalyze') }}
             </a-button>
           </div>
 
           <div v-if="analyzeState === 'analyzing'" style="text-align: center; padding: 48px 0">
-            <a-spin tip="正在分析素材..." />
+            <a-spin :tip="$t('storage.migrate.analyzing')" />
           </div>
 
           <div v-if="analyzeState === 'completed' && analyzeResult">
             <a-statistic
-              title="分析结果"
-              :value="`共 ${(analyzeResult.missing || []).length + (analyzeResult.existing || []).length} 条素材，${(analyzeResult.existing || []).length} 条已存在，${(analyzeResult.missing || []).length} 条需要迁移`"
+              :title="$t('storage.migrate.analyzeResult')"
+              :value="$t('storage.migrate.analyzeSummary', {
+                total: (analyzeResult.missing || []).length + (analyzeResult.existing || []).length,
+                existing: (analyzeResult.existing || []).length,
+                missing: (analyzeResult.missing || []).length,
+              })"
               style="margin-bottom: 16px"
             />
             <a-table
@@ -125,18 +129,18 @@
               bordered
             />
             <div class="migration-toolbar">
-              <span style="font-weight: 500">需迁移素材：</span>
+              <span style="font-weight: 500">{{ $t('storage.migrate.pendingLabel') }}</span>
               <a-button
                 type="primary"
                 :disabled="selectedRowKeys.length === 0"
                 @click="handleBatchMigrate"
               >
-                批量迁移（{{ selectedRowKeys.length }}）
+                {{ $t('storage.migrate.batch', { count: selectedRowKeys.length }) }}
               </a-button>
               <a-button type="primary" @click="handleMigrateAll">
-                一键迁移所有
+                {{ $t('storage.migrate.migrateAll') }}
               </a-button>
-              <a-button @click="handleResetAnalyze">重新分析</a-button>
+              <a-button @click="handleResetAnalyze">{{ $t('storage.migrate.reanalyze') }}</a-button>
             </div>
             <a-table
               :columns="missingColumns"
@@ -159,16 +163,16 @@
             :status="migrateProgressStatus"
           />
           <div style="margin: 12px 0; color: #666">
-            已迁移 {{ migrateSucceeded }} / {{ migrateTotal }} 条
+            {{ $t('storage.migrate.progress', { done: migrateSucceeded, total: migrateTotal }) }}
             <template v-if="migrationState === 'completed'">
-              ，迁移完成，耗时 {{ elapsedTime }} 秒
+              {{ $t('storage.migrate.completedIn', { seconds: elapsedTime }) }}
             </template>
           </div>
-          <a-button @click="handleResetAnalyze" style="margin-top: 8px">重新分析</a-button>
+          <a-button @click="handleResetAnalyze" style="margin-top: 8px">{{ $t('storage.migrate.reanalyze') }}</a-button>
 
           <!-- 失败项列表 -->
           <a-collapse v-if="migrateFailedItems.length > 0" style="margin-top: 16px">
-            <a-collapse-panel key="failed" :header="`失败项（${migrateFailedItems.length}）`">
+            <a-collapse-panel key="failed" :header="$t('storage.migrate.failedItems', { count: migrateFailedItems.length })">
               <a-table
                 :columns="failedColumns"
                 :data-source="migrateFailedItems"
@@ -185,7 +189,7 @@
     <!-- ============ 新增/编辑 Modal ============ -->
     <a-modal
       v-model:open="modalVisible"
-      :title="editingConfig ? '编辑存储配置' : '新增存储配置'"
+      :title="editingConfig ? $t('storage.modal.editTitle') : $t('storage.modal.createTitle')"
       :width="560"
       :confirm-loading="modalLoading"
       @ok="handleSave"
@@ -198,11 +202,11 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 18 }"
       >
-        <a-form-item label="存储平台" name="provider">
+        <a-form-item :label="$t('storage.fields.provider')" name="provider">
           <a-select
             v-model:value="form.provider"
             :disabled="!!editingConfig"
-            placeholder="请选择存储平台"
+            :placeholder="$t('storage.form.providerPlaceholder')"
             @change="handleProviderChange"
           >
             <a-select-option v-for="p in availableProviders" :key="p.value" :value="p.value">
@@ -217,7 +221,7 @@
             :placeholder="endpointPlaceholder"
           />
           <template #help>
-            <span class="field-hint">示例：{{ endpointExample }}</span>
+            <span class="field-hint">{{ $t('storage.form.example', { example: endpointExample }) }}</span>
           </template>
         </a-form-item>
 
@@ -228,11 +232,11 @@
         >
           <a-input
             v-model:value="form.region"
-            :placeholder="form.provider === 'tencent' ? '如 ap-guangzhou' : '如 cn-hangzhou'"
+            :placeholder="form.provider === 'tencent' ? $t('storage.form.regionExampleTencent') : $t('storage.form.regionExampleAliyun')"
           />
           <template #help>
-            <span v-if="form.provider === 'aliyun'" class="field-hint">必填，如 cn-hangzhou</span>
-            <span v-else class="field-hint">如 ap-guangzhou</span>
+            <span v-if="form.provider === 'aliyun'" class="field-hint">{{ $t('storage.form.regionRequiredAliyun') }}</span>
+            <span v-else class="field-hint">{{ $t('storage.form.regionExampleTencent') }}</span>
           </template>
         </a-form-item>
 
@@ -242,27 +246,27 @@
             :placeholder="bucketPlaceholder"
           />
           <template #help>
-            <span class="field-hint">示例：{{ bucketExample }}</span>
+            <span class="field-hint">{{ $t('storage.form.example', { example: bucketExample }) }}</span>
           </template>
         </a-form-item>
 
         <a-form-item v-if="form.provider !== 'local'" :label="form.provider === 'tencent' ? 'Secret ID' : 'Access Key'" name="access_key">
-          <a-input v-model:value="form.access_key" :placeholder="form.provider === 'tencent' ? '请输入 SecretId' : '请输入 Access Key'" />
+          <a-input v-model:value="form.access_key" :placeholder="form.provider === 'tencent' ? $t('storage.form.secretIdPlaceholder') : $t('storage.form.accessKeyPlaceholder')" />
         </a-form-item>
 
         <a-form-item v-if="form.provider !== 'local'" :label="form.provider === 'tencent' ? 'Secret Key' : 'Access Secret'" name="access_secret">
           <a-input-password
             v-model:value="form.access_secret"
-            :placeholder="editingConfig ? '留空不修改' : (form.provider === 'tencent' ? '请输入 SecretKey' : '请输入 Access Secret')"
+            :placeholder="editingConfig ? $t('storage.form.leaveEmptyToKeep') : (form.provider === 'tencent' ? $t('storage.form.secretKeyPlaceholder') : $t('storage.form.accessSecretPlaceholder'))"
           />
         </a-form-item>
 
-        <a-form-item label="路径前缀" name="path_prefix">
-          <a-input v-model:value="form.path_prefix" placeholder="可选，如 media/" />
+        <a-form-item :label="$t('storage.form.pathPrefix')" name="path_prefix">
+          <a-input v-model:value="form.path_prefix" :placeholder="$t('storage.form.pathPrefixPlaceholder')" />
         </a-form-item>
 
-        <a-form-item label="自定义域名" name="custom_domain">
-          <a-input v-model:value="form.custom_domain" placeholder="可选，如 https://cdn.example.com" />
+        <a-form-item :label="$t('storage.form.customDomain')" name="custom_domain">
+          <a-input v-model:value="form.custom_domain" :placeholder="$t('storage.form.customDomainPlaceholder')" />
         </a-form-item>
 
         <a-form-item v-if="form.provider === 'minio'" label="Use SSL" name="use_ssl">
@@ -280,7 +284,7 @@
 
         <a-form-item :wrapper-col="{ offset: 6, span: 18 }">
           <a-space>
-            <a-button :loading="testing" @click="handleTestConfig">测试连通性</a-button>
+            <a-button :loading="testing" @click="handleTestConfig">{{ $t('storage.actions.testConnection') }}</a-button>
           </a-space>
         </a-form-item>
       </a-form>
@@ -292,6 +296,8 @@
 import { ref, computed, onMounted, onUnmounted, watch, h } from 'vue'
 import { message, Modal, Tag, type TableColumnsType } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue/es/form'
+import { useI18n } from 'vue-i18n'
+import { formatDateTime } from '@/utils/datetime'
 import { storageApi } from '@/api/storage'
 import type {
   StorageConfig,
@@ -301,6 +307,8 @@ import type {
   MigrationItem,
   AnalyzeResult,
 } from '@/types/storage'
+
+const { t } = useI18n()
 
 // ========== 通用状态 ==========
 const activeTab = ref<'config' | 'migration'>('config')
@@ -314,31 +322,32 @@ const hasPendingConfig = computed(() => configs.value.some((c) => !c.is_active))
 const availableProviders = computed(() => {
   const activeProvider = configs.value.find((c) => c.is_active)?.provider
   return [
-    { value: 'local', label: '本地存储' },
-    { value: 'aliyun', label: '阿里云 OSS' },
-    { value: 'tencent', label: '腾讯云 COS' },
-    { value: 'minio', label: 'MinIO' },
+    { value: 'local', label: t('storage.providers.local') },
+    { value: 'aliyun', label: t('storage.providers.aliyun') },
+    { value: 'tencent', label: t('storage.providers.tencent') },
+    { value: 'minio', label: t('storage.providers.minio') },
   ].filter((p) => p.value !== activeProvider)
 })
 
+const providerLabels = computed<Record<string, string>>(() => ({
+  local: t('storage.providers.local'),
+  aliyun: t('storage.providers.aliyun'),
+  tencent: t('storage.providers.tencent'),
+  minio: t('storage.providers.minio'),
+}))
+
 const providerLabel = (p: string): string => {
-  const map: Record<string, string> = {
-    local: '本地存储',
-    aliyun: '阿里云 OSS',
-    tencent: '腾讯云 COS',
-    minio: 'MinIO',
-  }
-  return map[p] || p
+  return providerLabels.value[p] || p
 }
 
-const configColumns: TableColumnsType<StorageConfig> = [
-  { title: '存储平台', key: 'provider', width: 140 },
+const configColumns = computed<TableColumnsType<StorageConfig>>(() => [
+  { title: t('storage.fields.provider'), key: 'provider', width: 140 },
   { title: 'Endpoint', dataIndex: 'endpoint', key: 'endpoint', ellipsis: true },
   { title: 'Bucket', dataIndex: 'bucket', key: 'bucket', width: 180 },
-  { title: '状态', key: 'status', width: 120 },
-  { title: '更新时间', key: 'updated_at', width: 180 },
-  { title: '操作', key: 'action', width: 220 },
-]
+  { title: t('common.field.status'), key: 'status', width: 120 },
+  { title: t('common.field.updateTime'), key: 'updated_at', width: 180 },
+  { title: t('common.table.actions'), key: 'action', width: 220 },
+])
 
 async function fetchConfigs() {
   configLoading.value = true
@@ -354,15 +363,15 @@ async function fetchConfigs() {
 
 async function handleActivate(record: StorageConfig) {
   Modal.confirm({
-    title: '确认激活',
-    content: `激活后存储平台将切换为「${providerLabel(record.provider)}」，旧配置将被删除。请确保已将所有素材迁移到目标平台。确定继续？`,
+    title: t('storage.message.activateTitle'),
+    content: t('storage.message.activateConfirm', { provider: providerLabel(record.provider) }),
     onOk: async () => {
       try {
         await storageApi.activateConfig(record.provider)
-        message.success('已激活，旧配置已清理')
+        message.success(t('storage.message.activated'))
         await fetchConfigs()
       } catch (e: any) {
-        message.error(e?.message || '激活失败，请先完成素材迁移')
+        message.error(e?.message || t('storage.message.activateFailed'))
       }
     },
   })
@@ -370,15 +379,15 @@ async function handleActivate(record: StorageConfig) {
 
 async function handleDelete(record: StorageConfig) {
   Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除 ${providerLabel(record.provider)} 配置吗？`,
+    title: t('storage.message.deleteTitle'),
+    content: t('storage.message.deleteConfirm', { provider: providerLabel(record.provider) }),
     onOk: async () => {
       try {
         await storageApi.deleteConfig(record.provider)
-        message.success('已删除')
+        message.success(t('common.message.deleteSuccess'))
         await fetchConfigs()
       } catch (e: any) {
-        message.error(e?.message || '已激活的配置不能直接删除')
+        message.error(e?.message || t('storage.message.deleteActiveDenied'))
       }
     },
   })
@@ -450,14 +459,14 @@ function closeModal() {
   testResult.value = null
 }
 
-// 表单校验规则
-const formRules: Record<string, any> = {
-  provider: [{ required: true, message: '请选择存储平台', trigger: 'change' }],
+// 表单校验规则（computed 包裹，切换语言时刷新）
+const formRules = computed<Record<string, any>>(() => ({
+  provider: [{ required: true, message: t('storage.validation.providerRequired'), trigger: 'change' }],
   endpoint: [
     {
       validator: (_: any, value: string) => {
         if (form.value.provider !== 'local' && !value) {
-          return Promise.reject(new Error('请输入 Endpoint'))
+          return Promise.reject(new Error(t('storage.validation.endpointRequired')))
         }
         return Promise.resolve()
       },
@@ -468,7 +477,7 @@ const formRules: Record<string, any> = {
     {
       validator: (_: any, value: string) => {
         if (form.value.provider !== 'tencent' && form.value.provider !== 'local' && !value) {
-          return Promise.reject(new Error('请输入 Bucket'))
+          return Promise.reject(new Error(t('storage.validation.bucketRequired')))
         }
         return Promise.resolve()
       },
@@ -479,7 +488,7 @@ const formRules: Record<string, any> = {
     {
       validator: (_: any, value: string) => {
         if (form.value.provider !== 'local' && !value) {
-          return Promise.reject(new Error('请输入 Access Key'))
+          return Promise.reject(new Error(t('storage.validation.accessKeyRequired')))
         }
         return Promise.resolve()
       },
@@ -490,7 +499,7 @@ const formRules: Record<string, any> = {
     {
       validator: (_: any, value: string) => {
         if (form.value.provider !== 'local' && !editingConfig.value && !value) {
-          return Promise.reject(new Error('请输入 Access Secret'))
+          return Promise.reject(new Error(t('storage.validation.accessSecretRequired')))
         }
         return Promise.resolve()
       },
@@ -501,14 +510,14 @@ const formRules: Record<string, any> = {
     {
       validator: (_: any, value: string) => {
         if ((form.value.provider === 'aliyun' || form.value.provider === 'tencent') && !value) {
-          return Promise.reject(new Error('Region 为必填'))
+          return Promise.reject(new Error(t('storage.validation.regionRequired')))
         }
         return Promise.resolve()
       },
       trigger: 'blur',
     },
   ],
-}
+}))
 
 // Provider 动态提示
 const endpointPlaceholder = computed(() => {
@@ -516,7 +525,7 @@ const endpointPlaceholder = computed(() => {
     case 'aliyun': return 'https://oss-cn-hangzhou.aliyuncs.com'
     case 'tencent': return 'https://examplebucket-1250000000.cos.ap-guangzhou.myqcloud.com'
     case 'minio': return 'play.min.io:9000'
-    default: return '请输入 Endpoint'
+    default: return t('storage.form.endpointPlaceholder')
   }
 })
 
@@ -524,24 +533,24 @@ const endpointExample = computed(() => {
   switch (form.value.provider) {
     case 'aliyun': return 'https://oss-cn-hangzhou.aliyuncs.com'
     case 'tencent': return 'https://examplebucket-1250000000.cos.ap-guangzhou.myqcloud.com'
-    case 'minio': return 'play.min.io:9000（不含 scheme）'
+    case 'minio': return t('storage.form.endpointExampleMinio')
     default: return '—'
   }
 })
 
 const bucketPlaceholder = computed(() => {
   switch (form.value.provider) {
-    case 'aliyun': return '纯桶名，如 my-bucket'
-    case 'tencent': return '必须带 APPID，如 examplebucket-1250000000'
-    case 'minio': return '纯桶名，如 my-bucket'
-    default: return '请输入 Bucket'
+    case 'aliyun': return t('storage.form.bucketPlain')
+    case 'tencent': return t('storage.form.bucketWithAppId')
+    case 'minio': return t('storage.form.bucketPlain')
+    default: return t('storage.form.bucketPlaceholder')
   }
 })
 
 const bucketExample = computed(() => {
   switch (form.value.provider) {
     case 'aliyun': return 'my-bucket'
-    case 'tencent': return 'examplebucket-1250000000（必须带 APPID）'
+    case 'tencent': return t('storage.form.bucketExampleWithAppId')
     case 'minio': return 'my-bucket'
     default: return '—'
   }
@@ -576,9 +585,9 @@ async function handleTestConfig() {
       extra: buildExtra(),
     }
     await storageApi.testConfig(data)
-    testResult.value = { success: true, message: '连通性测试通过' }
+    testResult.value = { success: true, message: t('storage.message.testPassed') }
   } catch (e: any) {
-    testResult.value = { success: false, message: e?.message || '连通性测试失败' }
+    testResult.value = { success: false, message: e?.message || t('storage.message.testFailed') }
   } finally {
     testing.value = false
   }
@@ -596,8 +605,8 @@ async function handleSave() {
   // 检测平台类型是否被篡改
   if (editingConfig.value && form.value.provider !== editingConfig.value.provider) {
     Modal.warning({
-      title: '禁止修改存储平台',
-      content: '检测到存储平台类型发生变化！禁止直接修改存储平台类型。如需切换存储平台，请先在「素材迁移」中将已有素材迁移至目标平台，再激活目标平台配置。',
+      title: t('storage.message.changeProviderDeniedTitle'),
+      content: t('storage.message.changeProviderDenied'),
     })
     return
   }
@@ -616,17 +625,17 @@ async function handleSave() {
     }
     await storageApi.upsertConfig(payload)
     if (editingConfig.value) {
-      message.success('配置已更新')
+      message.success(t('storage.message.configUpdated'))
       closeModal()
       await fetchConfigs()
     } else {
-      message.success('配置已创建，请前往「素材迁移」完成迁移后再激活')
+      message.success(t('storage.message.configCreated'))
       closeModal()
       await fetchConfigs()
       activeTab.value = 'migration'
     }
   } catch (e: any) {
-    message.error(e?.message || '保存失败')
+    message.error(e?.message || t('storage.message.saveFailed'))
   } finally {
     modalLoading.value = false
   }
@@ -665,38 +674,38 @@ let migratePollTimer: ReturnType<typeof setInterval> | null = null
 
 const selectedRowKeys = ref<string[]>([])
 
-// 分析结果表格列
-const existingColumns: TableColumnsType<MigrationItem> = [
-  { title: '类型', dataIndex: 'source_type', key: 'source_type', width: 80, customRender: ({ text }: { text: string }) => text === 'preset' ? '预设' : '素材' },
-  { title: '文件名', dataIndex: 'filename', key: 'filename', ellipsis: true },
-  { title: '当前平台', dataIndex: 'storage_type', key: 'storage_type', customRender: ({ text }: { text: string }) => providerLabel(text) },
+// 分析结果表格列（computed 包裹，切换语言时刷新）
+const existingColumns = computed<TableColumnsType<MigrationItem>>(() => [
+  { title: t('common.field.type'), dataIndex: 'source_type', key: 'source_type', width: 80, customRender: ({ text }: { text: string }) => text === 'preset' ? t('storage.fields.typePreset') : t('storage.fields.typeMedia') },
+  { title: t('storage.fields.filename'), dataIndex: 'filename', key: 'filename', ellipsis: true },
+  { title: t('storage.fields.currentPlatform'), dataIndex: 'storage_type', key: 'storage_type', customRender: ({ text }: { text: string }) => providerLabel(text) },
   { title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true },
   {
-    title: '状态',
+    title: t('common.field.status'),
     key: 'status',
     width: 100,
-    customRender: () => h(Tag, { color: 'green' }, () => '存在 ✅'),
+    customRender: () => h(Tag, { color: 'green' }, () => t('storage.fields.statusExisting')),
   },
-]
+])
 
-const missingColumns: TableColumnsType<MigrationItem> = [
-  { title: '类型', dataIndex: 'source_type', key: 'source_type', width: 80, customRender: ({ text }: { text: string }) => text === 'preset' ? '预设' : '素材' },
-  { title: '文件名', dataIndex: 'filename', key: 'filename', ellipsis: true },
-  { title: '当前平台', dataIndex: 'storage_type', key: 'storage_type', customRender: ({ text }: { text: string }) => providerLabel(text) },
+const missingColumns = computed<TableColumnsType<MigrationItem>>(() => [
+  { title: t('common.field.type'), dataIndex: 'source_type', key: 'source_type', width: 80, customRender: ({ text }: { text: string }) => text === 'preset' ? t('storage.fields.typePreset') : t('storage.fields.typeMedia') },
+  { title: t('storage.fields.filename'), dataIndex: 'filename', key: 'filename', ellipsis: true },
+  { title: t('storage.fields.currentPlatform'), dataIndex: 'storage_type', key: 'storage_type', customRender: ({ text }: { text: string }) => providerLabel(text) },
   { title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true },
   {
-    title: '状态',
+    title: t('common.field.status'),
     key: 'status',
     width: 100,
-    customRender: () => h(Tag, { color: 'orange' }, () => '缺失 ⚠️'),
+    customRender: () => h(Tag, { color: 'orange' }, () => t('storage.fields.statusMissing')),
   },
-]
+])
 
-const failedColumns: TableColumnsType<MigrationItem> = [
+const failedColumns = computed<TableColumnsType<MigrationItem>>(() => [
   { title: 'Media ID', dataIndex: 'media_id', key: 'media_id' },
-  { title: '文件名', dataIndex: 'filename', key: 'filename', ellipsis: true },
-  { title: '错误信息', dataIndex: 'error', key: 'error', ellipsis: true },
-]
+  { title: t('storage.fields.filename'), dataIndex: 'filename', key: 'filename', ellipsis: true },
+  { title: t('storage.fields.error'), dataIndex: 'error', key: 'error', ellipsis: true },
+])
 
 // 迁移进度
 const migratePercent = computed(() => {
@@ -728,7 +737,7 @@ const elapsedTime = computed(() => {
 // 开始分析
 async function handleAnalyze() {
   if (!targetConfig.value) {
-    message.warning('请先添加存储平台配置')
+    message.warning(t('storage.migrate.addConfigFirst'))
     return
   }
 
@@ -748,7 +757,7 @@ async function handleAnalyze() {
           stopAnalyzePoll()
         } else if (result.task.status === 'failed') {
           analyzeState.value = 'failed'
-          message.error(result.task.error || '分析失败')
+          message.error(result.task.error || t('storage.message.analyzeFailed'))
           stopAnalyzePoll()
         }
       } catch {
@@ -757,7 +766,7 @@ async function handleAnalyze() {
     }, 2000)
   } catch (e: any) {
     analyzeState.value = 'failed'
-    message.error(e?.message || '启动分析失败')
+    message.error(e?.message || t('storage.message.analyzeStartFailed'))
   }
 }
 
@@ -800,21 +809,21 @@ async function startMigration(params: { target_provider: string; all?: boolean; 
         if (status.task.status === 'completed') {
           migrationState.value = 'completed'
           stopMigratePoll()
-          message.success('迁移完成')
+          message.success(t('storage.message.migrateCompleted'))
           // 提示用户激活新平台
           const pendingConfig = configs.value.find((c) => !c.is_active)
           if (pendingConfig) {
             Modal.confirm({
-              title: '迁移完成',
-              content: `所有素材已迁移完成，是否立即激活「${providerLabel(pendingConfig.provider)}」？激活后旧配置将被删除。`,
+              title: t('storage.message.migrateCompleted'),
+              content: t('storage.message.migrateActivateConfirm', { provider: providerLabel(pendingConfig.provider) }),
               onOk: async () => {
                 try {
                   await storageApi.activateConfig(pendingConfig.provider)
-                  message.success('已激活，旧配置已清理')
+                  message.success(t('storage.message.activated'))
                   await fetchConfigs()
                   activeTab.value = 'config'
                 } catch (e: any) {
-                  message.error(e?.message || '激活失败')
+                  message.error(e?.message || t('storage.message.activateFailedSimple'))
                 }
               },
             })
@@ -822,7 +831,7 @@ async function startMigration(params: { target_provider: string; all?: boolean; 
         } else if (status.task.status === 'failed') {
           migrationState.value = 'failed'
           stopMigratePoll()
-          message.error(status.task.error || '迁移失败')
+          message.error(status.task.error || t('storage.message.migrateFailed'))
         }
       } catch {
         // 继续轮询
@@ -830,7 +839,7 @@ async function startMigration(params: { target_provider: string; all?: boolean; 
     }, 2000)
   } catch (e: any) {
     migrationState.value = 'failed'
-    message.error(e?.message || '启动迁移失败')
+    message.error(e?.message || t('storage.message.migrateStartFailed'))
   }
 }
 
@@ -872,13 +881,6 @@ watch(activeTab, (val) => {
     fetchConfigs()
   }
 })
-
-function formatDateTime(time?: string): string {
-  if (!time) return '-'
-  const d = new Date(time)
-  if (Number.isNaN(d.getTime())) return time
-  return d.toLocaleString('zh-CN')
-}
 </script>
 
 <style scoped>

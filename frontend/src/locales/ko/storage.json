@@ -1,0 +1,107 @@
+{
+  "title": "오브젝트 스토리지",
+  "tabs": {
+    "config": "스토리지 설정",
+    "migration": "미디어 마이그레이션"
+  },
+  "providers": {
+    "local": "로컬 스토리지",
+    "aliyun": "Alibaba Cloud OSS",
+    "tencent": "Tencent Cloud COS",
+    "minio": "MinIO"
+  },
+  "status": {
+    "active": "사용 중",
+    "pending": "마이그레이션 대기"
+  },
+  "actions": {
+    "switchPlatform": "스토리지 전환",
+    "activate": "활성화",
+    "goMigrate": "마이그레이션으로 이동",
+    "testConnection": "연결 테스트"
+  },
+  "fields": {
+    "provider": "스토리지",
+    "filename": "파일명",
+    "currentPlatform": "현재 플랫폼",
+    "error": "오류 메시지",
+    "typePreset": "프리셋",
+    "typeMedia": "미디어",
+    "statusExisting": "존재 ✅",
+    "statusMissing": "없음 ⚠️"
+  },
+  "migrate": {
+    "fromTo": "미디어를 {sources}에서 {target} 로 마이그레이션합니다",
+    "targetHint": "마이그레이션 대상: {target}. '분석 시작'을 클릭하여 마이그레이션이 필요한 미디어를 확인하세요",
+    "needConfig": "먼저 '스토리지 설정'에서 스토리지 설정을 추가해 주세요",
+    "addConfigFirst": "먼저 스토리지 설정을 추가해 주세요",
+    "startAnalyze": "분석 시작",
+    "analyzing": "미디어 분석 중...",
+    "analyzeResult": "분석 결과",
+    "analyzeSummary": "총 {total}개의 미디어 중 {existing}개는 이미 존재하며, {missing}개는 마이그레이션이 필요합니다",
+    "pendingLabel": "마이그레이션 대상 미디어:",
+    "batch": "일괄 마이그레이션({count})",
+    "migrateAll": "전체 마이그레이션",
+    "reanalyze": "다시 분석",
+    "progress": "{done} / {total}개 마이그레이션됨",
+    "completedIn": ", 마이그레이션 완료({seconds}초 소요)",
+    "failedItems": "실패 항목({count})"
+  },
+  "modal": {
+    "createTitle": "스토리지 설정 추가",
+    "editTitle": "스토리지 설정 편집"
+  },
+  "form": {
+    "providerPlaceholder": "스토리지를 선택해 주세요",
+    "example": "예: {example}",
+    "regionExampleAliyun": "예: cn-hangzhou",
+    "regionExampleTencent": "예: ap-guangzhou",
+    "regionRequiredAliyun": "필수. 예: cn-hangzhou",
+    "endpointPlaceholder": "Endpoint를 입력해 주세요",
+    "endpointExampleMinio": "play.min.io:9000(스킴 제외)",
+    "bucketPlaceholder": "Bucket을 입력해 주세요",
+    "bucketPlain": "버킷명만 입력. 예: my-bucket",
+    "bucketWithAppId": "APPID 필수. 예: examplebucket-1250000000",
+    "bucketExampleWithAppId": "examplebucket-1250000000(APPID 필수)",
+    "secretIdPlaceholder": "SecretId를 입력해 주세요",
+    "accessKeyPlaceholder": "Access Key를 입력해 주세요",
+    "accessSecretPlaceholder": "Access Secret을 입력해 주세요",
+    "secretKeyPlaceholder": "SecretKey를 입력해 주세요",
+    "leaveEmptyToKeep": "비워 두면 변경하지 않음",
+    "pathPrefix": "경로 접두사",
+    "pathPrefixPlaceholder": "선택. 예: media/",
+    "customDomain": "사용자 지정 도메인",
+    "customDomainPlaceholder": "선택. 예: https://cdn.example.com"
+  },
+  "validation": {
+    "providerRequired": "스토리지를 선택해 주세요",
+    "endpointRequired": "Endpoint를 입력해 주세요",
+    "bucketRequired": "Bucket을 입력해 주세요",
+    "accessKeyRequired": "Access Key를 입력해 주세요",
+    "accessSecretRequired": "Access Secret을 입력해 주세요",
+    "regionRequired": "Region은 필수입니다"
+  },
+  "message": {
+    "activateTitle": "활성화 확인",
+    "activateConfirm": "활성화 후 스토리지는 {provider} 로 전환되며 기존 설정은 삭제됩니다. 모든 미디어를 대상 플랫폼으로 마이그레이션했는지 확인해 주세요. 계속하시겠습니까?",
+    "activated": "활성화되었습니다. 기존 설정이 정리되었습니다",
+    "activateFailed": "활성화에 실패했습니다. 먼저 미디어 마이그레이션을 완료해 주세요",
+    "activateFailedSimple": "활성화에 실패했습니다",
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "{provider} 설정을 삭제하시겠습니까?",
+    "deleteActiveDenied": "사용 중인 설정은 바로 삭제할 수 없습니다",
+    "changeProviderDeniedTitle": "스토리지 변경 금지",
+    "changeProviderDenied": "스토리지 유형 변경이 감지되었습니다! 스토리지 유형은 직접 수정할 수 없습니다. 스토리지를 전환하려면 먼저 '미디어 마이그레이션'에서 기존 미디어를 대상 플랫폼으로 마이그레이션한 후 대상 플랫폼 설정을 활성화해 주세요.",
+    "configUpdated": "설정이 업데이트되었습니다",
+    "configCreated": "설정이 생성되었습니다. '미디어 마이그레이션'에서 마이그레이션을 완료한 후 활성화해 주세요",
+    "saveFailed": "저장에 실패했습니다",
+    "testPassed": "연결 테스트를 통과했습니다",
+    "testFailed": "연결 테스트에 실패했습니다",
+    "analyzeFailed": "분석에 실패했습니다",
+    "analyzeStartFailed": "분석 시작에 실패했습니다",
+    "migrateCompleted": "마이그레이션이 완료되었습니다",
+    "migrateActivateConfirm": "모든 미디어의 마이그레이션이 완료되었습니다. {provider}를 지금 활성화하시겠습니까? 활성화하면 기존 설정이 삭제됩니다.",
+    "migrateFailed": "마이그레이션에 실패했습니다",
+    "migrateStartFailed": "마이그레이션 시작에 실패했습니다"
+  }
+}

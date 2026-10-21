@@ -1,0 +1,49 @@
+{
+  "blacklist": {
+    "title": "블랙리스트 관리",
+    "add": "블랙리스트 추가",
+    "searchPlaceholder": "IP 주소 검색",
+    "editRemark": "비고 편집",
+    "editTitle": "블랙리스트 비고 편집",
+    "deleteConfirm": "이 블랙리스트 항목을 삭제하시겠습니까?",
+    "columns": {
+      "ip": "IP 주소",
+      "reason": "비고 / 사유"
+    },
+    "form": {
+      "ip": "IP 주소",
+      "ipPlaceholder": "IP 주소를 입력해 주세요",
+      "reason": "비고 / 사유",
+      "reasonPlaceholder": "비고 또는 차단 사유를 입력해 주세요"
+    },
+    "message": {
+      "ipRequired": "IP 주소를 입력해 주세요",
+      "remarkUpdated": "비고가 업데이트되었습니다",
+      "addSuccess": "블랙리스트에 추가되었습니다"
+    }
+  },
+  "monitor": {
+    "title": "접속 통계",
+    "desc": "블로그 공개 API의 방문자 IP 접속 현황을 집계합니다. 관리자 작업은 포함되지 않으며, 로그는 7일간 보관됩니다.",
+    "searchIpPlaceholder": "IP 주소 검색",
+    "searchRegionPlaceholder": "지역 검색",
+    "block": "차단",
+    "blockTitle": "IP 차단",
+    "confirmBlock": "차단 확인",
+    "columns": {
+      "ip": "IP 주소",
+      "region": "지역",
+      "totalCount": "총 요청 수",
+      "errorCount": "오류 횟수",
+      "lastAccess": "최근 접속 시간"
+    },
+    "form": {
+      "reason": "차단 사유",
+      "reasonPlaceholder": "차단 사유를 입력해 주세요"
+    },
+    "message": {
+      "reasonRequired": "차단 사유를 입력해 주세요",
+      "blockSuccess": "IP가 차단되었습니다"
+    }
+  }
+}

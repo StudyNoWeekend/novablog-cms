@@ -1,0 +1,22 @@
+{
+  "title": "API 文件",
+  "download": "下載skill",
+  "modules": "模組",
+  "searchPlaceholder": "搜尋路徑或描述...",
+  "moduleTooltip": "所屬模組：{name}",
+  "params": "請求參數",
+  "response": "回應結構",
+  "noParams": "無請求參數",
+  "noResponse": "無回應結構",
+  "notFound": "未找到符合的 API",
+  "columns": {
+    "paramName": "參數名",
+    "fieldName": "欄位名",
+    "required": "必填",
+    "desc": "說明"
+  },
+  "error": {
+    "loadFailed": "載入 API 文件失敗",
+    "downloadFailed": "下載文件失敗"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "blacklist": {
+    "title": "黑名單管理",
+    "add": "新增黑名單",
+    "searchPlaceholder": "搜尋 IP 位址",
+    "editRemark": "編輯備註",
+    "editTitle": "編輯黑名單備註",
+    "deleteConfirm": "確定要刪除此黑名單嗎？",
+    "columns": {
+      "ip": "IP 位址",
+      "reason": "備註 / 原因"
+    },
+    "form": {
+      "ip": "IP 位址",
+      "ipPlaceholder": "請輸入 IP 位址",
+      "reason": "備註 / 原因",
+      "reasonPlaceholder": "請輸入備註或封鎖原因"
+    },
+    "message": {
+      "ipRequired": "請輸入 IP 位址",
+      "remarkUpdated": "備註更新成功",
+      "addSuccess": "黑名單新增成功"
+    }
+  },
+  "monitor": {
+    "title": "存取統計",
+    "desc": "統計部落格前台（公開介面）的訪客 IP 存取情況，不包含管理端操作；日誌保留 7 天。",
+    "searchIpPlaceholder": "搜尋 IP 位址",
+    "searchRegionPlaceholder": "搜尋地區",
+    "block": "封鎖",
+    "blockTitle": "封鎖 IP",
+    "confirmBlock": "確認封鎖",
+    "columns": {
+      "ip": "IP 位址",
+      "region": "地區",
+      "totalCount": "總請求數",
+      "errorCount": "錯誤次數",
+      "lastAccess": "最近存取時間"
+    },
+    "form": {
+      "reason": "封鎖原因",
+      "reasonPlaceholder": "請輸入封鎖原因"
+    },
+    "message": {
+      "reasonRequired": "請輸入封鎖原因",
+      "blockSuccess": "IP 封鎖成功"
+    }
+  }
+}

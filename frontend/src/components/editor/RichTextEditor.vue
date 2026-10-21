@@ -16,12 +16,15 @@
 </template>
 
 <script setup lang="ts">
-import { shallowRef, onBeforeUnmount } from 'vue'
+import { computed, shallowRef, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { type IDomEditor, type IEditorConfig } from '@wangeditor/editor'
 import { mediaApi } from '@/api/media'
 import { message } from 'ant-design-vue'
 import '@wangeditor/editor/dist/css/style.css'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: string
@@ -38,9 +41,9 @@ const toolbarConfig = {
   excludeKeys: [],
 }
 
-// 编辑器配置
-const editorConfig: Partial<IEditorConfig> = {
-  placeholder: '请输入文章内容...',
+// 编辑器配置（computed 包裹，placeholder 跟随当前语言）
+const editorConfig = computed<Partial<IEditorConfig>>(() => ({
+  placeholder: t('profile.editor.contentPlaceholder'),
   scroll: false,
   MENU_CONF: {
     uploadImage: {
@@ -49,7 +52,7 @@ const editorConfig: Partial<IEditorConfig> = {
           const res = await mediaApi.upload(file, { module: 'article' })
           insertFn(res.url, file.name, res.url)
         } catch {
-          message.error('图片上传失败')
+          message.error(t('profile.editor.imageUploadFailed'))
         }
       },
     },
@@ -59,12 +62,12 @@ const editorConfig: Partial<IEditorConfig> = {
           const res = await mediaApi.upload(file, { module: 'article' })
           insertFn(res.url, '')
         } catch {
-          message.error('视频上传失败')
+          message.error(t('profile.editor.videoUploadFailed'))
         }
       },
     },
   },
-}
+}))
 
 function handleCreated(editor: IDomEditor) {
   editorRef.value = editor

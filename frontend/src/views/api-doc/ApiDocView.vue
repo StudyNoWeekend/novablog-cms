@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">API 文档</h1>
+      <h1 class="page-title">{{ $t('apiDoc.title') }}</h1>
       <a-button type="primary" :icon="h(DownloadOutlined)" :loading="downloading" @click="downloadDoc">
-        下载skill
+        {{ $t('apiDoc.download') }}
       </a-button>
     </div>
 
@@ -11,7 +11,7 @@
     <div class="doc-layout">
       <!-- 左侧模块导航 -->
       <aside class="doc-sider">
-        <div class="sider-title">模块</div>
+        <div class="sider-title">{{ $t('apiDoc.modules') }}</div>
         <ul class="module-list">
           <li
             v-for="tab in moduleTabs"
@@ -30,7 +30,7 @@
         <div class="filter-bar">
           <a-input-search
             v-model:value="searchKeyword"
-            placeholder="搜索路径或描述..."
+            :placeholder="$t('apiDoc.searchPlaceholder')"
             style="width: 280px"
             allow-clear
           />
@@ -51,7 +51,7 @@
                   {{ item.method.toUpperCase() }}
                 </a-tag>
                 <span class="doc-path">/api/v1/public{{ item.path }}</span>
-                <a-tooltip :title="'所属模块：' + item.module">
+                <a-tooltip :title="$t('apiDoc.moduleTooltip', { name: item.module })">
                   <span class="doc-module">{{ item.module }}</span>
                 </a-tooltip>
               </div>
@@ -59,7 +59,7 @@
 
               <!-- 请求参数表 -->
               <div class="doc-section">
-                <h4 class="section-title">请求参数</h4>
+                <h4 class="section-title">{{ $t('apiDoc.params') }}</h4>
                 <a-table
                   v-if="item.params && item.params.length > 0"
                   :columns="paramColumns"
@@ -72,7 +72,7 @@
                   <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'required'">
                       <a-tag :color="record.required ? 'red' : 'default'">
-                        {{ record.required ? '是' : '否' }}
+                        {{ record.required ? $t('common.status.yes') : $t('common.status.no') }}
                       </a-tag>
                     </template>
                     <template v-else>
@@ -80,12 +80,12 @@
                     </template>
                   </template>
                 </a-table>
-                <a-empty v-else description="无请求参数" :image="simpleImage" />
+                <a-empty v-else :description="$t('apiDoc.noParams')" :image="simpleImage" />
               </div>
 
               <!-- 响应结构表 -->
               <div class="doc-section">
-                <h4 class="section-title">响应结构</h4>
+                <h4 class="section-title">{{ $t('apiDoc.response') }}</h4>
                 <a-table
                   v-if="item.response && item.response.length > 0"
                   :columns="responseColumns"
@@ -95,11 +95,11 @@
                   size="small"
                   :scroll="{ x: 500 }"
                 />
-                <a-empty v-else description="无响应结构" :image="simpleImage" />
+                <a-empty v-else :description="$t('apiDoc.noResponse')" :image="simpleImage" />
               </div>
             </a-card>
           </div>
-          <a-empty v-else-if="!loading" description="未找到匹配的 API" />
+          <a-empty v-else-if="!loading" :description="$t('apiDoc.notFound')" />
         </a-spin>
       </main>
     </div>
@@ -108,9 +108,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, h } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Empty, message, type TableColumnsType } from 'ant-design-vue'
 import { DownloadOutlined } from '@ant-design/icons-vue'
 import { parseApiDocMarkdown, type APIDocItem, type APIDocParam, type APIDocField } from '@/utils/markdownApiDoc'
+
+const { t } = useI18n()
 
 const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE
 
@@ -124,23 +127,23 @@ const searchKeyword = ref('')
 const moduleTabs = computed(() => {
   const modules = Array.from(new Set(docs.value.map((d) => d.module).filter(Boolean)))
   return [
-    { label: '全部', value: 'all' },
+    { label: t('common.status.all'), value: 'all' },
     ...modules.map((m) => ({ label: m, value: m })),
   ]
 })
 
-const paramColumns: TableColumnsType<APIDocParam> = [
-  { title: '参数名', dataIndex: 'name', key: 'name', width: 180 },
-  { title: '类型', dataIndex: 'type', key: 'type', width: 120 },
-  { title: '必填', key: 'required', width: 80 },
-  { title: '说明', dataIndex: 'desc', key: 'desc', ellipsis: true },
-]
+const paramColumns = computed<TableColumnsType<APIDocParam>>(() => [
+  { title: t('apiDoc.columns.paramName'), dataIndex: 'name', key: 'name', width: 180 },
+  { title: t('common.field.type'), dataIndex: 'type', key: 'type', width: 120 },
+  { title: t('apiDoc.columns.required'), key: 'required', width: 80 },
+  { title: t('apiDoc.columns.desc'), dataIndex: 'desc', key: 'desc', ellipsis: true },
+])
 
-const responseColumns: TableColumnsType<APIDocField> = [
-  { title: '字段名', dataIndex: 'name', key: 'name', width: 180 },
-  { title: '类型', dataIndex: 'type', key: 'type', width: 120 },
-  { title: '说明', dataIndex: 'desc', key: 'desc', ellipsis: true },
-]
+const responseColumns = computed<TableColumnsType<APIDocField>>(() => [
+  { title: t('apiDoc.columns.fieldName'), dataIndex: 'name', key: 'name', width: 180 },
+  { title: t('common.field.type'), dataIndex: 'type', key: 'type', width: 120 },
+  { title: t('apiDoc.columns.desc'), dataIndex: 'desc', key: 'desc', ellipsis: true },
+])
 
 const filteredDocs = computed(() => {
   let result = docs.value
@@ -184,7 +187,7 @@ async function fetchDocs() {
     docs.value = parseApiDocMarkdown(md)
   } catch (e) {
     console.error('加载 API 文档失败:', e)
-    message.error('加载 API 文档失败')
+    message.error(t('apiDoc.error.loadFailed'))
     docs.value = []
   } finally {
     loading.value = false
@@ -205,7 +208,7 @@ async function downloadDoc() {
     document.body.removeChild(a)
     URL.revokeObjectURL(a.href)
   } catch {
-    message.error('下载文档失败')
+    message.error(t('apiDoc.error.downloadFailed'))
   } finally {
     downloading.value = false
   }

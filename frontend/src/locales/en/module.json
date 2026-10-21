@@ -1,4 +1,8 @@
 {
+  "page": {
+    "title": "Modules",
+    "desc": "Control which feature modules are enabled. When disabled, the corresponding module is hidden from both the blog frontend and the admin menu, and its pages cannot be reached by URL in the admin console. Re-enable it from this page."
+  },
   "items": {
     "article": {
       "label": "Articles",

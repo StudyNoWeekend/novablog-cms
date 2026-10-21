@@ -1,0 +1,62 @@
+{
+  "nav": { "community": "コミュニティ送信" },
+  "push": {
+    "configTitle": "コミュニティ送信設定",
+    "keyConfigured": "キー設定済み",
+    "keyMissing": "キー未設定",
+    "baseUrl": "NovaBlog コミュニティ URL",
+    "baseUrlExtra": "コミュニティ送信とテーママーケットの統一公式エントリで、テーマモジュールもこの URL を使用します",
+    "baseUrlPlaceholder": "https://community.example.com（/api/v1 は自動補完）",
+    "siteUrl": "ブログ公開 URL",
+    "siteUrlExtra": "送信コンテンツの「続きを読む」リンクの生成に使用します",
+    "pushKey": "送信キー",
+    "pushKeyExtra": "NovaBlog 個人センターの「送信キー」で生成します。保存後は先頭部分のみ表示され、キー全体は再表示されません",
+    "pushKeyKeep": "空欄の場合は既存のキーを変更しません",
+    "pushKeyPlaceholder": "NovaBlog 個人センターで生成、nbk_ で始まります",
+    "verifyCode": "コミュニティ認証コード",
+    "verifyCodeExtra": "NovaBlog コミュニティの「個人設定 → ブログ連携」でコピーします。設定の保存時にブログの所有権をコミュニティへ自動確認し、通過するとコミュニティアカウントに「管理人」バッジが付与されます",
+    "verifyCodePlaceholder": "コミュニティの個人設定ページに表示される認証コードを貼り付け",
+    "saveConfig": "設定を保存",
+    "testConnection": "接続テスト",
+    "testSuccessTitle": "接続成功：{name}（ブロガー {username}）",
+    "testSuccessDesc": "コミュニティアカウントのブログ URL：{url}",
+    "notBound": "未連携",
+    "verifyPassed": "ブログ所有権の確認に成功しました",
+    "verifyFailed": "ブログ所有権の確認に失敗しました",
+    "recordsTitle": "同期履歴",
+    "repush": "再送信"
+  },
+  "record": {
+    "communityStatus": "コミュニティ状態",
+    "communityArticleId": "コミュニティ記事 ID",
+    "lastPush": "最終送信",
+    "retryCount": "再試行",
+    "lastError": "エラー"
+  },
+  "sync": { "synced": "同期済み", "hidden": "取り下げ済み", "failed": "失敗", "deleted": "削除済み", "notPushed": "未送信" },
+  "target": { "article": "記事", "travel": "旅行ガイド", "recipe": "レシピ", "portfolio": "ポートフォリオ", "openSource": "オープンソース" },
+  "syncButton": { "push": "コミュニティに送信", "unpublish": "コミュニティから取り下げ", "retryFailed": "送信失敗、再試行", "deleted": "コミュニティから削除済み" },
+  "syncTooltip": {
+    "default": "このコンテンツを NovaBlog コミュニティへ送信します。有効にすると以後の変更は自動同期されます",
+    "synced": "コミュニティに公開中です。CMS での以後の変更は自動同期されます",
+    "hidden": "コミュニティから取り下げ済みです。クリックすると再送信して公開します",
+    "unpublished": "公開済みのコンテンツのみ送信できます",
+    "failed": "直近の送信に失敗しました：{error}"
+  },
+  "modal": {
+    "unpublishTitle": "コミュニティから取り下げ",
+    "unpublishContent": "取り下げるとコミュニティの読者には表示されなくなりますが、コミュニティ側のデータは保持されます。再送信で復元できます。取り下げますか？",
+    "unpublishOk": "取り下げ"
+  },
+  "message": {
+    "saveSuccess": "送信設定を保存しました",
+    "saveVerified": "送信設定を保存し、ブログ所有権の確認に成功しました",
+    "saveVerifyFailed": "送信設定を保存しましたが、ブログ所有権の確認に失敗しました",
+    "verifyRejected": "認証コードがコミュニティに拒否されました",
+    "repushSuccess": "再送信しました",
+    "pushed": "NovaBlog コミュニティへ送信しました",
+    "unpublished": "コミュニティから取り下げました",
+    "noChanges": "変更がないため、コミュニティは最新です"
+  },
+  "validation": { "baseUrlRequired": "コミュニティ URL を入力してください" }
+}

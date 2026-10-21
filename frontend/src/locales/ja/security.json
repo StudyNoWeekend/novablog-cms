@@ -1,0 +1,49 @@
+{
+  "blacklist": {
+    "title": "ブラックリスト管理",
+    "add": "ブラックリストを追加",
+    "searchPlaceholder": "IP アドレスを検索",
+    "editRemark": "備考を編集",
+    "editTitle": "ブラックリストの備考を編集",
+    "deleteConfirm": "このブラックリストを削除しますか？",
+    "columns": {
+      "ip": "IP アドレス",
+      "reason": "備考 / 理由"
+    },
+    "form": {
+      "ip": "IP アドレス",
+      "ipPlaceholder": "IP アドレスを入力してください",
+      "reason": "備考 / 理由",
+      "reasonPlaceholder": "備考または遮断理由を入力してください"
+    },
+    "message": {
+      "ipRequired": "IP アドレスを入力してください",
+      "remarkUpdated": "備考を更新しました",
+      "addSuccess": "ブラックリストに追加しました"
+    }
+  },
+  "monitor": {
+    "title": "アクセス統計",
+    "desc": "ブログ公開 API への訪問者 IP のアクセス状況を集計します。管理画面の操作は含まれません。ログは 7 日間保持されます。",
+    "searchIpPlaceholder": "IP アドレスを検索",
+    "searchRegionPlaceholder": "地域を検索",
+    "block": "遮断",
+    "blockTitle": "IP を遮断",
+    "confirmBlock": "遮断する",
+    "columns": {
+      "ip": "IP アドレス",
+      "region": "地域",
+      "totalCount": "総リクエスト数",
+      "errorCount": "エラー回数",
+      "lastAccess": "最終アクセス日時"
+    },
+    "form": {
+      "reason": "遮断理由",
+      "reasonPlaceholder": "遮断理由を入力してください"
+    },
+    "message": {
+      "reasonRequired": "遮断理由を入力してください",
+      "blockSuccess": "IP を遮断しました"
+    }
+  }
+}

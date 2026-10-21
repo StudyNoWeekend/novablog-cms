@@ -12,32 +12,32 @@
     >
       <div class="market-login">
         <div class="market-login__icon"><SkinOutlined /></div>
-        <h2 class="market-login__title">登录 NovaBlog 官方账号</h2>
-        <p class="market-login__desc">连接官方主题市场后，可浏览主题并进行点赞、收藏、评分与下载</p>
+        <h2 class="market-login__title">{{ $t('theme.login.title') }}</h2>
+        <p class="market-login__desc">{{ $t('theme.login.desc') }}</p>
         <div class="market-login__official">
           <GlobalOutlined />
           <span class="market-login__official-url" :title="store.defaultBaseURL || ''">
-            {{ store.defaultBaseURL === null ? '官方地址加载中…' : store.defaultBaseURL || '尚未配置官方地址' }}
+            {{ store.defaultBaseURL === null ? $t('theme.login.officialLoading') : store.defaultBaseURL || $t('theme.login.officialMissing') }}
           </span>
-          <a @click="goOfficialConfig">去修改</a>
+          <a @click="goOfficialConfig">{{ $t('theme.login.goModify') }}</a>
         </div>
-        <p class="market-login__official-hint">官方地址在「系统配置 → 社区推送」统一维护，社区推送与主题市场共用</p>
+        <p class="market-login__official-hint">{{ $t('theme.login.officialHint') }}</p>
         <a-form :model="loginForm" layout="vertical" autocomplete="off" @finish="handleLogin">
-          <a-form-item label="邮箱" name="email" :rules="emailRules">
-            <a-input v-model:value="loginForm.email" placeholder="请输入官方账号邮箱" allow-clear>
+          <a-form-item :label="$t('theme.login.email')" name="email" :rules="emailRules">
+            <a-input v-model:value="loginForm.email" :placeholder="$t('theme.login.emailPlaceholder')" allow-clear>
               <template #prefix><UserOutlined /></template>
             </a-input>
           </a-form-item>
-          <a-form-item label="密码" name="password" :rules="passwordRules">
-            <a-input-password v-model:value="loginForm.password" placeholder="请输入密码">
+          <a-form-item :label="$t('theme.login.password')" name="password" :rules="passwordRules">
+            <a-input-password v-model:value="loginForm.password" :placeholder="$t('theme.login.passwordPlaceholder')">
               <template #prefix><LockOutlined /></template>
             </a-input-password>
           </a-form-item>
-          <a-button type="primary" html-type="submit" block :loading="loginLoading">登 录</a-button>
+          <a-button type="primary" html-type="submit" block :loading="loginLoading">{{ $t('theme.login.submit') }}</a-button>
         </a-form>
         <div class="market-login__actions">
-          <a-button block @click="handleGoRegister">去注册</a-button>
-          <a-button block @click="handleLoginModalClose">关 闭</a-button>
+          <a-button block @click="handleGoRegister">{{ $t('theme.login.goRegister') }}</a-button>
+          <a-button block @click="handleLoginModalClose">{{ $t('common.actions.close') }}</a-button>
         </div>
       </div>
     </a-modal>
@@ -45,36 +45,36 @@
     <!-- 博客 API 地址设置弹窗（官方站点地址统一在「系统设置 → 社区推送配置」维护） -->
     <a-modal
       v-model:open="marketConfigOpen"
-      title="博客 API 地址"
+      :title="$t('theme.apiModal.title')"
       :confirm-loading="marketConfigSaving"
-      ok-text="保存"
-      cancel-text="取消"
+      :ok-text="$t('common.actions.save')"
+      :cancel-text="$t('common.actions.cancel')"
       @ok="handleSaveMarketConfig"
     >
       <a-form layout="vertical" autocomplete="off">
-        <a-form-item label="博客 API 地址（可选）" :validate-status="apiURLError ? 'error' : ''" :help="apiURLError">
-          <a-input v-model:value="marketAPIURL" placeholder="https://api.example.com（留空 = 主题同域取数）" allow-clear>
+        <a-form-item :label="$t('theme.apiModal.label')" :validate-status="apiURLError ? 'error' : ''" :help="apiURLError">
+          <a-input v-model:value="marketAPIURL" :placeholder="$t('theme.apiModal.placeholder')" allow-clear>
             <template #prefix><GlobalOutlined /></template>
           </a-input>
         </a-form-item>
-        <p class="market-config-tip">博客 API 地址用于主题前台访问公开接口——填写独立 API 域名后保存，已安装主题会立即重新注入取数地址，无需重装主题；留空则同域相对路径取数。<a @click="goOfficialConfig">官方站点地址（社区推送与主题市场共用）请前往「系统配置 → 社区推送」修改</a></p>
+        <p class="market-config-tip">{{ $t('theme.apiModal.tip') }}<a @click="goOfficialConfig">{{ $t('theme.apiModal.officialLink') }}</a></p>
       </a-form>
     </a-modal>
 
     <template v-if="store.loggedIn">
       <div class="page-header">
-        <h1 class="page-title">主题</h1>
+        <h1 class="page-title">{{ $t('theme.page.title') }}</h1>
         <div class="market-header-actions">
           <span v-if="store.marketUser" class="market-account">
             <UserOutlined /> {{ store.marketUser.username }}
           </span>
           <a-button @click="openMarketConfig">
             <template #icon><SettingOutlined /></template>
-            官方地址
+            {{ $t('theme.header.officialUrl') }}
           </a-button>
           <a-button @click="handleLogout">
             <template #icon><LogoutOutlined /></template>
-            退出登录
+            {{ $t('theme.header.logout') }}
           </a-button>
         </div>
       </div>
@@ -83,25 +83,25 @@
       <div class="market-stats">
         <div class="market-stat">
           <span class="market-stat__value">{{ store.stats?.total ?? '—' }}</span>
-          <span class="market-stat__label">主题总数</span>
+          <span class="market-stat__label">{{ $t('theme.stats.total') }}</span>
         </div>
         <div class="market-stat">
           <span class="market-stat__value">{{ store.stats?.authors ?? '—' }}</span>
-          <span class="market-stat__label">作者数</span>
+          <span class="market-stat__label">{{ $t('theme.stats.authors') }}</span>
         </div>
         <div class="market-stat">
           <span class="market-stat__value">{{ store.stats?.downloads ?? '—' }}</span>
-          <span class="market-stat__label">安装次数</span>
+          <span class="market-stat__label">{{ $t('theme.stats.downloads') }}</span>
         </div>
       </div>
 
       <a-tabs v-model:active-key="store.activeTab" @change="handleTabChange">
         <!-- 主题市场 -->
-        <a-tab-pane key="market" tab="主题市场">
+        <a-tab-pane key="market" :tab="$t('menu.theme.market')">
           <div class="filter-bar">
             <a-select
               v-model:value="store.filters.type"
-              placeholder="全部类型"
+              :placeholder="$t('theme.filter.allTypes')"
               allow-clear
               style="width: 130px"
               :options="typeOptions"
@@ -110,7 +110,7 @@
             <a-select
               v-model:value="store.filters.styles"
               mode="multiple"
-              placeholder="风格筛选"
+              :placeholder="$t('theme.filter.styles')"
               allow-clear
               :max-tag-count="2"
               style="min-width: 170px"
@@ -119,7 +119,7 @@
             />
             <a-select
               v-model:value="store.filters.price"
-              placeholder="免费/付费"
+              :placeholder="$t('theme.filter.price')"
               allow-clear
               style="width: 120px"
               :options="priceOptions"
@@ -133,7 +133,7 @@
             />
             <a-input-search
               v-model:value="store.filters.search"
-              placeholder="搜索主题名称或描述..."
+              :placeholder="$t('theme.filter.searchPlaceholder')"
               style="width: 240px"
               allow-clear
               :loading="store.loading"
@@ -152,16 +152,16 @@
           <a-result
             v-else-if="store.loadError"
             status="error"
-            title="加载失败"
-            sub-title="获取官方主题市场数据时出错，请重试"
+            :title="$t('common.state.error')"
+            :sub-title="$t('theme.error.marketLoad')"
           >
             <template #extra>
-              <a-button type="primary" @click="store.fetchList()">重试</a-button>
+              <a-button type="primary" @click="store.fetchList()">{{ $t('common.actions.retry') }}</a-button>
             </template>
           </a-result>
 
           <!-- 空状态 -->
-          <a-empty v-else-if="store.list.length === 0" description="没有符合条件的主题" />
+          <a-empty v-else-if="store.list.length === 0" :description="$t('theme.empty.noMatch')" />
 
           <!-- 主题卡片网格 -->
           <div v-else class="market-grid">
@@ -186,7 +186,7 @@
               :total="store.total"
               :page-size-options="['9', '18', '36']"
               show-size-changer
-              :show-total="(total: number) => `共 ${total} 个主题`"
+              :show-total="(total: number) => $t('theme.pagination.totalThemes', { total })"
               @change="handlePageChange"
               @show-size-change="handlePageSizeChange"
             />
@@ -194,7 +194,7 @@
         </a-tab-pane>
 
         <!-- 我的收藏 -->
-        <a-tab-pane key="favorites" tab="我的收藏">
+        <a-tab-pane key="favorites" :tab="$t('theme.tabs.favorites')">
           <div v-if="store.favLoading && store.favList.length === 0" class="market-grid">
             <div v-for="i in 6" :key="i" class="skeleton-card">
               <a-skeleton active :paragraph="{ rows: 3 }" />
@@ -204,16 +204,16 @@
           <a-result
             v-else-if="store.favLoadError"
             status="error"
-            title="加载失败"
-            sub-title="获取收藏列表时出错，请重试"
+            :title="$t('common.state.error')"
+            :sub-title="$t('theme.error.favoritesLoad')"
           >
             <template #extra>
-              <a-button type="primary" @click="store.fetchFavorites()">重试</a-button>
+              <a-button type="primary" @click="store.fetchFavorites()">{{ $t('common.actions.retry') }}</a-button>
             </template>
           </a-result>
 
-          <a-empty v-else-if="store.favList.length === 0" description="暂无收藏">
-            <a-button type="primary" @click="store.activeTab = 'market'">去主题市场逛逛</a-button>
+          <a-empty v-else-if="store.favList.length === 0" :description="$t('theme.empty.noFavorites')">
+            <a-button type="primary" @click="store.activeTab = 'market'">{{ $t('theme.empty.goMarket') }}</a-button>
           </a-empty>
 
           <div v-else class="market-grid">
@@ -237,7 +237,7 @@
               :total="store.favTotal"
               :page-size-options="['9', '18', '36']"
               show-size-changer
-              :show-total="(total: number) => `共 ${total} 个收藏`"
+              :show-total="(total: number) => $t('theme.pagination.totalFavorites', { total })"
               @change="handleFavPageChange"
               @show-size-change="handleFavPageSizeChange"
             />
@@ -245,7 +245,7 @@
         </a-tab-pane>
 
         <!-- 已安装主题 -->
-        <a-tab-pane key="installed" tab="已安装主题">
+        <a-tab-pane key="installed" :tab="$t('theme.tabs.installed')">
           <div v-if="installedLoading && installedList.length === 0" class="market-grid">
             <div v-for="i in 6" :key="i" class="skeleton-card">
               <a-skeleton active :paragraph="{ rows: 3 }" />
@@ -255,16 +255,16 @@
           <a-result
             v-else-if="installedError"
             status="error"
-            title="加载失败"
-            sub-title="获取已安装主题时出错，请重试"
+            :title="$t('common.state.error')"
+            :sub-title="$t('theme.error.installedLoad')"
           >
             <template #extra>
-              <a-button type="primary" @click="fetchInstalled()">重试</a-button>
+              <a-button type="primary" @click="fetchInstalled()">{{ $t('common.actions.retry') }}</a-button>
             </template>
           </a-result>
 
-          <a-empty v-else-if="installedList.length === 0" description="尚未安装任何主题">
-            <a-button type="primary" @click="store.activeTab = 'market'">去主题市场安装</a-button>
+          <a-empty v-else-if="installedList.length === 0" :description="$t('theme.empty.noInstalled')">
+            <a-button type="primary" @click="store.activeTab = 'market'">{{ $t('theme.empty.goInstall') }}</a-button>
           </a-empty>
 
           <div v-else class="market-grid">
@@ -284,7 +284,7 @@
 
           <p class="installed-tip">
             <GlobalOutlined />
-            启用后访客侧立即生效；「预览」在新窗口打开主题预览页，激活前即可对比真实效果
+            {{ $t('theme.installedTip') }}
           </p>
         </a-tab-pane>
       </a-tabs>
@@ -292,8 +292,8 @@
 
     <!-- 未登录且已关闭登录弹窗时的占位提示 -->
     <div v-else class="market-login-required">
-      <p class="market-login-required__text">获取主题市场内容需要登录</p>
-      <a-button type="link" @click="loginModalDismissed = false">登陆</a-button>
+      <p class="market-login-required__text">{{ $t('theme.login.required') }}</p>
+      <a-button type="link" @click="loginModalDismissed = false">{{ $t('theme.login.action') }}</a-button>
     </div>
   </div>
 </template>
@@ -301,6 +301,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Modal, message } from 'ant-design-vue'
 import {
   GlobalOutlined,
@@ -312,12 +313,13 @@ import {
 } from '@ant-design/icons-vue'
 import { MARKET_AUTH_EXPIRED_EVENT, abortMarketRetries, themeApi, themeMarketApi } from '@/api/theme'
 import { configApi } from '@/api/config'
-import { THEME_TYPE_LABELS, themeDisplayName } from '@/utils/themeDisplay'
+import { themeDisplayName } from '@/utils/themeDisplay'
 import type { InstalledTheme, ThemeItem } from '@/types/theme'
 import { useThemeMarketStore } from '@/stores/themeMarket'
 import ThemeCard from '@/components/theme/ThemeCard.vue'
 import InstalledThemeCard from '@/components/theme/InstalledThemeCard.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const store = useThemeMarketStore()
 
@@ -385,16 +387,17 @@ async function fetchInstalled() {
 
 /** 从官方市场安装主题（长任务：下载/校验/解压/落库） */
 function handleInstall(theme: ThemeItem) {
+  const name = themeDisplayName(theme.title, theme.slug)
   Modal.confirm({
-    title: `安装「${themeDisplayName(theme.title, theme.slug)}」？`,
-    content: '将从官方市场下载预构建制品并安装，完成后可在「已安装主题」中启用',
-    okText: '安装',
-    cancelText: '取消',
+    title: t('theme.modal.installTitle', { name }),
+    content: t('theme.modal.installContent'),
+    okText: t('theme.action.install'),
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       installingId.value = theme.id
       try {
         await themeApi.install({ theme_id: theme.id })
-        message.success(`「${themeDisplayName(theme.title, theme.slug)}」安装成功，可在「已安装主题」中启用`)
+        message.success(t('theme.modal.installSuccess', { name }))
         fetchInstalled()
       } catch {
         // 失败原因（制品缺失/引擎不支持等）由拦截器统一提示
@@ -408,15 +411,15 @@ function handleInstall(theme: ThemeItem) {
 /** 启用主题（切换后访客侧立即生效） */
 function handleActivate(theme: InstalledTheme) {
   Modal.confirm({
-    title: `启用「${theme.name} v${theme.version}」？`,
-    content: '切换后博客前台将立即更新外观，确认切换？',
-    okText: '启用',
-    cancelText: '取消',
+    title: t('theme.modal.activateTitle', { name: theme.name, version: theme.version }),
+    content: t('theme.modal.activateContent'),
+    okText: t('common.actions.enable'),
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       activatingId.value = theme.id
       try {
         await themeApi.activate(theme.id)
-        message.success(`已启用「${theme.name}」，访客侧已生效`)
+        message.success(t('theme.modal.activateSuccess', { name: theme.name }))
         fetchInstalled()
       } catch {
         // 错误由拦截器统一提示
@@ -438,7 +441,7 @@ function handleUninstall(theme: InstalledTheme) {
   themeApi
     .uninstall(theme.id)
     .then(() => {
-      message.success(`已卸载「${theme.name} v${theme.version}」`)
+      message.success(t('theme.modal.uninstallSuccess', { name: theme.name, version: theme.version }))
       fetchInstalled()
     })
     .catch(() => {
@@ -449,15 +452,15 @@ function handleUninstall(theme: InstalledTheme) {
 /** 从官方市场更新主题到最新版本 */
 async function handleUpdate(theme: InstalledTheme) {
   Modal.confirm({
-    title: `更新「${theme.name}」？`,
-    content: '将从官方市场拉取最新版本并重新部署，如果正在使用中将自动切换激活。',
-    okText: '更新',
-    cancelText: '取消',
+    title: t('theme.modal.updateTitle', { name: theme.name }),
+    content: t('theme.modal.updateContent'),
+    okText: t('common.actions.update'),
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       updatingId.value = theme.id
       try {
         await themeApi.updateTheme(theme.id)
-        message.success(`「${theme.name}」已更新`)
+        message.success(t('theme.modal.updateSuccess', { name: theme.name }))
         fetchInstalled()
       } catch (e: any) {
         // "已是最新版本"等错误由拦截器统一提示
@@ -479,18 +482,18 @@ const loginForm = reactive({
   password: '',
 })
 
-const emailRules = [
-  { required: true, message: '请输入邮箱', trigger: 'blur' },
-  { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '邮箱格式不正确', trigger: 'blur' },
-]
-const passwordRules = [{ required: true, message: '请输入密码', trigger: 'blur' }]
+const emailRules = computed(() => [
+  { required: true, message: t('theme.validation.emailRequired'), trigger: 'blur' },
+  { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: t('theme.validation.emailInvalid'), trigger: 'blur' },
+])
+const passwordRules = computed(() => [{ required: true, message: t('theme.validation.passwordRequired'), trigger: 'blur' }])
 
 async function handleLogin() {
   loginLoading.value = true
   try {
     await store.login(loginForm.email.trim(), loginForm.password)
     loginForm.password = ''
-    message.success('已连接官方主题市场')
+    message.success(t('theme.message.loginSuccess'))
     // 登录后补拉已安装列表，市场卡片的"已安装"状态立即可用
     fetchInstalled()
   } catch {
@@ -518,10 +521,10 @@ function handleLoginModalClose() {
 
 function handleLogout() {
   Modal.confirm({
-    title: '退出官方账号？',
-    content: '退出后需重新登录才能浏览主题市场',
-    okText: '退出',
-    cancelText: '取消',
+    title: t('theme.modal.logoutTitle'),
+    content: t('theme.modal.logoutContent'),
+    okText: t('theme.modal.logoutOk'),
+    cancelText: t('common.actions.cancel'),
     onOk: () => store.logout(),
   })
 }
@@ -548,14 +551,14 @@ async function openMarketConfig() {
 async function handleSaveMarketConfig() {
   const apiURL = marketAPIURL.value.trim()
   if (apiURL && !/^https?:\/\//.test(apiURL)) {
-    apiURLError.value = 'API 地址需以 http:// 或 https:// 开头，留空表示同域取数'
+    apiURLError.value = t('theme.validation.apiURLFormat')
     return
   }
   marketConfigSaving.value = true
   try {
     await configApi.updateThemeMarketConfig({ public_api_base: apiURL })
     marketConfigOpen.value = false
-    message.success('博客 API 地址已保存并全局生效')
+    message.success(t('theme.apiModal.saved'))
   } catch {
     // 错误由拦截器统一提示
   } finally {
@@ -570,21 +573,30 @@ function handleAuthExpiredEvent() {
 }
 
 // ===== 市场浏览 =====
+// typeLabels 主题类型展示文案（i18n），未知类型回退原始值
+const typeLabels = computed<Record<string, string>>(() => ({
+  personal: t('theme.type.personal'),
+  tech: t('theme.type.tech'),
+  photo: t('theme.type.photo'),
+  travel: t('theme.type.travel'),
+  music: t('theme.type.music'),
+  team: t('theme.type.team'),
+}))
 const typeOptions = computed(() =>
-  Object.entries(THEME_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+  Object.entries(typeLabels.value).map(([value, label]) => ({ value, label })),
 )
 const styleOptions = computed(() =>
   store.hotTags.map((t) => ({ value: t.name, label: `${t.name} (${t.count})` })),
 )
-const priceOptions = [
-  { value: 'free', label: '免费' },
-  { value: 'paid', label: '付费' },
-]
-const sortOptions = [
-  { value: 'latest', label: '最新上架' },
-  { value: 'downloads', label: '下载最多' },
-  { value: 'rating', label: '评分最高' },
-]
+const priceOptions = computed(() => [
+  { value: 'free', label: t('theme.price.free') },
+  { value: 'paid', label: t('theme.price.paid') },
+])
+const sortOptions = computed(() => [
+  { value: 'latest', label: t('theme.sort.latest') },
+  { value: 'downloads', label: t('theme.sort.downloads') },
+  { value: 'rating', label: t('theme.sort.rating') },
+])
 
 function handleTabChange(key: string | number) {
   if (key === 'favorites') store.fetchFavorites()

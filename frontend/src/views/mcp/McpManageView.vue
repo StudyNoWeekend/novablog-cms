@@ -2,41 +2,41 @@
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h1 class="page-title">MCP 服务</h1>
-        <p class="page-desc">通过 MCP 协议让 AI 客户端直接发布和管理博客内容</p>
+        <h1 class="page-title">{{ $t('mcp.title') }}</h1>
+        <p class="page-desc">{{ $t('mcp.desc') }}</p>
       </div>
       <a-button type="primary" @click="openCreateModal">
         <template #icon><PlusOutlined /></template>
-        新建密钥
+        {{ $t('mcp.action.createKey') }}
       </a-button>
     </div>
 
     <!-- 接入信息 -->
-    <a-card class="section-card" title="接入信息">
+    <a-card class="section-card" :title="$t('mcp.access.title')">
       <template #extra>
         <a-tag color="green">Streamable HTTP</a-tag>
       </template>
       <div class="endpoint-row">
-        <span class="endpoint-label">服务端点</span>
+        <span class="endpoint-label">{{ $t('mcp.access.endpoint') }}</span>
         <code class="endpoint-value">{{ endpoint }}</code>
         <a-button type="link" size="small" @click="handleCopyEndpoint">
           <template #icon><CopyOutlined /></template>
-          复制
+          {{ $t('common.actions.copy') }}
         </a-button>
       </div>
       <ul class="info-list">
-        <li>鉴权方式：请求头携带 <code>Authorization: Bearer &lt;API Key&gt;</code>，密钥在下方创建。</li>
-        <li>可用能力：创建 / 更新 / 发布 / 下架 / 删除文章（Markdown），上传图片到媒体库，查询分类与标签，共 9 个工具。</li>
-        <li>安全限制：每个密钥限流 120 次/分钟；删除文章需要 AI 显式确认；密钥明文仅在创建时显示一次。</li>
+        <li>{{ $t('mcp.access.authPrefix') }} <code>Authorization: Bearer &lt;API Key&gt;</code>{{ $t('mcp.access.authSuffix') }}</li>
+        <li>{{ $t('mcp.access.capabilities') }}</li>
+        <li>{{ $t('mcp.access.security') }}</li>
       </ul>
     </a-card>
 
     <!-- API 密钥 -->
-    <a-card class="section-card" title="API 密钥">
+    <a-card class="section-card" :title="$t('mcp.keys.title')">
       <div class="toolbar">
         <a-input-search
           v-model:value="searchKeyword"
-          placeholder="搜索密钥名称"
+          :placeholder="$t('mcp.keys.searchPlaceholder')"
           allow-clear
           enter-button
           style="max-width: 280px"
@@ -60,53 +60,53 @@
           <template v-else-if="column.key === 'status'">
             <a-switch
               :checked="record.status === MCP_KEY_STATUS.ENABLED"
-              checked-children="启用"
-              un-checked-children="禁用"
+              :checked-children="$t('common.actions.enable')"
+              :un-checked-children="$t('common.actions.disable')"
               @change="(checked: boolean | string | number) => handleToggleStatus(record, checked)"
             />
           </template>
           <template v-else-if="column.key === 'call_count'">
-            {{ record.call_count }} 次
+            {{ $t('mcp.keys.callCount', { count: record.call_count }) }}
           </template>
           <template v-else-if="column.key === 'last_used_at'">
-            {{ record.last_used_at ? formatDateTime(record.last_used_at) : '从未使用' }}
+            {{ record.last_used_at ? formatDateTime(record.last_used_at) : $t('mcp.keys.neverUsed') }}
           </template>
           <template v-else-if="column.key === 'expires_at'">
-            {{ record.expires_at ? formatDateTime(record.expires_at) : '永久有效' }}
+            {{ record.expires_at ? formatDateTime(record.expires_at) : $t('mcp.keys.neverExpires') }}
           </template>
           <template v-else-if="column.key === 'created_at'">
             {{ formatDateTime(record.created_at) }}
           </template>
           <template v-else-if="column.key === 'action'">
             <a-popconfirm
-              title="删除后使用该密钥的 AI 客户端将立即失去访问权限，确定删除？"
-              ok-text="删除"
-              cancel-text="取消"
+              :title="$t('mcp.message.deleteConfirm')"
+              :ok-text="$t('common.actions.delete')"
+              :cancel-text="$t('common.actions.cancel')"
               @confirm="handleDelete(record.id)"
             >
-              <a-button type="link" size="small" danger>删除</a-button>
+              <a-button type="link" size="small" danger>{{ $t('common.actions.delete') }}</a-button>
             </a-popconfirm>
           </template>
         </template>
 
         <template #emptyText>
           <div class="empty-guide">
-            <p class="empty-title">还没有 API 密钥，三步接入：</p>
+            <p class="empty-title">{{ $t('mcp.empty.title') }}</p>
             <div class="empty-steps">
-              <div class="empty-step"><span class="step-no">1</span>点击「新建密钥」生成密钥</div>
-              <div class="empty-step"><span class="step-no">2</span>复制 MCP 配置到 AI 客户端</div>
-              <div class="empty-step"><span class="step-no">3</span>在 AI 客户端里让它发布文章</div>
+              <div class="empty-step"><span class="step-no">1</span>{{ $t('mcp.empty.step1') }}</div>
+              <div class="empty-step"><span class="step-no">2</span>{{ $t('mcp.empty.step2') }}</div>
+              <div class="empty-step"><span class="step-no">3</span>{{ $t('mcp.empty.step3') }}</div>
             </div>
-            <a-button type="primary" @click="openCreateModal">立即创建</a-button>
+            <a-button type="primary" @click="openCreateModal">{{ $t('mcp.empty.create') }}</a-button>
           </div>
         </template>
       </a-table>
     </a-card>
 
     <!-- 客户端接入配置 -->
-    <a-card class="section-card" title="客户端接入配置">
+    <a-card class="section-card" :title="$t('mcp.clientConfig.title')">
       <template #extra>
-        <span class="placeholder-tip">配置中的密钥为占位符，创建密钥后可获得预填完整配置</span>
+        <span class="placeholder-tip">{{ $t('mcp.clientConfig.placeholderTip') }}</span>
       </template>
       <McpConfigJson :endpoint="endpoint" :key-value="''" />
     </a-card>
@@ -114,27 +114,27 @@
     <!-- 新建密钥弹窗 -->
     <a-modal
       v-model:open="createModalOpen"
-      title="新建 MCP 密钥"
+      :title="$t('mcp.create.title')"
       :confirm-loading="creating"
-      ok-text="创建"
-      cancel-text="取消"
+      :ok-text="$t('mcp.create.okText')"
+      :cancel-text="$t('common.actions.cancel')"
       @ok="handleCreate"
     >
       <a-form layout="vertical">
-        <a-form-item label="密钥名称" required>
+        <a-form-item :label="$t('mcp.create.nameLabel')" required>
           <a-input
             v-model:value="createForm.name"
-            placeholder="例如：我的工作电脑"
+            :placeholder="$t('mcp.create.namePlaceholder')"
             :maxlength="100"
             show-count
           />
         </a-form-item>
-        <a-form-item label="有效期">
+        <a-form-item :label="$t('mcp.create.expireLabel')">
           <a-radio-group v-model:value="createForm.expireDays">
-            <a-radio-button :value="0">永久</a-radio-button>
-            <a-radio-button :value="30">30 天</a-radio-button>
-            <a-radio-button :value="90">90 天</a-radio-button>
-            <a-radio-button :value="180">180 天</a-radio-button>
+            <a-radio-button :value="0">{{ $t('mcp.create.permanent') }}</a-radio-button>
+            <a-radio-button :value="30">{{ $t('mcp.create.days', { days: 30 }) }}</a-radio-button>
+            <a-radio-button :value="90">{{ $t('mcp.create.days', { days: 90 }) }}</a-radio-button>
+            <a-radio-button :value="180">{{ $t('mcp.create.days', { days: 180 }) }}</a-radio-button>
           </a-radio-group>
         </a-form-item>
       </a-form>
@@ -143,7 +143,7 @@
     <!-- 创建成功弹窗（密钥仅显示一次） -->
     <a-modal
       v-model:open="createdModalOpen"
-      title="密钥创建成功"
+      :title="$t('mcp.created.title')"
       :footer="null"
       :width="680"
       class="created-modal"
@@ -151,15 +151,15 @@
       <a-alert
         type="warning"
         show-icon
-        message="请立即保存密钥，关闭后将无法再次查看"
-        description="密钥仅展示这一次。建议直接复制下方客户端配置使用。"
+        :message="$t('mcp.created.alertTitle')"
+        :description="$t('mcp.created.alertDesc')"
         class="key-alert"
       />
       <div class="created-key-row">
         <code class="created-key">{{ createdKeyInfo?.key }}</code>
         <a-button type="primary" size="small" @click="handleCopyKey">
           <template #icon><CopyOutlined /></template>
-          复制密钥
+          {{ $t('mcp.action.copyKey') }}
         </a-button>
       </div>
       <McpConfigJson v-if="createdKeyInfo" :endpoint="endpoint" :key-value="createdKeyInfo.key" />
@@ -169,6 +169,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, type TableColumnsType } from 'ant-design-vue'
 import { PlusOutlined, CopyOutlined } from '@ant-design/icons-vue'
 import {
@@ -180,7 +181,10 @@ import {
 import { MCP_KEY_STATUS, type McpKeyItem } from '@/types/mcp'
 import { getMcpEndpoint } from '@/constants/mcpSnippets'
 import { copyText } from '@/utils/clipboard'
+import { formatDateTime } from '@/utils/datetime'
 import McpConfigJson from '@/components/mcp/McpConfigJson.vue'
+
+const { t } = useI18n()
 
 const endpoint = getMcpEndpoint()
 
@@ -196,20 +200,20 @@ const pagination = computed(() => ({
   current: page.value,
   pageSize: pageSize.value,
   total: total.value,
-  showTotal: (t: number) => `共 ${t} 条`,
+  showTotal: (count: number) => t('common.table.total', { total: count }),
   showSizeChanger: true,
 }))
 
-const columns: TableColumnsType<McpKeyItem> = [
-  { title: '名称', dataIndex: 'name', key: 'name', width: 160, ellipsis: true },
-  { title: '密钥', dataIndex: 'key_prefix', key: 'key_prefix', width: 190 },
-  { title: '状态', key: 'status', width: 90 },
-  { title: '调用次数', dataIndex: 'call_count', key: 'call_count', width: 90 },
-  { title: '最近使用', key: 'last_used_at', width: 150 },
-  { title: '有效期至', key: 'expires_at', width: 150 },
-  { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 150 },
-  { title: '操作', key: 'action', width: 80, fixed: 'right' },
-]
+const columns = computed<TableColumnsType<McpKeyItem>>(() => [
+  { title: t('common.field.name'), dataIndex: 'name', key: 'name', width: 160, ellipsis: true },
+  { title: t('mcp.keys.columns.key'), dataIndex: 'key_prefix', key: 'key_prefix', width: 190 },
+  { title: t('common.field.status'), key: 'status', width: 90 },
+  { title: t('mcp.keys.columns.callCount'), dataIndex: 'call_count', key: 'call_count', width: 90 },
+  { title: t('mcp.keys.columns.lastUsed'), key: 'last_used_at', width: 150 },
+  { title: t('mcp.keys.columns.expiresAt'), key: 'expires_at', width: 150 },
+  { title: t('common.field.createTime'), dataIndex: 'created_at', key: 'created_at', width: 150 },
+  { title: t('common.table.actions'), key: 'action', width: 80, fixed: 'right' },
+])
 
 async function fetchKeys() {
   loading.value = true
@@ -244,7 +248,7 @@ async function handleToggleStatus(record: McpKeyItem, checked: boolean | string 
   try {
     await updateMcpKeyAPI(record.id, { status })
     record.status = status
-    message.success(status === MCP_KEY_STATUS.ENABLED ? '已启用' : '已禁用，使用该密钥的客户端将无法调用')
+    message.success(status === MCP_KEY_STATUS.ENABLED ? t('common.status.enabled') : t('mcp.message.disabledNotice'))
   } catch {
     // 错误由请求拦截器处理
   }
@@ -253,7 +257,7 @@ async function handleToggleStatus(record: McpKeyItem, checked: boolean | string 
 async function handleDelete(id: string) {
   try {
     await deleteMcpKeyAPI(id)
-    message.success('密钥已删除')
+    message.success(t('mcp.message.deleteSuccess'))
     await fetchKeys()
   } catch {
     // 错误由请求拦截器处理
@@ -275,7 +279,7 @@ function openCreateModal() {
 async function handleCreate() {
   const name = createForm.value.name.trim()
   if (!name) {
-    message.warning('请输入密钥名称')
+    message.warning(t('mcp.message.nameRequired'))
     return
   }
   creating.value = true
@@ -299,9 +303,9 @@ async function handleCreate() {
 async function handleCopyEndpoint() {
   const ok = await copyText(endpoint)
   if (ok) {
-    message.success('端点地址已复制')
+    message.success(t('mcp.message.endpointCopied'))
   } else {
-    message.error('复制失败，请手动复制')
+    message.error(t('mcp.message.copyFailedManual'))
   }
 }
 
@@ -309,19 +313,10 @@ async function handleCopyKey() {
   if (!createdKeyInfo.value) return
   const ok = await copyText(createdKeyInfo.value.key)
   if (ok) {
-    message.success('密钥已复制')
+    message.success(t('mcp.message.keyCopied'))
   } else {
-    message.error('复制失败，请手动选择复制')
+    message.error(t('mcp.message.copyFailedSelect'))
   }
-}
-
-// ---------- 工具 ----------
-function formatDateTime(dateStr: string): string {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 onMounted(() => {

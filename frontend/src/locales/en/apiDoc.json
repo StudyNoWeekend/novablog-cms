@@ -1,0 +1,22 @@
+{
+  "title": "API Docs",
+  "download": "Download Skill",
+  "modules": "Modules",
+  "searchPlaceholder": "Search path or description...",
+  "moduleTooltip": "Module: {name}",
+  "params": "Request parameters",
+  "response": "Response structure",
+  "noParams": "No request parameters",
+  "noResponse": "No response structure",
+  "notFound": "No matching APIs",
+  "columns": {
+    "paramName": "Name",
+    "fieldName": "Field",
+    "required": "Required",
+    "desc": "Description"
+  },
+  "error": {
+    "loadFailed": "Failed to load API docs",
+    "downloadFailed": "Failed to download the doc"
+  }
+}
