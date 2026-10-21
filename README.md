@@ -15,9 +15,13 @@
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
 </p>
 
-[官方站点](http://novablog.ditancafebar.cn) · [免费注册](http://novablog.ditancafebar.cn/register) · [作者博客](http://czf.ditancafebar.cn) · [主题仓库](https://github.com/StudyNoWeekend/novablog-web) · [Docker 镜像](https://github.com/StudyNoWeekend/novablog-cms/pkgs/container/novablog-cms) · [Skill 文档](https://github.com/StudyNoWeekend/novablog-cms/blob/main/frontend/public/docs/novablog-api.md)
+[官方站点](http://www.novablog.cn) · [免费注册](http://www.novablog.cn/register) · [作者博客](http://czf.ditancafebar.cn) · [主题仓库](https://github.com/StudyNoWeekend/novablog-web) · [Docker 镜像](https://github.com/StudyNoWeekend/novablog-cms/pkgs/container/novablog-cms) · [Skill 文档](https://github.com/StudyNoWeekend/novablog-cms/blob/main/frontend/public/docs/novablog-api.md)
 
-*官方站点 / 注册 / API 均为临时域名，后续可能更换*
+</div>
+
+<div align="center">
+
+**语言**：简体中文 · [繁體中文](README.zh-TW.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
 </div>
 
@@ -27,7 +31,7 @@
 
 不需要懂代码，也不需要懂服务器：
 
-1. **开通博客** —— 到 [官方托管申请](http://novablog.ditancafebar.cn/hosting#apply)（临时域名）即用官方托管，零部署开箱即用；想完全自己掌控，就按下方 [部署](#-部署两种方式) 章节用 Docker 自建；
+1. **开通博客** —— 到 [官方托管申请](http://www.novablog.cn/hosting#apply)即用官方托管，零部署开箱即用；想完全自己掌控，就按下方 [部署](#-部署两种方式) 章节用 Docker 自建；
 2. **首装向导** —— 创建账号 → **选择创作方向** → 配置存储 → 自动装好默认主题，全程点几下鼠标；
 3. **开始创作** —— 写文章、传照片、发菜谱、记旅行……你选的方向决定了后台预置哪些模块，之后随时可调。
 
@@ -144,11 +148,11 @@ MCP 端点为 Streamable HTTP（`/api/v1/mcp`），当前提供 9 个工具：
 
 | 入口 | 地址 | 用途 |
 |------|------|------|
-| 官方站点 | <http://novablog.ditancafebar.cn>（临时） | 社区门户 · 主题市场 |
-| 免费注册 | <http://novablog.ditancafebar.cn/register>（临时） | 开通官方账号：市场登录、托管部署、推送密钥 |
-| 官方 API | <http://novablogapi.ditancafebar.cn>（临时） | 社区推送与主题市场的统一服务入口 |
+| 官方站点 | <http://www.novablog.cn> | 社区门户 · 主题市场 |
+| 免费注册 | <http://www.novablog.cn/register> | 开通官方账号：市场登录、托管部署、推送密钥 |
+| 官方 API | <http://api.novablog.cn> | 社区推送与主题市场的统一服务入口 |
 
-> 以上官方地址均为临时域名，后续可能更换；后台「系统配置 → 社区推送」中的官方地址以实际配置为准。
+> 后台「系统配置 → 社区推送」中的官方地址以实际配置为准。
 
 **社区推送**：文章、旅行攻略、美食菜谱、摄影作品集、开源作品 5 类内容可一键同步到官方社区获得曝光——内容创建/更新后自动异步推送、删除自动下架、无变化自动跳过、失败自动重试，编辑页内的推送按钮也支持手动重推与查看同步状态。
 
@@ -183,7 +187,7 @@ MCP 端点为 Streamable HTTP（`/api/v1/mcp`），当前提供 9 个工具：
 
 ### 方式一：官方托管（零部署，小白推荐）
 
-到 [官方站点免费注册](http://novablog.ditancafebar.cn/register)（临时域名）即可开通托管博客，无需服务器、无需 Docker，注册后进入与自部署完全一致的首装向导。
+到 [官方站点免费注册](http://www.novablog.cn/register)即可开通托管博客，无需服务器、无需 Docker，注册后进入与自部署完全一致的首装向导。
 
 ### 方式二：Docker 自部署
 
