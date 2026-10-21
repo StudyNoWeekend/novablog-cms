@@ -3,26 +3,26 @@
     <div class="section-header">
       <div class="section-title-wrap">
         <span class="section-title-bar" aria-hidden="true" />
-        <h2 class="section-title">景点池</h2>
+        <h2 class="section-title">{{ $t('travel.pool.title') }}</h2>
       </div>
-      <p class="section-subtitle">先添加景点，再拖拽或选择到对应日期</p>
+      <p class="section-subtitle">{{ $t('travel.pool.subtitle') }}</p>
     </div>
 
     <a-button
       type="primary"
       class="add-button"
-      aria-label="添加景点"
+      :aria-label="$t('travel.actions.addAttraction')"
       @click="openAddModal"
     >
       <PlusOutlined />
-      添加景点
+      {{ $t('travel.actions.addAttraction') }}
     </a-button>
 
     <div
       v-if="attractions.length > 0"
       class="attractions-grid"
       role="list"
-      aria-label="景点列表"
+      :aria-label="$t('travel.pool.listAria')"
     >
       <div
         v-for="attraction in attractions"
@@ -31,14 +31,14 @@
         role="listitem"
         draggable="true"
         tabindex="0"
-        :aria-label="`景点：${attraction.name}`"
+        :aria-label="$t('travel.pool.attractionAria', { name: attraction.name })"
         @dragstart="handleDragStart($event, attraction)"
       >
         <div class="attraction-thumbnail">
           <img
             v-if="attraction.image"
             :src="attraction.image"
-            :alt="`${attraction.name} 图片`"
+            :alt="$t('travel.pool.imageAlt', { name: attraction.name })"
             loading="lazy"
           />
           <div v-else class="thumbnail-placeholder">
@@ -75,7 +75,7 @@
               :color="index % 2 === 0 ? 'success' : 'warning'"
               class="ref-tag"
             >
-              第{{ day }}天
+              {{ $t('travel.pool.dayRef', { day }) }}
             </a-tag>
           </div>
         </div>
@@ -84,7 +84,7 @@
           <a-button
             type="text"
             size="small"
-            aria-label="编辑景点"
+            :aria-label="$t('travel.actions.editAttraction')"
             @click.stop="openEdit(attraction)"
           >
             <EditOutlined />
@@ -93,7 +93,7 @@
             type="text"
             size="small"
             danger
-            aria-label="删除景点"
+            :aria-label="$t('travel.actions.deleteAttraction')"
             @click.stop="handleDelete(attraction)"
           >
             <DeleteOutlined />
@@ -104,56 +104,56 @@
 
     <div v-else class="empty-state">
       <InboxOutlined class="empty-icon" />
-      <p>还没有景点，点击上方按钮添加</p>
+      <p>{{ $t('travel.pool.empty') }}</p>
     </div>
 
     <a-modal
       v-model:open="modalVisible"
       :title="modalTitle"
-      :ok-text="isEditing ? '保存' : '添加'"
-      cancel-text="取消"
+      :ok-text="isEditing ? $t('common.actions.save') : $t('common.actions.add')"
+      :cancel-text="$t('common.actions.cancel')"
       destroy-on-close
       @ok="handleModalOk"
       @cancel="closeModal"
     >
       <a-form :model="form" layout="vertical">
-        <a-form-item label="名称" required>
+        <a-form-item :label="$t('common.field.name')" required>
           <a-input
             v-model:value="form.name"
-            placeholder="请输入景点名称"
+            :placeholder="$t('travel.pool.namePlaceholder')"
             maxlength="100"
             show-count
           />
         </a-form-item>
 
-        <a-form-item label="描述">
+        <a-form-item :label="$t('common.field.description')">
           <a-textarea
             v-model:value="form.description"
-            placeholder="请输入景点描述"
+            :placeholder="$t('travel.pool.descriptionPlaceholder')"
             :rows="3"
             maxlength="500"
             show-count
           />
         </a-form-item>
 
-        <a-form-item label="图片">
+        <a-form-item :label="$t('common.field.image')">
           <div class="image-field">
             <div
               class="image-card"
               role="button"
               tabindex="0"
-              aria-label="选择图片"
+              :aria-label="$t('travel.pool.selectImageAria')"
               @click="imagePickerVisible = true"
               @keydown.enter="imagePickerVisible = true"
             >
               <template v-if="form.image">
-                <img :src="form.image" alt="景点图片" />
-                <div class="image-overlay"><span>更换图片</span></div>
+                <img :src="form.image" :alt="$t('travel.pool.attractionImageAlt')" />
+                <div class="image-overlay"><span>{{ $t('travel.pool.changeImage') }}</span></div>
                 <a-button
                   type="text"
                   size="small"
                   class="image-clear-btn"
-                  aria-label="移除图片"
+                  :aria-label="$t('travel.pool.removeImageAria')"
                   @click.stop="form.image = ''"
                 >
                   <CloseOutlined />
@@ -162,7 +162,7 @@
               <template v-else>
                 <div class="image-placeholder">
                   <PictureOutlined class="image-placeholder-icon" />
-                  <span class="image-placeholder-text">点击选择图片</span>
+                  <span class="image-placeholder-text">{{ $t('travel.pool.selectImageText') }}</span>
                 </div>
               </template>
             </div>
@@ -173,20 +173,20 @@
           />
         </a-form-item>
 
-        <a-form-item label="游玩天数" required>
+        <a-form-item :label="$t('travel.pool.durationLabel')" required>
           <a-input
             v-model:value="form.duration"
-            placeholder="例如：1天、2天"
+            :placeholder="$t('travel.pool.durationPlaceholder')"
           />
         </a-form-item>
 
-        <a-form-item label="选择定位" required>
+        <a-form-item :label="$t('travel.pool.locationLabel')" required>
           <div v-if="form.location" class="location-selected">
             <a-tag color="purple" class="location-tag">
               <EnvironmentOutlined /> {{ form.location }}
             </a-tag>
             <a-button type="link" size="small" @click="openLocationPicker">
-              重新选择
+              {{ $t('travel.pool.reselect') }}
             </a-button>
           </div>
           <a-button
@@ -195,14 +195,14 @@
             block
             @click="openLocationPicker"
           >
-            <EnvironmentOutlined /> 请选择定位
+            <EnvironmentOutlined /> {{ $t('travel.pool.selectLocationRequired') }}
           </a-button>
         </a-form-item>
 
-        <a-form-item label="备注">
+        <a-form-item :label="$t('common.field.remark')">
           <a-textarea
             v-model:value="form.notes"
-            placeholder="其他补充信息"
+            :placeholder="$t('travel.pool.notesPlaceholder')"
             :rows="2"
           />
         </a-form-item>
@@ -220,6 +220,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -235,6 +236,8 @@ import type { TravelAttraction, TravelGuideFormData } from '@/types/travel'
 import type { MapLocationResult } from '@/composables/mapTypes'
 import LocationPickerModal from './LocationPickerModal.vue'
 import TravelCoverPicker from './TravelCoverPicker.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: TravelGuideFormData
@@ -270,7 +273,8 @@ const emptyForm = (): AttractionFormData => ({
 const form = reactive<AttractionFormData>(emptyForm())
 
 const isEditing = computed(() => editingId.value !== null)
-const modalTitle = computed(() => (isEditing.value ? '编辑景点' : '添加景点'))
+// 弹窗标题（跟随当前语言）
+const modalTitle = computed(() => (isEditing.value ? t('travel.actions.editAttraction') : t('travel.actions.addAttraction')))
 const attractions = computed(() => props.modelValue.attractions)
 
 const dayReferences = computed(() => {
@@ -328,7 +332,7 @@ function handleModalOk() {
 
   if (!name || !duration || !location) {
     // 给出可见反馈，避免静默失败让用户误以为已添加
-    message.warning('请完善景点名称、游玩天数，并完成选择定位')
+    message.warning(t('travel.pool.incompleteWarning'))
     return
   }
 
@@ -390,11 +394,11 @@ function handleDelete(attraction: TravelAttraction) {
 
   if (refs.length > 0) {
     Modal.confirm({
-      title: '确认删除',
-      content: `该景点已被第 ${refs.join('、')} 天引用，删除后会从所有日行程中移除。是否继续？`,
-      okText: '删除',
+      title: t('travel.delete.confirmTitle'),
+      content: t('travel.delete.attractionInUse', { days: refs.join(t('travel.pool.daySeparator')) }),
+      okText: t('common.actions.delete'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('common.actions.cancel'),
       onOk: doDelete,
     })
   } else {
@@ -430,7 +434,10 @@ function onImageSelected(payload: { url: string }) {
 
 function locationTitle(attraction: TravelAttraction): string {
   if (attraction.latitude != null && attraction.longitude != null) {
-    return `${attraction.location} (经度: ${attraction.longitude.toFixed(6)}, 纬度: ${attraction.latitude.toFixed(6)})`
+    return `${attraction.location} (${t('travel.pool.coordsTitle', {
+      lng: attraction.longitude.toFixed(6),
+      lat: attraction.latitude.toFixed(6),
+    })})`
   }
   return attraction.location ?? ''
 }

@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "Add Book",
+    "edit": "Edit Book"
+  },
+  "status": {
+    "published": "Published",
+    "draft": "Draft",
+    "unpublished": "Unpublished"
+  },
+  "readingStatus": {
+    "want": "Want to Read",
+    "reading": "Reading",
+    "done": "Finished"
+  },
+  "columns": {
+    "book": "Book",
+    "rating": "Rating",
+    "publish": "Publish"
+  },
+  "list": {
+    "searchPlaceholder": "Search by title/author...",
+    "unknownAuthor": "Unknown author",
+    "total": "{total} books in total"
+  },
+  "form": {
+    "title": "Book Title",
+    "titlePlaceholder": "Enter the book title",
+    "author": "Author",
+    "authorPlaceholder": "Enter the author",
+    "readingStatus": "Reading Status",
+    "rating": "Rating",
+    "categoryPlaceholder": "Select a category (optional)",
+    "cover": "Cover",
+    "coverUrlPlaceholder": "Or paste a cover image URL directly",
+    "mediaLibrary": "Media Library",
+    "startedAt": "Started Reading",
+    "finishedAt": "Finished Reading",
+    "review": "Review",
+    "reviewPlaceholder": "Write something (Markdown)"
+  },
+  "message": {
+    "titleRequired": "Please enter the book title",
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "“{name}” will be permanently deleted. Are you sure?"
+  }
+}

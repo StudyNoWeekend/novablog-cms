@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "Tech Stack",
+    "addTech": "Add Technology",
+    "editTech": "Edit Technology",
+    "searchPlaceholder": "Search technologies...",
+    "total": "{total} items in total"
+  },
+  "columns": {
+    "tech": "Technology",
+    "level": "Proficiency",
+    "publish": "Publish"
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published"
+  },
+  "level": {
+    "aware": "Aware",
+    "familiar": "Familiar",
+    "proficient": "Proficient",
+    "expert": "Expert"
+  },
+  "category": {
+    "language": "Language",
+    "framework": "Framework",
+    "tool": "Tool",
+    "database": "Database",
+    "other": "Other"
+  },
+  "form": {
+    "namePlaceholder": "e.g. Go / Vue 3 / PostgreSQL",
+    "nameRequired": "Please enter the technology name",
+    "categoryPlaceholder": "Select a category (optional)",
+    "levelLabel": "Proficiency",
+    "iconPlaceholder": "Or paste an icon URL directly",
+    "descPlaceholder": "Experience, representative works, etc."
+  },
+  "message": {
+    "offlineSuccess": "Unpublished",
+    "publishSuccess": "Published",
+    "deleteTitle": "Delete Technology",
+    "deleteConfirm": "\"{name}\" will be permanently deleted. Are you sure?"
+  }
+}

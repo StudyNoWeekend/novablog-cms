@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">健身训练</h1>
+      <h1 class="page-title">{{ t('menu.fitness.list') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 记录训练
+        <PlusOutlined /> {{ t('fitness.actions.create') }}
       </a-button>
     </div>
 
@@ -14,7 +14,7 @@
       <div class="toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索训练..."
+          :placeholder="t('fitness.list.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
@@ -41,22 +41,22 @@
             <span v-else>—</span>
           </template>
           <template v-else-if="column.key === 'duration_min'">
-            {{ record.duration_min }} 分钟
+            {{ record.duration_min }} {{ t('fitness.unit.minutes') }}
           </template>
           <template v-else-if="column.key === 'calories'">
-            {{ record.calories }} 千卡
+            {{ record.calories }} {{ t('fitness.unit.kcal') }}
           </template>
           <template v-else-if="column.key === 'status'">
             <a-tag :color="record.status === 1 ? 'success' : 'default'">
-              {{ record.status === 1 ? '已发布' : '草稿' }}
+              {{ record.status === 1 ? t('fitness.status.published') : t('fitness.status.draft') }}
             </a-tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-button type="link" size="small" @click="toggleStatus(record)">
-              {{ record.status === 1 ? '下架' : '发布' }}
+              {{ record.status === 1 ? t('common.actions.offline') : t('common.actions.publish') }}
             </a-button>
-            <a-button type="link" size="small" @click="handleEdit(record)">编辑</a-button>
-            <a-button type="link" size="small" danger @click="handleDelete(record)">删除</a-button>
+            <a-button type="link" size="small" @click="handleEdit(record)">{{ t('common.actions.edit') }}</a-button>
+            <a-button type="link" size="small" danger @click="handleDelete(record)">{{ t('common.actions.delete') }}</a-button>
           </template>
         </template>
       </a-table>
@@ -64,53 +64,53 @@
 
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '记录训练' : '编辑训练'"
+      :title="modalMode === 'create' ? t('fitness.actions.create') : t('fitness.actions.edit')"
       :confirm-loading="modalLoading"
       width="680px"
       @ok="handleSubmit"
     >
       <a-form layout="vertical">
         <div class="form-row">
-          <a-form-item label="训练日期" required>
+          <a-form-item :label="t('fitness.form.date')" required>
             <a-date-picker v-model:value="trainDate" style="width: 100%" />
           </a-form-item>
-          <a-form-item label="分类">
-            <CategorySelect v-model="form.category_id" type="fitness" placeholder="选择分类（可选）" />
+          <a-form-item :label="t('common.field.category')">
+            <CategorySelect v-model="form.category_id" type="fitness" :placeholder="t('fitness.form.categoryPlaceholder')" />
           </a-form-item>
         </div>
-        <a-form-item label="标题" required>
-          <a-input v-model:value="form.title" placeholder="如：卧推 + 划船日" :maxlength="255" />
+        <a-form-item :label="t('common.field.title')" required>
+          <a-input v-model:value="form.title" :placeholder="t('fitness.form.titlePlaceholder')" :maxlength="255" />
         </a-form-item>
         <div class="form-row">
-          <a-form-item label="时长（分钟）">
+          <a-form-item :label="t('fitness.form.duration')">
             <a-input-number v-model:value="form.duration_min" :min="0" style="width: 100%" />
           </a-form-item>
-          <a-form-item label="消耗（千卡）">
+          <a-form-item :label="t('fitness.form.calories')">
             <a-input-number v-model:value="form.calories" :min="0" style="width: 100%" />
           </a-form-item>
         </div>
-        <a-form-item label="动作清单">
+        <a-form-item :label="t('fitness.form.exerciseList')">
           <div class="dynamic-list">
             <div v-for="(item, index) in form.content" :key="index" class="dynamic-row">
-              <a-input v-model:value="item.name" placeholder="动作，如：卧推" />
-              <a-input v-model:value="item.sets" placeholder="组数，如：4" style="width: 90px" />
-              <a-input v-model:value="item.reps" placeholder="次数，如：8-12" style="width: 110px" />
+              <a-input v-model:value="item.name" :placeholder="t('fitness.form.exerciseNamePlaceholder')" />
+              <a-input v-model:value="item.sets" :placeholder="t('fitness.form.setsPlaceholder')" style="width: 90px" />
+              <a-input v-model:value="item.reps" :placeholder="t('fitness.form.repsPlaceholder')" style="width: 110px" />
               <a-button type="text" danger @click="form.content.splice(index, 1)">
                 <DeleteOutlined />
               </a-button>
             </div>
             <a-button type="dashed" block @click="form.content.push({ name: '', sets: '', reps: '' })">
-              <PlusOutlined /> 添加动作
+              <PlusOutlined /> {{ t('fitness.form.addExercise') }}
             </a-button>
           </div>
         </a-form-item>
-        <a-form-item label="备注">
-          <a-textarea v-model:value="form.notes" placeholder="训练感受、重量记录等" :rows="3" />
+        <a-form-item :label="t('common.field.remark')">
+          <a-textarea v-model:value="form.notes" :placeholder="t('fitness.form.notesPlaceholder')" :rows="3" />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.field.status')">
           <a-radio-group v-model:value="form.status">
-            <a-radio :value="0">草稿</a-radio>
-            <a-radio :value="1">发布</a-radio>
+            <a-radio :value="0">{{ t('fitness.status.draft') }}</a-radio>
+            <a-radio :value="1">{{ t('common.actions.publish') }}</a-radio>
           </a-radio-group>
         </a-form-item>
       </a-form>
@@ -121,6 +121,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import dayjs, { type Dayjs } from 'dayjs'
 import { fitnessApi } from '@/api/fitness'
@@ -129,6 +130,9 @@ import CategoryBar from '@/components/common/CategoryBar.vue'
 import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
+import { formatDate } from '@/utils/datetime'
+
+const { t } = useI18n()
 
 const keyword = ref('')
 const categoryFilter = ref<string | undefined>(undefined)
@@ -154,21 +158,21 @@ const form = reactive({
   status: 0,
 })
 
-const columns = [
-  { key: 'title', title: '训练', ellipsis: true },
-  { key: 'type', title: '类型', width: 90 },
-  { key: 'duration_min', title: '时长', width: 100 },
-  { key: 'calories', title: '消耗', width: 100 },
-  { key: 'status', title: '发布', width: 90 },
-  { key: 'action', title: '操作', width: 200 },
-]
+const columns = computed(() => [
+  { key: 'title', title: t('fitness.columns.title'), ellipsis: true },
+  { key: 'type', title: t('common.field.type'), width: 90 },
+  { key: 'duration_min', title: t('fitness.columns.duration'), width: 100 },
+  { key: 'calories', title: t('fitness.columns.calories'), width: 100 },
+  { key: 'status', title: t('fitness.columns.status'), width: 90 },
+  { key: 'action', title: t('common.table.actions'), width: 200 },
+])
 
 const paginationConfig = computed(() => ({
   current: page.value,
   pageSize: pageSize.value,
   total: total.value,
   showSizeChanger: true,
-  showTotal: (t: number) => `共 ${t} 条`,
+  showTotal: (count: number) => t('common.table.total', { total: count }),
 }))
 
 watch(keyword, setDebounce)
@@ -211,13 +215,8 @@ function handleTableChange(p: { current?: number; pageSize?: number }) {
   fetchList()
 }
 
-function formatDate(d: string): string {
-  const date = new Date(d)
-  return Number.isNaN(date.getTime()) ? d : date.toLocaleDateString('zh-CN')
-}
-
-function typeLabel(t: string): string {
-  return { strength: '力量', cardio: '有氧', stretch: '拉伸' }[t] || t
+function typeLabel(type: string): string {
+  return { strength: t('fitness.type.strength'), cardio: t('fitness.type.cardio'), stretch: t('fitness.type.stretch') }[type] || type
 }
 
 function typeColor(t: string): string {
@@ -272,17 +271,17 @@ function buildPayload() {
 
 async function handleSubmit() {
   if (!form.title.trim()) {
-    message.warning('请输入训练标题')
+    message.warning(t('fitness.message.titleRequired'))
     return
   }
   modalLoading.value = true
   try {
     if (modalMode.value === 'create') {
       await fitnessApi.create(buildPayload())
-      message.success('创建成功')
+      message.success(t('common.message.createSuccess'))
     } else {
       await fitnessApi.update(editingId.value, buildPayload())
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -296,7 +295,7 @@ async function handleSubmit() {
 async function toggleStatus(record: FitnessRecord) {
   try {
     await fitnessApi.update(record.id, { status: record.status === 1 ? 0 : 1 })
-    message.success(record.status === 1 ? '已下架' : '已发布')
+    message.success(record.status === 1 ? t('fitness.status.offline') : t('fitness.status.published'))
     fetchList()
   } catch {
     // 错误由拦截器处理
@@ -305,15 +304,15 @@ async function toggleStatus(record: FitnessRecord) {
 
 function handleDelete(record: FitnessRecord) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${record.title}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('fitness.message.deleteTitle'),
+    content: t('fitness.message.deleteConfirm', { name: record.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await fitnessApi.remove(record.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }

@@ -1,0 +1,57 @@
+{
+  "list": {
+    "title": "프로젝트 경력",
+    "create": "새 프로젝트",
+    "edit": "프로젝트 편집",
+    "searchPlaceholder": "프로젝트 이름/소개 검색...",
+    "allStatus": "전체 상태",
+    "empty": "아직 프로젝트 경력이 없습니다. 추가해 보세요",
+    "uncategorized": "미분류",
+    "noSummary": "소개 없음",
+    "projectLinkTitle": "프로젝트/작품 링크",
+    "repoTitle": "저장소",
+    "total": "총 {total}개의 프로젝트"
+  },
+  "status": {
+    "draft": "초안",
+    "published": "게시됨"
+  },
+  "form": {
+    "titleLabel": "프로젝트 이름",
+    "titlePlaceholder": "프로젝트 이름을 입력하세요",
+    "titleRequired": "프로젝트 이름을 입력해 주세요",
+    "categoryPlaceholder": "카테고리 선택 (선택)",
+    "roleLabel": "역할",
+    "rolePlaceholder": "예: 사진작가 / 영상 편집자 / 풀스택 개발자",
+    "clientLabel": "클라이언트 / 소속 조직",
+    "clientPlaceholder": "클라이언트 또는 소속 조직을 입력하세요 (선택)",
+    "coverLabel": "커버 이미지",
+    "coverAlt": "프로젝트 커버",
+    "changeCover": "커버 변경",
+    "selectCover": "커버 선택",
+    "summaryLabel": "한 줄 소개",
+    "summaryPlaceholder": "이 프로젝트를 한 문장으로 소개하세요 (목록 카드 표시용)",
+    "descLabel": "상세 설명",
+    "descPlaceholder": "프로젝트 배경, 담당 업무, 성과 하이라이트 등 (선택)",
+    "techLabel": "기술 / 도구 태그",
+    "techPlaceholder": "입력 후 Enter로 추가. 예: Go, Vue, Lightroom, Premiere",
+    "startDateLabel": "시작 시기",
+    "monthPlaceholder": "월 선택",
+    "endDateLabel": "종료 시기",
+    "endDatePlaceholder": "비워 두면 \"현재\"",
+    "projectUrlLabel": "프로젝트 / 작품 링크",
+    "urlPlaceholder": "https:// (선택)",
+    "repoUrlLabel": "저장소 링크",
+    "repoUrlPlaceholder": "https://github.com/... (선택)",
+    "sortWeight": "정렬 가중치"
+  },
+  "meta": {
+    "timeTbd": "시기 미정",
+    "present": "현재"
+  },
+  "message": {
+    "dateRangeInvalid": "시작 시기는 종료 시기보다 늦을 수 없습니다",
+    "deleteTitle": "프로젝트 삭제",
+    "deleteConfirm": "{name}을(를) 삭제하면 복구할 수 없습니다. 삭제하시겠습니까?"
+  }
+}

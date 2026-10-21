@@ -1,0 +1,57 @@
+{
+  "list": {
+    "title": "プロジェクト経歴",
+    "create": "プロジェクトを新規作成",
+    "edit": "プロジェクトを編集",
+    "searchPlaceholder": "プロジェクト名/概要を検索...",
+    "allStatus": "すべてのステータス",
+    "empty": "プロジェクト経歴はまだありません。追加してみましょう",
+    "uncategorized": "未分類",
+    "noSummary": "概要なし",
+    "projectLinkTitle": "プロジェクト/作品リンク",
+    "repoTitle": "リポジトリ",
+    "total": "全 {total} 件のプロジェクト"
+  },
+  "status": {
+    "draft": "下書き",
+    "published": "公開済み"
+  },
+  "form": {
+    "titleLabel": "プロジェクト名",
+    "titlePlaceholder": "プロジェクト名を入力してください",
+    "titleRequired": "プロジェクト名を入力してください",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "roleLabel": "担当役割",
+    "rolePlaceholder": "例：カメラマン / 動画編集者 / フルスタック開発",
+    "clientLabel": "クライアント / 所属組織",
+    "clientPlaceholder": "クライアントまたは所属組織を入力（任意）",
+    "coverLabel": "カバー画像",
+    "coverAlt": "プロジェクトカバー",
+    "changeCover": "カバーを変更",
+    "selectCover": "カバーを選択",
+    "summaryLabel": "一言概要",
+    "summaryPlaceholder": "このプロジェクトを一文で紹介してください（リストカード表示用）",
+    "descLabel": "詳細説明",
+    "descPlaceholder": "プロジェクトの背景、担当業務、成果ハイライトなど（任意）",
+    "techLabel": "スキル / ツールタグ",
+    "techPlaceholder": "入力して Enter で追加。例：Go、Vue、Lightroom、Premiere",
+    "startDateLabel": "開始時期",
+    "monthPlaceholder": "月を選択",
+    "endDateLabel": "終了時期",
+    "endDatePlaceholder": "空欄の場合は「現在」",
+    "projectUrlLabel": "プロジェクト / 作品リンク",
+    "urlPlaceholder": "https://（任意）",
+    "repoUrlLabel": "リポジトリリンク",
+    "repoUrlPlaceholder": "https://github.com/...（任意）",
+    "sortWeight": "表示順"
+  },
+  "meta": {
+    "timeTbd": "時期未定",
+    "present": "現在"
+  },
+  "message": {
+    "dateRangeInvalid": "開始時期は終了時期より後にできません",
+    "deleteTitle": "プロジェクトを削除",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

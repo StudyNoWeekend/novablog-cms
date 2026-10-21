@@ -1,0 +1,27 @@
+{
+  "actions": {
+    "create": "장비 추가",
+    "edit": "장비 편집"
+  },
+  "list": {
+    "searchPlaceholder": "장비 이름 검색...",
+    "empty": "아직 개인 장비가 없습니다. 지금 추가해 보세요",
+    "noBrand": "브랜드 미설정",
+    "noDescription": "설명 없음",
+    "total": "총 {total}개 장비"
+  },
+  "form": {
+    "namePlaceholder": "장비 이름을 입력해 주세요",
+    "imageAlt": "장비 이미지",
+    "changeImage": "이미지 변경",
+    "selectImage": "이미지 선택",
+    "brand": "브랜드",
+    "brandPlaceholder": "브랜드 입력 (선택 사항)",
+    "descriptionPlaceholder": "장비 설명 입력 (선택 사항)"
+  },
+  "message": {
+    "nameRequired": "장비 이름을 입력해 주세요",
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "\"{name}\"(을)를 삭제하면 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  }
+}

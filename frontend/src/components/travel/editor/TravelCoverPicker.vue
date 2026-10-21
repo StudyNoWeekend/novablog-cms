@@ -1,7 +1,7 @@
 <template>
   <a-modal
     v-model:open="open"
-    title="选择封面图"
+    :title="$t('travel.coverPicker.title')"
     width="720px"
     :footer="null"
     @cancel="handleClose"
@@ -11,7 +11,7 @@
       <div class="picker-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索图片文件名"
+          :placeholder="$t('travel.coverPicker.searchPlaceholder')"
           allow-clear
           style="width: 260px"
         />
@@ -32,7 +32,7 @@
             :class="{ selected: selectedId === item.id }"
             role="button"
             tabindex="0"
-            :aria-label="`选择图片 ${item.filename}`"
+            :aria-label="$t('travel.coverPicker.selectImageAria', { name: item.filename })"
             :aria-pressed="selectedId === item.id"
             @click="handleSelect(item)"
             @keydown.enter="handleSelect(item)"
@@ -49,7 +49,7 @@
         </div>
         <a-empty
           v-else-if="!loading"
-          description="暂无图片"
+          :description="$t('travel.coverPicker.noImages')"
           style="margin-top: 48px"
         />
       </a-spin>
@@ -68,14 +68,14 @@
       <div class="picker-footer">
         <div class="selected-info">
           <template v-if="selectedId && selectedUrl">
-            <span class="selected-label">已选择</span>
+            <span class="selected-label">{{ $t('travel.coverPicker.selected') }}</span>
             <img
               class="selected-thumb"
               :src="selectedUrl"
-              alt="已选封面"
+              :alt="$t('travel.coverPicker.selectedAlt')"
             />
           </template>
-          <span v-else class="selected-label">未选择</span>
+          <span v-else class="selected-label">{{ $t('travel.coverPicker.notSelected') }}</span>
         </div>
 
         <div class="footer-actions">
@@ -90,21 +90,21 @@
           <a-button
             :loading="uploading"
             :disabled="uploading"
-            aria-label="本地上传"
+            :aria-label="$t('travel.coverPicker.uploadLocal')"
             @click="handleUploadClick"
           >
-            <UploadOutlined /> 本地上传
+            <UploadOutlined /> {{ $t('travel.coverPicker.uploadLocal') }}
           </a-button>
-          <a-button aria-label="取消" @click="handleClose">
-            取消
+          <a-button :aria-label="$t('common.actions.cancel')" @click="handleClose">
+            {{ $t('common.actions.cancel') }}
           </a-button>
           <a-button
             type="primary"
             :disabled="!selectedId"
-            aria-label="确认选择"
+            :aria-label="$t('travel.coverPicker.confirm')"
             @click="handleConfirm"
           >
-            确认选择
+            {{ $t('travel.coverPicker.confirm') }}
           </a-button>
         </div>
       </div>
@@ -121,6 +121,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   PictureOutlined,
@@ -131,6 +132,8 @@ import {
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
 import MediaPresetChooser from '@/components/media/MediaPresetChooser.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   visible: boolean
@@ -239,6 +242,7 @@ async function handleFileChange(e: Event) {
   uploadPercent.value = 0
 
   try {
+    // 「默认无 EXIF」为后端预设约定的固定名称，参与后端匹配，不做翻译
     const res = await mediaApi.uploadWithPreset(
       file,
       '默认无 EXIF',
@@ -256,7 +260,7 @@ async function handleFileChange(e: Event) {
       await fetchMedia()
     }
   } catch {
-    message.error('上传失败，请重试')
+    message.error(t('travel.coverPicker.uploadFailed'))
   } finally {
     uploading.value = false
     uploadPercent.value = 0

@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "Log Workout",
+    "edit": "Edit Workout"
+  },
+  "status": {
+    "published": "Published",
+    "draft": "Draft",
+    "offline": "Unpublished"
+  },
+  "type": {
+    "strength": "Strength",
+    "cardio": "Cardio",
+    "stretch": "Stretching"
+  },
+  "columns": {
+    "title": "Workout",
+    "duration": "Duration",
+    "calories": "Calories",
+    "status": "Publish"
+  },
+  "unit": {
+    "minutes": "min",
+    "kcal": "kcal"
+  },
+  "list": {
+    "searchPlaceholder": "Search workouts..."
+  },
+  "form": {
+    "date": "Workout date",
+    "categoryPlaceholder": "Select a category (optional)",
+    "titlePlaceholder": "e.g. Bench press + row day",
+    "duration": "Duration (min)",
+    "calories": "Calories (kcal)",
+    "exerciseList": "Exercises",
+    "exerciseNamePlaceholder": "Exercise, e.g. Bench press",
+    "setsPlaceholder": "Sets, e.g. 4",
+    "repsPlaceholder": "Reps, e.g. 8-12",
+    "addExercise": "Add exercise",
+    "notesPlaceholder": "How it felt, weight notes, etc."
+  },
+  "message": {
+    "titleRequired": "Please enter a workout title",
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "\"{name}\" cannot be recovered after deletion. Are you sure?"
+  }
+}

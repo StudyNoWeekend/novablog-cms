@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "添加书籍",
+    "edit": "编辑书籍"
+  },
+  "status": {
+    "published": "已发布",
+    "draft": "草稿",
+    "unpublished": "已下架"
+  },
+  "readingStatus": {
+    "want": "想读",
+    "reading": "在读",
+    "done": "读完"
+  },
+  "columns": {
+    "book": "书籍",
+    "rating": "评分",
+    "publish": "发布"
+  },
+  "list": {
+    "searchPlaceholder": "搜索书名/作者...",
+    "unknownAuthor": "未知作者",
+    "total": "共 {total} 本"
+  },
+  "form": {
+    "title": "书名",
+    "titlePlaceholder": "请输入书名",
+    "author": "作者",
+    "authorPlaceholder": "请输入作者",
+    "readingStatus": "阅读状态",
+    "rating": "评分",
+    "categoryPlaceholder": "选择分类（可选）",
+    "cover": "封面图",
+    "coverUrlPlaceholder": "或直接粘贴封面地址",
+    "mediaLibrary": "媒体库",
+    "startedAt": "开始阅读",
+    "finishedAt": "读完",
+    "review": "书评",
+    "reviewPlaceholder": "写点什么（Markdown）"
+  },
+  "message": {
+    "titleRequired": "请输入书名",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

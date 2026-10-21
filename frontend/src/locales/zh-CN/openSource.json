@@ -1,0 +1,51 @@
+{
+  "list": {
+    "title": "开源作品",
+    "addRepo": "添加仓库",
+    "editRepo": "编辑仓库",
+    "searchPlaceholder": "搜索仓库名称/简介...",
+    "allStatus": "全部状态",
+    "empty": "还没有开源作品，点击右上角添加 GitHub 仓库",
+    "noSummary": "暂无简介，保存后自动回填仓库描述",
+    "starsTitle": "Star 数（同步时快照）",
+    "homepageTitle": "主页/演示地址",
+    "repoTitle": "仓库链接",
+    "total": "共 {total} 个仓库"
+  },
+  "modal": {
+    "fetchTip": "保存时将自动拉取仓库的 README 与元数据（描述/语言/Star 等），请确保服务器可访问 GitHub"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已发布"
+  },
+  "form": {
+    "nameLabel": "仓库名称",
+    "namePlaceholder": "如 novablog",
+    "nameRequired": "请输入仓库名称",
+    "languageLabel": "主语言",
+    "languagePlaceholder": "如 Go / Vue，保存时自动回填",
+    "repoUrlLabel": "仓库链接",
+    "repoUrlPlaceholder": "https://github.com/owner/repo",
+    "repoUrlRequired": "请输入仓库链接",
+    "summaryLabel": "一句话介绍",
+    "summaryPlaceholder": "留空则保存时自动回填仓库描述（列表卡片展示用）",
+    "topicsLabel": "主题标签",
+    "topicsPlaceholder": "输入后回车添加，保存时自动回填仓库 topics",
+    "categoryPlaceholder": "选择分类（可选）",
+    "homepageLabel": "主页 / 演示地址",
+    "homepagePlaceholder": "https://（可选）",
+    "sortWeight": "排序权重"
+  },
+  "readme": {
+    "reload": "重新加载",
+    "fetchedAt": "最近拉取：{time}",
+    "empty": "尚未拉取到 README，试试「同步」按钮"
+  },
+  "message": {
+    "addSuccess": "添加成功，README 已自动拉取",
+    "synced": "「{name}」已同步",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

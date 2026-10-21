@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "create": "レシピを作成",
+    "edit": "レシピを編集"
+  },
+  "status": {
+    "published": "公開済み",
+    "draft": "下書き",
+    "unpublished": "公開停止"
+  },
+  "difficulty": {
+    "easy": "簡単",
+    "medium": "普通",
+    "hard": "難しい"
+  },
+  "columns": {
+    "recipe": "レシピ",
+    "difficulty": "難易度",
+    "minutes": "時間(分)",
+    "publish": "公開"
+  },
+  "list": {
+    "searchPlaceholder": "レシピを検索...",
+    "total": "全 {total} 件"
+  },
+  "form": {
+    "title": "レシピ名",
+    "titlePlaceholder": "レシピ名を入力してください",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "cover": "カバー画像",
+    "coverUrlPlaceholder": "またはカバー画像の URL を直接貼り付け",
+    "mediaLibrary": "メディアライブラリ",
+    "summary": "紹介",
+    "summaryPlaceholder": "この料理をひとことで紹介",
+    "difficulty": "難易度",
+    "minutes": "調理時間（分）",
+    "servings": "分量（人前）",
+    "tags": "タグ（カンマ区切り）",
+    "tagsPlaceholder": "例：家常菜,おかず",
+    "ingredients": "材料",
+    "ingredientNamePlaceholder": "材料名（例：トマト）",
+    "ingredientAmountPlaceholder": "分量（例：2個）",
+    "addIngredient": "材料を追加",
+    "steps": "作り方",
+    "stepPlaceholder": "この手順で行うこと",
+    "addStep": "手順を追加"
+  },
+  "message": {
+    "titleRequired": "レシピ名を入力してください",
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "「{name}」を削除すると元に戻せません。本当に削除しますか？"
+  }
+}

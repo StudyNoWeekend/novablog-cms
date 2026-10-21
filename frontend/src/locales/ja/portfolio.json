@@ -1,0 +1,79 @@
+{
+  "list": {
+    "title": "撮影作品集",
+    "create": "作品集を新規作成",
+    "searchPlaceholder": "作品集名を検索...",
+    "empty": "作品集はまだありません。作成してみましょう",
+    "itemCount": "{count} 点の作品",
+    "total": "全 {total} 件の作品集",
+    "deleteTitle": "作品集を削除",
+    "deleteConfirm": "「{name}」を削除すると元に戻せず、作品項目も一緒に削除されます。本当に削除しますか？"
+  },
+  "edit": {
+    "backToList": "一覧に戻る",
+    "saveInfo": "情報を保存",
+    "namePlaceholder": "作品集名",
+    "descPlaceholder": "作品集の紹介（任意）",
+    "coverSelected": "カバーを選択しました。「情報を保存」をクリックしてください",
+    "presetSelected": "新しいプリセットを選択しました。「OK」で保存してください",
+    "sortUpdated": "並び順を更新しました"
+  },
+  "item": {
+    "list": "作品リスト",
+    "add": "作品を追加",
+    "empty": "作品はまだありません。「作品を追加」をクリックして始めましょう",
+    "noDesc": "説明なし",
+    "editTitle": "作品を編集",
+    "titleLabel": "作品名",
+    "titlePlaceholder": "作品名を入力してください",
+    "titleRequired": "作品名を入力してください",
+    "introLabel": "作品紹介",
+    "introPlaceholder": "作品の紹介を入力してください（任意）",
+    "presetLabel": "関連プリセット",
+    "currentPreset": "現在のプリセット",
+    "newPresetPending": "新しいプリセット（保存後にプレビュー表示）",
+    "presetDeleted": "プリセットは削除済み",
+    "reselect": "再選択",
+    "selectPreset": "プリセットを選択",
+    "reselectTitle": "プリセットを再選択",
+    "deleteTitle": "作品を削除",
+    "deleteConfirm": "作品「{name}」を削除すると元に戻せません。本当に削除しますか？",
+    "added": "作品を追加しました"
+  },
+  "cover": {
+    "setting": "カバー設定",
+    "useFirst": "先頭の作品を使用",
+    "custom": "カバーを個別設定",
+    "previewAlt": "カバープレビュー",
+    "change": "変更",
+    "clear": "クリア",
+    "selectPreset": "カバープリセットを選択",
+    "autoTip": "並び順の先頭にある作品が自動的にカバーとして使用されます",
+    "presetRequired": "個別カバー設定モードではカバープリセットを選択してください"
+  },
+  "form": {
+    "namePlaceholder": "作品集名を入力してください",
+    "nameRequired": "作品集名を入力してください",
+    "introLabel": "紹介",
+    "introPlaceholder": "作品集の紹介を入力してください（任意）",
+    "categoryPlaceholder": "カテゴリーを選択（任意）"
+  },
+  "picker": {
+    "stepOriginal": "原図を選択",
+    "stepPreset": "プリセットを選択",
+    "stepInfo": "情報を入力",
+    "searchPlaceholder": "ファイル名を検索...",
+    "uploadLocal": "ローカルアップロード",
+    "noImage": "画像がありません",
+    "presetHint": "使用するプリセットバージョンを選択してください。「プリセット作成」をクリックすると、その場で新しい完成画像を作成できます",
+    "makePreset": "プリセット作成",
+    "noPresets": "この画像にはプリセットがありません",
+    "goMakePreset": "プリセットを作成",
+    "prev": "前へ",
+    "next": "次へ",
+    "confirm": "選択を確定",
+    "defaultPresetName": "デフォルト（EXIF なし）",
+    "uploadSuccess": "アップロードしました。プリセットを選択してください",
+    "uploadFailed": "アップロードに失敗しました。再試行してください"
+  }
+}

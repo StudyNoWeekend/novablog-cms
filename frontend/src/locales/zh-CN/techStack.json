@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "技术栈",
+    "addTech": "添加技术",
+    "editTech": "编辑技术",
+    "searchPlaceholder": "搜索技术...",
+    "total": "共 {total} 项"
+  },
+  "columns": {
+    "tech": "技术",
+    "level": "熟练度",
+    "publish": "发布"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已发布"
+  },
+  "level": {
+    "aware": "了解",
+    "familiar": "熟悉",
+    "proficient": "熟练",
+    "expert": "精通"
+  },
+  "category": {
+    "language": "语言",
+    "framework": "框架",
+    "tool": "工具",
+    "database": "数据库",
+    "other": "其他"
+  },
+  "form": {
+    "namePlaceholder": "如：Go / Vue 3 / PostgreSQL",
+    "nameRequired": "请输入技术名称",
+    "categoryPlaceholder": "选择分类（可选）",
+    "levelLabel": "熟练度",
+    "iconPlaceholder": "或直接粘贴图标地址",
+    "descPlaceholder": "使用经验、代表作品等"
+  },
+  "message": {
+    "offlineSuccess": "已下架",
+    "publishSuccess": "已发布",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

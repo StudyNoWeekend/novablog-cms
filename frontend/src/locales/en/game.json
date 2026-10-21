@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "create": "Add Game",
+    "edit": "Edit Game"
+  },
+  "status": {
+    "published": "Published",
+    "draft": "Draft",
+    "unpublished": "Unpublished"
+  },
+  "playStatus": {
+    "want": "Want to Play",
+    "playing": "Playing",
+    "played": "Played"
+  },
+  "columns": {
+    "game": "Game",
+    "playHours": "Time",
+    "rating": "Rating",
+    "publish": "Publish"
+  },
+  "list": {
+    "searchPlaceholder": "Search games...",
+    "total": "{total} games in total"
+  },
+  "form": {
+    "title": "Game Name",
+    "titlePlaceholder": "Enter the game name",
+    "platform": "Platform",
+    "platformPlaceholder": "e.g. PC / PS5 / Switch",
+    "genre": "Genre",
+    "genrePlaceholder": "e.g. RPG / FPS",
+    "playStatus": "Play Status",
+    "categoryPlaceholder": "Select a category (optional)",
+    "playHours": "Play Time (hours)",
+    "rating": "Rating (0-10)",
+    "cover": "Cover",
+    "coverUrlPlaceholder": "Or paste a cover image URL directly",
+    "mediaLibrary": "Media Library",
+    "shortReview": "Short Review",
+    "shortReviewPlaceholder": "One-line review"
+  },
+  "message": {
+    "titleRequired": "Please enter the game name",
+    "deleteTitle": "Confirm Deletion",
+    "deleteConfirm": "“{name}” will be permanently deleted. Are you sure?"
+  }
+}

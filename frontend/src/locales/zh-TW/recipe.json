@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "create": "新增食譜",
+    "edit": "編輯食譜"
+  },
+  "status": {
+    "published": "已發佈",
+    "draft": "草稿",
+    "unpublished": "已下架"
+  },
+  "difficulty": {
+    "easy": "簡單",
+    "medium": "中等",
+    "hard": "困難"
+  },
+  "columns": {
+    "recipe": "食譜",
+    "difficulty": "難度",
+    "minutes": "耗時(分)",
+    "publish": "發佈"
+  },
+  "list": {
+    "searchPlaceholder": "搜尋食譜...",
+    "total": "共 {total} 篇"
+  },
+  "form": {
+    "title": "食譜名稱",
+    "titlePlaceholder": "請輸入食譜名稱",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "cover": "封面圖",
+    "coverUrlPlaceholder": "或直接貼上封面網址",
+    "mediaLibrary": "媒體庫",
+    "summary": "簡介",
+    "summaryPlaceholder": "一句話介紹這道菜",
+    "difficulty": "難度",
+    "minutes": "耗時（分鐘）",
+    "servings": "份量（人份）",
+    "tags": "標籤（逗號分隔）",
+    "tagsPlaceholder": "如：家常菜,下飯菜",
+    "ingredients": "食材清單",
+    "ingredientNamePlaceholder": "食材名，如：番茄",
+    "ingredientAmountPlaceholder": "用量，如：2個",
+    "addIngredient": "新增食材",
+    "steps": "烹飪步驟",
+    "stepPlaceholder": "這一步做什麼",
+    "addStep": "新增步驟"
+  },
+  "message": {
+    "titleRequired": "請輸入食譜名稱",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，確定要刪除嗎？"
+  }
+}

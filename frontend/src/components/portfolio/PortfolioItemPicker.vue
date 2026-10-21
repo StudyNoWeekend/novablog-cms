@@ -8,9 +8,9 @@
     @cancel="handleCancel"
   >
     <a-steps :current="currentStep" size="small" class="picker-steps">
-      <a-step title="选择原图" />
-      <a-step title="选择预设" />
-      <a-step v-if="!presetOnly" title="填写信息" />
+      <a-step :title="t('portfolio.picker.stepOriginal')" />
+      <a-step :title="t('portfolio.picker.stepPreset')" />
+      <a-step v-if="!presetOnly" :title="t('portfolio.picker.stepInfo')" />
     </a-steps>
 
     <!-- 步骤一：媒体库图片列表 -->
@@ -18,7 +18,7 @@
       <div class="step1-toolbar">
         <a-input-search
           v-model:value="mediaKeyword"
-          placeholder="搜索文件名..."
+          :placeholder="t('portfolio.picker.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
@@ -30,14 +30,14 @@
           aria-hidden="true"
           @change="handleUploadFile"
         />
-        <a-button :loading="uploading" aria-label="本地上传" @click="uploadInputRef?.click()">
-          <UploadOutlined /> 本地上传
+        <a-button :loading="uploading" :aria-label="t('portfolio.picker.uploadLocal')" @click="uploadInputRef?.click()">
+          <UploadOutlined /> {{ t('portfolio.picker.uploadLocal') }}
         </a-button>
       </div>
       <a-spin :spinning="mediaLoading">
         <a-empty
           v-if="!mediaLoading && mediaList.length === 0"
-          description="暂无图片"
+          :description="t('portfolio.picker.noImage')"
           style="margin-top: 32px"
         />
         <div v-else class="picker-grid">
@@ -70,16 +70,16 @@
     <!-- 步骤二：预设列表 -->
     <div v-else-if="currentStep === 1">
       <div class="step2-toolbar">
-        <span class="step2-hint">选择要使用的预设版本，点击「制作预设」可现场制作新成品图</span>
-        <a-button size="small" aria-label="制作预设" @click="workbenchVisible = true">
-          <EditOutlined /> 制作预设
+        <span class="step2-hint">{{ t('portfolio.picker.presetHint') }}</span>
+        <a-button size="small" :aria-label="t('portfolio.picker.makePreset')" @click="workbenchVisible = true">
+          <EditOutlined /> {{ t('portfolio.picker.makePreset') }}
         </a-button>
       </div>
       <a-spin :spinning="presetLoading">
         <div v-if="!presetLoading && presetList.length === 0" class="preset-empty">
-          <a-empty description="该图片暂无预设" />
-          <a-button type="primary" aria-label="制作预设" @click="workbenchVisible = true">
-            <EditOutlined /> 去制作预设
+          <a-empty :description="t('portfolio.picker.noPresets')" />
+          <a-button type="primary" :aria-label="t('portfolio.picker.makePreset')" @click="workbenchVisible = true">
+            <EditOutlined /> {{ t('portfolio.picker.goMakePreset') }}
           </a-button>
         </div>
         <div v-else class="picker-grid">
@@ -103,25 +103,25 @@
     <!-- 步骤三：填写信息 -->
     <div v-else-if="currentStep === 2">
       <a-form layout="vertical">
-        <a-form-item label="作品名称" required>
+        <a-form-item :label="t('portfolio.item.titleLabel')" required>
           <a-input
             v-model:value="itemTitle"
-            placeholder="请输入作品名称"
+            :placeholder="t('portfolio.item.titlePlaceholder')"
             :maxlength="100"
             show-count
           />
         </a-form-item>
-        <a-form-item label="作品介绍">
+        <a-form-item :label="t('portfolio.item.introLabel')">
           <a-textarea
             v-model:value="itemDescription"
-            placeholder="请输入作品介绍（可选）"
+            :placeholder="t('portfolio.item.introPlaceholder')"
             :rows="4"
             :maxlength="500"
             show-count
           />
         </a-form-item>
         <div v-if="selectedPreset" class="confirm-preview">
-          <img :src="selectedPreset.output_url" alt="预览" />
+          <img :src="selectedPreset.output_url" :alt="t('common.actions.preview')" />
           <div class="confirm-preview-name">{{ selectedPreset.name }}</div>
         </div>
       </a-form>
@@ -129,16 +129,16 @@
 
     <!-- 底部操作 -->
     <div class="picker-footer">
-      <a-button v-if="currentStep > 0" @click="handlePrev">上一步</a-button>
+      <a-button v-if="currentStep > 0" @click="handlePrev">{{ t('portfolio.picker.prev') }}</a-button>
       <div class="footer-right">
-        <a-button @click="handleCancel">取消</a-button>
+        <a-button @click="handleCancel">{{ t('common.actions.cancel') }}</a-button>
         <a-button
           v-if="currentStep < (presetOnly ? 1 : 2)"
           type="primary"
           :disabled="!canNext"
           @click="handleNext"
         >
-          下一步
+          {{ t('portfolio.picker.next') }}
         </a-button>
         <a-button
           v-else
@@ -146,7 +146,7 @@
           :disabled="presetOnly ? !canNext : !itemTitle.trim()"
           @click="handleConfirm"
         >
-          确认选择
+          {{ t('portfolio.picker.confirm') }}
         </a-button>
       </div>
     </div>
@@ -163,6 +163,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { CheckCircleFilled, EditOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
@@ -190,6 +191,8 @@ const emit = defineEmits<{
     },
   ): void
 }>()
+
+const { t } = useI18n()
 
 const open = ref(props.visible)
 const currentStep = ref(0)
@@ -293,7 +296,7 @@ async function handleUploadFile(e: Event) {
 
   uploading.value = true
   try {
-    const res = await mediaApi.uploadWithPreset(file, '默认无 EXIF', { module: 'portfolio' })
+    const res = await mediaApi.uploadWithPreset(file, t('portfolio.picker.defaultPresetName'), { module: 'portfolio' })
     if (res.media && res.preset) {
       mediaList.value = [res.media, ...mediaList.value]
       mediaTotal.value += 1
@@ -302,10 +305,10 @@ async function handleUploadFile(e: Event) {
       currentStep.value = 1
       selectedPresetId.value = null
       await fetchPresets()
-      message.success('上传成功，请选择预设')
+      message.success(t('portfolio.picker.uploadSuccess'))
     }
   } catch {
-    message.error('上传失败，请重试')
+    message.error(t('portfolio.picker.uploadFailed'))
   } finally {
     uploading.value = false
     if (uploadInputRef.value) {

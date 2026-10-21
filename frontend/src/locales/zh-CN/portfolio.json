@@ -1,0 +1,79 @@
+{
+  "list": {
+    "title": "摄影作品集",
+    "create": "新建作品集",
+    "searchPlaceholder": "搜索作品集名称...",
+    "empty": "还没有作品集，开始创建吧",
+    "itemCount": "{count} 件作品",
+    "total": "共 {total} 个作品集",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，作品项也将一并删除，确定要删除吗？"
+  },
+  "edit": {
+    "backToList": "返回列表",
+    "saveInfo": "保存信息",
+    "namePlaceholder": "作品集名称",
+    "descPlaceholder": "作品集介绍（可选）",
+    "coverSelected": "已选择封面，请点击保存信息",
+    "presetSelected": "已选择新预设，请点击确定保存",
+    "sortUpdated": "排序已更新"
+  },
+  "item": {
+    "list": "作品列表",
+    "add": "添加作品",
+    "empty": "还没有作品，点击「添加作品」开始",
+    "noDesc": "暂无介绍",
+    "editTitle": "编辑作品",
+    "titleLabel": "作品名称",
+    "titlePlaceholder": "请输入作品名称",
+    "titleRequired": "请输入作品名称",
+    "introLabel": "作品介绍",
+    "introPlaceholder": "请输入作品介绍（可选）",
+    "presetLabel": "关联预设",
+    "currentPreset": "当前预设",
+    "newPresetPending": "新预设（保存后显示预览）",
+    "presetDeleted": "预设已删除",
+    "reselect": "重新选择",
+    "selectPreset": "选择预设",
+    "reselectTitle": "重新选择预设",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除作品「{name}」后无法恢复，确定要删除吗？",
+    "added": "添加成功"
+  },
+  "cover": {
+    "setting": "封面设置",
+    "useFirst": "使用首张作品",
+    "custom": "独立设置封面",
+    "previewAlt": "封面预览",
+    "change": "更换",
+    "clear": "清除",
+    "selectPreset": "选择封面预设",
+    "autoTip": "将自动使用排序第一的作品作为封面",
+    "presetRequired": "独立封面模式下请选择封面预设"
+  },
+  "form": {
+    "namePlaceholder": "请输入作品集名称",
+    "nameRequired": "请输入作品集名称",
+    "introLabel": "介绍",
+    "introPlaceholder": "请输入作品集介绍（可选）",
+    "categoryPlaceholder": "选择分类（可选）"
+  },
+  "picker": {
+    "stepOriginal": "选择原图",
+    "stepPreset": "选择预设",
+    "stepInfo": "填写信息",
+    "searchPlaceholder": "搜索文件名...",
+    "uploadLocal": "本地上传",
+    "noImage": "暂无图片",
+    "presetHint": "选择要使用的预设版本，点击「制作预设」可现场制作新成品图",
+    "makePreset": "制作预设",
+    "noPresets": "该图片暂无预设",
+    "goMakePreset": "去制作预设",
+    "prev": "上一步",
+    "next": "下一步",
+    "confirm": "确认选择",
+    "defaultPresetName": "默认无 EXIF",
+    "uploadSuccess": "上传成功，请选择预设",
+    "uploadFailed": "上传失败，请重试"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "list": {
+    "title": "Photography Portfolio",
+    "create": "New Portfolio",
+    "searchPlaceholder": "Search portfolios...",
+    "empty": "No portfolios yet. Create one to get started",
+    "itemCount": "{count} items",
+    "total": "{total} portfolios in total",
+    "deleteTitle": "Delete Portfolio",
+    "deleteConfirm": "Portfolio \"{name}\" will be permanently deleted, including all its items. Are you sure?"
+  },
+  "edit": {
+    "backToList": "Back to List",
+    "saveInfo": "Save Info",
+    "namePlaceholder": "Portfolio name",
+    "descPlaceholder": "Portfolio description (optional)",
+    "coverSelected": "Cover selected. Click \"Save Info\" to apply",
+    "presetSelected": "New preset selected. Click OK to save",
+    "sortUpdated": "Order updated"
+  },
+  "item": {
+    "list": "Items",
+    "add": "Add Item",
+    "empty": "No items yet. Click \"Add Item\" to get started",
+    "noDesc": "No description yet",
+    "editTitle": "Edit Item",
+    "titleLabel": "Item Name",
+    "titlePlaceholder": "Enter item name",
+    "titleRequired": "Please enter the item name",
+    "introLabel": "Description",
+    "introPlaceholder": "Enter item description (optional)",
+    "presetLabel": "Linked Preset",
+    "currentPreset": "Current preset",
+    "newPresetPending": "New preset (preview appears after saving)",
+    "presetDeleted": "Preset deleted",
+    "reselect": "Reselect",
+    "selectPreset": "Select Preset",
+    "reselectTitle": "Reselect Preset",
+    "deleteTitle": "Delete Item",
+    "deleteConfirm": "Item \"{name}\" will be permanently deleted. Are you sure?",
+    "added": "Item added"
+  },
+  "cover": {
+    "setting": "Cover Settings",
+    "useFirst": "Use first item",
+    "custom": "Set custom cover",
+    "previewAlt": "Cover preview",
+    "change": "Change",
+    "clear": "Clear",
+    "selectPreset": "Select Cover Preset",
+    "autoTip": "The first item by sort order will be used as the cover automatically",
+    "presetRequired": "Please select a cover preset in custom cover mode"
+  },
+  "form": {
+    "namePlaceholder": "Enter portfolio name",
+    "nameRequired": "Please enter the portfolio name",
+    "introLabel": "Description",
+    "introPlaceholder": "Enter portfolio description (optional)",
+    "categoryPlaceholder": "Select a category (optional)"
+  },
+  "picker": {
+    "stepOriginal": "Select Original",
+    "stepPreset": "Select Preset",
+    "stepInfo": "Item Details",
+    "searchPlaceholder": "Search files...",
+    "uploadLocal": "Upload Local File",
+    "noImage": "No images",
+    "presetHint": "Choose a preset version to use. Click \"Make Preset\" to create a new one on the spot",
+    "makePreset": "Make Preset",
+    "noPresets": "No presets for this image",
+    "goMakePreset": "Make a Preset",
+    "prev": "Previous",
+    "next": "Next",
+    "confirm": "Confirm Selection",
+    "defaultPresetName": "Default (no EXIF)",
+    "uploadSuccess": "Uploaded. Please select a preset",
+    "uploadFailed": "Upload failed. Please try again"
+  }
+}

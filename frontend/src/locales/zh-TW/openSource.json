@@ -1,0 +1,51 @@
+{
+  "list": {
+    "title": "開源作品",
+    "addRepo": "新增倉庫",
+    "editRepo": "編輯倉庫",
+    "searchPlaceholder": "搜尋倉庫名稱/簡介...",
+    "allStatus": "全部狀態",
+    "empty": "還沒有開源作品，點擊右上角新增 GitHub 倉庫",
+    "noSummary": "暫無簡介，儲存後自動回填倉庫描述",
+    "starsTitle": "Star 數（同步時快照）",
+    "homepageTitle": "首頁/展示連結",
+    "repoTitle": "倉庫連結",
+    "total": "共 {total} 個倉庫"
+  },
+  "modal": {
+    "fetchTip": "儲存時將自動拉取倉庫的 README 與中繼資料（描述/語言/Star 等），請確保伺服器可存取 GitHub"
+  },
+  "status": {
+    "draft": "草稿",
+    "published": "已發布"
+  },
+  "form": {
+    "nameLabel": "倉庫名稱",
+    "namePlaceholder": "如 novablog",
+    "nameRequired": "請輸入倉庫名稱",
+    "languageLabel": "主要語言",
+    "languagePlaceholder": "如 Go / Vue，儲存時自動回填",
+    "repoUrlLabel": "倉庫連結",
+    "repoUrlPlaceholder": "https://github.com/owner/repo",
+    "repoUrlRequired": "請輸入倉庫連結",
+    "summaryLabel": "一句話介紹",
+    "summaryPlaceholder": "留空則儲存時自動回填倉庫描述（列表卡片展示用）",
+    "topicsLabel": "主題標籤",
+    "topicsPlaceholder": "輸入後按 Enter 新增，儲存時自動回填倉庫 topics",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "homepageLabel": "首頁 / 展示連結",
+    "homepagePlaceholder": "https://（可選）",
+    "sortWeight": "排序權重"
+  },
+  "readme": {
+    "reload": "重新載入",
+    "fetchedAt": "最近拉取：{time}",
+    "empty": "尚未拉取到 README，試試「同步」按鈕"
+  },
+  "message": {
+    "addSuccess": "新增成功，README 已自動拉取",
+    "synced": "「{name}」已同步",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，確定要刪除嗎？"
+  }
+}

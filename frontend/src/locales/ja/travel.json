@@ -1,0 +1,217 @@
+{
+  "list": {
+    "title": "旅行ガイド",
+    "create": "ガイドを作成",
+    "statsAria": "ガイド統計",
+    "empty": "一致するガイドが見つかりません",
+    "totalItems": "全 {total} 件"
+  },
+  "stats": {
+    "total": "ガイド総数",
+    "thisMonth": "今月の新規",
+    "totalViews": "総閲覧数",
+    "avgRating": "平均評価"
+  },
+  "filter": {
+    "regionPlaceholder": "地域を選択",
+    "daysAria": "日数で絞り込み",
+    "sortAria": "並び替え",
+    "searchPlaceholder": "ガイドのタイトル・目的地を検索...",
+    "searchAria": "ガイドを検索",
+    "days1To3": "1-3日",
+    "days4To7": "4-7日",
+    "days8To14": "8-14日",
+    "days15Plus": "15日以上"
+  },
+  "sort": {
+    "latest": "新着順",
+    "mostViewed": "閲覧数順",
+    "topRated": "評価順",
+    "mostLiked": "いいね順"
+  },
+  "status": {
+    "draft": "下書き",
+    "published": "公開済み",
+    "archived": "公開停止"
+  },
+  "actions": {
+    "toDraft": "下書きに戻す",
+    "addAttraction": "スポットを追加",
+    "editAttraction": "スポットを編集",
+    "deleteAttraction": "スポットを削除",
+    "moveUp": "上へ移動",
+    "moveDown": "下へ移動",
+    "removeAttraction": "スポットを外す"
+  },
+  "card": {
+    "coverAlt": "{title} のカバー画像",
+    "viewDetail": "詳細を見る",
+    "days": "{days}日",
+    "reviewCount": "（レビュー{count}件）"
+  },
+  "common": {
+    "days": "{days} 日",
+    "dayN": "{day} 日目",
+    "coverAlt": "{title} のカバー"
+  },
+  "section": {
+    "itinerary": "行程",
+    "attractions": "おすすめスポット",
+    "reviews": "ユーザーレビュー"
+  },
+  "drawer": {
+    "mapPlaceholder": "地図ルート（プレースホルダー）",
+    "dayEmpty": "この日のスポットはまだありません",
+    "avatarAlt": "{name} のアイコン"
+  },
+  "detail": {
+    "title": "ガイド詳細",
+    "developing": "ガイド詳細ページは開発中です"
+  },
+  "edit": {
+    "createTitle": "ガイドを新規作成",
+    "editTitle": "ガイドを編集",
+    "notFoundTitle": "ガイドが見つかりません",
+    "notFoundSubtitle": "お探しのガイドは削除されたか、存在しない可能性があります",
+    "backToList": "ガイド一覧に戻る",
+    "saveDraft": "下書き保存",
+    "publishAria": "ガイドを公開",
+    "openPreview": "プレビューを開く",
+    "leaveTitle": "ページを離れますか？",
+    "leaveConfirm": "未保存の変更があります。このまま離れますか？",
+    "leaveOk": "離れる"
+  },
+  "form": {
+    "basicInfo": "基本情報",
+    "titleLabel": "ガイドタイトル",
+    "titlePlaceholder": "ガイドタイトルを入力",
+    "titleRequired": "ガイドタイトルを入力してください",
+    "destinationLabel": "目的地",
+    "destinationPlaceholder": "例：チベット・ラサ",
+    "destinationRequired": "目的地を入力してください",
+    "regionLabel": "地域分類",
+    "regionPlaceholder": "地域を選択",
+    "regionRequired": "地域を選択してください",
+    "daysLabel": "旅程日数",
+    "daysPlaceholder": "日数を入力",
+    "daysRequired": "旅程日数を入力してください",
+    "bestMonthLabel": "ベスト旅行時期",
+    "bestMonthPlaceholder": "例：3〜5月",
+    "categoryLabel": "カテゴリー",
+    "categoryPlaceholder": "カテゴリーを選択（任意）",
+    "selectCoverAria": "クリックしてカバー画像を選択",
+    "changeCover": "カバーを変更",
+    "removeCoverAria": "カバー画像を削除",
+    "summaryLabel": "ガイド概要",
+    "summaryPlaceholder": "ガイドの概要を入力"
+  },
+  "builder": {
+    "dayTitleLabel": "{day} 日目のタイトル",
+    "dayTitlePlaceholder": "この日のタイトルを入力",
+    "descriptionLabel": "行程の説明",
+    "descriptionPlaceholder": "この日の行程を入力",
+    "attractionCount": "スポット {count} 件",
+    "emptyAttractions": "スポットがありません。「スポットを追加」をクリックするか、スポットをここへドラッグしてください",
+    "attractionListAria": "{day} 日目のスポット一覧",
+    "emptyDays": "旅程日数がまだありません",
+    "noAvailableAttractions": "追加できるスポットがありません",
+    "unknownAttraction": "不明なスポット"
+  },
+  "pool": {
+    "title": "スポットプール",
+    "subtitle": "先にスポットを追加し、各日にドラッグまたは選択で割り当てます",
+    "listAria": "スポット一覧",
+    "attractionAria": "スポット：{name}",
+    "imageAlt": "{name} の画像",
+    "dayRef": "{day}日目",
+    "empty": "スポットがまだありません。上のボタンから追加してください",
+    "namePlaceholder": "スポット名を入力",
+    "descriptionPlaceholder": "スポットの説明を入力",
+    "selectImageAria": "画像を選択",
+    "attractionImageAlt": "スポット画像",
+    "changeImage": "画像を変更",
+    "removeImageAria": "画像を削除",
+    "selectImageText": "クリックして画像を選択",
+    "durationLabel": "滞在日数",
+    "durationPlaceholder": "例：1日、2日",
+    "locationLabel": "位置情報",
+    "reselect": "選び直す",
+    "selectLocationRequired": "位置を選択してください",
+    "notesPlaceholder": "その他の補足情報",
+    "incompleteWarning": "スポット名・滞在日数を入力し、位置を選択してください",
+    "daySeparator": "、",
+    "coordsTitle": "経度: {lng}, 緯度: {lat}"
+  },
+  "delete": {
+    "confirmTitle": "ガイドの削除",
+    "guideConfirm": "「{name}」を削除しますか？削除すると元に戻せません。",
+    "attractionInUse": "このスポットは {days} 日目で参照されています。削除するとすべての日の行程からも削除されます。続行しますか？"
+  },
+  "message": {
+    "statusUpdated": "ステータスを更新しました",
+    "draftSaved": "下書きを保存しました",
+    "publishSuccess": "公開しました",
+    "completeRequired": "必須項目を入力してください"
+  },
+  "coverPicker": {
+    "title": "カバー画像を選択",
+    "searchPlaceholder": "画像ファイル名を検索",
+    "selectImageAria": "画像 {name} を選択",
+    "noImages": "画像がありません",
+    "selected": "選択中",
+    "selectedAlt": "選択したカバー",
+    "notSelected": "未選択",
+    "uploadLocal": "ローカルからアップロード",
+    "confirm": "選択を確定",
+    "uploadFailed": "アップロードに失敗しました。再試行してください"
+  },
+  "preview": {
+    "title": "リアルタイムプレビュー",
+    "updating": "プレビューを更新中",
+    "reviewsPending": "レビューは公開後に表示されます"
+  },
+  "location": {
+    "title": "位置を選択",
+    "providerAmap": "Amap（高徳地図）",
+    "providerGoogle": "Google Maps",
+    "providerOsm": "OSM キーレスモード",
+    "hintAmap": "現在の地域では Amap を使用します",
+    "hintGoogle": "現在の地域では Google Maps を使用します",
+    "hintOsm": "地図キーが未設定か読み込みに失敗したため、OSM キーレスモード（WGS-84 座標）に切り替えました",
+    "searchPlaceholder": "地名または住所を検索",
+    "coords": "経度: {lng}, 緯度: {lat}"
+  },
+  "regions": {
+    "all": "すべて",
+    "asia": "アジア",
+    "europe": "ヨーロッパ",
+    "americas": "アメリカ大陸",
+    "oceania": "オセアニア",
+    "africa": "アフリカ",
+    "polar": "極地",
+    "china": "中国",
+    "japan": "日本",
+    "korea": "韓国",
+    "southeast-asia": "東南アジア",
+    "south-asia": "南アジア",
+    "central-asia": "中央アジア",
+    "middle-east": "中東",
+    "western-europe": "西欧",
+    "southern-europe": "南欧",
+    "northern-europe": "北欧",
+    "eastern-europe": "東欧",
+    "uk-ireland": "イギリスとアイルランド",
+    "north-america": "北米",
+    "central-caribbean": "中央アメリカとカリブ海",
+    "south-america": "南米",
+    "australia": "オーストラリア",
+    "new-zealand": "ニュージーランド",
+    "pacific-islands": "太平洋の島々",
+    "north-africa": "北アフリカ",
+    "east-africa": "東アフリカ",
+    "southern-africa": "南アフリカ",
+    "west-central-africa": "西アフリカと中央アフリカ",
+    "antarctica": "南極大陸",
+    "arctic": "北極"
+  }
+}

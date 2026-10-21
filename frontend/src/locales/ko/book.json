@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "책 추가",
+    "edit": "책 편집"
+  },
+  "status": {
+    "published": "게시됨",
+    "draft": "초안",
+    "unpublished": "게시 중지"
+  },
+  "readingStatus": {
+    "want": "읽고 싶음",
+    "reading": "읽는 중",
+    "done": "완독"
+  },
+  "columns": {
+    "book": "책",
+    "rating": "평점",
+    "publish": "게시"
+  },
+  "list": {
+    "searchPlaceholder": "책 제목/저자 검색...",
+    "unknownAuthor": "저자 미상",
+    "total": "총 {total}권"
+  },
+  "form": {
+    "title": "책 제목",
+    "titlePlaceholder": "책 제목을 입력하세요",
+    "author": "저자",
+    "authorPlaceholder": "저자를 입력하세요",
+    "readingStatus": "독서 상태",
+    "rating": "평점",
+    "categoryPlaceholder": "카테고리 선택(선택 사항)",
+    "cover": "커버 이미지",
+    "coverUrlPlaceholder": "또는 커버 이미지 URL을 직접 붙여넣으세요",
+    "mediaLibrary": "미디어 라이브러리",
+    "startedAt": "독서 시작일",
+    "finishedAt": "완독일",
+    "review": "서평",
+    "reviewPlaceholder": "자유롭게 기록해 보세요(Markdown)"
+  },
+  "message": {
+    "titleRequired": "책 제목을 입력하세요",
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "「{name}」 삭제 후에는 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  }
+}

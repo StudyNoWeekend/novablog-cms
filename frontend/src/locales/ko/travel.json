@@ -1,0 +1,217 @@
+{
+  "list": {
+    "title": "여행 가이드",
+    "create": "가이드 작성",
+    "statsAria": "가이드 통계",
+    "empty": "일치하는 가이드가 없습니다",
+    "totalItems": "총 {total}개"
+  },
+  "stats": {
+    "total": "전체 가이드",
+    "thisMonth": "이번 달 신규",
+    "totalViews": "총 조회수",
+    "avgRating": "평균 평점"
+  },
+  "filter": {
+    "regionPlaceholder": "지역 선택",
+    "daysAria": "일수 필터",
+    "sortAria": "정렬 방식",
+    "searchPlaceholder": "가이드 제목, 목적지 검색...",
+    "searchAria": "가이드 검색",
+    "days1To3": "1-3일",
+    "days4To7": "4-7일",
+    "days8To14": "8-14일",
+    "days15Plus": "15일 이상"
+  },
+  "sort": {
+    "latest": "최신순",
+    "mostViewed": "조회수순",
+    "topRated": "평점순",
+    "mostLiked": "좋아요순"
+  },
+  "status": {
+    "draft": "초안",
+    "published": "게시됨",
+    "archived": "게시 중지"
+  },
+  "actions": {
+    "toDraft": "초안으로 전환",
+    "addAttraction": "명소 추가",
+    "editAttraction": "명소 편집",
+    "deleteAttraction": "명소 삭제",
+    "moveUp": "위로 이동",
+    "moveDown": "아래로 이동",
+    "removeAttraction": "명소 제거"
+  },
+  "card": {
+    "coverAlt": "{title} 표지 이미지",
+    "viewDetail": "상세 보기",
+    "days": "{days}일",
+    "reviewCount": "({count}개 리뷰)"
+  },
+  "common": {
+    "days": "{days}일",
+    "dayN": "{day}일 차",
+    "coverAlt": "{title} 표지"
+  },
+  "section": {
+    "itinerary": "일정",
+    "attractions": "추천 명소",
+    "reviews": "사용자 리뷰"
+  },
+  "drawer": {
+    "mapPlaceholder": "지도 경로(임시)",
+    "dayEmpty": "이 날짜에 예정된 명소가 없습니다",
+    "avatarAlt": "{name} 프로필 이미지"
+  },
+  "detail": {
+    "title": "가이드 상세",
+    "developing": "가이드 상세 페이지는 개발 중입니다"
+  },
+  "edit": {
+    "createTitle": "가이드 작성",
+    "editTitle": "가이드 편집",
+    "notFoundTitle": "가이드를 찾을 수 없습니다",
+    "notFoundSubtitle": "요청하신 가이드는 삭제되었거나 존재하지 않을 수 있습니다",
+    "backToList": "가이드 목록으로",
+    "saveDraft": "초안 저장",
+    "publishAria": "가이드 게시",
+    "openPreview": "미리보기 열기",
+    "leaveTitle": "나가시겠습니까?",
+    "leaveConfirm": "저장하지 않은 변경 사항이 있습니다. 나가시겠습니까?",
+    "leaveOk": "나가기"
+  },
+  "form": {
+    "basicInfo": "기본 정보",
+    "titleLabel": "가이드 제목",
+    "titlePlaceholder": "가이드 제목을 입력하세요",
+    "titleRequired": "가이드 제목을 입력하세요",
+    "destinationLabel": "목적지",
+    "destinationPlaceholder": "예: 티베트 라싸",
+    "destinationRequired": "목적지를 입력하세요",
+    "regionLabel": "지역 분류",
+    "regionPlaceholder": "지역 분류 선택",
+    "regionRequired": "지역 분류를 선택하세요",
+    "daysLabel": "여행 일수",
+    "daysPlaceholder": "일수를 입력하세요",
+    "daysRequired": "여행 일수를 입력하세요",
+    "bestMonthLabel": "추천 여행 시기",
+    "bestMonthPlaceholder": "예: 3-5월",
+    "categoryLabel": "가이드 분류",
+    "categoryPlaceholder": "분류 선택(선택 사항)",
+    "selectCoverAria": "클릭하여 표지 이미지 선택",
+    "changeCover": "표지 변경",
+    "removeCoverAria": "표지 이미지 제거",
+    "summaryLabel": "가이드 요약",
+    "summaryPlaceholder": "가이드 요약을 입력하세요"
+  },
+  "builder": {
+    "dayTitleLabel": "{day}일 차 제목",
+    "dayTitlePlaceholder": "이 날짜의 제목을 입력하세요",
+    "descriptionLabel": "일정 설명",
+    "descriptionPlaceholder": "이 날짜의 일정을 입력하세요",
+    "attractionCount": "명소 {count}곳",
+    "emptyAttractions": "명소가 없습니다. '명소 추가'를 클릭하거나 명소를 여기로 끌어다 놓으세요",
+    "attractionListAria": "{day}일 차 명소 목록",
+    "emptyDays": "여행 일수가 없습니다",
+    "noAvailableAttractions": "추가할 수 있는 명소가 없습니다",
+    "unknownAttraction": "알 수 없는 명소"
+  },
+  "pool": {
+    "title": "명소 풀",
+    "subtitle": "먼저 명소를 추가한 뒤 해당 일자로 드래그하거나 선택하세요",
+    "listAria": "명소 목록",
+    "attractionAria": "명소: {name}",
+    "imageAlt": "{name} 이미지",
+    "dayRef": "{day}일 차",
+    "empty": "아직 명소가 없습니다. 위의 버튼을 눌러 추가하세요",
+    "namePlaceholder": "명소 이름을 입력하세요",
+    "descriptionPlaceholder": "명소 설명을 입력하세요",
+    "selectImageAria": "이미지 선택",
+    "attractionImageAlt": "명소 이미지",
+    "changeImage": "이미지 변경",
+    "removeImageAria": "이미지 제거",
+    "selectImageText": "클릭하여 이미지 선택",
+    "durationLabel": "관광 소요일",
+    "durationPlaceholder": "예: 1일, 2일",
+    "locationLabel": "위치 선택",
+    "reselect": "다시 선택",
+    "selectLocationRequired": "위치를 선택하세요",
+    "notesPlaceholder": "기타 참고 정보",
+    "incompleteWarning": "명소 이름, 관광 소요일을 입력하고 위치를 선택해 주세요",
+    "daySeparator": ", ",
+    "coordsTitle": "경도: {lng}, 위도: {lat}"
+  },
+  "delete": {
+    "confirmTitle": "가이드 삭제",
+    "guideConfirm": "\"{name}\"을(를) 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.",
+    "attractionInUse": "이 명소는 {days}일 차에서 사용 중이며, 삭제하면 모든 일정에서 제거됩니다. 계속하시겠습니까?"
+  },
+  "message": {
+    "statusUpdated": "상태가 업데이트되었습니다",
+    "draftSaved": "초안이 저장되었습니다",
+    "publishSuccess": "게시되었습니다",
+    "completeRequired": "필수 항목을 입력해 주세요"
+  },
+  "coverPicker": {
+    "title": "표지 이미지 선택",
+    "searchPlaceholder": "이미지 파일명 검색",
+    "selectImageAria": "이미지 {name} 선택",
+    "noImages": "이미지가 없습니다",
+    "selected": "선택됨",
+    "selectedAlt": "선택한 표지",
+    "notSelected": "선택 안 함",
+    "uploadLocal": "로컬 업로드",
+    "confirm": "선택 확인",
+    "uploadFailed": "업로드에 실패했습니다. 다시 시도해 주세요"
+  },
+  "preview": {
+    "title": "실시간 미리보기",
+    "updating": "미리보기 업데이트 중",
+    "reviewsPending": "리뷰는 게시 후 표시됩니다"
+  },
+  "location": {
+    "title": "위치 선택",
+    "providerAmap": "Amap",
+    "providerGoogle": "Google Maps",
+    "providerOsm": "OSM 키 없는 모드",
+    "hintAmap": "현재 지역에서는 Amap을 사용합니다",
+    "hintGoogle": "현재 지역에서는 Google Maps를 사용합니다",
+    "hintOsm": "지도 키가 설정되지 않았거나 로드에 실패하여 OSM 키 없는 모드(WGS-84 좌표)로 전환했습니다",
+    "searchPlaceholder": "장소 이름 또는 주소 검색",
+    "coords": "경도: {lng}, 위도: {lat}"
+  },
+  "regions": {
+    "all": "전체",
+    "asia": "아시아",
+    "europe": "유럽",
+    "americas": "아메리카",
+    "oceania": "오세아니아",
+    "africa": "아프리카",
+    "polar": "극지",
+    "china": "중국",
+    "japan": "일본",
+    "korea": "한국",
+    "southeast-asia": "동남아시아",
+    "south-asia": "남아시아",
+    "central-asia": "중앙아시아",
+    "middle-east": "중동",
+    "western-europe": "서유럽",
+    "southern-europe": "남유럽",
+    "northern-europe": "북유럽",
+    "eastern-europe": "동유럽",
+    "uk-ireland": "영국과 아일랜드",
+    "north-america": "북미",
+    "central-caribbean": "중미와 카리브해",
+    "south-america": "남미",
+    "australia": "호주",
+    "new-zealand": "뉴질랜드",
+    "pacific-islands": "태평양 제도",
+    "north-africa": "북아프리카",
+    "east-africa": "동아프리카",
+    "southern-africa": "남아프리카",
+    "west-central-africa": "서아프리카와 중앙아프리카",
+    "antarctica": "남극대륙",
+    "arctic": "북극"
+  }
+}

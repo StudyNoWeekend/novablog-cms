@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">项目经历</h1>
+      <h1 class="page-title">{{ t('project.list.title') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 新建项目
+        <PlusOutlined /> {{ t('project.list.create') }}
       </a-button>
     </div>
 
@@ -14,13 +14,13 @@
       <div class="project-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索项目名称/简介..."
+          :placeholder="t('project.list.searchPlaceholder')"
           style="width: 220px"
           allow-clear
         />
         <a-select
           v-model:value="filterStatus"
-          placeholder="全部状态"
+          :placeholder="t('project.list.allStatus')"
           style="width: 120px"
           allow-clear
           :options="statusOptions"
@@ -30,7 +30,7 @@
       <a-spin :spinning="loading">
         <a-empty
           v-if="!loading && list.length === 0"
-          description="还没有项目经历，开始添加吧"
+          :description="t('project.list.empty')"
           style="margin-top: 48px"
         />
         <div v-else class="project-grid">
@@ -48,13 +48,13 @@
               <a-tag v-if="item.category_name || item.category" class="category-tag" color="blue">
                 {{ item.category_name || item.category }}
               </a-tag>
-              <a-tag v-else class="category-tag">未分类</a-tag>
+              <a-tag v-else class="category-tag">{{ t('project.list.uncategorized') }}</a-tag>
             </div>
             <div class="project-info">
               <div class="project-title-row">
                 <div class="project-title" :title="item.title">{{ item.title }}</div>
                 <a-tag :color="item.status === 1 ? 'green' : 'default'" class="status-tag">
-                  {{ item.status === 1 ? '已发布' : '草稿' }}
+                  {{ item.status === 1 ? t('project.status.published') : t('project.status.draft') }}
                 </a-tag>
               </div>
               <div class="project-sub">
@@ -65,7 +65,7 @@
                 </template>
               </div>
               <div class="project-summary" :title="item.summary">
-                {{ item.summary || '暂无简介' }}
+                {{ item.summary || t('project.list.noSummary') }}
               </div>
               <div v-if="splitTechStack(item.tech_stack).length" class="project-tech">
                 <a-tag
@@ -90,7 +90,7 @@
                     :href="item.project_url"
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="项目/作品链接"
+                    :title="t('project.list.projectLinkTitle')"
                   >
                     <LinkOutlined />
                   </a>
@@ -99,7 +99,7 @@
                     :href="item.repo_url"
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="代码仓库"
+                    :title="t('project.list.repoTitle')"
                   >
                     <GithubOutlined />
                   </a>
@@ -107,10 +107,10 @@
               </div>
               <div class="project-actions">
                 <a-button type="link" size="small" @click="handleEdit(item)">
-                  <EditOutlined /> 编辑
+                  <EditOutlined /> {{ t('common.actions.edit') }}
                 </a-button>
                 <a-button type="link" size="small" danger @click="handleDelete(item)">
-                  <DeleteOutlined /> 删除
+                  <DeleteOutlined /> {{ t('common.actions.delete') }}
                 </a-button>
               </div>
             </div>
@@ -125,7 +125,7 @@
           :total="total"
           :page-size-options="[12, 24, 48]"
           show-size-changer
-          :show-total="(t: number) => `共 ${t} 个项目`"
+          :show-total="(count: number) => t('project.list.total', { total: count })"
           @change="handlePageChange"
           @show-size-change="handlePageChange"
         />
@@ -135,133 +135,133 @@
     <!-- 新建/编辑项目弹窗 -->
     <a-modal
       v-model:open="modalVisible"
-      :title="modalMode === 'create' ? '新建项目' : '编辑项目'"
+      :title="modalMode === 'create' ? t('project.list.create') : t('project.list.edit')"
       :confirm-loading="modalLoading"
       width="720px"
       @ok="handleSubmit"
     >
       <a-form layout="vertical">
-        <a-form-item label="项目名称" required>
+        <a-form-item :label="t('project.form.titleLabel')" required>
           <a-input
             v-model:value="form.title"
-            placeholder="请输入项目名称"
+            :placeholder="t('project.form.titlePlaceholder')"
             :maxlength="255"
             show-count
           />
         </a-form-item>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="分类">
-              <CategorySelect v-model="form.category_id" type="project" placeholder="选择分类（可选）" />
+            <a-form-item :label="t('common.field.category')">
+              <CategorySelect v-model="form.category_id" type="project" :placeholder="t('project.form.categoryPlaceholder')" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="担任角色">
+            <a-form-item :label="t('project.form.roleLabel')">
               <a-input
                 v-model:value="form.role"
-                placeholder="如：摄影师 / 剪辑师 / 全栈开发"
+                :placeholder="t('project.form.rolePlaceholder')"
                 :maxlength="100"
               />
             </a-form-item>
           </a-col>
         </a-row>
-        <a-form-item label="客户 / 所属组织">
+        <a-form-item :label="t('project.form.clientLabel')">
           <a-input
             v-model:value="form.client"
-            placeholder="请输入客户或所属组织（可选）"
+            :placeholder="t('project.form.clientPlaceholder')"
             :maxlength="255"
           />
         </a-form-item>
-        <a-form-item label="封面图">
+        <a-form-item :label="t('project.form.coverLabel')">
           <div class="image-picker">
             <div v-if="form.cover_url" class="image-preview">
               <img
                 :src="getThumbUrl(form.cover_url, 400)"
-                alt="项目封面"
+                :alt="t('project.form.coverAlt')"
                 referrerpolicy="no-referrer"
               />
               <a-button size="small" @click="mediaPickerVisible = true">
-                <PictureOutlined /> 更换封面
+                <PictureOutlined /> {{ t('project.form.changeCover') }}
               </a-button>
             </div>
             <a-button v-else @click="mediaPickerVisible = true">
-              <PictureOutlined /> 选择封面
+              <PictureOutlined /> {{ t('project.form.selectCover') }}
             </a-button>
           </div>
         </a-form-item>
-        <a-form-item label="一句话简介">
+        <a-form-item :label="t('project.form.summaryLabel')">
           <a-textarea
             v-model:value="form.summary"
-            placeholder="用一句话介绍这个项目（列表卡片展示用）"
+            :placeholder="t('project.form.summaryPlaceholder')"
             :rows="2"
             :maxlength="500"
             show-count
           />
         </a-form-item>
-        <a-form-item label="详细描述">
+        <a-form-item :label="t('project.form.descLabel')">
           <a-textarea
             v-model:value="form.description"
-            placeholder="项目背景、职责、成果亮点等（可选）"
+            :placeholder="t('project.form.descPlaceholder')"
             :rows="5"
           />
         </a-form-item>
-        <a-form-item label="技能 / 工具标签">
+        <a-form-item :label="t('project.form.techLabel')">
           <a-select
             v-model:value="form.techStack"
             mode="tags"
-            placeholder="输入后回车添加，如 Go、Vue、Lightroom、Premiere"
+            :placeholder="t('project.form.techPlaceholder')"
             :max-tag-count="8"
           />
         </a-form-item>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="开始时间">
+            <a-form-item :label="t('project.form.startDateLabel')">
               <a-date-picker
                 v-model:value="form.start_date"
                 picker="month"
                 value-format="YYYY-MM"
-                placeholder="选择月份"
+                :placeholder="t('project.form.monthPlaceholder')"
                 style="width: 100%"
               />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="结束时间">
+            <a-form-item :label="t('project.form.endDateLabel')">
               <a-date-picker
                 v-model:value="form.end_date"
                 picker="month"
                 value-format="YYYY-MM"
-                placeholder="留空表示至今"
+                :placeholder="t('project.form.endDatePlaceholder')"
                 style="width: 100%"
               />
             </a-form-item>
           </a-col>
         </a-row>
-        <a-form-item label="项目 / 作品链接">
+        <a-form-item :label="t('project.form.projectUrlLabel')">
           <a-input
             v-model:value="form.project_url"
-            placeholder="https://（可选）"
+            :placeholder="t('project.form.urlPlaceholder')"
             :maxlength="1024"
           />
         </a-form-item>
-        <a-form-item label="代码仓库链接">
+        <a-form-item :label="t('project.form.repoUrlLabel')">
           <a-input
             v-model:value="form.repo_url"
-            placeholder="https://github.com/...（可选）"
+            :placeholder="t('project.form.repoUrlPlaceholder')"
             :maxlength="1024"
           />
         </a-form-item>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="状态">
+            <a-form-item :label="t('common.field.status')">
               <a-radio-group v-model:value="form.status">
-                <a-radio :value="0">草稿</a-radio>
-                <a-radio :value="1">已发布</a-radio>
+                <a-radio :value="0">{{ t('project.status.draft') }}</a-radio>
+                <a-radio :value="1">{{ t('project.status.published') }}</a-radio>
               </a-radio-group>
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="排序权重">
+            <a-form-item :label="t('project.form.sortWeight')">
               <a-input-number
                 v-model:value="form.sort_order"
                 :min="0"
@@ -279,7 +279,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -300,10 +301,12 @@ import CategorySelect from '@/components/article/CategorySelect.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
-const statusOptions = [
-  { value: 0, label: '草稿' },
-  { value: 1, label: '已发布' },
-]
+const { t } = useI18n()
+
+const statusOptions = computed(() => [
+  { value: 0, label: t('project.status.draft') },
+  { value: 1, label: t('project.status.published') },
+])
 
 const keyword = ref('')
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
@@ -437,18 +440,18 @@ function splitTechStack(techStack?: string): string[] {
 }
 
 function formatRange(start?: string, end?: string): string {
-  if (!start && !end) return '时间待定'
-  const endText = end || '至今'
+  if (!start && !end) return t('project.meta.timeTbd')
+  const endText = end || t('project.meta.present')
   return `${start || '?'} ~ ${endText}`
 }
 
 async function handleSubmit() {
   if (!form.title.trim()) {
-    message.warning('请输入项目名称')
+    message.warning(t('project.form.titleRequired'))
     return
   }
   if (form.start_date && form.end_date && form.start_date > form.end_date) {
-    message.warning('开始时间不能晚于结束时间')
+    message.warning(t('project.message.dateRangeInvalid'))
     return
   }
   modalLoading.value = true
@@ -470,7 +473,7 @@ async function handleSubmit() {
         status: form.status,
         sort_order: form.sort_order,
       })
-      message.success('创建成功')
+      message.success(t('common.message.createSuccess'))
     } else {
       await projectApi.update(editingId.value, {
         title: form.title.trim(),
@@ -489,7 +492,7 @@ async function handleSubmit() {
         status: form.status,
         sort_order: form.sort_order,
       })
-      message.success('更新成功')
+      message.success(t('common.message.updateSuccess'))
     }
     modalVisible.value = false
     fetchList()
@@ -502,15 +505,15 @@ async function handleSubmit() {
 
 function handleDelete(item: Project) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${item.title}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('project.message.deleteTitle'),
+    content: t('project.message.deleteConfirm', { name: item.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await projectApi.remove(item.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }

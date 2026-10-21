@@ -1,0 +1,27 @@
+{
+  "actions": {
+    "create": "新建設備",
+    "edit": "編輯設備"
+  },
+  "list": {
+    "searchPlaceholder": "搜尋設備名稱...",
+    "empty": "還沒有個人設備，開始新增吧",
+    "noBrand": "未設定品牌",
+    "noDescription": "暫無介紹",
+    "total": "共 {total} 個設備"
+  },
+  "form": {
+    "namePlaceholder": "請輸入設備名稱",
+    "imageAlt": "設備圖片",
+    "changeImage": "更換圖片",
+    "selectImage": "選擇圖片",
+    "brand": "品牌",
+    "brandPlaceholder": "請輸入品牌（可選）",
+    "descriptionPlaceholder": "請輸入設備描述（可選）"
+  },
+  "message": {
+    "nameRequired": "請輸入設備名稱",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法恢復，確定要刪除嗎？"
+  }
+}

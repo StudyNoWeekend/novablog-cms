@@ -1,0 +1,53 @@
+{
+  "actions": {
+    "create": "레시피 추가",
+    "edit": "레시피 편집"
+  },
+  "status": {
+    "published": "게시됨",
+    "draft": "초안",
+    "unpublished": "게시 중지"
+  },
+  "difficulty": {
+    "easy": "쉬움",
+    "medium": "보통",
+    "hard": "어려움"
+  },
+  "columns": {
+    "recipe": "레시피",
+    "difficulty": "난이도",
+    "minutes": "시간(분)",
+    "publish": "게시"
+  },
+  "list": {
+    "searchPlaceholder": "레시피 검색...",
+    "total": "총 {total}편"
+  },
+  "form": {
+    "title": "레시피 이름",
+    "titlePlaceholder": "레시피 이름을 입력하세요",
+    "categoryPlaceholder": "카테고리 선택(선택 사항)",
+    "cover": "커버 이미지",
+    "coverUrlPlaceholder": "또는 커버 이미지 URL을 직접 붙여넣으세요",
+    "mediaLibrary": "미디어 라이브러리",
+    "summary": "소개",
+    "summaryPlaceholder": "이 요리를 한 줄로 소개하세요",
+    "difficulty": "난이도",
+    "minutes": "조리 시간(분)",
+    "servings": "인분",
+    "tags": "태그(쉼표로 구분)",
+    "tagsPlaceholder": "예: 집밥,반찬",
+    "ingredients": "재료",
+    "ingredientNamePlaceholder": "재료명(예: 토마토)",
+    "ingredientAmountPlaceholder": "분량(예: 2개)",
+    "addIngredient": "재료 추가",
+    "steps": "조리 단계",
+    "stepPlaceholder": "이 단계에서 할 일",
+    "addStep": "단계 추가"
+  },
+  "message": {
+    "titleRequired": "레시피 이름을 입력하세요",
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "「{name}」 삭제 후에는 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  }
+}

@@ -1,21 +1,21 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">旅行攻略</h1>
+      <h1 class="page-title">{{ $t('travel.list.title') }}</h1>
       <a-button
         type="primary"
-        aria-label="新建攻略"
+        :aria-label="$t('travel.list.create')"
         @click="handleCreate"
       >
         <PlusOutlined />
-        新建攻略
+        {{ $t('travel.list.create') }}
       </a-button>
     </div>
 
     <!-- 分类标签栏 -->
     <CategoryBar type="travel" @select="handleCategorySelect" />
 
-    <div class="travel-stats" role="region" aria-label="攻略统计">
+    <div class="travel-stats" role="region" :aria-label="$t('travel.list.statsAria')">
       <div
         v-for="item in statItems"
         :key="item.label"
@@ -40,7 +40,7 @@
         v-if="loading"
         class="travel-grid travel-grid-skeleton"
         role="status"
-        aria-label="加载中"
+        :aria-label="$t('common.state.loading')"
       >
         <div
           v-for="n in 6"
@@ -71,7 +71,7 @@
 
       <a-empty
         v-else
-        description="没有找到匹配的攻略"
+        :description="$t('travel.list.empty')"
       />
     </div>
 
@@ -82,7 +82,7 @@
         :page-size="pageSize"
         :total="total"
         :show-size-changer="true"
-        :show-total="(total: number) => `共 ${total} 篇`"
+        :show-total="(total: number) => $t('travel.list.totalItems', { total })"
         @change="onPageChange"
         @show-size-change="handlePageSizeChange"
       />
@@ -99,6 +99,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -144,6 +145,12 @@ const selectedGuide = ref<TravelGuide | null>(null)
 const loading = ref(false)
 
 const router = useRouter()
+const { t, locale } = useI18n()
+
+// 数字本地化格式化（跟随当前语言）
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat(locale.value).format(value)
+}
 
 const filteredGuides = computed(() => guides.value)
 
@@ -164,28 +171,28 @@ const stats = computed(() => {
 
 const statItems = computed(() => [
   {
-    label: '攻略总数',
+    label: t('travel.stats.total'),
     value: stats.value.total,
     icon: FileTextOutlined,
     iconBg: 'rgba(82, 111, 232, 0.1)',
     iconColor: '#526FE8',
   },
   {
-    label: '本月新增',
+    label: t('travel.stats.thisMonth'),
     value: stats.value.thisMonth,
     icon: CalendarOutlined,
     iconBg: 'rgba(22, 128, 93, 0.1)',
     iconColor: '#16805D',
   },
   {
-    label: '总浏览量',
-    value: stats.value.totalViews.toLocaleString('zh-CN'),
+    label: t('travel.stats.totalViews'),
+    value: formatNumber(stats.value.totalViews),
     icon: EyeOutlined,
     iconBg: 'rgba(183, 121, 31, 0.1)',
     iconColor: '#B7791F',
   },
   {
-    label: '平均评分',
+    label: t('travel.stats.avgRating'),
     value: stats.value.avgRating,
     icon: StarOutlined,
     iconBg: 'rgba(194, 65, 75, 0.1)',
@@ -265,15 +272,15 @@ function handleDelete(id: string) {
   if (!guide) return
 
   Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除「${guide.title}」吗？删除后无法恢复。`,
-    okText: '删除',
+    title: t('travel.delete.confirmTitle'),
+    content: t('travel.delete.guideConfirm', { name: guide.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await travelApi.remove(id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         fetchGuides()
       } catch {
         // 错误已由拦截器处理
@@ -285,7 +292,7 @@ function handleDelete(id: string) {
 async function handleStatusChange(id: string, status: TravelStatus) {
   try {
     await travelApi.updateStatus(id, status)
-    message.success('状态更新成功')
+    message.success(t('travel.message.statusUpdated'))
     fetchGuides()
   } catch {
     // 错误已由拦截器处理

@@ -11,7 +11,7 @@
       <img
         v-if="guide.coverImage"
         :src="getThumbUrl(guide.coverImage, 400)"
-        :alt="`${guide.title} 封面图`"
+        :alt="$t('travel.card.coverAlt', { title: guide.title })"
         loading="lazy"
       />
       <div v-else class="travel-card-cover-placeholder">
@@ -19,7 +19,7 @@
       </div>
       <a-tag :color="statusColor" class="travel-card-status">{{ statusText }}</a-tag>
       <div class="travel-card-cover-overlay" aria-hidden="true">
-        <span>查看详情</span>
+        <span>{{ $t('travel.card.viewDetail') }}</span>
       </div>
     </div>
 
@@ -27,8 +27,8 @@
       <h3 class="travel-card-title">{{ guide.title }}</h3>
       <p class="travel-card-summary">{{ guide.summary }}</p>
       <div class="travel-card-meta">
-        <span class="travel-card-meta-item" :title="getRegionPath(guide.region)">
-          <CompassOutlined /> {{ getRegionPath(guide.region) }}
+        <span class="travel-card-meta-item" :title="regionPath(guide.region)">
+          <CompassOutlined /> {{ regionPath(guide.region) }}
         </span>
         <span v-if="guide.categoryName" class="travel-card-meta-item">
           <TagsOutlined /> {{ guide.categoryName }}
@@ -37,7 +37,7 @@
           <EnvironmentOutlined /> {{ guide.destination }}
         </span>
         <span class="travel-card-meta-item">
-          <CalendarOutlined /> {{ guide.days }}天
+          <CalendarOutlined /> {{ $t('travel.card.days', { days: guide.days }) }}
         </span>
         <span class="travel-card-meta-item" :title="guide.bestMonth">
           <ClockCircleOutlined /> {{ guide.bestMonth }}
@@ -58,7 +58,7 @@
       <div class="travel-card-rating">
         <span class="travel-card-rating-score">{{ guide.rating }}</span>
         <StarFilled class="travel-card-rating-icon" />
-        <span class="travel-card-review-count">({{ guide.reviewCount }}条评价)</span>
+        <span class="travel-card-review-count">{{ $t('travel.card.reviewCount', { count: guide.reviewCount }) }}</span>
       </div>
       <div class="travel-card-actions" @click.stop>
         <PushSyncButton
@@ -70,13 +70,13 @@
         <a-button
           size="small"
           type="text"
-          aria-label="编辑"
+          :aria-label="$t('common.actions.edit')"
           @click="handleEdit"
         >
           <EditOutlined />
         </a-button>
         <a-dropdown :trigger="['click']">
-          <a-button size="small" type="text" aria-label="更多操作">
+          <a-button size="small" type="text" :aria-label="$t('common.actions.more')">
             <MoreOutlined />
           </a-button>
           <template #overlay>
@@ -85,23 +85,23 @@
                 v-if="guide.status === TravelStatus.Draft"
                 @click="handleStatusChange(TravelStatus.Published)"
               >
-                <SendOutlined /> 发布
+                <SendOutlined /> {{ $t('common.actions.publish') }}
               </a-menu-item>
               <a-menu-item
                 v-if="guide.status === TravelStatus.Published"
                 @click="handleStatusChange(TravelStatus.Archived)"
               >
-                <StopOutlined /> 下架
+                <StopOutlined /> {{ $t('common.actions.offline') }}
               </a-menu-item>
               <a-menu-item
                 v-if="guide.status !== TravelStatus.Draft"
                 @click="handleStatusChange(TravelStatus.Draft)"
               >
-                <FileTextOutlined /> 转为草稿
+                <FileTextOutlined /> {{ $t('travel.actions.toDraft') }}
               </a-menu-item>
               <a-menu-divider />
               <a-menu-item danger @click="handleDelete">
-                <DeleteOutlined /> 删除
+                <DeleteOutlined /> {{ $t('common.actions.delete') }}
               </a-menu-item>
             </a-menu>
           </template>
@@ -113,6 +113,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import {
   CompassOutlined,
@@ -130,8 +131,10 @@ import {
   DeleteOutlined,
   TagsOutlined,
 } from '@ant-design/icons-vue'
-import { TravelStatus, getRegionPath, type TravelGuide, type TravelStatus as TTravelStatus } from '@/types/travel'
+import { TravelStatus, getRegionLabelKeys, type TravelGuide, type TravelStatus as TTravelStatus, type TravelRegionFilter } from '@/types/travel'
 import { getThumbUrl } from '@/utils/image'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -151,14 +154,31 @@ const emit = defineEmits<{
   (e: 'pushUpdated'): void
 }>()
 
-const statusMap: Record<TTravelStatus, { text: string; color: string }> = {
-  [TravelStatus.Draft]: { text: '草稿', color: 'default' },
-  [TravelStatus.Published]: { text: '已发布', color: 'green' },
-  [TravelStatus.Archived]: { text: '已下架', color: 'orange' },
+// 状态枚举 → i18n key（文案见 travel.status.*）
+const statusKeyMap: Record<number, string> = {
+  [TravelStatus.Draft]: 'draft',
+  [TravelStatus.Published]: 'published',
+  [TravelStatus.Archived]: 'archived',
 }
 
-const statusText = computed(() => statusMap[props.guide.status]?.text ?? '未知')
-const statusColor = computed(() => statusMap[props.guide.status]?.color ?? 'default')
+const statusText = computed(() => {
+  const key = statusKeyMap[props.guide.status]
+  return key ? t(`travel.status.${key}`) : t('common.status.unknown')
+})
+
+// 状态色值（纯展示配色，与语言无关）
+const statusColorMap: Record<number, string> = {
+  [TravelStatus.Draft]: 'default',
+  [TravelStatus.Published]: 'green',
+  [TravelStatus.Archived]: 'orange',
+}
+
+const statusColor = computed(() => statusColorMap[props.guide.status] || 'default')
+
+// 地区路径（大洲 / 地区，跟随当前语言）
+function regionPath(region: TravelRegionFilter): string {
+  return getRegionLabelKeys(region).map((key) => t(key)).join(' / ')
+}
 
 const cardStyle = computed(() => ({
   '--delay': `${props.index * 50}ms`,

@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "create": "添加游戏",
+    "edit": "编辑游戏"
+  },
+  "status": {
+    "published": "已发布",
+    "draft": "草稿",
+    "unpublished": "已下架"
+  },
+  "playStatus": {
+    "want": "想玩",
+    "playing": "在玩",
+    "played": "玩过"
+  },
+  "columns": {
+    "game": "游戏",
+    "playHours": "时长",
+    "rating": "评分",
+    "publish": "发布"
+  },
+  "list": {
+    "searchPlaceholder": "搜索游戏...",
+    "total": "共 {total} 款"
+  },
+  "form": {
+    "title": "游戏名称",
+    "titlePlaceholder": "请输入游戏名称",
+    "platform": "平台",
+    "platformPlaceholder": "如：PC / PS5 / Switch",
+    "genre": "类型",
+    "genrePlaceholder": "如：RPG / FPS",
+    "playStatus": "游玩状态",
+    "categoryPlaceholder": "选择分类（可选）",
+    "playHours": "时长（小时）",
+    "rating": "评分（0-10）",
+    "cover": "封面图",
+    "coverUrlPlaceholder": "或直接粘贴封面地址",
+    "mediaLibrary": "媒体库",
+    "shortReview": "短评",
+    "shortReviewPlaceholder": "一句话短评"
+  },
+  "message": {
+    "titleRequired": "请输入游戏名称",
+    "deleteTitle": "确认删除",
+    "deleteConfirm": "删除「{name}」后无法恢复，确定要删除吗？"
+  }
+}

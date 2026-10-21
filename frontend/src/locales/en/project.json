@@ -1,0 +1,57 @@
+{
+  "list": {
+    "title": "Projects",
+    "create": "New Project",
+    "edit": "Edit Project",
+    "searchPlaceholder": "Search projects...",
+    "allStatus": "All statuses",
+    "empty": "No projects yet. Add one to get started",
+    "uncategorized": "Uncategorized",
+    "noSummary": "No summary yet",
+    "projectLinkTitle": "Project/work link",
+    "repoTitle": "Repository",
+    "total": "{total} projects in total"
+  },
+  "status": {
+    "draft": "Draft",
+    "published": "Published"
+  },
+  "form": {
+    "titleLabel": "Project Name",
+    "titlePlaceholder": "Enter project name",
+    "titleRequired": "Please enter the project name",
+    "categoryPlaceholder": "Select a category (optional)",
+    "roleLabel": "Role",
+    "rolePlaceholder": "e.g. Photographer / Video Editor / Full-stack Developer",
+    "clientLabel": "Client / Organization",
+    "clientPlaceholder": "Enter client or organization (optional)",
+    "coverLabel": "Cover Image",
+    "coverAlt": "Project cover",
+    "changeCover": "Change Cover",
+    "selectCover": "Select Cover",
+    "summaryLabel": "One-line Summary",
+    "summaryPlaceholder": "Summarize this project in one sentence (shown on list cards)",
+    "descLabel": "Detailed Description",
+    "descPlaceholder": "Background, responsibilities, highlights, etc. (optional)",
+    "techLabel": "Skills / Tools",
+    "techPlaceholder": "Type and press Enter to add, e.g. Go, Vue, Lightroom, Premiere",
+    "startDateLabel": "Start",
+    "monthPlaceholder": "Select month",
+    "endDateLabel": "End",
+    "endDatePlaceholder": "Leave empty for \"present\"",
+    "projectUrlLabel": "Project / Work Link",
+    "urlPlaceholder": "https:// (optional)",
+    "repoUrlLabel": "Repository Link",
+    "repoUrlPlaceholder": "https://github.com/... (optional)",
+    "sortWeight": "Sort Weight"
+  },
+  "meta": {
+    "timeTbd": "Dates TBD",
+    "present": "Present"
+  },
+  "message": {
+    "dateRangeInvalid": "Start date cannot be later than end date",
+    "deleteTitle": "Delete Project",
+    "deleteConfirm": "Project \"{name}\" will be permanently deleted. Are you sure?"
+  }
+}

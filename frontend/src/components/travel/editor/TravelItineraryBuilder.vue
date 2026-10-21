@@ -3,7 +3,7 @@
     <div class="section-header">
       <div class="section-title-wrap">
         <span class="section-title-bar" aria-hidden="true" />
-        <h2 class="section-title">行程安排</h2>
+        <h2 class="section-title">{{ $t('travel.section.itinerary') }}</h2>
       </div>
     </div>
 
@@ -25,25 +25,25 @@
         >
           <div class="day-field">
             <label :for="titleId(dayIndex)" class="day-label">
-              第 {{ day.day }} 天标题
+              {{ $t('travel.builder.dayTitleLabel', { day: day.day }) }}
             </label>
             <a-input
               :id="titleId(dayIndex)"
               :value="day.title"
-              placeholder="请输入当天标题"
+              :placeholder="$t('travel.builder.dayTitlePlaceholder')"
               @update:value="updateDayTitle(dayIndex, $event)"
             />
           </div>
 
           <div class="day-field">
             <label :for="descId(dayIndex)" class="day-label">
-              行程描述
+              {{ $t('travel.builder.descriptionLabel') }}
             </label>
             <a-textarea
               :id="descId(dayIndex)"
               :value="day.description"
               :rows="2"
-              placeholder="请输入当天行程描述"
+              :placeholder="$t('travel.builder.descriptionPlaceholder')"
               @update:value="updateDayDescription(dayIndex, $event)"
             />
           </div>
@@ -51,7 +51,7 @@
           <div class="day-attractions">
             <div class="attractions-toolbar">
               <span class="attractions-count">
-                景点 {{ day.attractionIds.length }}
+                {{ $t('travel.builder.attractionCount', { count: day.attractionIds.length }) }}
               </span>
               <a-button
                 type="primary"
@@ -59,7 +59,7 @@
                 @click="openAddAttraction(dayIndex)"
               >
                 <PlusOutlined />
-                添加景点
+                {{ $t('travel.actions.addAttraction') }}
               </a-button>
             </div>
 
@@ -67,14 +67,14 @@
               v-if="day.attractionIds.length === 0"
               class="empty-state"
             >
-              暂无景点，点击“添加景点”或将景点拖拽到此处
+              {{ $t('travel.builder.emptyAttractions') }}
             </div>
 
             <div
               v-else
               class="attractions-list"
               role="list"
-              :aria-label="`第 ${day.day} 天景点列表`"
+              :aria-label="$t('travel.builder.attractionListAria', { day: day.day })"
             >
               <div
                 v-for="(attractionId, index) in day.attractionIds"
@@ -134,7 +134,7 @@
                     type="text"
                     size="small"
                     :disabled="index === 0"
-                    aria-label="上移"
+                    :aria-label="$t('travel.actions.moveUp')"
                     @click="moveAttraction(dayIndex, index, index - 1)"
                   >
                     <UpOutlined />
@@ -143,7 +143,7 @@
                     type="text"
                     size="small"
                     :disabled="index === day.attractionIds.length - 1"
-                    aria-label="下移"
+                    :aria-label="$t('travel.actions.moveDown')"
                     @click="moveAttraction(dayIndex, index, index + 1)"
                   >
                     <DownOutlined />
@@ -152,7 +152,7 @@
                     type="text"
                     size="small"
                     danger
-                    aria-label="移除景点"
+                    :aria-label="$t('travel.actions.removeAttraction')"
                     @click="removeAttraction(dayIndex, index)"
                   >
                     <CloseOutlined />
@@ -165,17 +165,17 @@
       </a-timeline-item>
     </a-timeline>
 
-    <a-empty v-else description="暂无行程天数" />
+    <a-empty v-else :description="$t('travel.builder.emptyDays')" />
 
     <a-modal
       v-model:open="modalOpen"
-      title="添加景点"
+      :title="$t('travel.actions.addAttraction')"
       :footer="null"
       width="640px"
     >
       <a-empty
         v-if="modalAttractions.length === 0"
-        description="没有可添加的景点"
+        :description="$t('travel.builder.noAvailableAttractions')"
       />
       <div v-else class="modal-attraction-list">
         <div
@@ -220,6 +220,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   PlusOutlined,
   CloseOutlined,
@@ -234,6 +235,8 @@ import type {
   TravelItineraryDay,
   TravelAttraction,
 } from '@/types/travel'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: TravelGuideFormData
@@ -452,7 +455,7 @@ function descId(dayIndex: number) {
 }
 
 function attractionName(id: string) {
-  return attractionById(id)?.name ?? '未知景点'
+  return attractionById(id)?.name ?? t('travel.builder.unknownAttraction')
 }
 
 function attractionImage(id: string) {

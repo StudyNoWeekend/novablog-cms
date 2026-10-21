@@ -1,9 +1,9 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">摄影作品集</h1>
+      <h1 class="page-title">{{ t('portfolio.list.title') }}</h1>
       <a-button type="primary" @click="openCreateModal">
-        <PlusOutlined /> 新建作品集
+        <PlusOutlined /> {{ t('portfolio.list.create') }}
       </a-button>
     </div>
 
@@ -14,7 +14,7 @@
       <div class="portfolio-toolbar">
         <a-input-search
           v-model:value="keyword"
-          placeholder="搜索作品集名称..."
+          :placeholder="t('portfolio.list.searchPlaceholder')"
           style="width: 240px"
           allow-clear
         />
@@ -23,7 +23,7 @@
       <a-spin :spinning="loading">
         <a-empty
           v-if="!loading && list.length === 0"
-          description="还没有作品集，开始创建吧"
+          :description="t('portfolio.list.empty')"
           style="margin-top: 48px"
         />
         <div v-else class="portfolio-grid">
@@ -38,26 +38,26 @@
                 <PictureOutlined />
               </div>
               <div class="cover-overlay">
-                <span>编辑</span>
+                <span>{{ t('common.actions.edit') }}</span>
               </div>
             </div>
             <div class="portfolio-info">
               <div class="portfolio-name" :title="item.name">{{ item.name }}</div>
               <div class="portfolio-desc" :title="item.description">
-                {{ item.description || '暂无介绍' }}
+                {{ item.description || t('portfolio.item.noDesc') }}
               </div>
               <div v-if="item.category_name" class="portfolio-category">
                 <a-tag color="blue" :bordered="false">{{ item.category_name }}</a-tag>
               </div>
               <div class="portfolio-meta">
                 <span class="meta-item">
-                  <PictureOutlined /> {{ item.item_count }} 件作品
+                  <PictureOutlined /> {{ t('portfolio.list.itemCount', { count: item.item_count }) }}
                 </span>
                 <span class="meta-item">{{ formatDateTime(item.created_at) }}</span>
               </div>
               <div class="portfolio-actions">
                 <a-button type="link" size="small" @click="handleEdit(item.id)">
-                  <EditOutlined /> 编辑
+                  <EditOutlined /> {{ t('common.actions.edit') }}
                 </a-button>
                 <PushSyncButton
                   target-type="portfolio"
@@ -66,7 +66,7 @@
                   @updated="fetchList"
                 />
                 <a-button type="link" size="small" danger @click="handleDelete(item)">
-                  <DeleteOutlined /> 删除
+                  <DeleteOutlined /> {{ t('common.actions.delete') }}
                 </a-button>
               </div>
             </div>
@@ -81,7 +81,7 @@
           :total="total"
           :page-size-options="[12, 24, 48]"
           show-size-changer
-          :show-total="(t: number) => `共 ${t} 个作品集`"
+          :show-total="(count: number) => t('portfolio.list.total', { total: count })"
           @change="handlePageChange"
           @show-size-change="handlePageChange"
         />
@@ -91,50 +91,50 @@
     <!-- 新建作品集弹窗 -->
     <a-modal
       v-model:open="createVisible"
-      title="新建作品集"
+      :title="t('portfolio.list.create')"
       :confirm-loading="creating"
       @ok="handleCreate"
     >
       <a-form layout="vertical">
-        <a-form-item label="名称" required>
+        <a-form-item :label="t('common.field.name')" required>
           <a-input
             v-model:value="createForm.name"
-            placeholder="请输入作品集名称"
+            :placeholder="t('portfolio.form.namePlaceholder')"
             :maxlength="100"
             show-count
           />
         </a-form-item>
-        <a-form-item label="介绍">
+        <a-form-item :label="t('portfolio.form.introLabel')">
           <a-textarea
             v-model:value="createForm.description"
-            placeholder="请输入作品集介绍（可选）"
+            :placeholder="t('portfolio.form.introPlaceholder')"
             :rows="4"
             :maxlength="500"
             show-count
           />
         </a-form-item>
-        <a-form-item label="分类">
-          <CategorySelect v-model="createForm.category_id" type="portfolio" placeholder="选择分类（可选）" />
+        <a-form-item :label="t('common.field.category')">
+          <CategorySelect v-model="createForm.category_id" type="portfolio" :placeholder="t('portfolio.form.categoryPlaceholder')" />
         </a-form-item>
-        <a-form-item label="封面设置">
+        <a-form-item :label="t('portfolio.cover.setting')">
           <a-radio-group v-model:value="createForm.cover_mode">
-            <a-radio :value="0">使用首张作品</a-radio>
-            <a-radio :value="1">独立设置封面</a-radio>
+            <a-radio :value="0">{{ t('portfolio.cover.useFirst') }}</a-radio>
+            <a-radio :value="1">{{ t('portfolio.cover.custom') }}</a-radio>
           </a-radio-group>
           <div v-if="createForm.cover_mode === 1" class="create-cover-custom">
             <div v-if="createCoverPreviewUrl" class="create-cover-preview">
-              <img :src="createCoverPreviewUrl" alt="封面预览" />
+              <img :src="createCoverPreviewUrl" :alt="t('portfolio.cover.previewAlt')" />
               <div class="create-cover-actions">
-                <a-button type="link" size="small" @click="openCreateCoverPicker">更换</a-button>
-                <a-button type="link" size="small" danger @click="clearCreateCoverPreset">清除</a-button>
+                <a-button type="link" size="small" @click="openCreateCoverPicker">{{ t('portfolio.cover.change') }}</a-button>
+                <a-button type="link" size="small" danger @click="clearCreateCoverPreset">{{ t('portfolio.cover.clear') }}</a-button>
               </div>
             </div>
             <a-button v-else type="dashed" @click="openCreateCoverPicker">
-              <PictureOutlined /> 选择封面预设
+              <PictureOutlined /> {{ t('portfolio.cover.selectPreset') }}
             </a-button>
           </div>
           <div v-else class="create-cover-tip">
-            将自动使用排序第一的作品作为封面
+            {{ t('portfolio.cover.autoTip') }}
           </div>
         </a-form-item>
       </a-form>
@@ -143,7 +143,7 @@
     <!-- 封面预设选择器 -->
     <PortfolioItemPicker
       v-model:visible="createCoverPickerVisible"
-      title="选择封面预设"
+      :title="t('portfolio.cover.selectPreset')"
       preset-only
       @selected="handleSelectCreateCover"
     />
@@ -154,6 +154,7 @@
 import { ref, watch, onMounted } from 'vue'
 import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   PlusOutlined,
@@ -164,6 +165,7 @@ import {
 import { portfolioApi } from '@/api/portfolio'
 import type { Portfolio, CreatePortfolioReq } from '@/types/portfolio'
 import { getThumbUrl } from '@/utils/image'
+import { formatDateTime } from '@/utils/datetime'
 import PortfolioItemPicker from '@/components/portfolio/PortfolioItemPicker.vue'
 import CategoryBar from '@/components/common/CategoryBar.vue'
 import CategorySelect from '@/components/article/CategorySelect.vue'
@@ -171,6 +173,7 @@ import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const keyword = ref('')
 const { debouncedValue: debouncedKeyword, setDebounce } = useDebounce(keyword)
@@ -232,11 +235,11 @@ function openCreateModal() {
 
 async function handleCreate() {
   if (!createForm.value.name.trim()) {
-    message.warning('请输入作品集名称')
+    message.warning(t('portfolio.form.nameRequired'))
     return
   }
   if (createForm.value.cover_mode === 1 && !createCoverPresetId.value) {
-    message.warning('独立封面模式下请选择封面预设')
+    message.warning(t('portfolio.cover.presetRequired'))
     return
   }
   creating.value = true
@@ -251,7 +254,7 @@ async function handleCreate() {
           : undefined,
       category_id: createForm.value.category_id,
     })
-    message.success('创建成功')
+    message.success(t('common.message.createSuccess'))
     createVisible.value = false
     router.push(`/portfolios/${res.id}/edit`)
   } catch {
@@ -292,15 +295,15 @@ function handleEdit(id: string) {
 
 function handleDelete(item: Portfolio) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除「${item.name}」后无法恢复，作品项也将一并删除，确定要删除吗？`,
-    okText: '删除',
+    title: t('portfolio.list.deleteTitle'),
+    content: t('portfolio.list.deleteConfirm', { name: item.name }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await portfolioApi.remove(item.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         if (list.value.length === 1 && page.value > 1) {
           page.value -= 1
         }
@@ -310,13 +313,6 @@ function handleDelete(item: Portfolio) {
       }
     },
   })
-}
-
-function formatDateTime(time?: string): string {
-  if (!time) return '-'
-  const d = new Date(time)
-  if (Number.isNaN(d.getTime())) return time
-  return d.toLocaleString('zh-CN')
 }
 </script>
 

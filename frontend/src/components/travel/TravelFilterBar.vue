@@ -1,10 +1,10 @@
 <template>
   <div class="travel-filter-bar">
     <a-cascader
-      :options="regionTree"
+      :options="regionOptions"
       :value="findRegionPath(localFilters.region)"
       allow-clear
-      placeholder="选择地区"
+      :placeholder="$t('travel.filter.regionPlaceholder')"
       change-on-select
       class="region-cascader"
       @change="onRegionChange"
@@ -14,22 +14,22 @@
       <a-select
         v-model:value="localFilters.days"
         :options="daysOptions"
-        aria-label="天数筛选"
+        :aria-label="$t('travel.filter.daysAria')"
         class="filter-select"
         @change="onDaysChange"
       />
       <a-select
         v-model:value="localFilters.sort"
         :options="sortOptions"
-        aria-label="排序方式"
+        :aria-label="$t('travel.filter.sortAria')"
         class="filter-select"
         @change="onSortChange"
       />
       <a-input-search
         v-model:value="keyword"
-        placeholder="搜索攻略标题、目的地..."
+        :placeholder="$t('travel.filter.searchPlaceholder')"
         allow-clear
-        aria-label="搜索攻略"
+        :aria-label="$t('travel.filter.searchAria')"
         class="filter-search"
       />
     </div>
@@ -37,10 +37,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useDebounce } from '@/composables/useDebounce'
 import { findRegionPath, regionTree } from '@/types/travel'
 import type { TravelFilters, TravelRegionFilter } from '@/types/travel'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: TravelFilters
@@ -50,20 +53,34 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: TravelFilters): void
 }>()
 
-const daysOptions = [
-  { value: 'all', label: '全部' },
-  { value: '1-3', label: '1-3 天' },
-  { value: '4-7', label: '4-7 天' },
-  { value: '8-14', label: '8-14 天' },
-  { value: '15+', label: '15 天以上' },
-]
+// 地区级联选项（labelKey → 当前语言文案）
+const regionOptions = computed(() =>
+  regionTree.map((continent) => ({
+    value: continent.value,
+    label: t(continent.labelKey),
+    children: continent.children?.map((child) => ({
+      value: child.value,
+      label: t(child.labelKey),
+    })),
+  })),
+)
 
-const sortOptions = [
-  { value: 'latest', label: '最新发布' },
-  { value: 'views', label: '最多浏览' },
-  { value: 'rating', label: '最高评分' },
-  { value: 'likes', label: '最多点赞' },
-]
+// 天数筛选选项（跟随当前语言）
+const daysOptions = computed(() => [
+  { value: 'all', label: t('common.status.all') },
+  { value: '1-3', label: t('travel.filter.days1To3') },
+  { value: '4-7', label: t('travel.filter.days4To7') },
+  { value: '8-14', label: t('travel.filter.days8To14') },
+  { value: '15+', label: t('travel.filter.days15Plus') },
+])
+
+// 排序选项（跟随当前语言）
+const sortOptions = computed(() => [
+  { value: 'latest', label: t('travel.sort.latest') },
+  { value: 'views', label: t('travel.sort.mostViewed') },
+  { value: 'rating', label: t('travel.sort.topRated') },
+  { value: 'likes', label: t('travel.sort.mostLiked') },
+])
 
 const keyword = ref(props.modelValue.keyword ?? '')
 const { debouncedValue, setDebounce } = useDebounce(keyword, 300)

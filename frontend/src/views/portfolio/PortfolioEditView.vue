@@ -8,10 +8,10 @@
       <div class="edit-header">
         <div class="header-top">
           <a-button type="text" @click="router.push('/portfolios')">
-            <ArrowLeftOutlined /> 返回列表
+            <ArrowLeftOutlined /> {{ t('portfolio.edit.backToList') }}
           </a-button>
           <div class="header-actions">
-            <a-button :loading="saving" @click="handleSave">保存信息</a-button>
+            <a-button :loading="saving" @click="handleSave">{{ t('portfolio.edit.saveInfo') }}</a-button>
             <PushSyncButton
               v-if="portfolioId"
               target-type="portfolio"
@@ -22,48 +22,48 @@
         <div class="header-form">
           <a-input
             v-model:value="form.name"
-            placeholder="作品集名称"
+            :placeholder="t('portfolio.edit.namePlaceholder')"
             size="large"
             class="name-input"
           />
           <a-textarea
             v-model:value="form.description"
-            placeholder="作品集介绍（可选）"
+            :placeholder="t('portfolio.edit.descPlaceholder')"
             :rows="2"
             :maxlength="500"
             class="desc-input"
           />
           <!-- 分类设置 -->
           <div class="category-setting">
-            <div class="category-label">分类</div>
+            <div class="category-label">{{ t('common.field.category') }}</div>
             <CategorySelect
               v-model="form.category_id"
               type="portfolio"
-              placeholder="选择分类（可选）"
+              :placeholder="t('portfolio.form.categoryPlaceholder')"
               class="category-select"
             />
           </div>
           <!-- 封面设置 -->
           <div class="cover-setting">
-            <div class="cover-label">封面设置</div>
+            <div class="cover-label">{{ t('portfolio.cover.setting') }}</div>
             <a-radio-group v-model:value="coverMode">
-              <a-radio :value="0">使用首张作品</a-radio>
-              <a-radio :value="1">独立设置封面</a-radio>
+              <a-radio :value="0">{{ t('portfolio.cover.useFirst') }}</a-radio>
+              <a-radio :value="1">{{ t('portfolio.cover.custom') }}</a-radio>
             </a-radio-group>
             <div v-if="coverMode === 1" class="cover-custom">
               <div v-if="coverPreviewUrl" class="cover-preview">
-                <img :src="coverPreviewUrl" alt="封面预览" />
+                <img :src="coverPreviewUrl" :alt="t('portfolio.cover.previewAlt')" />
                 <div class="cover-preview-actions">
-                  <a-button type="link" size="small" @click="openCoverPicker">更换</a-button>
-                  <a-button type="link" size="small" danger @click="clearCoverPreset">清除</a-button>
+                  <a-button type="link" size="small" @click="openCoverPicker">{{ t('portfolio.cover.change') }}</a-button>
+                  <a-button type="link" size="small" danger @click="clearCoverPreset">{{ t('portfolio.cover.clear') }}</a-button>
                 </div>
               </div>
               <a-button v-else type="dashed" @click="openCoverPicker">
-                <PictureOutlined /> 选择封面预设
+                <PictureOutlined /> {{ t('portfolio.cover.selectPreset') }}
               </a-button>
             </div>
             <div v-else class="cover-tip">
-              将自动使用排序第一的作品作为封面
+              {{ t('portfolio.cover.autoTip') }}
             </div>
           </div>
         </div>
@@ -72,10 +72,10 @@
       <!-- 工具栏 -->
       <div class="items-toolbar">
         <span class="items-title">
-          作品列表 <span class="items-count">({{ items.length }})</span>
+          {{ t('portfolio.item.list') }} <span class="items-count">({{ items.length }})</span>
         </span>
         <a-button type="primary" @click="openAddPicker">
-          <PlusOutlined /> 添加作品
+          <PlusOutlined /> {{ t('portfolio.item.add') }}
         </a-button>
       </div>
 
@@ -83,7 +83,7 @@
       <a-spin :spinning="actionLoading">
         <a-empty
           v-if="items.length === 0"
-          description="还没有作品，点击「添加作品」开始"
+          :description="t('portfolio.item.empty')"
           style="margin-top: 48px"
         />
         <div v-else class="items-list">
@@ -111,21 +111,21 @@
               />
               <div v-else class="preset-deleted">
                 <PictureOutlined />
-                <span>预设已删除</span>
+                <span>{{ t('portfolio.item.presetDeleted') }}</span>
               </div>
             </div>
             <div class="item-content">
               <div class="item-title" :title="item.title">{{ item.title }}</div>
               <div class="item-desc">
-                {{ item.description || '暂无介绍' }}
+                {{ item.description || t('portfolio.item.noDesc') }}
               </div>
             </div>
             <div class="item-actions">
               <a-button type="link" size="small" @click="openEditItem(item)">
-                <EditOutlined /> 编辑
+                <EditOutlined /> {{ t('common.actions.edit') }}
               </a-button>
               <a-button type="link" size="small" danger @click="handleDeleteItem(item)">
-                <DeleteOutlined /> 删除
+                <DeleteOutlined /> {{ t('common.actions.delete') }}
               </a-button>
             </div>
           </div>
@@ -135,36 +135,36 @@
       <!-- 添加作品选择器 -->
       <PortfolioItemPicker
         v-model:visible="pickerVisible"
-        title="添加作品"
+        :title="t('portfolio.item.add')"
         @selected="handleAddItem"
       />
 
       <!-- 编辑作品项弹窗 -->
       <a-modal
         v-model:open="editItemVisible"
-        title="编辑作品"
+        :title="t('portfolio.item.editTitle')"
         :confirm-loading="savingItem"
         @ok="handleSaveItem"
       >
         <a-form layout="vertical">
-          <a-form-item label="作品名称" required>
+          <a-form-item :label="t('portfolio.item.titleLabel')" required>
             <a-input
               v-model:value="editItemForm.title"
-              placeholder="请输入作品名称"
+              :placeholder="t('portfolio.item.titlePlaceholder')"
               :maxlength="100"
               show-count
             />
           </a-form-item>
-          <a-form-item label="作品介绍">
+          <a-form-item :label="t('portfolio.item.introLabel')">
             <a-textarea
               v-model:value="editItemForm.description"
-              placeholder="请输入作品介绍（可选）"
+              :placeholder="t('portfolio.item.introPlaceholder')"
               :rows="4"
               :maxlength="500"
               show-count
             />
           </a-form-item>
-          <a-form-item label="关联预设">
+          <a-form-item :label="t('portfolio.item.presetLabel')">
             <div v-if="presetPreview" class="preset-preview">
               <img
                 v-if="presetPreview.output_url"
@@ -175,10 +175,10 @@
                 <PictureOutlined />
               </div>
               <span>{{ presetPreview.name }}</span>
-              <a-button type="link" size="small" @click="openReselectPreset">重新选择</a-button>
+              <a-button type="link" size="small" @click="openReselectPreset">{{ t('portfolio.item.reselect') }}</a-button>
             </div>
             <a-button v-else type="dashed" block @click="openReselectPreset">
-              <SwapOutlined /> 选择预设
+              <SwapOutlined /> {{ t('portfolio.item.selectPreset') }}
             </a-button>
           </a-form-item>
         </a-form>
@@ -187,14 +187,14 @@
       <!-- 重选预设选择器 -->
       <PortfolioItemPicker
         v-model:visible="reselectPickerVisible"
-        title="重新选择预设"
+        :title="t('portfolio.item.reselectTitle')"
         @selected="handleReselectPreset"
       />
 
       <!-- 封面预设选择器 -->
       <PortfolioItemPicker
         v-model:visible="coverPickerVisible"
-        title="选择封面预设"
+        :title="t('portfolio.cover.selectPreset')"
         preset-only
         @selected="handleSelectCover"
       />
@@ -206,6 +206,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import PushSyncButton from '@/components/community/PushSyncButton.vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   ArrowLeftOutlined,
@@ -223,6 +224,7 @@ import CategorySelect from '@/components/article/CategorySelect.vue'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 const portfolioId = computed(() => String(route.params.id))
 
@@ -269,10 +271,10 @@ const presetPreview = computed(() => {
   }
   const editing = editingItem.value
   if (editing && editing.output_url) {
-    return { name: '当前预设', output_url: editing.output_url }
+    return { name: t('portfolio.item.currentPreset'), output_url: editing.output_url }
   }
   if (editing && editing.preset_id) {
-    return { name: '预设已删除', output_url: '' }
+    return { name: t('portfolio.item.presetDeleted'), output_url: '' }
   }
   return null
 })
@@ -302,11 +304,11 @@ async function fetchDetail() {
 
 async function handleSave() {
   if (!form.name.trim()) {
-    message.warning('请输入作品集名称')
+    message.warning(t('portfolio.form.nameRequired'))
     return
   }
   if (coverMode.value === 1 && !coverPresetId.value) {
-    message.warning('独立封面模式下请选择封面预设')
+    message.warning(t('portfolio.cover.presetRequired'))
     return
   }
   saving.value = true
@@ -319,7 +321,7 @@ async function handleSave() {
       cover_preset_id:
         coverMode.value === 1 ? coverPresetId.value || undefined : undefined,
     })
-    message.success('保存成功')
+    message.success(t('common.message.saveSuccess'))
     await fetchDetail()
   } catch {
     // 错误由拦截器处理
@@ -340,7 +342,7 @@ function handleSelectCover(payload: {
   coverPresetId.value = payload.preset_id
   coverPreviewUrl.value = payload.output_url || ''
   coverPickerVisible.value = false
-  message.success('已选择封面，请点击保存信息')
+  message.success(t('portfolio.edit.coverSelected'))
 }
 
 function clearCoverPreset() {
@@ -360,7 +362,7 @@ async function handleAddItem(payload: { preset_id: string; title: string; descri
       title: payload.title,
       description: payload.description || undefined,
     })
-    message.success('添加成功')
+    message.success(t('portfolio.item.added'))
     await fetchDetail()
   } catch {
     // 错误由拦截器处理
@@ -386,17 +388,17 @@ function handleReselectPreset(payload: { preset_id: string; title: string; descr
   // picker 仅返回 preset_id，预设名称与缩略图在保存后由详情接口刷新
   reselectPresetCache.value = {
     id: payload.preset_id,
-    name: '新预设（保存后显示预览）',
+    name: t('portfolio.item.newPresetPending'),
     output_url: '',
   }
   editItemForm.preset_id = payload.preset_id
-  message.success('已选择新预设，请点击确定保存')
+  message.success(t('portfolio.edit.presetSelected'))
 }
 
 async function handleSaveItem() {
   if (!editingItem.value) return
   if (!editItemForm.title.trim()) {
-    message.warning('请输入作品名称')
+    message.warning(t('portfolio.item.titleRequired'))
     return
   }
   savingItem.value = true
@@ -406,7 +408,7 @@ async function handleSaveItem() {
       description: editItemForm.description.trim() || undefined,
       preset_id: editItemForm.preset_id,
     })
-    message.success('保存成功')
+    message.success(t('common.message.saveSuccess'))
     editItemVisible.value = false
     await fetchDetail()
   } catch {
@@ -418,15 +420,15 @@ async function handleSaveItem() {
 
 function handleDeleteItem(item: PortfolioItem) {
   Modal.confirm({
-    title: '确认删除',
-    content: `删除作品「${item.title}」后无法恢复，确定要删除吗？`,
-    okText: '删除',
+    title: t('portfolio.item.deleteTitle'),
+    content: t('portfolio.item.deleteConfirm', { name: item.title }),
+    okText: t('common.actions.delete'),
     okType: 'danger',
-    cancelText: '取消',
+    cancelText: t('common.actions.cancel'),
     onOk: async () => {
       try {
         await portfolioApi.removeItem(portfolioId.value, item.id)
-        message.success('删除成功')
+        message.success(t('common.message.deleteSuccess'))
         await fetchDetail()
       } catch {
         // 错误由拦截器处理
@@ -472,7 +474,7 @@ async function persistSort() {
   }
   try {
     await portfolioApi.sortItems(portfolioId.value, payload)
-    message.success('排序已更新')
+    message.success(t('portfolio.edit.sortUpdated'))
   } catch {
     // 排序失败时回滚到服务端数据
     await fetchDetail()

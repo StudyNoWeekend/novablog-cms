@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "新增書籍",
+    "edit": "編輯書籍"
+  },
+  "status": {
+    "published": "已發佈",
+    "draft": "草稿",
+    "unpublished": "已下架"
+  },
+  "readingStatus": {
+    "want": "想讀",
+    "reading": "在讀",
+    "done": "讀完"
+  },
+  "columns": {
+    "book": "書籍",
+    "rating": "評分",
+    "publish": "發佈"
+  },
+  "list": {
+    "searchPlaceholder": "搜尋書名/作者...",
+    "unknownAuthor": "未知作者",
+    "total": "共 {total} 本"
+  },
+  "form": {
+    "title": "書名",
+    "titlePlaceholder": "請輸入書名",
+    "author": "作者",
+    "authorPlaceholder": "請輸入作者",
+    "readingStatus": "閱讀狀態",
+    "rating": "評分",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "cover": "封面圖",
+    "coverUrlPlaceholder": "或直接貼上封面網址",
+    "mediaLibrary": "媒體庫",
+    "startedAt": "開始閱讀",
+    "finishedAt": "讀完",
+    "review": "書評",
+    "reviewPlaceholder": "寫點什麼（Markdown）"
+  },
+  "message": {
+    "titleRequired": "請輸入書名",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，確定要刪除嗎？"
+  }
+}

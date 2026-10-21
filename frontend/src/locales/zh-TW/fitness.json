@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "create": "記錄訓練",
+    "edit": "編輯訓練"
+  },
+  "status": {
+    "published": "已發佈",
+    "draft": "草稿",
+    "offline": "已下架"
+  },
+  "type": {
+    "strength": "力量",
+    "cardio": "有氧",
+    "stretch": "伸展"
+  },
+  "columns": {
+    "title": "訓練",
+    "duration": "時長",
+    "calories": "消耗",
+    "status": "發佈"
+  },
+  "unit": {
+    "minutes": "分鐘",
+    "kcal": "千卡"
+  },
+  "list": {
+    "searchPlaceholder": "搜尋訓練..."
+  },
+  "form": {
+    "date": "訓練日期",
+    "categoryPlaceholder": "選擇分類（可選）",
+    "titlePlaceholder": "如：臥推 + 划船日",
+    "duration": "時長（分鐘）",
+    "calories": "消耗（千卡）",
+    "exerciseList": "動作清單",
+    "exerciseNamePlaceholder": "動作，如：臥推",
+    "setsPlaceholder": "組數，如：4",
+    "repsPlaceholder": "次數，如：8-12",
+    "addExercise": "新增動作",
+    "notesPlaceholder": "訓練感受、重量記錄等"
+  },
+  "message": {
+    "titleRequired": "請輸入訓練標題",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法恢復，確定要刪除嗎？"
+  }
+}

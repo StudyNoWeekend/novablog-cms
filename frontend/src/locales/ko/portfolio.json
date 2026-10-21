@@ -1,0 +1,79 @@
+{
+  "list": {
+    "title": "사진 포트폴리오",
+    "create": "새 포트폴리오",
+    "searchPlaceholder": "포트폴리오 이름 검색...",
+    "empty": "아직 포트폴리오가 없습니다. 지금 만들어 보세요",
+    "itemCount": "작품 {count}점",
+    "total": "총 {total}개의 포트폴리오",
+    "deleteTitle": "포트폴리오 삭제",
+    "deleteConfirm": "{name}을(를) 삭제하면 복구할 수 없으며 작품 항목도 함께 삭제됩니다. 삭제하시겠습니까?"
+  },
+  "edit": {
+    "backToList": "목록으로 돌아가기",
+    "saveInfo": "정보 저장",
+    "namePlaceholder": "포트폴리오 이름",
+    "descPlaceholder": "포트폴리오 소개 (선택)",
+    "coverSelected": "커버를 선택했습니다. 정보 저장을 눌러 적용하세요",
+    "presetSelected": "새 프리셋을 선택했습니다. 확인을 눌러 저장하세요",
+    "sortUpdated": "정렬 순서가 업데이트되었습니다"
+  },
+  "item": {
+    "list": "작품 목록",
+    "add": "작품 추가",
+    "empty": "아직 작품이 없습니다. \"작품 추가\"를 눌러 시작하세요",
+    "noDesc": "소개 없음",
+    "editTitle": "작품 편집",
+    "titleLabel": "작품 이름",
+    "titlePlaceholder": "작품 이름을 입력하세요",
+    "titleRequired": "작품 이름을 입력해 주세요",
+    "introLabel": "작품 소개",
+    "introPlaceholder": "작품 소개를 입력하세요 (선택)",
+    "presetLabel": "연결된 프리셋",
+    "currentPreset": "현재 프리셋",
+    "newPresetPending": "새 프리셋 (저장 후 미리보기 표시)",
+    "presetDeleted": "프리셋 삭제됨",
+    "reselect": "다시 선택",
+    "selectPreset": "프리셋 선택",
+    "reselectTitle": "프리셋 다시 선택",
+    "deleteTitle": "작품 삭제",
+    "deleteConfirm": "작품 {name}을(를) 삭제하면 복구할 수 없습니다. 삭제하시겠습니까?",
+    "added": "작품이 추가되었습니다"
+  },
+  "cover": {
+    "setting": "커버 설정",
+    "useFirst": "첫 번째 작품 사용",
+    "custom": "커버 직접 설정",
+    "previewAlt": "커버 미리보기",
+    "change": "변경",
+    "clear": "지우기",
+    "selectPreset": "커버 프리셋 선택",
+    "autoTip": "정렬 기준 첫 번째 작품이 자동으로 커버로 사용됩니다",
+    "presetRequired": "커버 직접 설정 모드에서는 커버 프리셋을 선택해 주세요"
+  },
+  "form": {
+    "namePlaceholder": "포트폴리오 이름을 입력하세요",
+    "nameRequired": "포트폴리오 이름을 입력해 주세요",
+    "introLabel": "소개",
+    "introPlaceholder": "포트폴리오 소개를 입력하세요 (선택)",
+    "categoryPlaceholder": "카테고리 선택 (선택)"
+  },
+  "picker": {
+    "stepOriginal": "원본 선택",
+    "stepPreset": "프리셋 선택",
+    "stepInfo": "정보 입력",
+    "searchPlaceholder": "파일명 검색...",
+    "uploadLocal": "로컬 업로드",
+    "noImage": "이미지 없음",
+    "presetHint": "사용할 프리셋 버전을 선택하세요. \"프리셋 만들기\"를 누르면 바로 새 결과 이미지를 만들 수 있습니다",
+    "makePreset": "프리셋 만들기",
+    "noPresets": "이 이미지에는 프리셋이 없습니다",
+    "goMakePreset": "프리셋 만들러 가기",
+    "prev": "이전",
+    "next": "다음",
+    "confirm": "선택 확인",
+    "defaultPresetName": "기본값 (EXIF 없음)",
+    "uploadSuccess": "업로드 완료. 프리셋을 선택하세요",
+    "uploadFailed": "업로드에 실패했습니다. 다시 시도하세요"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "create": "게임 추가",
+    "edit": "게임 편집"
+  },
+  "status": {
+    "published": "게시됨",
+    "draft": "초안",
+    "unpublished": "게시 중지"
+  },
+  "playStatus": {
+    "want": "하고 싶음",
+    "playing": "하는 중",
+    "played": "플레이함"
+  },
+  "columns": {
+    "game": "게임",
+    "playHours": "플레이 시간",
+    "rating": "평점",
+    "publish": "게시"
+  },
+  "list": {
+    "searchPlaceholder": "게임 검색...",
+    "total": "총 {total}개"
+  },
+  "form": {
+    "title": "게임 이름",
+    "titlePlaceholder": "게임 이름을 입력하세요",
+    "platform": "플랫폼",
+    "platformPlaceholder": "예: PC / PS5 / Switch",
+    "genre": "장르",
+    "genrePlaceholder": "예: RPG / FPS",
+    "playStatus": "플레이 상태",
+    "categoryPlaceholder": "카테고리 선택(선택 사항)",
+    "playHours": "플레이 시간(시간)",
+    "rating": "평점(0-10)",
+    "cover": "커버 이미지",
+    "coverUrlPlaceholder": "또는 커버 이미지 URL을 직접 붙여넣으세요",
+    "mediaLibrary": "미디어 라이브러리",
+    "shortReview": "짧은 리뷰",
+    "shortReviewPlaceholder": "한 줄 평가"
+  },
+  "message": {
+    "titleRequired": "게임 이름을 입력하세요",
+    "deleteTitle": "삭제 확인",
+    "deleteConfirm": "「{name}」 삭제 후에는 복구할 수 없습니다. 정말 삭제하시겠습니까?"
+  }
+}

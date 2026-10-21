@@ -1,0 +1,79 @@
+{
+  "list": {
+    "title": "攝影作品集",
+    "create": "新增作品集",
+    "searchPlaceholder": "搜尋作品集名稱...",
+    "empty": "還沒有作品集，開始建立吧",
+    "itemCount": "{count} 件作品",
+    "total": "共 {total} 個作品集",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除「{name}」後無法復原，作品項也將一併刪除，確定要刪除嗎？"
+  },
+  "edit": {
+    "backToList": "返回列表",
+    "saveInfo": "儲存資訊",
+    "namePlaceholder": "作品集名稱",
+    "descPlaceholder": "作品集介紹（可選）",
+    "coverSelected": "已選擇封面，請點擊儲存資訊",
+    "presetSelected": "已選擇新預設，請點擊確定儲存",
+    "sortUpdated": "排序已更新"
+  },
+  "item": {
+    "list": "作品列表",
+    "add": "新增作品",
+    "empty": "還沒有作品，點擊「新增作品」開始",
+    "noDesc": "暫無介紹",
+    "editTitle": "編輯作品",
+    "titleLabel": "作品名稱",
+    "titlePlaceholder": "請輸入作品名稱",
+    "titleRequired": "請輸入作品名稱",
+    "introLabel": "作品介紹",
+    "introPlaceholder": "請輸入作品介紹（可選）",
+    "presetLabel": "關聯預設",
+    "currentPreset": "目前預設",
+    "newPresetPending": "新預設（儲存後顯示預覽）",
+    "presetDeleted": "預設已刪除",
+    "reselect": "重新選擇",
+    "selectPreset": "選擇預設",
+    "reselectTitle": "重新選擇預設",
+    "deleteTitle": "確認刪除",
+    "deleteConfirm": "刪除作品「{name}」後無法復原，確定要刪除嗎？",
+    "added": "新增成功"
+  },
+  "cover": {
+    "setting": "封面設定",
+    "useFirst": "使用首張作品",
+    "custom": "獨立設定封面",
+    "previewAlt": "封面預覽",
+    "change": "更換",
+    "clear": "清除",
+    "selectPreset": "選擇封面預設",
+    "autoTip": "將自動使用排序第一的作品作為封面",
+    "presetRequired": "獨立封面模式下請選擇封面預設"
+  },
+  "form": {
+    "namePlaceholder": "請輸入作品集名稱",
+    "nameRequired": "請輸入作品集名稱",
+    "introLabel": "介紹",
+    "introPlaceholder": "請輸入作品集介紹（可選）",
+    "categoryPlaceholder": "選擇分類（可選）"
+  },
+  "picker": {
+    "stepOriginal": "選擇原圖",
+    "stepPreset": "選擇預設",
+    "stepInfo": "填寫資訊",
+    "searchPlaceholder": "搜尋檔名...",
+    "uploadLocal": "本機上傳",
+    "noImage": "暫無圖片",
+    "presetHint": "選擇要使用的預設版本，點擊「製作預設」可現場製作新成品圖",
+    "makePreset": "製作預設",
+    "noPresets": "該圖片暫無預設",
+    "goMakePreset": "去製作預設",
+    "prev": "上一步",
+    "next": "下一步",
+    "confirm": "確認選擇",
+    "defaultPresetName": "預設無 EXIF",
+    "uploadSuccess": "上傳成功，請選擇預設",
+    "uploadFailed": "上傳失敗，請重試"
+  }
+}
