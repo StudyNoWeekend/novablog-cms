@@ -3,6 +3,11 @@
     <!-- 几何网格背景 -->
     <div class="bg-pattern"></div>
 
+    <!-- 语言切换：独立路由无页头，页面右上角自置 -->
+    <div class="login-locale">
+      <LocaleSwitch />
+    </div>
+
     <div class="login-card">
       <!-- Logo -->
       <img :src="logoMark" alt="Novablog" class="login-logo-img" />
@@ -84,6 +89,7 @@ import { message } from 'ant-design-vue'
 import { useI18n } from 'vue-i18n'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import LocaleSwitch from '@/components/common/LocaleSwitch.vue'
 import type { FormInstance } from 'ant-design-vue'
 import logoMark from '@/assets/brand/novablog-logo-mark.png'
 
@@ -142,6 +148,14 @@ function handleForgotPassword() {
     linear-gradient(90deg, rgba(41, 54, 92, 0.035) 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
+}
+
+/* 语言切换：右上角悬浮 */
+.login-locale {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 10;
 }
 
 /* 角落装饰光晕 */

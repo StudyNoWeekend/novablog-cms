@@ -3,6 +3,11 @@
     <!-- 几何网格背景 -->
     <div class="bg-pattern"></div>
 
+    <!-- 语言切换：独立路由无页头，页面右上角自置 -->
+    <div class="setup-locale">
+      <LocaleSwitch />
+    </div>
+
     <div class="setup-card">
       <!-- Logo -->
       <img :src="logoMark" alt="Novablog" class="setup-logo-img" />
@@ -372,6 +377,7 @@ import type { FormInstance } from 'ant-design-vue'
 import { MODULE_DEFS, COMMON_MODULE_KEYS, type ModuleKey } from '@/constants/modules'
 import { computeModulePreset, type RoleKey } from '@/constants/setupRoles'
 import RolePickerCards from '@/components/common/RolePickerCards.vue'
+import LocaleSwitch from '@/components/common/LocaleSwitch.vue'
 import logoMark from '@/assets/brand/novablog-logo-mark.png'
 
 const router = useRouter()
@@ -868,6 +874,14 @@ onUnmounted(stopPolling)
     linear-gradient(90deg, rgba(41, 54, 92, 0.035) 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
+}
+
+/* 语言切换：右上角悬浮 */
+.setup-locale {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 10;
 }
 
 /* 角落装饰光晕 */
