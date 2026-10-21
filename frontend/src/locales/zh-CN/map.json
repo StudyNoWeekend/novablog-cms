@@ -1,0 +1,23 @@
+{
+  "title": "地图配置",
+  "desc": "配置旅行攻略选点使用的地图服务 Key。未配置或加载失败时，选点弹窗自动降级为 OSM 免 Key 模式（WGS-84 坐标）；博客端地图展示不受此处影响，始终使用免 Key 方案。",
+  "form": {
+    "amapKey": "高德 Key",
+    "amapKeyPlaceholder": "高德开放平台 Web端(JS API) Key",
+    "amapConsoleLink": "高德开放平台控制台",
+    "amapKeyTipBefore": "在 ",
+    "amapKeyTipAfter": " 创建「Web端(JS API)」类型 Key 后填入；配置后中国地区选点使用高德地图（GCJ-02 坐标）。",
+    "amapSecurityCode": "高德安全密钥（securityJsCode）",
+    "amapSecurityCodePlaceholder": "与高德 Key 配套的安全密钥；留空表示保持后端已存值",
+    "amapSecurityCodeTip": "与高德 2021-12 后申请的 Key 配套；保存后加密存储，读取仅限登录后台。",
+    "googleKey": "Google Maps Key",
+    "googleKeyPlaceholder": "Google Maps JavaScript API Key",
+    "googleKeyTip": "配置后海外地区选点使用 Google Maps（WGS-84 坐标）。"
+  },
+  "actions": {
+    "save": "保存配置"
+  },
+  "message": {
+    "saveSuccess": "地图配置已更新，选点弹窗下次打开时生效"
+  }
+}

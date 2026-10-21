@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import {
   CloudUploadOutlined,
@@ -48,6 +49,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{ (e: 'updated', state: CommunitySyncState): void }>()
 
+const { t } = useI18n()
+
 const selfState = ref<CommunitySyncState | null>(null)
 const loading = ref(false)
 const syncing = ref(false)
@@ -57,20 +60,15 @@ const status = computed(() => state.value?.sync_status ?? 'none')
 
 const canPush = computed(() => props.published && status.value !== 'deleted')
 
-const label = computed(() => {
-  switch (status.value) {
-    case 'synced':
-      return '从社区下架'
-    case 'hidden':
-      return '推送到社区'
-    case 'failed':
-      return '推送失败，重试'
-    case 'deleted':
-      return '已从社区删除'
-    default:
-      return '推送到社区'
-  }
-})
+// labelMap 各状态下按钮文案，未知状态回退「推送到社区」
+const labelMap = computed<Record<string, string>>(() => ({
+  synced: t('system.syncButton.unpublish'),
+  hidden: t('system.syncButton.push'),
+  failed: t('system.syncButton.retryFailed'),
+  deleted: t('system.syncButton.deleted'),
+}))
+
+const label = computed(() => labelMap.value[status.value] || t('system.syncButton.push'))
 
 const icon = computed(() => {
   switch (status.value) {
@@ -101,11 +99,12 @@ const isDisabled = computed(() => {
 })
 
 const tooltip = computed(() => {
-  if (status.value === 'failed' && state.value?.last_error) return `最近一次推送失败：${state.value.last_error}`
-  if (!props.published && status.value !== 'deleted') return '仅已发布的内容可推送到社区'
-  if (status.value === 'synced') return '内容已上架社区；在 CMS 的后续修改会自动同步'
-  if (status.value === 'hidden') return '已从社区下架；点击重新推送上架'
-  return '将该内容推送到 NovaBlog 社区；开启后后续修改自动同步'
+  if (status.value === 'failed' && state.value?.last_error)
+    return t('system.syncTooltip.failed', { error: state.value.last_error })
+  if (!props.published && status.value !== 'deleted') return t('system.syncTooltip.unpublished')
+  if (status.value === 'synced') return t('system.syncTooltip.synced')
+  if (status.value === 'hidden') return t('system.syncTooltip.hidden')
+  return t('system.syncTooltip.default')
 })
 
 async function loadState() {
@@ -125,11 +124,11 @@ async function runSync(action: 'push' | 'hide') {
   try {
     const result = await communityPushApi.sync(props.targetType, props.targetId, action)
     if (result.result === 'skipped') {
-      message.success('内容无变化，社区已是最新')
+      message.success(t('system.message.noChanges'))
     } else if (action === 'push') {
-      message.success('已推送到 NovaBlog 社区')
+      message.success(t('system.message.pushed'))
     } else {
-      message.success('已从社区下架')
+      message.success(t('system.message.unpublished'))
     }
     await loadState()
     if (selfState.value) emit('updated', selfState.value)
@@ -141,9 +140,9 @@ async function runSync(action: 'push' | 'hide') {
 function handleClick() {
   if (status.value === 'synced') {
     Modal.confirm({
-      title: '从社区下架',
-      content: '下架后社区读者不可见，但社区数据保留；重新推送即可恢复。确认下架？',
-      okText: '下架',
+      title: t('system.modal.unpublishTitle'),
+      content: t('system.modal.unpublishContent'),
+      okText: t('system.modal.unpublishOk'),
       onOk: () => runSync('hide'),
     })
     return

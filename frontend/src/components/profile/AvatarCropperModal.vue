@@ -1,43 +1,44 @@
 <template>
   <a-modal
     :open="open"
-    title="裁剪头像"
+    :title="$t('profile.avatarCrop.title')"
     :width="440"
     :mask-closable="false"
     :confirm-loading="cropping || confirmLoading"
-    ok-text="确认"
-    cancel-text="取消"
+    :ok-text="$t('common.actions.confirm')"
+    :cancel-text="$t('common.actions.cancel')"
     @ok="handleOk"
     @cancel="handleCancel"
   >
     <div class="avatar-cropper">
       <div class="crop-container">
-        <img ref="imgRef" :src="objectUrl" alt="头像裁剪预览" />
+        <img ref="imgRef" :src="objectUrl" :alt="$t('profile.avatarCrop.previewAlt')" />
       </div>
       <div class="crop-actions">
-        <a-tooltip title="缩小">
+        <a-tooltip :title="$t('profile.avatarCrop.zoomOut')">
           <a-button size="small" @click="zoom(-0.1)"><ZoomOutOutlined /></a-button>
         </a-tooltip>
-        <a-tooltip title="放大">
+        <a-tooltip :title="$t('profile.avatarCrop.zoomIn')">
           <a-button size="small" @click="zoom(0.1)"><ZoomInOutlined /></a-button>
         </a-tooltip>
-        <a-tooltip title="向左旋转">
+        <a-tooltip :title="$t('profile.avatarCrop.rotateLeft')">
           <a-button size="small" @click="rotate(-90)"><UndoOutlined /></a-button>
         </a-tooltip>
-        <a-tooltip title="向右旋转">
+        <a-tooltip :title="$t('profile.avatarCrop.rotateRight')">
           <a-button size="small" @click="rotate(90)"><RedoOutlined /></a-button>
         </a-tooltip>
-        <a-tooltip title="重置">
+        <a-tooltip :title="$t('common.actions.reset')">
           <a-button size="small" @click="reset"><ReloadOutlined /></a-button>
         </a-tooltip>
       </div>
-      <p class="crop-hint">拖动图片调整位置，滚轮或按钮缩放</p>
+      <p class="crop-hint">{{ $t('profile.avatarCrop.hint') }}</p>
     </div>
   </a-modal>
 </template>
 
 <script setup lang="ts">
 import { nextTick, ref, watch, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
@@ -48,6 +49,8 @@ import {
   RedoOutlined,
   ReloadOutlined,
 } from '@ant-design/icons-vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean
@@ -134,14 +137,14 @@ function handleOk() {
     imageSmoothingQuality: 'high',
   })
   if (!canvas) {
-    message.error('图片裁剪失败，请重试')
+    message.error(t('profile.avatarCrop.cropFailed'))
     cropping.value = false
     return
   }
   canvas.toBlob((blob) => {
     cropping.value = false
     if (!blob) {
-      message.error('图片导出失败，请重试')
+      message.error(t('profile.avatarCrop.exportFailed'))
       return
     }
     emit('confirm', blob)

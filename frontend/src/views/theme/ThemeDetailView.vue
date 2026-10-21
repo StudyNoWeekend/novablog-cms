@@ -4,9 +4,9 @@
       <div class="page-header__left">
         <a-button type="text" @click="goBack">
           <template #icon><ArrowLeftOutlined /></template>
-          返回
+          {{ $t('common.actions.back') }}
         </a-button>
-        <h1 class="page-title">主题详情</h1>
+        <h1 class="page-title">{{ $t('menu.theme.detail') }}</h1>
       </div>
     </div>
 
@@ -20,17 +20,17 @@
     <a-result
       v-else-if="store.detailError"
       status="warning"
-      title="加载失败"
-      sub-title="获取主题详情时出错，请重试"
+      :title="$t('common.state.error')"
+      :sub-title="$t('theme.error.detailLoad')"
     >
       <template #extra>
-        <a-button type="primary" @click="loadAll">重试</a-button>
+        <a-button type="primary" @click="loadAll">{{ $t('common.actions.retry') }}</a-button>
       </template>
     </a-result>
 
     <!-- 主题不存在 -->
-    <a-empty v-else-if="!detail" description="主题不存在或已下架">
-      <a-button type="primary" @click="goBack">返回主题市场</a-button>
+    <a-empty v-else-if="!detail" :description="$t('theme.error.notFound')">
+      <a-button type="primary" @click="goBack">{{ $t('theme.action.backToMarket') }}</a-button>
     </a-empty>
 
     <div v-else class="detail-layout">
@@ -53,13 +53,13 @@
           <div class="detail-tags">
             <a-tag color="blue">{{ typeLabel }}</a-tag>
             <a-tag v-for="s in detail.styles" :key="s">{{ s }}</a-tag>
-            <a-tag v-if="detail.status !== 2" color="warning">{{ themeStatusText(detail.status) }}</a-tag>
+            <a-tag v-if="detail.status !== 2" color="warning">{{ statusText(detail.status) }}</a-tag>
           </div>
 
-          <p class="detail-desc">{{ detail.description || '暂无描述' }}</p>
+          <p class="detail-desc">{{ detail.description || $t('theme.empty.noDescription') }}</p>
 
           <template v-if="detail.features?.length">
-            <h4 class="detail-section-title">功能特性</h4>
+            <h4 class="detail-section-title">{{ $t('theme.section.features') }}</h4>
             <div class="detail-tags">
               <a-tag v-for="f in detail.features" :key="f" color="geekblue">
                 <CheckCircleOutlined /> {{ f }}
@@ -70,21 +70,21 @@
 
         <!-- 版本历史 -->
         <div class="detail-card">
-          <h4 class="detail-section-title">版本历史</h4>
+          <h4 class="detail-section-title">{{ $t('theme.section.releases') }}</h4>
 
           <div v-if="store.releasesLoading" class="releases-loading">
             <a-skeleton active :paragraph="{ rows: 2 }" />
           </div>
 
           <div v-else-if="store.releasesError" class="releases-error">
-            <span>版本历史加载失败</span>
-            <a-button size="small" @click="retryReleases">重试</a-button>
+            <span>{{ $t('theme.error.releasesLoad') }}</span>
+            <a-button size="small" @click="retryReleases">{{ $t('common.actions.retry') }}</a-button>
           </div>
 
           <a-empty
             v-else-if="store.releases.length === 0"
             :image="Empty.PRESENTED_IMAGE_SIMPLE"
-            description="暂无版本记录"
+            :description="$t('theme.empty.noReleases')"
           />
 
           <div v-else class="release-list">
@@ -94,7 +94,7 @@
                 <span class="release-item__tag" :title="r.tag">{{ r.tag }}</span>
                 <span class="release-item__time">{{ r.published_at }}</span>
               </div>
-              <div class="release-item__notes">{{ r.notes || '暂无更新说明' }}</div>
+              <div class="release-item__notes">{{ r.notes || $t('theme.empty.noNotes') }}</div>
             </div>
           </div>
         </div>
@@ -104,27 +104,27 @@
       <div class="detail-side">
         <div class="detail-card">
           <div class="detail-info">
-            <div class="detail-info__item"><span>作者</span><b>{{ detail.author }}</b></div>
-            <div class="detail-info__item"><span>最新版本</span><b>{{ detail.version || '—' }}</b></div>
+            <div class="detail-info__item"><span>{{ $t('theme.info.author') }}</span><b>{{ detail.author }}</b></div>
+            <div class="detail-info__item"><span>{{ $t('theme.info.latestVersion') }}</span><b>{{ detail.version || '—' }}</b></div>
             <div class="detail-info__item">
-              <span>价格</span><b>{{ isPaid ? `¥${detail.price_amount}` : '免费' }}</b>
+              <span>{{ $t('theme.info.price') }}</span><b>{{ isPaid ? `¥${detail.price_amount}` : $t('theme.price.free') }}</b>
             </div>
-            <div class="detail-info__item"><span>下载量</span><b>{{ detail.downloads }}</b></div>
-            <div class="detail-info__item"><span>点赞</span><b>{{ detail.likes }}</b></div>
+            <div class="detail-info__item"><span>{{ $t('theme.info.downloads') }}</span><b>{{ detail.downloads }}</b></div>
+            <div class="detail-info__item"><span>{{ $t('theme.info.likes') }}</span><b>{{ detail.likes }}</b></div>
             <div class="detail-info__item">
-              <span>综合评分</span><b>{{ detail.rating > 0 ? detail.rating.toFixed(1) : '暂无' }}</b>
+              <span>{{ $t('theme.info.rating') }}</span><b>{{ detail.rating > 0 ? detail.rating.toFixed(1) : $t('theme.rate.none') }}</b>
             </div>
-            <div class="detail-info__item"><span>发布时间</span><b>{{ detail.created_at }}</b></div>
+            <div class="detail-info__item"><span>{{ $t('theme.info.publishedAt') }}</span><b>{{ detail.created_at }}</b></div>
             <div class="detail-info__item"><span>slug</span><b>{{ detail.slug }}</b></div>
           </div>
         </div>
 
         <div class="detail-card">
-          <h4 class="detail-section-title">我的评分</h4>
+          <h4 class="detail-section-title">{{ $t('theme.rate.myRating') }}</h4>
           <div class="detail-rating">
             <a-rate :value="myRating" :disabled="ratingLoading" @change="onRate" />
             <span class="detail-rating__hint">
-              {{ myRating > 0 ? `${myRating} 分` : '点击评分（1-5 分，可覆盖）' }}
+              {{ myRating > 0 ? $t('theme.rate.score', { score: myRating }) : $t('theme.rate.hint') }}
             </span>
           </div>
         </div>
@@ -137,7 +137,7 @@
               @click="handleLike"
             >
               <template #icon><HeartFilled v-if="detail.liked" /><HeartOutlined v-else /></template>
-              {{ detail.liked ? '已点赞' : '点赞' }}
+              {{ detail.liked ? $t('theme.action.liked') : $t('theme.action.like') }}
             </a-button>
             <a-button
               :type="favorited ? 'primary' : 'default'"
@@ -145,12 +145,12 @@
               @click="handleFavorite"
             >
               <template #icon><StarFilled v-if="favorited" /><StarOutlined v-else /></template>
-              {{ favorited ? '已收藏' : '收藏' }}
+              {{ favorited ? $t('theme.action.favorited') : $t('theme.action.favorite') }}
             </a-button>
           </div>
           <a-button type="primary" block :loading="downloadLoading" @click="handleDownload">
             <template #icon><DownloadOutlined /></template>
-            下载主题
+            {{ $t('theme.action.download') }}
           </a-button>
         </div>
       </div>
@@ -161,6 +161,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Empty } from 'ant-design-vue'
 import {
   ArrowLeftOutlined,
@@ -173,11 +174,31 @@ import {
 } from '@ant-design/icons-vue'
 import { MARKET_AUTH_EXPIRED_EVENT } from '@/api/theme'
 import { useThemeMarketStore } from '@/stores/themeMarket'
-import { isPreviewURL, themeDisplayName, themeGradient, themeStatusText, THEME_TYPE_LABELS } from '@/utils/themeDisplay'
+import { isPreviewURL, themeDisplayName, themeGradient } from '@/utils/themeDisplay'
 
 const route = useRoute()
 const router = useRouter()
 const store = useThemeMarketStore()
+const { t } = useI18n()
+
+// typeLabels 主题类型展示文案（i18n），未知类型回退原始值
+const typeLabels = computed<Record<string, string>>(() => ({
+  personal: t('theme.type.personal'),
+  tech: t('theme.type.tech'),
+  photo: t('theme.type.photo'),
+  travel: t('theme.type.travel'),
+  music: t('theme.type.music'),
+  team: t('theme.type.team'),
+}))
+// statusTextMap 主题状态文案（1 审核中 / 2 已上架 / 3 已下架）
+const statusTextMap = computed<Record<number, string>>(() => ({
+  1: t('theme.status.reviewing'),
+  2: t('theme.status.listed'),
+  3: t('theme.status.offline'),
+}))
+function statusText(status: number): string {
+  return statusTextMap.value[status] || t('common.status.unknown')
+}
 
 const coverFailed = ref(false)
 const likeLoading = ref(false)
@@ -192,7 +213,7 @@ const coverURL = computed(() => isPreviewURL(detail.value?.preview || ''))
 const displayName = computed(() =>
   detail.value ? themeDisplayName(detail.value.title, detail.value.slug) : '',
 )
-const typeLabel = computed(() => (detail.value ? THEME_TYPE_LABELS[detail.value.type] || detail.value.type : ''))
+const typeLabel = computed(() => (detail.value ? typeLabels.value[detail.value.type] || detail.value.type : ''))
 const isPaid = computed(() => detail.value?.price === 'paid')
 const favorited = computed(() => (detail.value ? store.favoriteIds.has(detail.value.id) : false))
 

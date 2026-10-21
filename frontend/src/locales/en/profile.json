@@ -1,0 +1,118 @@
+{
+  "field": {
+    "avatar": "Avatar",
+    "blogIcon": "Blog icon",
+    "pageBackground": "Page background",
+    "email": "Email",
+    "city": "City",
+    "blogTitle": "Blog title",
+    "personality": "Personality",
+    "zodiac": "Zodiac sign",
+    "bio": "Bio",
+    "blogDescription": "Blog description",
+    "socialLinks": "Social links"
+  },
+  "upload": {
+    "changeImage": "Change image",
+    "uploadImage": "Upload image",
+    "remove": "Remove",
+    "changeAvatar": "Change avatar",
+    "uploadAvatar": "Upload avatar",
+    "changeBlogIcon": "Change blog icon",
+    "uploadBlogIcon": "Upload blog icon",
+    "changeBackground": "Change background",
+    "uploadBackground": "Upload background",
+    "sizeLimit": "File size cannot exceed {limit}",
+    "formatUnsupported": "Only {formats} formats are supported"
+  },
+  "placeholder": {
+    "name": "Enter a name",
+    "email": "Enter an email",
+    "city": "Select province/city",
+    "blogTitle": "Enter a blog title",
+    "personality": "Choose your personality (MBTI)",
+    "personalitySearch": "Search personality types",
+    "zodiac": "Choose your zodiac sign",
+    "zodiacSearch": "Search zodiac signs",
+    "bio": "Enter your bio",
+    "blogDescription": "Enter a blog description",
+    "platform": "Select platform",
+    "socialUrl": "Enter your profile URL"
+  },
+  "tooltip": {
+    "publicDisplay": "When enabled, this will be shown publicly on your blog"
+  },
+  "aria": {
+    "publicToggle": "Show {field} publicly",
+    "choosePersonality": "Choose personality",
+    "chooseZodiac": "Choose zodiac sign"
+  },
+  "action": {
+    "addTag": "Add tag",
+    "addSocialLink": "Add social link"
+  },
+  "social": {
+    "github": "GitHub",
+    "gitlab": "GitLab",
+    "juejin": "Juejin",
+    "zhihu": "Zhihu",
+    "csdn": "CSDN",
+    "weibo": "Weibo",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "bilibili": "Bilibili",
+    "youtube": "YouTube",
+    "douyin": "Douyin",
+    "xiaohongshu": "Xiaohongshu",
+    "kuaishou": "Kuaishou",
+    "tiktok": "TikTok",
+    "wechat": "WeChat",
+    "qq": "QQ",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "steam": "Steam",
+    "email": "Email",
+    "website": "Personal website"
+  },
+  "picker": {
+    "placeholder": "Select",
+    "searchPlaceholder": "Search",
+    "ariaLabel": "Select",
+    "noMatch": "No matches found",
+    "clearSelection": "Clear selection"
+  },
+  "cors": {
+    "title": "Allowed origin (Origin) whitelist",
+    "desc": "Set the cross-origin addresses allowed to access the API. One per line; ports are supported. Changes take effect immediately after saving.",
+    "inputPlaceholder": "Press Enter after typing an address, e.g. http://localhost:3001",
+    "saveConfig": "Save config",
+    "invalidUrl": "Please enter a valid URL (starting with http:// or https://)",
+    "duplicate": "This address is already in the list",
+    "updateSuccess": "CORS config updated and effective immediately",
+    "saveFailed": "Save failed. Please retry"
+  },
+  "avatarCrop": {
+    "title": "Crop avatar",
+    "previewAlt": "Avatar crop preview",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "hint": "Drag the image to adjust its position; zoom with the wheel or buttons",
+    "cropFailed": "Failed to crop the image. Please retry",
+    "exportFailed": "Failed to export the image. Please retry"
+  },
+  "editor": {
+    "uploadFileFailed": "Failed to upload {name}",
+    "contentPlaceholder": "Enter article content...",
+    "imageUploadFailed": "Failed to upload image",
+    "videoUploadFailed": "Failed to upload video"
+  },
+  "message": {
+    "loadFailed": "Failed to load profile",
+    "saveFailed": "Save failed",
+    "uploadFailed": "Upload failed"
+  }
+}

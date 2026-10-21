@@ -1,19 +1,19 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">访问统计</h1>
+      <h1 class="page-title">{{ $t('security.monitor.title') }}</h1>
       <a-button type="primary" :loading="loading" @click="fetchAccessStats">
         <template #icon><ReloadOutlined /></template>
-        刷新
+        {{ $t('common.actions.refresh') }}
       </a-button>
     </div>
-    <p class="page-desc">统计博客前台（公开接口）的访客 IP 访问情况，不包含管理端操作；日志保留 7 天。</p>
+    <p class="page-desc">{{ $t('security.monitor.desc') }}</p>
 
     <a-card class="table-card">
       <div class="toolbar">
         <a-input-search
           v-model:value="searchIP"
-          placeholder="搜索 IP 地址"
+          :placeholder="$t('security.monitor.searchIpPlaceholder')"
           allow-clear
           enter-button
           style="max-width: 280px"
@@ -21,7 +21,7 @@
         />
         <a-input-search
           v-model:value="searchRegion"
-          placeholder="搜索地区"
+          :placeholder="$t('security.monitor.searchRegionPlaceholder')"
           allow-clear
           enter-button
           style="max-width: 280px"
@@ -41,7 +41,7 @@
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'region'">
             <span v-if="record.region">{{ record.region }}</span>
-            <span v-else class="text-muted">未知</span>
+            <span v-else class="text-muted">{{ $t('common.status.unknown') }}</span>
           </template>
           <template v-if="column.key === 'total_count'">
             <a-tag color="blue">{{ record.total_count }}</a-tag>
@@ -56,7 +56,7 @@
           </template>
           <template v-if="column.key === 'action'">
             <a-button type="link" danger size="small" @click="openBlockModal(record.ip)">
-              封禁
+              {{ $t('security.monitor.block') }}
             </a-button>
           </template>
         </template>
@@ -65,20 +65,20 @@
 
     <a-modal
       v-model:open="blockModalOpen"
-      title="封禁 IP"
+      :title="$t('security.monitor.blockTitle')"
       :confirm-loading="blockSubmitting"
-      ok-text="确认封禁"
-      cancel-text="取消"
+      :ok-text="$t('security.monitor.confirmBlock')"
+      :cancel-text="$t('common.actions.cancel')"
       @ok="handleBlockSubmit"
     >
       <a-form layout="vertical">
-        <a-form-item label="IP 地址">
+        <a-form-item :label="$t('security.blacklist.form.ip')">
           <a-input v-model:value="blockForm.ip" disabled />
         </a-form-item>
-        <a-form-item label="封禁原因">
+        <a-form-item :label="$t('security.monitor.form.reason')">
           <a-textarea
             v-model:value="blockForm.reason"
-            placeholder="请输入封禁原因"
+            :placeholder="$t('security.monitor.form.reasonPlaceholder')"
             :rows="3"
             :maxlength="255"
             show-count
@@ -93,8 +93,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { message, type TableColumnsType } from 'ant-design-vue'
 import { ReloadOutlined } from '@ant-design/icons-vue'
+import { useI18n } from 'vue-i18n'
 import { getAccessStatsAPI, createBlacklistAPI } from '@/api/security'
 import type { IPAccessStats } from '@/types/security'
+import { formatDateTime } from '@/utils/datetime'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const accessStats = ref<IPAccessStats[]>([])
@@ -108,18 +112,19 @@ const pagination = computed(() => ({
   current: page.value,
   pageSize: pageSize.value,
   total: total.value,
-  showTotal: (t: number) => `共 ${t} 条`,
+  showTotal: (count: number) => t('common.table.total', { total: count }),
   showSizeChanger: true,
 }))
 
-const columns: TableColumnsType<IPAccessStats> = [
-  { title: 'IP 地址', dataIndex: 'ip', key: 'ip', width: 160 },
-  { title: '地区', dataIndex: 'region', key: 'region', width: 220 },
-  { title: '总请求数', dataIndex: 'total_count', key: 'total_count', width: 120, align: 'center' },
-  { title: '错误次数', dataIndex: 'error_count', key: 'error_count', width: 120, align: 'center' },
-  { title: '最近访问时间', dataIndex: 'last_access_at', key: 'last_access_at', width: 190 },
-  { title: '操作', key: 'action', width: 100, fixed: 'right' },
-]
+// 表格列定义（computed 包裹，切换语言时刷新）
+const columns = computed<TableColumnsType<IPAccessStats>>(() => [
+  { title: t('security.monitor.columns.ip'), dataIndex: 'ip', key: 'ip', width: 160 },
+  { title: t('security.monitor.columns.region'), dataIndex: 'region', key: 'region', width: 220 },
+  { title: t('security.monitor.columns.totalCount'), dataIndex: 'total_count', key: 'total_count', width: 120, align: 'center' },
+  { title: t('security.monitor.columns.errorCount'), dataIndex: 'error_count', key: 'error_count', width: 120, align: 'center' },
+  { title: t('security.monitor.columns.lastAccess'), dataIndex: 'last_access_at', key: 'last_access_at', width: 190 },
+  { title: t('common.table.actions'), key: 'action', width: 100, fixed: 'right' },
+])
 
 async function fetchAccessStats() {
   loading.value = true
@@ -162,7 +167,7 @@ function openBlockModal(ip: string) {
 
 async function handleBlockSubmit() {
   if (!blockForm.value.reason.trim()) {
-    message.warning('请输入封禁原因')
+    message.warning(t('security.monitor.message.reasonRequired'))
     return
   }
   blockSubmitting.value = true
@@ -171,21 +176,13 @@ async function handleBlockSubmit() {
       ip: blockForm.value.ip,
       reason: blockForm.value.reason.trim(),
     })
-    message.success('IP 封禁成功')
+    message.success(t('security.monitor.message.blockSuccess'))
     blockModalOpen.value = false
   } catch {
     // 错误由请求拦截器处理
   } finally {
     blockSubmitting.value = false
   }
-}
-
-function formatDateTime(dateStr: string): string {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 onMounted(() => {

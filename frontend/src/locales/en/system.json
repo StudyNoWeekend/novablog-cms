@@ -1,0 +1,62 @@
+{
+  "nav": { "community": "Community Push" },
+  "push": {
+    "configTitle": "Community Push Settings",
+    "keyConfigured": "Key Configured",
+    "keyMissing": "Key Not Configured",
+    "baseUrl": "NovaBlog Community URL",
+    "baseUrlExtra": "The unified official entry for community push and the theme market; the theme module uses this URL as well",
+    "baseUrlPlaceholder": "https://community.example.com (auto-appends /api/v1)",
+    "siteUrl": "Public Blog URL",
+    "siteUrlExtra": "Used to build the \"Read More\" link of pushed content",
+    "pushKey": "Push Key",
+    "pushKeyExtra": "Generate it in the NovaBlog personal center under \"Push Key\". Only the prefix is shown after saving; the full key is never displayed again",
+    "pushKeyKeep": "Leave empty to keep the existing key",
+    "pushKeyPlaceholder": "Generated in the NovaBlog personal center, starts with nbk_",
+    "verifyCode": "Verification Code",
+    "verifyCodeExtra": "Copy it from the NovaBlog community under \"Personal Settings → Bind Blog\". Saving confirms blog ownership with the community automatically; once verified, the community account gets the \"Owner\" badge",
+    "verifyCodePlaceholder": "Paste the code shown on the community personal settings page",
+    "saveConfig": "Save Settings",
+    "testConnection": "Test Connection",
+    "testSuccessTitle": "Connected: {name} (Blogger {username})",
+    "testSuccessDesc": "Community account blog URL: {url}",
+    "notBound": "Not bound",
+    "verifyPassed": "Blog ownership verified",
+    "verifyFailed": "Blog ownership verification failed",
+    "recordsTitle": "Sync Records",
+    "repush": "Re-push"
+  },
+  "record": {
+    "communityStatus": "Community Status",
+    "communityArticleId": "Community Article ID",
+    "lastPush": "Last Push",
+    "retryCount": "Retries",
+    "lastError": "Error"
+  },
+  "sync": { "synced": "Synced", "hidden": "Unpublished", "failed": "Failed", "deleted": "Deleted", "notPushed": "Not Pushed" },
+  "target": { "article": "Article", "travel": "Travel Guide", "recipe": "Recipe", "portfolio": "Portfolio", "openSource": "Open Source" },
+  "syncButton": { "push": "Push to Community", "unpublish": "Unpublish from Community", "retryFailed": "Push Failed, Retry", "deleted": "Deleted from Community" },
+  "syncTooltip": {
+    "default": "Push this content to the NovaBlog community; later changes will sync automatically",
+    "synced": "Published on the community; later changes in the CMS sync automatically",
+    "hidden": "Unpublished from the community; click to push and publish again",
+    "unpublished": "Only published content can be pushed to the community",
+    "failed": "Last push failed: {error}"
+  },
+  "modal": {
+    "unpublishTitle": "Unpublish from Community",
+    "unpublishContent": "Community readers will no longer see it, but community data is kept. Push again to restore. Unpublish now?",
+    "unpublishOk": "Unpublish"
+  },
+  "message": {
+    "saveSuccess": "Push settings saved",
+    "saveVerified": "Push settings saved; blog ownership verified",
+    "saveVerifyFailed": "Push settings saved, but blog ownership verification failed",
+    "verifyRejected": "The verification code was rejected by the community",
+    "repushSuccess": "Re-pushed successfully",
+    "pushed": "Pushed to the NovaBlog community",
+    "unpublished": "Unpublished from the community",
+    "noChanges": "No changes; the community is already up to date"
+  },
+  "validation": { "baseUrlRequired": "Please enter the community URL" }
+}

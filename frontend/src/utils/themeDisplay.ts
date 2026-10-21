@@ -1,15 +1,3 @@
-import type { ThemeItem } from '@/types/theme'
-
-// THEME_TYPE_LABELS 主题类型取值与展示文案（与官方接口文档对齐）
-export const THEME_TYPE_LABELS: Record<string, string> = {
-  personal: '个人博客',
-  tech: '技术博客',
-  photo: '摄影博客',
-  travel: '旅行博客',
-  music: '音乐博客',
-  team: '企业/团队',
-}
-
 // THEME_TYPE_GRADIENTS 各主题类型封面占位渐变色
 const THEME_TYPE_GRADIENTS: Record<string, string> = {
   personal: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)',
@@ -53,10 +41,4 @@ export function themeGradient(type: string): string {
 export function isPreviewURL(preview: string): boolean {
   if (!preview) return false
   return /^https?:\/\//.test(preview) || preview.startsWith('/')
-}
-
-// themeStatusText 主题状态文案（1 审核中 / 2 已上架 / 3 已下架）。
-export function themeStatusText(status: number): string {
-  const map: Record<number, string> = { 1: '审核中', 2: '已上架', 3: '已下架' }
-  return map[status] || '未知'
 }

@@ -1,0 +1,62 @@
+{
+  "nav": { "community": "커뮤니티 내보내기" },
+  "push": {
+    "configTitle": "커뮤니티 내보내기 설정",
+    "keyConfigured": "키 설정됨",
+    "keyMissing": "키 미설정",
+    "baseUrl": "NovaBlog 커뮤니티 URL",
+    "baseUrlExtra": "커뮤니티 내보내기와 테마 마켓의 통합 공식 진입점이며, 테마 모듈도 이 URL을 사용합니다",
+    "baseUrlPlaceholder": "https://community.example.com (/api/v1 자동 추가)",
+    "siteUrl": "블로그 외부 URL",
+    "siteUrlExtra": "내보낸 콘텐츠의 \"원문 보기\" 링크를 만드는 데 사용됩니다",
+    "pushKey": "내보내기 키",
+    "pushKeyExtra": "NovaBlog 개인 센터의 \"내보내기 키\"에서 생성합니다. 저장 후에는 접두사만 표시되며 전체 키는 다시 표시되지 않습니다",
+    "pushKeyKeep": "비워 두면 기존 키를 변경하지 않습니다",
+    "pushKeyPlaceholder": "NovaBlog 개인 센터에서 생성, nbk_로 시작",
+    "verifyCode": "커뮤니티 인증 코드",
+    "verifyCodeExtra": "NovaBlog 커뮤니티 \"개인 설정 → 블로그 연결\"에서 복사합니다. 설정 저장 시 블로그 소유권을 커뮤니티에 자동 확인하며, 통과하면 커뮤니티 계정에 \"관리자\" 배지가 부여됩니다",
+    "verifyCodePlaceholder": "커뮤니티 개인 설정 페이지에 표시된 인증 코드를 붙여넣으세요",
+    "saveConfig": "설정 저장",
+    "testConnection": "연결 테스트",
+    "testSuccessTitle": "연결 성공: {name} (블로거 {username})",
+    "testSuccessDesc": "커뮤니티 계정 블로그 URL: {url}",
+    "notBound": "미연결",
+    "verifyPassed": "블로그 소유권 인증 성공",
+    "verifyFailed": "블로그 소유권 인증 실패",
+    "recordsTitle": "동기화 기록",
+    "repush": "다시 내보내기"
+  },
+  "record": {
+    "communityStatus": "커뮤니티 상태",
+    "communityArticleId": "커뮤니티 글 ID",
+    "lastPush": "마지막 내보내기",
+    "retryCount": "재시도",
+    "lastError": "오류"
+  },
+  "sync": { "synced": "동기화됨", "hidden": "게시 취소됨", "failed": "실패", "deleted": "삭제됨", "notPushed": "미게시" },
+  "target": { "article": "게시글", "travel": "여행 가이드", "recipe": "레시피", "portfolio": "포트폴리오", "openSource": "오픈소스" },
+  "syncButton": { "push": "커뮤니티에 게시", "unpublish": "커뮤니티에서 내리기", "retryFailed": "게시 실패, 재시도", "deleted": "커뮤니티에서 삭제됨" },
+  "syncTooltip": {
+    "default": "이 콘텐츠를 NovaBlog 커뮤니티에 게시합니다. 사용하면 이후 수정 사항이 자동 동기화됩니다",
+    "synced": "커뮤니티에 게시 중입니다. CMS에서의 이후 수정은 자동 동기화됩니다",
+    "hidden": "커뮤니티에서 게시 취소되었습니다. 클릭하면 다시 게시합니다",
+    "unpublished": "게시된 콘텐츠만 커뮤니티에 내보낼 수 있습니다",
+    "failed": "최근 내보내기 실패: {error}"
+  },
+  "modal": {
+    "unpublishTitle": "커뮤니티에서 내리기",
+    "unpublishContent": "내리면 커뮤니티 독자에게는 보이지 않지만 커뮤니티 데이터는 유지됩니다. 다시 내보내면 복원됩니다. 내리시겠습니까?",
+    "unpublishOk": "내리기"
+  },
+  "message": {
+    "saveSuccess": "내보내기 설정이 저장되었습니다",
+    "saveVerified": "내보내기 설정이 저장되었고 블로그 소유권 인증에 통과했습니다",
+    "saveVerifyFailed": "내보내기 설정이 저장되었지만 블로그 소유권 인증에 실패했습니다",
+    "verifyRejected": "인증 코드가 커뮤니티에서 거부되었습니다",
+    "repushSuccess": "다시 내보냈습니다",
+    "pushed": "NovaBlog 커뮤니티에 게시했습니다",
+    "unpublished": "커뮤니티에서 내렸습니다",
+    "noChanges": "변경 사항이 없어 커뮤니티가 최신 상태입니다"
+  },
+  "validation": { "baseUrlRequired": "커뮤니티 URL을 입력하세요" }
+}

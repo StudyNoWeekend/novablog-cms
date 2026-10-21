@@ -11,7 +11,7 @@
           ref="searchInputRef"
           v-model:value="keyword"
           allow-clear
-          :placeholder="searchPlaceholder"
+          :placeholder="searchPlaceholderText"
         >
           <template #prefix>
             <SearchOutlined class="picker-search-icon" />
@@ -48,9 +48,9 @@
             </span>
           </button>
         </div>
-        <div v-if="filteredOptions.length === 0" class="picker-empty">未找到匹配项</div>
+        <div v-if="filteredOptions.length === 0" class="picker-empty">{{ $t('profile.picker.noMatch') }}</div>
         <div v-if="modelValue" class="picker-footer">
-          <a-button type="link" size="small" danger @click="select('')">清除选择</a-button>
+          <a-button type="link" size="small" danger @click="select('')">{{ $t('profile.picker.clearSelection') }}</a-button>
         </div>
       </div>
     </template>
@@ -59,13 +59,13 @@
       type="button"
       class="picker-trigger"
       :class="{ 'is-placeholder': !selectedOption, 'is-open': open }"
-      :aria-label="ariaLabel"
+      :aria-label="ariaLabelText"
     >
       <template v-if="selectedOption">
         <svg class="picker-trigger__icon" viewBox="0 0 24 24" aria-hidden="true" v-html="selectedOption.image" />
         <span class="picker-trigger__text">{{ selectedOption.name }}</span>
       </template>
-      <span v-else class="picker-trigger__text">{{ placeholder }}</span>
+      <span v-else class="picker-trigger__text">{{ placeholderText }}</span>
       <DownOutlined class="picker-trigger__arrow" />
     </button>
   </a-popover>
@@ -89,8 +89,12 @@ export interface PickerCardOption {
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CheckOutlined, DownOutlined, SearchOutlined } from '@ant-design/icons-vue'
 
+const { t } = useI18n()
+
+// 文案类 prop 未传时回退到 i18n 默认值（随语言切换）
 const props = withDefaults(
   defineProps<{
     /** 已选 key（v-model:value，空串/undefined 表示未选择） */
@@ -103,12 +107,13 @@ const props = withDefaults(
   }>(),
   {
     modelValue: '',
-    placeholder: '请选择',
-    searchPlaceholder: '搜索',
-    ariaLabel: '选择',
     panelWidth: '520px',
   },
 )
+
+const placeholderText = computed(() => props.placeholder ?? t('profile.picker.placeholder'))
+const searchPlaceholderText = computed(() => props.searchPlaceholder ?? t('profile.picker.searchPlaceholder'))
+const ariaLabelText = computed(() => props.ariaLabel ?? t('profile.picker.ariaLabel'))
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void

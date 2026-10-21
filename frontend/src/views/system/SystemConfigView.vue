@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <h1 class="page-title">系统配置</h1>
+      <h1 class="page-title">{{ $t('menu.system.config') }}</h1>
     </div>
 
     <div class="settings-layout">
@@ -34,6 +34,7 @@
 import { computed, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   AppstoreOutlined,
   CloudServerOutlined,
@@ -58,23 +59,26 @@ interface NavItem {
   component: Component
 }
 
-const navItems: NavItem[] = [
-  { key: 'module', label: '模块管理', icon: AppstoreOutlined, component: ModuleConfigView },
-  { key: 'storage', label: '对象存储', icon: CloudServerOutlined, component: StorageConfigView },
-  { key: 'cors', label: '跨域配置', icon: ApiOutlined, component: CorsConfigView },
-  { key: 'map', label: '地图配置', icon: KeyOutlined, component: MapConfigView },
-  { key: 'security', label: '黑名单管理', icon: SafetyCertificateOutlined, component: SecurityConfigView },
-  { key: 'community', label: '社区推送', icon: SendOutlined, component: CommunityPushConfigView },
-]
+const { t } = useI18n()
+
+// navItems 左侧导航（标签随语言切换，包成 computed 保证响应式）
+const navItems = computed<NavItem[]>(() => [
+  { key: 'module', label: t('menu.system.module'), icon: AppstoreOutlined, component: ModuleConfigView },
+  { key: 'storage', label: t('menu.storage.config'), icon: CloudServerOutlined, component: StorageConfigView },
+  { key: 'cors', label: t('menu.profile.cors'), icon: ApiOutlined, component: CorsConfigView },
+  { key: 'map', label: t('menu.system.map'), icon: KeyOutlined, component: MapConfigView },
+  { key: 'security', label: t('menu.security.blacklist'), icon: SafetyCertificateOutlined, component: SecurityConfigView },
+  { key: 'community', label: t('system.nav.community'), icon: SendOutlined, component: CommunityPushConfigView },
+])
 
 function readStoredKey(): string {
   try {
     const v = localStorage.getItem(ACTIVE_KEY_STORAGE)
-    if (v && navItems.some((item) => item.key === v)) return v
+    if (v && navItems.value.some((item) => item.key === v)) return v
   } catch {
     // 存储不可用时回退到默认项
   }
-  return navItems[0].key
+  return navItems.value[0].key
 }
 
 const route = useRoute()
@@ -83,7 +87,7 @@ const activeKey = ref(readStoredKey())
 
 // 支持 ?tab= 深链定位（如主题页登录弹窗的官方地址修改引导），合法时优先于本地记忆
 const queryTab = typeof route.query.tab === 'string' ? route.query.tab : ''
-if (navItems.some((item) => item.key === queryTab)) {
+if (navItems.value.some((item) => item.key === queryTab)) {
   activeKey.value = queryTab
 }
 
@@ -96,7 +100,7 @@ watch(activeKey, (key) => {
 })
 
 const activeComponent = computed(() => {
-  return navItems.find((item) => item.key === activeKey.value)?.component ?? navItems[0].component
+  return navItems.value.find((item) => item.key === activeKey.value)?.component ?? navItems.value[0].component
 })
 </script>
 

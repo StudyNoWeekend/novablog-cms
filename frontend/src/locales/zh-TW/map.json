@@ -1,0 +1,23 @@
+{
+  "title": "地圖設定",
+  "desc": "設定旅遊攻略選點使用的地圖服務 Key。未設定或載入失敗時，選點彈窗自動降級為 OSM 免 Key 模式（WGS-84 座標）；部落格端地圖顯示不受此處影響，始終使用免 Key 方案。",
+  "form": {
+    "amapKey": "高德 Key",
+    "amapKeyPlaceholder": "高德開放平台 Web端(JS API) Key",
+    "amapConsoleLink": "高德開放平台控制台",
+    "amapKeyTipBefore": "在 ",
+    "amapKeyTipAfter": " 建立「Web端(JS API)」類型 Key 後填入；設定後中國地區選點使用高德地圖（GCJ-02 座標）。",
+    "amapSecurityCode": "高德安全金鑰（securityJsCode）",
+    "amapSecurityCodePlaceholder": "與高德 Key 配套的安全金鑰；留空表示保持後端已存值",
+    "amapSecurityCodeTip": "適用於高德 2021-12 之後申請的 Key；儲存後加密存放，僅限登入後台讀取。",
+    "googleKey": "Google Maps Key",
+    "googleKeyPlaceholder": "Google Maps JavaScript API Key",
+    "googleKeyTip": "設定後海外地區選點使用 Google Maps（WGS-84 座標）。"
+  },
+  "actions": {
+    "save": "儲存設定"
+  },
+  "message": {
+    "saveSuccess": "地圖設定已更新，選點彈窗下次開啟時生效"
+  }
+}

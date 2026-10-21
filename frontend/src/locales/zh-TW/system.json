@@ -1,0 +1,62 @@
+{
+  "nav": { "community": "社群推播" },
+  "push": {
+    "configTitle": "社群推播設定",
+    "keyConfigured": "已設定金鑰",
+    "keyMissing": "未設定金鑰",
+    "baseUrl": "NovaBlog 社群網址",
+    "baseUrlExtra": "社群推播與主題市場的統一官方入口，主題模組同步使用此網址",
+    "baseUrlPlaceholder": "https://community.example.com（自動補 /api/v1）",
+    "siteUrl": "部落格對外網址",
+    "siteUrlExtra": "用於組合推播內容的「閱讀原文」連結",
+    "pushKey": "推播金鑰",
+    "pushKeyExtra": "在 NovaBlog 個人中心「推播金鑰」產生；儲存後僅顯示前綴，不會回顯完整金鑰",
+    "pushKeyKeep": "留空表示不修改已有金鑰",
+    "pushKeyPlaceholder": "在 NovaBlog 個人中心產生，nbk_ 開頭",
+    "verifyCode": "社群驗證碼",
+    "verifyCodeExtra": "在 NovaBlog 社群「個人設定 → 綁定部落格」複製；儲存設定時自動向社群確認部落格歸屬，通過後社群帳號獲得「站長」標識",
+    "verifyCodePlaceholder": "貼上社群個人設定頁顯示的驗證碼",
+    "saveConfig": "儲存設定",
+    "testConnection": "測試連線",
+    "testSuccessTitle": "連線成功：{name}（部落客 {username}）",
+    "testSuccessDesc": "社群帳號部落格網址：{url}",
+    "notBound": "未綁定",
+    "verifyPassed": "部落格歸屬驗證成功",
+    "verifyFailed": "部落格歸屬驗證未通過",
+    "recordsTitle": "同步紀錄",
+    "repush": "重新推播"
+  },
+  "record": {
+    "communityStatus": "社群狀態",
+    "communityArticleId": "社群文章 ID",
+    "lastPush": "最後推播",
+    "retryCount": "重試",
+    "lastError": "錯誤訊息"
+  },
+  "sync": { "synced": "已同步", "hidden": "已下架", "failed": "失敗", "deleted": "已刪除", "notPushed": "未推播" },
+  "target": { "article": "文章", "travel": "旅遊攻略", "recipe": "美食食譜", "portfolio": "作品集", "openSource": "開源作品" },
+  "syncButton": { "push": "推播到社群", "unpublish": "從社群下架", "retryFailed": "推播失敗，重試", "deleted": "已從社群刪除" },
+  "syncTooltip": {
+    "default": "將該內容推播到 NovaBlog 社群；開啟後後續修改自動同步",
+    "synced": "內容已上架社群；在 CMS 的後續修改會自動同步",
+    "hidden": "已從社群下架；點擊重新推播上架",
+    "unpublished": "僅已發布的內容可推播到社群",
+    "failed": "最近一次推播失敗：{error}"
+  },
+  "modal": {
+    "unpublishTitle": "從社群下架",
+    "unpublishContent": "下架後社群讀者不可見，但社群資料保留；重新推播即可恢復。確定下架？",
+    "unpublishOk": "下架"
+  },
+  "message": {
+    "saveSuccess": "推播設定已儲存",
+    "saveVerified": "推播設定已儲存，部落格歸屬驗證通過",
+    "saveVerifyFailed": "推播設定已儲存，但部落格歸屬驗證未通過",
+    "verifyRejected": "驗證碼被社群拒絕",
+    "repushSuccess": "已重新推播",
+    "pushed": "已推播到 NovaBlog 社群",
+    "unpublished": "已從社群下架",
+    "noChanges": "內容無變化，社群已是最新"
+  },
+  "validation": { "baseUrlRequired": "請填寫社群網址" }
+}

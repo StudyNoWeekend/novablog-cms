@@ -1,5 +1,6 @@
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import i18n, { DEFAULT_LOCALE, LOCALE_META, isSupportedLocale } from '@/locales'
 import type { MapSearchResult } from './mapTypes'
 
 // OSM 免 Key 兜底选点：Leaflet + OpenStreetMap 瓦片 + Nominatim 检索（WGS-84 坐标系）。
@@ -10,6 +11,12 @@ let marker: L.Marker | null = null
 let clickHandler: ((lat: number, lng: number) => void) | null = null
 
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org'
+
+// Nominatim 的 accept-language 跟随当前界面语言（zh-CN/zh-TW/en/ja/ko）
+function acceptLanguage(): string {
+  const value = i18n.global.locale.value
+  return isSupportedLocale(value) ? LOCALE_META[value].htmlLang : LOCALE_META[DEFAULT_LOCALE].htmlLang
+}
 
 export function useOsm() {
   async function initMap(
@@ -37,7 +44,7 @@ export function useOsm() {
 
   async function searchPlaces(keyword: string): Promise<MapSearchResult[]> {
     const url =
-      `${NOMINATIM_BASE}/search?format=jsonv2&limit=10&accept-language=zh-CN` +
+      `${NOMINATIM_BASE}/search?format=jsonv2&limit=10&accept-language=${acceptLanguage()}` +
       `&q=${encodeURIComponent(keyword)}`
     const res = await fetch(url, { headers: { Accept: 'application/json' } })
     if (!res.ok) throw new Error(`Nominatim search failed: ${res.status}`)
@@ -57,7 +64,7 @@ export function useOsm() {
 
   async function reverseGeocode(lat: number, lng: number): Promise<string> {
     try {
-      const url = `${NOMINATIM_BASE}/reverse?format=jsonv2&accept-language=zh-CN&lat=${lat}&lon=${lng}`
+      const url = `${NOMINATIM_BASE}/reverse?format=jsonv2&accept-language=${acceptLanguage()}&lat=${lat}&lon=${lng}`
       const res = await fetch(url, { headers: { Accept: 'application/json' } })
       if (!res.ok) throw new Error(String(res.status))
       const data = (await res.json()) as { display_name?: string }

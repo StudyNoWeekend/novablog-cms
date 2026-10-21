@@ -1,0 +1,118 @@
+{
+  "field": {
+    "avatar": "アバター",
+    "blogIcon": "ブログアイコン",
+    "pageBackground": "ページ背景画像",
+    "email": "メールアドレス",
+    "city": "所在都市",
+    "blogTitle": "ブログタイトル",
+    "personality": "性格",
+    "zodiac": "星座",
+    "bio": "自己紹介",
+    "blogDescription": "ブログ説明",
+    "socialLinks": "ソーシャルリンク"
+  },
+  "upload": {
+    "changeImage": "画像を変更",
+    "uploadImage": "画像をアップロード",
+    "remove": "削除",
+    "changeAvatar": "アバターを変更",
+    "uploadAvatar": "アバターをアップロード",
+    "changeBlogIcon": "ブログアイコンを変更",
+    "uploadBlogIcon": "ブログアイコンをアップロード",
+    "changeBackground": "背景画像を変更",
+    "uploadBackground": "背景画像をアップロード",
+    "sizeLimit": "ファイルサイズは {limit} を超えられません",
+    "formatUnsupported": "{formats} 形式のみサポートしています"
+  },
+  "placeholder": {
+    "name": "名前を入力してください",
+    "email": "メールアドレスを入力してください",
+    "city": "省/市を選択してください",
+    "blogTitle": "ブログタイトルを入力してください",
+    "personality": "性格（MBTI）を選択",
+    "personalitySearch": "性格タイプを検索",
+    "zodiac": "星座を選択",
+    "zodiacSearch": "星座を検索",
+    "bio": "自己紹介を入力してください",
+    "blogDescription": "ブログ説明を入力してください",
+    "platform": "プラットフォームを選択",
+    "socialUrl": "プロフィール URL を入力してください"
+  },
+  "tooltip": {
+    "publicDisplay": "オンにするとブログで公開表示されます"
+  },
+  "aria": {
+    "publicToggle": "{field}を公開するかどうか",
+    "choosePersonality": "性格を選択",
+    "chooseZodiac": "星座を選択"
+  },
+  "action": {
+    "addTag": "タグを追加",
+    "addSocialLink": "ソーシャルリンクを追加"
+  },
+  "social": {
+    "github": "GitHub",
+    "gitlab": "GitLab",
+    "juejin": "Juejin",
+    "zhihu": "Zhihu",
+    "csdn": "CSDN",
+    "weibo": "Weibo",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "bilibili": "Bilibili",
+    "youtube": "YouTube",
+    "douyin": "Douyin",
+    "xiaohongshu": "Xiaohongshu",
+    "kuaishou": "Kuaishou",
+    "tiktok": "TikTok",
+    "wechat": "WeChat",
+    "qq": "QQ",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "steam": "Steam",
+    "email": "Email",
+    "website": "個人サイト"
+  },
+  "picker": {
+    "placeholder": "選択してください",
+    "searchPlaceholder": "検索",
+    "ariaLabel": "選択",
+    "noMatch": "一致する項目がありません",
+    "clearSelection": "選択を解除"
+  },
+  "cors": {
+    "title": "許可するオリジン（Origin）ホワイトリスト",
+    "desc": "API へのアクセスを許可するクロスオリジンのアドレスを設定します。1 行に 1 つ、ポート番号をサポート。保存するとすぐに反映されます。",
+    "inputPlaceholder": "アドレスを入力して Enter で追加、例：http://localhost:3001",
+    "saveConfig": "設定を保存",
+    "invalidUrl": "有効な URL（http:// または https:// で始まる）を入力してください",
+    "duplicate": "このアドレスは既にリストにあります",
+    "updateSuccess": "CORS 設定を更新し、すぐに反映しました",
+    "saveFailed": "保存に失敗しました。再試行してください"
+  },
+  "avatarCrop": {
+    "title": "アバターを切り抜く",
+    "previewAlt": "アバター切り抜きプレビュー",
+    "zoomOut": "縮小",
+    "zoomIn": "拡大",
+    "rotateLeft": "左に回転",
+    "rotateRight": "右に回転",
+    "hint": "画像をドラッグして位置を調整し、ホイールまたはボタンで拡大縮小できます",
+    "cropFailed": "画像の切り抜きに失敗しました。再試行してください",
+    "exportFailed": "画像の書き出しに失敗しました。再試行してください"
+  },
+  "editor": {
+    "uploadFileFailed": "{name} のアップロードに失敗しました",
+    "contentPlaceholder": "記事の内容を入力してください...",
+    "imageUploadFailed": "画像のアップロードに失敗しました",
+    "videoUploadFailed": "動画のアップロードに失敗しました"
+  },
+  "message": {
+    "loadFailed": "プロフィールの読み込みに失敗しました",
+    "saveFailed": "保存に失敗しました",
+    "uploadFailed": "アップロードに失敗しました"
+  }
+}

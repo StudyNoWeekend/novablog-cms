@@ -1,23 +1,26 @@
 <template>
   <div class="config-json">
     <div class="config-meta">
-      <span class="config-label">MCP 配置 JSON</span>
+      <span class="config-label">{{ $t('mcp.config.label') }}</span>
       <a-button type="link" size="small" class="copy-btn" @click="handleCopy">
         <template #icon><CopyOutlined /></template>
-        复制配置
+        {{ $t('mcp.config.copy') }}
       </a-button>
     </div>
     <pre class="config-code"><code>{{ json }}</code></pre>
-    <p class="config-hint">加入 mcpServers 配置并重启客户端后，即可让 AI 通过 MCP 工具发布内容</p>
+    <p class="config-hint">{{ $t('mcp.config.hint') }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { CopyOutlined } from '@ant-design/icons-vue'
 import { copyText } from '@/utils/clipboard'
 import { buildMcpJsonConfig, MCP_KEY_PLACEHOLDER } from '@/constants/mcpSnippets'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   endpoint: string
@@ -32,9 +35,9 @@ const json = computed(() => buildMcpJsonConfig(props.endpoint, effectiveKey.valu
 async function handleCopy() {
   const ok = await copyText(json.value)
   if (ok) {
-    message.success('MCP 配置已复制')
+    message.success(t('mcp.message.configCopied'))
   } else {
-    message.error('复制失败，请手动选择复制')
+    message.error(t('mcp.message.copyFailedSelect'))
   }
 }
 </script>

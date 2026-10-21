@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { message } from 'ant-design-vue'
+import i18n from '@/locales'
 
 import { themeMarketApi, resolveMarketRetries, abortMarketRetries } from '@/api/theme'
 import { configApi } from '@/api/config'
@@ -204,7 +205,7 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
       }
     }
     favoriteIds.value = next
-    message.success(res.favorited ? '已收藏' : '已取消收藏')
+    message.success(i18n.global.t(res.favorited ? 'theme.message.favorited' : 'theme.message.unfavorited'))
     return res.favorited
   }
 
@@ -230,7 +231,7 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     if (item) item.rating = res.rating
     const fav = favList.value.find((t) => t.id === id)
     if (fav) fav.rating = res.rating
-    message.success('评分成功')
+    message.success(i18n.global.t('theme.message.rateSuccess'))
     return res.rating
   }
 
@@ -239,9 +240,9 @@ export const useThemeMarketStore = defineStore('themeMarket', () => {
     if (res.download_url) {
       // 异步回调中 window.open 可能被拦截，被拦时降级为提示
       const win = window.open(res.download_url, '_blank')
-      if (!win) message.info(`下载地址：${res.download_url}`)
+      if (!win) message.info(i18n.global.t('theme.message.downloadLinkAt', { url: res.download_url }))
     } else {
-      message.warning('该主题未配置下载地址')
+      message.warning(i18n.global.t('theme.message.downloadMissing'))
     }
     if (currentDetail.value?.id === id) currentDetail.value.downloads += 1
     const item = list.value.find((t) => t.id === id)

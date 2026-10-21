@@ -1,0 +1,70 @@
+{
+  "title": "MCP 服务",
+  "desc": "通过 MCP 协议让 AI 客户端直接发布和管理博客内容",
+  "action": {
+    "createKey": "新建密钥",
+    "copyKey": "复制密钥"
+  },
+  "access": {
+    "title": "接入信息",
+    "endpoint": "服务端点",
+    "authPrefix": "鉴权方式：请求头携带",
+    "authSuffix": "，密钥在下方创建。",
+    "capabilities": "可用能力：创建 / 更新 / 发布 / 下架 / 删除文章（Markdown），上传图片到媒体库，查询分类与标签，共 9 个工具。",
+    "security": "安全限制：每个密钥限流 120 次/分钟；删除文章需要 AI 显式确认；密钥明文仅在创建时显示一次。"
+  },
+  "keys": {
+    "title": "API 密钥",
+    "searchPlaceholder": "搜索密钥名称",
+    "callCount": "{count} 次",
+    "neverUsed": "从未使用",
+    "neverExpires": "永久有效",
+    "columns": {
+      "key": "密钥",
+      "callCount": "调用次数",
+      "lastUsed": "最近使用",
+      "expiresAt": "有效期至"
+    }
+  },
+  "empty": {
+    "title": "还没有 API 密钥，三步接入：",
+    "step1": "点击「新建密钥」生成密钥",
+    "step2": "复制 MCP 配置到 AI 客户端",
+    "step3": "在 AI 客户端里让它发布文章",
+    "create": "立即创建"
+  },
+  "clientConfig": {
+    "title": "客户端接入配置",
+    "placeholderTip": "配置中的密钥为占位符，创建密钥后可获得预填完整配置"
+  },
+  "create": {
+    "title": "新建 MCP 密钥",
+    "okText": "创建",
+    "nameLabel": "密钥名称",
+    "namePlaceholder": "例如：我的工作电脑",
+    "expireLabel": "有效期",
+    "permanent": "永久",
+    "days": "{days} 天"
+  },
+  "created": {
+    "title": "密钥创建成功",
+    "alertTitle": "请立即保存密钥，关闭后将无法再次查看",
+    "alertDesc": "密钥仅展示这一次。建议直接复制下方客户端配置使用。"
+  },
+  "config": {
+    "label": "MCP 配置 JSON",
+    "copy": "复制配置",
+    "hint": "加入 mcpServers 配置并重启客户端后，即可让 AI 通过 MCP 工具发布内容"
+  },
+  "message": {
+    "disabledNotice": "已禁用，使用该密钥的客户端将无法调用",
+    "deleteConfirm": "删除后使用该密钥的 AI 客户端将立即失去访问权限，确定删除？",
+    "deleteSuccess": "密钥已删除",
+    "nameRequired": "请输入密钥名称",
+    "endpointCopied": "端点地址已复制",
+    "keyCopied": "密钥已复制",
+    "configCopied": "MCP 配置已复制",
+    "copyFailedManual": "复制失败，请手动复制",
+    "copyFailedSelect": "复制失败，请手动选择复制"
+  }
+}

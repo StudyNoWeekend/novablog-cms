@@ -1,0 +1,70 @@
+{
+  "title": "MCP 서비스",
+  "desc": "MCP 프로토콜로 AI 클라이언트에서 블로그 콘텐츠를 직접 발행하고 관리하세요",
+  "action": {
+    "createKey": "키 생성",
+    "copyKey": "키 복사"
+  },
+  "access": {
+    "title": "연결 정보",
+    "endpoint": "서버 엔드포인트",
+    "authPrefix": "인증 방식: 요청 헤더에",
+    "authSuffix": "을(를) 담아 보내고, 키는 아래에서 생성합니다.",
+    "capabilities": "사용 가능한 기능: 게시글 생성 / 수정 / 발행 / 내리기 / 삭제(Markdown), 미디어 라이브러리에 이미지 업로드, 카테고리와 태그 조회, 총 9개 도구.",
+    "security": "보안 제한: 키당 분당 120회로 제한됩니다. 게시글 삭제에는 AI의 명시적인 확인이 필요하며, 키 값은 생성 시 한 번만 표시됩니다."
+  },
+  "keys": {
+    "title": "API 키",
+    "searchPlaceholder": "키 이름 검색",
+    "callCount": "{count}회",
+    "neverUsed": "사용된 적 없음",
+    "neverExpires": "만료 없음",
+    "columns": {
+      "key": "키",
+      "callCount": "호출 수",
+      "lastUsed": "최근 사용",
+      "expiresAt": "만료일"
+    }
+  },
+  "empty": {
+    "title": "API 키가 아직 없습니다. 3단계로 연결하세요:",
+    "step1": "\"키 생성\"을 클릭해 키를 발급받으세요",
+    "step2": "MCP 설정을 AI 클라이언트에 복사하세요",
+    "step3": "AI 클라이언트에서 게시글 발행을 요청하세요",
+    "create": "지금 만들기"
+  },
+  "clientConfig": {
+    "title": "클라이언트 연결 설정",
+    "placeholderTip": "설정의 키는 자리표시자이며, 키를 생성하면 완성된 설정을 받을 수 있습니다"
+  },
+  "create": {
+    "title": "MCP 키 생성",
+    "okText": "생성",
+    "nameLabel": "키 이름",
+    "namePlaceholder": "예: 회사 PC",
+    "expireLabel": "유효 기간",
+    "permanent": "무기한",
+    "days": "{days}일"
+  },
+  "created": {
+    "title": "키가 생성되었습니다",
+    "alertTitle": "지금 키를 저장하세요. 닫으면 다시 볼 수 없습니다",
+    "alertDesc": "키는 이번 한 번만 표시됩니다. 아래 클라이언트 설정을 복사해 사용하세요."
+  },
+  "config": {
+    "label": "MCP 설정 JSON",
+    "copy": "설정 복사",
+    "hint": "mcpServers에 추가하고 클라이언트를 재시작하면 AI가 MCP 도구로 콘텐츠를 발행할 수 있습니다"
+  },
+  "message": {
+    "disabledNotice": "비활성화되었습니다. 이 키를 사용하는 클라이언트는 호출할 수 없습니다",
+    "deleteConfirm": "이 키를 사용하는 AI 클라이언트는 즉시 접근할 수 없게 됩니다. 삭제하시겠습니까?",
+    "deleteSuccess": "키가 삭제되었습니다",
+    "nameRequired": "키 이름을 입력해 주세요",
+    "endpointCopied": "엔드포인트가 복사되었습니다",
+    "keyCopied": "키가 복사되었습니다",
+    "configCopied": "MCP 설정이 복사되었습니다",
+    "copyFailedManual": "복사에 실패했습니다. 직접 복사해 주세요",
+    "copyFailedSelect": "복사에 실패했습니다. 선택 후 직접 복사해 주세요"
+  }
+}

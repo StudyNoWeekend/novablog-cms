@@ -1,0 +1,118 @@
+{
+  "field": {
+    "avatar": "頭像",
+    "blogIcon": "部落格 Icon",
+    "pageBackground": "頁面背景圖",
+    "email": "電子郵件",
+    "city": "所在城市",
+    "blogTitle": "部落格標題",
+    "personality": "性格",
+    "zodiac": "星座",
+    "bio": "介紹",
+    "blogDescription": "部落格描述",
+    "socialLinks": "社交連結"
+  },
+  "upload": {
+    "changeImage": "更換圖片",
+    "uploadImage": "上傳圖片",
+    "remove": "移除",
+    "changeAvatar": "更換頭像",
+    "uploadAvatar": "上傳頭像",
+    "changeBlogIcon": "更換部落格 Icon",
+    "uploadBlogIcon": "上傳部落格 Icon",
+    "changeBackground": "更換背景圖",
+    "uploadBackground": "上傳背景圖",
+    "sizeLimit": "檔案大小不能超過 {limit}",
+    "formatUnsupported": "僅支援 {formats} 格式"
+  },
+  "placeholder": {
+    "name": "請輸入名稱",
+    "email": "請輸入電子郵件",
+    "city": "請選擇省/市",
+    "blogTitle": "請輸入部落格標題",
+    "personality": "選擇你的性格（MBTI）",
+    "personalitySearch": "搜尋性格類型",
+    "zodiac": "選擇你的星座",
+    "zodiacSearch": "搜尋星座",
+    "bio": "請輸入個人介紹",
+    "blogDescription": "請輸入部落格描述",
+    "platform": "選擇平台",
+    "socialUrl": "請輸入個人主頁 URL"
+  },
+  "tooltip": {
+    "publicDisplay": "開啟後將在部落格對外展示"
+  },
+  "aria": {
+    "publicToggle": "{field}是否對外展示",
+    "choosePersonality": "選擇性格",
+    "chooseZodiac": "選擇星座"
+  },
+  "action": {
+    "addTag": "新增標籤",
+    "addSocialLink": "新增社交連結"
+  },
+  "social": {
+    "github": "GitHub",
+    "gitlab": "GitLab",
+    "juejin": "掘金",
+    "zhihu": "知乎",
+    "csdn": "CSDN",
+    "weibo": "微博",
+    "twitter": "Twitter/X",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "bilibili": "B站",
+    "youtube": "YouTube",
+    "douyin": "抖音",
+    "xiaohongshu": "小紅書",
+    "kuaishou": "快手",
+    "tiktok": "TikTok",
+    "wechat": "微信",
+    "qq": "QQ",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "steam": "Steam",
+    "email": "Email",
+    "website": "個人網站"
+  },
+  "picker": {
+    "placeholder": "請選擇",
+    "searchPlaceholder": "搜尋",
+    "ariaLabel": "選擇",
+    "noMatch": "未找到符合項目",
+    "clearSelection": "清除選擇"
+  },
+  "cors": {
+    "title": "允許的來源（Origin）白名單",
+    "desc": "設定允許存取 API 的跨域來源位址。每行一個，支援連接埠號碼。修改後點擊儲存立即生效。",
+    "inputPlaceholder": "輸入位址後按 Enter 新增，例如 http://localhost:3001",
+    "saveConfig": "儲存設定",
+    "invalidUrl": "請輸入有效的 URL（以 http:// 或 https:// 開頭）",
+    "duplicate": "該位址已在清單中",
+    "updateSuccess": "跨域設定已更新，立即生效",
+    "saveFailed": "儲存失敗，請重試"
+  },
+  "avatarCrop": {
+    "title": "裁切頭像",
+    "previewAlt": "頭像裁切預覽",
+    "zoomOut": "縮小",
+    "zoomIn": "放大",
+    "rotateLeft": "向左旋轉",
+    "rotateRight": "向右旋轉",
+    "hint": "拖曳圖片調整位置，滾輪或按鈕縮放",
+    "cropFailed": "圖片裁切失敗，請重試",
+    "exportFailed": "圖片匯出失敗，請重試"
+  },
+  "editor": {
+    "uploadFileFailed": "上傳 {name} 失敗",
+    "contentPlaceholder": "請輸入文章內容...",
+    "imageUploadFailed": "圖片上傳失敗",
+    "videoUploadFailed": "影片上傳失敗"
+  },
+  "message": {
+    "loadFailed": "載入個人資料失敗",
+    "saveFailed": "儲存失敗",
+    "uploadFailed": "上傳失敗"
+  }
+}

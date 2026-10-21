@@ -1,0 +1,22 @@
+{
+  "title": "API 문서",
+  "download": "Skill 다운로드",
+  "modules": "모듈",
+  "searchPlaceholder": "경로 또는 설명 검색...",
+  "moduleTooltip": "소속 모듈: {name}",
+  "params": "요청 파라미터",
+  "response": "응답 구조",
+  "noParams": "요청 파라미터 없음",
+  "noResponse": "응답 구조 없음",
+  "notFound": "일치하는 API가 없습니다",
+  "columns": {
+    "paramName": "파라미터명",
+    "fieldName": "필드명",
+    "required": "필수",
+    "desc": "설명"
+  },
+  "error": {
+    "loadFailed": "API 문서를 불러오지 못했습니다",
+    "downloadFailed": "문서 다운로드에 실패했습니다"
+  }
+}

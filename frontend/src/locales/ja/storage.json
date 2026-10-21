@@ -1,0 +1,107 @@
+{
+  "title": "オブジェクトストレージ",
+  "tabs": {
+    "config": "ストレージ設定",
+    "migration": "素材移行"
+  },
+  "providers": {
+    "local": "ローカルストレージ",
+    "aliyun": "Alibaba Cloud OSS",
+    "tencent": "Tencent Cloud COS",
+    "minio": "MinIO"
+  },
+  "status": {
+    "active": "使用中",
+    "pending": "移行待ち"
+  },
+  "actions": {
+    "switchPlatform": "ストレージを切り替え",
+    "activate": "有効化",
+    "goMigrate": "移行へ",
+    "testConnection": "接続テスト"
+  },
+  "fields": {
+    "provider": "ストレージ",
+    "filename": "ファイル名",
+    "currentPlatform": "現在のプラットフォーム",
+    "error": "エラーメッセージ",
+    "typePreset": "プリセット",
+    "typeMedia": "素材",
+    "statusExisting": "存在 ✅",
+    "statusMissing": "未存在 ⚠️"
+  },
+  "migrate": {
+    "fromTo": "素材を {sources} から「{target}」へ移行します",
+    "targetHint": "移行先：{target}。「分析開始」をクリックして移行が必要な素材を確認します",
+    "needConfig": "先に「ストレージ設定」でストレージ設定を追加してください",
+    "addConfigFirst": "先にストレージ設定を追加してください",
+    "startAnalyze": "分析開始",
+    "analyzing": "素材を分析中...",
+    "analyzeResult": "分析結果",
+    "analyzeSummary": "全 {total} 件の素材のうち、{existing} 件は既に存在、{missing} 件は移行が必要です",
+    "pendingLabel": "移行対象素材：",
+    "batch": "一括移行（{count}）",
+    "migrateAll": "すべて移行",
+    "reanalyze": "再分析",
+    "progress": "{done} / {total} 件を移行済み",
+    "completedIn": "、移行完了（{seconds}秒）",
+    "failedItems": "失敗項目（{count}）"
+  },
+  "modal": {
+    "createTitle": "ストレージ設定を追加",
+    "editTitle": "ストレージ設定を編集"
+  },
+  "form": {
+    "providerPlaceholder": "ストレージを選択してください",
+    "example": "例：{example}",
+    "regionExampleAliyun": "例：cn-hangzhou",
+    "regionExampleTencent": "例：ap-guangzhou",
+    "regionRequiredAliyun": "必須。例：cn-hangzhou",
+    "endpointPlaceholder": "Endpoint を入力してください",
+    "endpointExampleMinio": "play.min.io:9000（スキームなし）",
+    "bucketPlaceholder": "Bucket を入力してください",
+    "bucketPlain": "バケット名のみ。例：my-bucket",
+    "bucketWithAppId": "APPID 必須。例：examplebucket-1250000000",
+    "bucketExampleWithAppId": "examplebucket-1250000000（APPID 必須）",
+    "secretIdPlaceholder": "SecretId を入力してください",
+    "accessKeyPlaceholder": "Access Key を入力してください",
+    "accessSecretPlaceholder": "Access Secret を入力してください",
+    "secretKeyPlaceholder": "SecretKey を入力してください",
+    "leaveEmptyToKeep": "空欄の場合は変更しない",
+    "pathPrefix": "パスプレフィックス",
+    "pathPrefixPlaceholder": "任意。例：media/",
+    "customDomain": "カスタムドメイン",
+    "customDomainPlaceholder": "任意。例：https://cdn.example.com"
+  },
+  "validation": {
+    "providerRequired": "ストレージを選択してください",
+    "endpointRequired": "Endpoint を入力してください",
+    "bucketRequired": "Bucket を入力してください",
+    "accessKeyRequired": "Access Key を入力してください",
+    "accessSecretRequired": "Access Secret を入力してください",
+    "regionRequired": "Region は必須です"
+  },
+  "message": {
+    "activateTitle": "有効化の確認",
+    "activateConfirm": "有効化するとストレージは「{provider}」に切り替わり、旧設定は削除されます。すべての素材が移行先に移行済みであることを確認してください。続行しますか？",
+    "activated": "有効化しました。旧設定は削除されました",
+    "activateFailed": "有効化に失敗しました。先に素材の移行を完了してください",
+    "activateFailedSimple": "有効化に失敗しました",
+    "deleteTitle": "削除の確認",
+    "deleteConfirm": "{provider} の設定を削除しますか？",
+    "deleteActiveDenied": "使用中の設定は直接削除できません",
+    "changeProviderDeniedTitle": "ストレージの変更はできません",
+    "changeProviderDenied": "ストレージの種類が変更されています！ストレージの種類は直接変更できません。切り替えが必要な場合は、先に「素材移行」で既存の素材を移行先へ移行し、その後移行先の設定を有効化してください。",
+    "configUpdated": "設定を更新しました",
+    "configCreated": "設定を作成しました。「素材移行」で移行を完了してから有効化してください",
+    "saveFailed": "保存に失敗しました",
+    "testPassed": "接続テストに成功しました",
+    "testFailed": "接続テストに失敗しました",
+    "analyzeFailed": "分析に失敗しました",
+    "analyzeStartFailed": "分析の開始に失敗しました",
+    "migrateCompleted": "移行が完了しました",
+    "migrateActivateConfirm": "すべての素材の移行が完了しました。「{provider}」を今すぐ有効化しますか？有効化すると旧設定は削除されます。",
+    "migrateFailed": "移行に失敗しました",
+    "migrateStartFailed": "移行の開始に失敗しました"
+  }
+}

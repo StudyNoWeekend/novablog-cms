@@ -2,9 +2,9 @@
   <div class="cors-config-page">
     <a-spin :spinning="loading">
       <div class="section">
-        <h3 class="section-title">允许的来源（Origin）白名单</h3>
+        <h3 class="section-title">{{ $t('profile.cors.title') }}</h3>
         <p class="section-desc">
-          设置允许访问 API 的跨域来源地址。每行一个，支持端口号。修改后点击保存即时生效。
+          {{ $t('profile.cors.desc') }}
         </p>
 
         <div class="origins-input-wrapper">
@@ -21,7 +21,7 @@
             <a-input
               ref="inputRef"
               v-model:value="newOrigin"
-              placeholder="输入地址后按回车添加，例如 http://localhost:3001"
+              :placeholder="$t('profile.cors.inputPlaceholder')"
               class="origin-input"
               @press-enter="addOrigin"
             />
@@ -31,7 +31,7 @@
 
       <div class="actions">
         <a-button type="primary" :loading="saving" @click="handleSave">
-          保存配置
+          {{ $t('profile.cors.saveConfig') }}
         </a-button>
       </div>
     </a-spin>
@@ -40,8 +40,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { corsApi } from '@/api/cors'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const saving = ref(false)
@@ -55,13 +58,13 @@ function addOrigin() {
 
   // 简单校验：必须以 http:// 或 https:// 开头
   if (!/^https?:\/\/.+/.test(val)) {
-    message.warning('请输入有效的 URL（以 http:// 或 https:// 开头）')
+    message.warning(t('profile.cors.invalidUrl'))
     return
   }
 
   // 去重
   if (origins.value.includes(val)) {
-    message.info('该地址已在列表中')
+    message.info(t('profile.cors.duplicate'))
     newOrigin.value = ''
     return
   }
@@ -95,9 +98,9 @@ async function handleSave() {
     await corsApi.updateConfig({
       allowed_origins: origins.value.join(','),
     })
-    message.success('跨域配置已更新，立即生效')
+    message.success(t('profile.cors.updateSuccess'))
   } catch {
-    message.error('保存失败，请重试')
+    message.error(t('profile.cors.saveFailed'))
   } finally {
     saving.value = false
   }

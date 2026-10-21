@@ -1,6 +1,7 @@
 /**
  * 文件上传工具：accept 写法与前端校验统一入口
  */
+import i18n from '@/locales'
 
 /**
  * 移动端兼容要求 accept 必须使用通配 MIME（image/*、video/*），
@@ -38,11 +39,15 @@ export function getFileExtension(file: File): string {
  */
 export function validateImageFile(file: File, allowedExts: string[]): string | null {
   if (file.size > MAX_UPLOAD_SIZE) {
-    return '文件大小不能超过 100MB'
+    return i18n.global.t('profile.upload.sizeLimit', {
+      limit: `${Math.round(MAX_UPLOAD_SIZE / 1024 / 1024)}MB`,
+    })
   }
   const ext = getFileExtension(file)
   if (!allowedExts.includes(ext)) {
-    return `仅支持 ${allowedExts.map((e) => e.toUpperCase()).join('/')} 格式`
+    return i18n.global.t('profile.upload.formatUnsupported', {
+      formats: allowedExts.map((e) => e.toUpperCase()).join('/'),
+    })
   }
   return null
 }

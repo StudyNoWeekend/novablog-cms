@@ -1,0 +1,168 @@
+{
+  "page": {
+    "title": "主題"
+  },
+  "header": {
+    "officialUrl": "官方網址",
+    "logout": "登出"
+  },
+  "stats": {
+    "total": "主題總數",
+    "authors": "作者數",
+    "downloads": "安裝次數",
+    "downloadTitle": "下載 {count} 次",
+    "likeTitle": "按讚 {count} 次",
+    "ratingTitle": "評分 {rating}",
+    "listedAt": "上架時間：{time}"
+  },
+  "tabs": {
+    "favorites": "我的收藏",
+    "installed": "已安裝主題"
+  },
+  "filter": {
+    "allTypes": "全部類型",
+    "styles": "風格篩選",
+    "price": "免費/付費",
+    "searchPlaceholder": "搜尋主題名稱或描述..."
+  },
+  "sort": {
+    "latest": "最新上架",
+    "downloads": "下載最多",
+    "rating": "評分最高"
+  },
+  "price": {
+    "free": "免費",
+    "paid": "付費"
+  },
+  "type": {
+    "personal": "個人部落格",
+    "tech": "技術部落格",
+    "photo": "攝影部落格",
+    "travel": "旅遊部落格",
+    "music": "音樂部落格",
+    "team": "企業/團隊"
+  },
+  "status": {
+    "reviewing": "審核中",
+    "listed": "已上架",
+    "offline": "已下架"
+  },
+  "action": {
+    "install": "安裝",
+    "installed": "已安裝",
+    "uninstall": "解除安裝",
+    "inUse": "使用中",
+    "like": "按讚",
+    "liked": "已按讚",
+    "favorite": "收藏",
+    "favorited": "已收藏",
+    "download": "下載主題",
+    "backToMarket": "返回主題市場"
+  },
+  "update": {
+    "newVersion": "有新版本",
+    "available": "有新版本可更新",
+    "latest": "已是最新",
+    "tooltipOutdated": "本機 v{local}，官方最新 v{market}",
+    "tooltipLatest": "本機 v{local} 已與官方最新版本一致",
+    "tooltipDefault": "從官方市場拉取最新版本"
+  },
+  "modal": {
+    "installTitle": "安裝「{name}」？",
+    "installContent": "將從官方市場下載預建構製品並安裝，完成後可在「已安裝主題」中啟用",
+    "installSuccess": "「{name}」安裝成功，可在「已安裝主題」中啟用",
+    "activateTitle": "啟用「{name} v{version}」？",
+    "activateContent": "切換後部落格前台將立即更新外觀，確認切換？",
+    "activateSuccess": "已啟用「{name}」，訪客端已生效",
+    "uninstallSuccess": "已解除安裝「{name} v{version}」",
+    "uninstallConfirm": "解除安裝後主題目錄與紀錄將被刪除，確定解除安裝？",
+    "updateTitle": "更新「{name}」？",
+    "updateContent": "將從官方市場拉取最新版本並重新部署，如果正在使用中將自動切換啟用。",
+    "updateSuccess": "「{name}」已更新",
+    "logoutTitle": "登出官方帳號？",
+    "logoutContent": "登出後需重新登入才能瀏覽主題市場",
+    "logoutOk": "登出"
+  },
+  "message": {
+    "loginSuccess": "已連結官方主題市場",
+    "favorited": "已收藏",
+    "unfavorited": "已取消收藏",
+    "rateSuccess": "評分成功",
+    "downloadLinkAt": "下載網址：{url}",
+    "downloadMissing": "該主題未設定下載網址"
+  },
+  "validation": {
+    "emailRequired": "請輸入電子郵件",
+    "emailInvalid": "電子郵件格式不正確",
+    "passwordRequired": "請輸入密碼",
+    "apiURLFormat": "API 網址需以 http:// 或 https:// 開頭，留空表示同網域取數"
+  },
+  "login": {
+    "title": "登入 NovaBlog 官方帳號",
+    "desc": "連結官方主題市場後，可瀏覽主題並進行按讚、收藏、評分與下載",
+    "officialLoading": "官方網址載入中…",
+    "officialMissing": "尚未設定官方網址",
+    "goModify": "前往修改",
+    "officialHint": "官方網址統一在「系統設定 → 社群推播」維護，社群推播與主題市場共用",
+    "email": "電子郵件",
+    "emailPlaceholder": "請輸入官方帳號電子郵件",
+    "password": "密碼",
+    "passwordPlaceholder": "請輸入密碼",
+    "submit": "登 入",
+    "goRegister": "前往註冊",
+    "required": "需要登入才能取得主題市場內容",
+    "action": "登入"
+  },
+  "apiModal": {
+    "title": "部落格 API 網址",
+    "label": "部落格 API 網址（可選）",
+    "placeholder": "https://api.example.com（留空 = 主題同網域取數）",
+    "tip": "部落格 API 網址用於主題前台存取公開介面——填寫獨立 API 網域後儲存，已安裝主題會立即重新注入取數網址，無需重新安裝主題；留空則以同網域相對路徑取數。",
+    "officialLink": "官方網站網址（社群推播與主題市場共用）請前往「系統設定 → 社群推播」修改",
+    "saved": "部落格 API 網址已儲存並全域生效"
+  },
+  "error": {
+    "marketLoad": "取得官方主題市場資料時發生錯誤，請重試",
+    "favoritesLoad": "取得收藏清單時發生錯誤，請重試",
+    "installedLoad": "取得已安裝主題時發生錯誤，請重試",
+    "detailLoad": "取得主題詳情時發生錯誤，請重試",
+    "releasesLoad": "版本紀錄載入失敗",
+    "notFound": "主題不存在或已下架",
+    "marketAuthCancelled": "已取消，未重新登入官方帳號"
+  },
+  "empty": {
+    "noMatch": "沒有符合條件的主題",
+    "noFavorites": "暫無收藏",
+    "goMarket": "去主題市場逛逛",
+    "noInstalled": "尚未安裝任何主題",
+    "goInstall": "去主題市場安裝",
+    "noDescription": "暫無描述",
+    "noReleases": "暫無版本紀錄",
+    "noNotes": "暫無更新說明",
+    "noIntro": "暫無介紹"
+  },
+  "pagination": {
+    "totalThemes": "共 {total} 個主題",
+    "totalFavorites": "共 {total} 個收藏"
+  },
+  "installedTip": "啟用後訪客端立即生效；「預覽」會在新視窗開啟主題預覽頁，啟用前即可比對實際效果",
+  "section": {
+    "features": "功能特性",
+    "releases": "版本歷史"
+  },
+  "info": {
+    "author": "作者",
+    "latestVersion": "最新版本",
+    "price": "價格",
+    "downloads": "下載量",
+    "likes": "按讚",
+    "rating": "綜合評分",
+    "publishedAt": "發布時間"
+  },
+  "rate": {
+    "myRating": "我的評分",
+    "score": "{score} 分",
+    "hint": "點擊評分（1-5 分，可覆蓋）",
+    "none": "暫無"
+  }
+}

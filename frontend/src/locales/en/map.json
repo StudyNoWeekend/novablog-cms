@@ -1,0 +1,23 @@
+{
+  "title": "Map Config",
+  "desc": "Configure the map service keys used by the travel guide location picker. If not configured or failed to load, the picker dialog automatically falls back to OSM keyless mode (WGS-84 coordinates). The blog-side map display is not affected by this page and always uses the keyless solution.",
+  "form": {
+    "amapKey": "AMap Key",
+    "amapKeyPlaceholder": "AMap Open Platform Web (JS API) Key",
+    "amapConsoleLink": "AMap Open Platform Console",
+    "amapKeyTipBefore": "In the ",
+    "amapKeyTipAfter": ", create a key of type “Web (JS API)” and paste it here. Once configured, location picking in mainland China uses AMap (GCJ-02 coordinates).",
+    "amapSecurityCode": "AMap Security Key (securityJsCode)",
+    "amapSecurityCodePlaceholder": "Security key paired with the AMap Key; leave empty to keep the value stored on the server",
+    "amapSecurityCodeTip": "Required for AMap keys applied after Dec 2021. Encrypted at rest after saving; readable only in the admin console.",
+    "googleKey": "Google Maps Key",
+    "googleKeyPlaceholder": "Google Maps JavaScript API Key",
+    "googleKeyTip": "Once configured, location picking outside mainland China uses Google Maps (WGS-84 coordinates)."
+  },
+  "actions": {
+    "save": "Save Config"
+  },
+  "message": {
+    "saveSuccess": "Map config updated. Takes effect the next time the picker dialog opens"
+  }
+}

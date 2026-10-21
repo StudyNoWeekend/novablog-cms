@@ -1,0 +1,168 @@
+{
+  "page": {
+    "title": "主题"
+  },
+  "header": {
+    "officialUrl": "官方地址",
+    "logout": "退出登录"
+  },
+  "stats": {
+    "total": "主题总数",
+    "authors": "作者数",
+    "downloads": "安装次数",
+    "downloadTitle": "下载 {count} 次",
+    "likeTitle": "点赞 {count} 次",
+    "ratingTitle": "评分 {rating}",
+    "listedAt": "上架时间：{time}"
+  },
+  "tabs": {
+    "favorites": "我的收藏",
+    "installed": "已安装主题"
+  },
+  "filter": {
+    "allTypes": "全部类型",
+    "styles": "风格筛选",
+    "price": "免费/付费",
+    "searchPlaceholder": "搜索主题名称或描述..."
+  },
+  "sort": {
+    "latest": "最新上架",
+    "downloads": "下载最多",
+    "rating": "评分最高"
+  },
+  "price": {
+    "free": "免费",
+    "paid": "付费"
+  },
+  "type": {
+    "personal": "个人博客",
+    "tech": "技术博客",
+    "photo": "摄影博客",
+    "travel": "旅行博客",
+    "music": "音乐博客",
+    "team": "企业/团队"
+  },
+  "status": {
+    "reviewing": "审核中",
+    "listed": "已上架",
+    "offline": "已下架"
+  },
+  "action": {
+    "install": "安装",
+    "installed": "已安装",
+    "uninstall": "卸载",
+    "inUse": "使用中",
+    "like": "点赞",
+    "liked": "已点赞",
+    "favorite": "收藏",
+    "favorited": "已收藏",
+    "download": "下载主题",
+    "backToMarket": "返回主题市场"
+  },
+  "update": {
+    "newVersion": "有新版本",
+    "available": "有新版本可更新",
+    "latest": "已是最新",
+    "tooltipOutdated": "本地 v{local}，官方最新 v{market}",
+    "tooltipLatest": "本地 v{local} 已与官方最新版本一致",
+    "tooltipDefault": "从官方市场拉取最新版本"
+  },
+  "modal": {
+    "installTitle": "安装「{name}」？",
+    "installContent": "将从官方市场下载预构建制品并安装，完成后可在「已安装主题」中启用",
+    "installSuccess": "「{name}」安装成功，可在「已安装主题」中启用",
+    "activateTitle": "启用「{name} v{version}」？",
+    "activateContent": "切换后博客前台将立即更新外观，确认切换？",
+    "activateSuccess": "已启用「{name}」，访客侧已生效",
+    "uninstallSuccess": "已卸载「{name} v{version}」",
+    "uninstallConfirm": "卸载后主题目录与记录将被删除，确定卸载？",
+    "updateTitle": "更新「{name}」？",
+    "updateContent": "将从官方市场拉取最新版本并重新部署，如果正在使用中将自动切换激活。",
+    "updateSuccess": "「{name}」已更新",
+    "logoutTitle": "退出官方账号？",
+    "logoutContent": "退出后需重新登录才能浏览主题市场",
+    "logoutOk": "退出"
+  },
+  "message": {
+    "loginSuccess": "已连接官方主题市场",
+    "favorited": "已收藏",
+    "unfavorited": "已取消收藏",
+    "rateSuccess": "评分成功",
+    "downloadLinkAt": "下载地址：{url}",
+    "downloadMissing": "该主题未配置下载地址"
+  },
+  "validation": {
+    "emailRequired": "请输入邮箱",
+    "emailInvalid": "邮箱格式不正确",
+    "passwordRequired": "请输入密码",
+    "apiURLFormat": "API 地址需以 http:// 或 https:// 开头，留空表示同域取数"
+  },
+  "login": {
+    "title": "登录 NovaBlog 官方账号",
+    "desc": "连接官方主题市场后，可浏览主题并进行点赞、收藏、评分与下载",
+    "officialLoading": "官方地址加载中…",
+    "officialMissing": "尚未配置官方地址",
+    "goModify": "去修改",
+    "officialHint": "官方地址在「系统配置 → 社区推送」统一维护，社区推送与主题市场共用",
+    "email": "邮箱",
+    "emailPlaceholder": "请输入官方账号邮箱",
+    "password": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "submit": "登 录",
+    "goRegister": "去注册",
+    "required": "获取主题市场内容需要登录",
+    "action": "登陆"
+  },
+  "apiModal": {
+    "title": "博客 API 地址",
+    "label": "博客 API 地址（可选）",
+    "placeholder": "https://api.example.com（留空 = 主题同域取数）",
+    "tip": "博客 API 地址用于主题前台访问公开接口——填写独立 API 域名后保存，已安装主题会立即重新注入取数地址，无需重装主题；留空则同域相对路径取数。",
+    "officialLink": "官方站点地址（社区推送与主题市场共用）请前往「系统配置 → 社区推送」修改",
+    "saved": "博客 API 地址已保存并全局生效"
+  },
+  "error": {
+    "marketLoad": "获取官方主题市场数据时出错，请重试",
+    "favoritesLoad": "获取收藏列表时出错，请重试",
+    "installedLoad": "获取已安装主题时出错，请重试",
+    "detailLoad": "获取主题详情时出错，请重试",
+    "releasesLoad": "版本历史加载失败",
+    "notFound": "主题不存在或已下架",
+    "marketAuthCancelled": "已取消，未重新登录官方账号"
+  },
+  "empty": {
+    "noMatch": "没有符合条件的主题",
+    "noFavorites": "暂无收藏",
+    "goMarket": "去主题市场逛逛",
+    "noInstalled": "尚未安装任何主题",
+    "goInstall": "去主题市场安装",
+    "noDescription": "暂无描述",
+    "noReleases": "暂无版本记录",
+    "noNotes": "暂无更新说明",
+    "noIntro": "暂无介绍"
+  },
+  "pagination": {
+    "totalThemes": "共 {total} 个主题",
+    "totalFavorites": "共 {total} 个收藏"
+  },
+  "installedTip": "启用后访客侧立即生效；「预览」在新窗口打开主题预览页，激活前即可对比真实效果",
+  "section": {
+    "features": "功能特性",
+    "releases": "版本历史"
+  },
+  "info": {
+    "author": "作者",
+    "latestVersion": "最新版本",
+    "price": "价格",
+    "downloads": "下载量",
+    "likes": "点赞",
+    "rating": "综合评分",
+    "publishedAt": "发布时间"
+  },
+  "rate": {
+    "myRating": "我的评分",
+    "score": "{score} 分",
+    "hint": "点击评分（1-5 分，可覆盖）",
+    "none": "暂无"
+  }
+}

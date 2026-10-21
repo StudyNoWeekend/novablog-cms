@@ -12,13 +12,13 @@
         <span class="theme-card__placeholder-text">{{ displayName.slice(0, 1) }}</span>
       </div>
       <span class="theme-card__price" :class="{ 'theme-card__price--paid': isPaid }">
-        {{ isPaid ? `¥${theme.price_amount}` : '免费' }}
+        {{ isPaid ? `¥${theme.price_amount}` : $t('theme.price.free') }}
       </span>
       <a-tag v-if="installed" color="success" class="theme-card__installed">
-        <CheckCircleOutlined /> 已安装
+        <CheckCircleOutlined /> {{ $t('theme.action.installed') }}
       </a-tag>
       <a-tag v-if="theme.status !== 2" color="warning" class="theme-card__status">
-        {{ themeStatusText(theme.status) }}
+        {{ statusText(theme.status) }}
       </a-tag>
     </div>
 
@@ -31,30 +31,30 @@
           <span v-if="theme.version" class="theme-card__version">v{{ theme.version }}</span>
         </span>
       </div>
-      <p class="theme-card__desc" :title="theme.description || ''">{{ theme.description || '暂无介绍' }}</p>
+      <p class="theme-card__desc" :title="theme.description || ''">{{ theme.description || $t('theme.empty.noIntro') }}</p>
       <div v-if="theme.styles?.length" class="theme-card__tags">
         <a-tag v-for="s in theme.styles.slice(0, 3)" :key="s">{{ s }}</a-tag>
         <a-tag v-if="theme.styles.length > 3">+{{ theme.styles.length - 3 }}</a-tag>
       </div>
       <div class="theme-card__stats">
-        <span :title="`下载 ${theme.downloads} 次`"><DownloadOutlined /> {{ theme.downloads }}</span>
-        <span :title="`点赞 ${theme.likes} 次`"><HeartOutlined /> {{ theme.likes }}</span>
-        <span :title="`评分 ${theme.rating}`"><StarOutlined /> {{ theme.rating > 0 ? theme.rating.toFixed(1) : '暂无' }}</span>
-        <span v-if="theme.created_at" class="theme-card__time" :title="`上架时间：${theme.created_at}`">
+        <span :title="$t('theme.stats.downloadTitle', { count: theme.downloads })"><DownloadOutlined /> {{ theme.downloads }}</span>
+        <span :title="$t('theme.stats.likeTitle', { count: theme.likes })"><HeartOutlined /> {{ theme.likes }}</span>
+        <span :title="$t('theme.stats.ratingTitle', { rating: theme.rating })"><StarOutlined /> {{ theme.rating > 0 ? theme.rating.toFixed(1) : $t('theme.rate.none') }}</span>
+        <span v-if="theme.created_at" class="theme-card__time" :title="$t('theme.stats.listedAt', { time: theme.created_at })">
           <ClockCircleOutlined /> {{ theme.created_at }}
         </span>
       </div>
     </div>
 
     <div class="theme-card__actions" @click.stop>
-      <a-button size="small" @click="emit('detail')">详情</a-button>
+      <a-button size="small" @click="emit('detail')">{{ $t('common.actions.detail') }}</a-button>
       <a-button size="small" :type="favorited ? 'primary' : 'default'" @click="emit('favorite')">
         <template #icon><StarFilled v-if="favorited" /><StarOutlined v-else /></template>
-        {{ favorited ? '已收藏' : '收藏' }}
+        {{ favorited ? $t('theme.action.favorited') : $t('theme.action.favorite') }}
       </a-button>
       <a-button size="small" type="primary" :disabled="installed" :loading="installing" @click="emit('install')">
         <template #icon><CloudDownloadOutlined v-if="!installed" /><CheckOutlined v-else /></template>
-        {{ installed ? '已安装' : '安装' }}
+        {{ installed ? $t('theme.action.installed') : $t('theme.action.install') }}
       </a-button>
     </div>
   </div>
@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   CheckCircleOutlined,
   CheckOutlined,
@@ -78,8 +79,6 @@ import {
   isPreviewURL,
   themeDisplayName,
   themeGradient,
-  themeStatusText,
-  THEME_TYPE_LABELS,
 } from '@/utils/themeDisplay'
 
 const props = defineProps<{
@@ -95,12 +94,33 @@ const emit = defineEmits<{
   (e: 'install'): void
 }>()
 
+const { t } = useI18n()
+
+// typeLabels 主题类型展示文案（i18n），未知类型回退原始值
+const typeLabels = computed<Record<string, string>>(() => ({
+  personal: t('theme.type.personal'),
+  tech: t('theme.type.tech'),
+  photo: t('theme.type.photo'),
+  travel: t('theme.type.travel'),
+  music: t('theme.type.music'),
+  team: t('theme.type.team'),
+}))
+// statusTextMap 主题状态文案（1 审核中 / 2 已上架 / 3 已下架）
+const statusTextMap = computed<Record<number, string>>(() => ({
+  1: t('theme.status.reviewing'),
+  2: t('theme.status.listed'),
+  3: t('theme.status.offline'),
+}))
+function statusText(status: number): string {
+  return statusTextMap.value[status] || t('common.status.unknown')
+}
+
 const coverFailed = ref(false)
 const coverURL = computed(() => isPreviewURL(props.theme.preview))
 const isPaid = computed(() => props.theme.price === 'paid')
 const displayName = computed(() => themeDisplayName(props.theme.title, props.theme.slug))
 const themeTypeLabel = computed(() =>
-  props.theme.type ? THEME_TYPE_LABELS[props.theme.type] || props.theme.type : '',
+  props.theme.type ? typeLabels.value[props.theme.type] || props.theme.type : '',
 )
 
 watch(
