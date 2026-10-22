@@ -11,7 +11,7 @@ import (
 // CorsConfig 跨域配置模型，对应 cors_configs 数据表（单行模式）。
 type CorsConfig struct {
 	ID             string    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	AllowedOrigins string    `gorm:"type:text;not null;default:'http://localhost:5173,http://localhost:5174'"`
+	AllowedOrigins string    `gorm:"type:text;not null;default:'http://localhost:5173,http://localhost:5174,https://www.novablog.cn,https://api.novablog.cn'"`
 	CreatedAt      time.Time `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt      time.Time `gorm:"type:timestamptz;autoUpdateTime"`
 }

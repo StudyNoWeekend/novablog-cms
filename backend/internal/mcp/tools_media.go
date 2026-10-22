@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"novablog/enum"
+	"novablog/internal/dto/req"
+	"novablog/internal/dto/res"
 	"novablog/internal/logic"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -25,6 +27,7 @@ const maxImageSize = 20 << 20
 type UploadImageIn struct {
 	Source   string `json:"source" jsonschema:"图片来源：http(s):// 开头的图片 URL，或 base64 编码的图片数据（支持 data URI）"`
 	Filename string `json:"filename,omitempty" jsonschema:"文件名（需含扩展名，如 cover.png）；URL 方式默认取 URL 末段"`
+	Module   string `json:"module,omitempty" jsonschema:"归入的媒体库模块文件夹，可选：article(默认)/recipe/book/game/tech_stack/travel/equipment/project/video/music/portfolio/profile"`
 }
 
 // UploadImageOut upload_image 出参。
@@ -35,11 +38,18 @@ type UploadImageOut struct {
 	MimeType string `json:"mime_type"`
 }
 
-// uploadImage 上传图片：URL 自动转存，base64 直接落库，统一归入媒体库"文章"文件夹。
+// uploadImage 上传图片：URL 自动转存，base64 直接落库，按 module 参数归入对应模块文件夹（默认 article）。
 func (s *Service) uploadImage(ctx context.Context, _ *sdk.CallToolRequest, in UploadImageIn) (*sdk.CallToolResult, UploadImageOut, error) {
 	source := strings.TrimSpace(in.Source)
 	if source == "" {
 		return nil, UploadImageOut{}, fmt.Errorf("source 不能为空")
+	}
+	module := strings.TrimSpace(in.Module)
+	if module == "" {
+		module = enum.MediaModuleArticle
+	}
+	if _, ok := enum.MediaModuleFolders[module]; !ok {
+		return nil, UploadImageOut{}, fmt.Errorf("非法的媒体模块 %q，可选：%s", module, strings.Join(enum.MediaModuleOrder, "/"))
 	}
 
 	var (
@@ -68,7 +78,7 @@ func (s *Service) uploadImage(ctx context.Context, _ *sdk.CallToolRequest, in Up
 	}
 
 	media, err := s.mediaLogic.SaveRemoteBytes(ctx, filename, contentType, data, logic.MediaUploadOptions{
-		Module: enum.MediaModuleArticle,
+		Module: module,
 	})
 	if err != nil {
 		return nil, UploadImageOut{}, fmt.Errorf("保存图片失败: %w", err)
@@ -79,6 +89,151 @@ func (s *Service) uploadImage(ctx context.Context, _ *sdk.CallToolRequest, in Up
 		Size:     media.Size,
 		MimeType: media.MimeType,
 	}, nil
+}
+
+// ListMediaIn list_media 入参。
+type ListMediaIn struct {
+	FileType *int16 `json:"file_type,omitempty" jsonschema:"按类型筛选: 0=其他 1=图片 2=视频 3=音频"`
+	Keyword  string `json:"keyword,omitempty" jsonschema:"按文件名模糊搜索"`
+	FolderID string `json:"folder_id,omitempty" jsonschema:"按文件夹筛选：root 表示根目录，其他值为文件夹 ID；不传返回全部媒体"`
+	Page     int    `json:"page,omitempty" jsonschema:"页码，默认 1"`
+	PageSize int    `json:"page_size,omitempty" jsonschema:"每页条数，默认 20，最大 100"`
+}
+
+// ListMediaOut list_media 出参。
+type ListMediaOut struct {
+	Total int64          `json:"total"`
+	Page  int            `json:"page"`
+	Items []res.MediaRes `json:"items"`
+}
+
+// listMedia 分页查询媒体库文件列表。
+func (s *Service) listMedia(ctx context.Context, _ *sdk.CallToolRequest, in ListMediaIn) (*sdk.CallToolResult, res.MediaListRes, error) {
+	if in.PageSize <= 0 {
+		in.PageSize = 20
+	}
+	if in.PageSize > 100 {
+		in.PageSize = 100
+	}
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	page, err := s.mediaLogic.GetList(ctx, &req.MediaListReq{
+		PageReq:  req.PageReq{Page: in.Page, PageSize: in.PageSize},
+		FileType: in.FileType,
+		Keyword:  stringPtr(in.Keyword),
+		FolderID: stringPtr(in.FolderID),
+	})
+	if err != nil {
+		return nil, res.MediaListRes{}, fmt.Errorf("查询媒体列表失败: %w", err)
+	}
+	return nil, *page, nil
+}
+
+// MediaFolderItem list_media_folders 出参条目（树拍平后的单个文件夹）。
+// 递归的树形结构无法被 jsonschema 生成器表达，故输出扁平列表，
+// 以 depth 与 path（完整祖先路径）还原层级，便于直接选取 folder_id。
+type MediaFolderItem struct {
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	ParentID   *string `json:"parent_id"`
+	ModuleKey  *string `json:"module_key"`
+	MediaCount int64   `json:"media_count"`
+	Depth      int     `json:"depth"`
+	Path       string  `json:"path"`
+}
+
+// ListMediaFoldersOut list_media_folders 出参。
+type ListMediaFoldersOut struct {
+	Items []MediaFolderItem `json:"items"`
+}
+
+// flattenFolderTree 深度优先拍平文件夹树，Path 为「祖先名 / 本名」的完整路径。
+func flattenFolderTree(nodes []res.MediaFolderRes) []MediaFolderItem {
+	items := make([]MediaFolderItem, 0)
+	var walk func(nodes []res.MediaFolderRes, depth int, prefix string)
+	walk = func(nodes []res.MediaFolderRes, depth int, prefix string) {
+		for _, n := range nodes {
+			path := n.Name
+			if prefix != "" {
+				path = prefix + " / " + n.Name
+			}
+			items = append(items, MediaFolderItem{
+				ID:         n.ID,
+				Name:       n.Name,
+				ParentID:   n.ParentID,
+				ModuleKey:  n.ModuleKey,
+				MediaCount: n.MediaCount,
+				Depth:      depth,
+				Path:       path,
+			})
+			walk(n.Children, depth+1, path)
+		}
+	}
+	walk(nodes, 0, "")
+	return items
+}
+
+// listMediaFolders 查询媒体库文件夹（按内容模块组织的层级目录，已拍平并附完整路径与文件数）。
+func (s *Service) listMediaFolders(ctx context.Context, _ *sdk.CallToolRequest, _ struct{}) (*sdk.CallToolResult, ListMediaFoldersOut, error) {
+	tree, err := s.mediaFolderLogic.Tree(ctx)
+	if err != nil {
+		return nil, ListMediaFoldersOut{}, fmt.Errorf("查询媒体文件夹失败: %w", err)
+	}
+	return nil, ListMediaFoldersOut{Items: flattenFolderTree(tree.List)}, nil
+}
+
+// MoveMediaIn move_media 入参。
+type MoveMediaIn struct {
+	MediaIDs []string `json:"media_ids" jsonschema:"要移动的媒体文件 ID 列表（1-200 个）"`
+	FolderID string   `json:"folder_id,omitempty" jsonschema:"目标文件夹 ID；不传表示移动到根目录"`
+}
+
+// MoveMediaOut move_media 出参。
+type MoveMediaOut struct {
+	Moved bool `json:"moved"`
+	Count int  `json:"count"`
+}
+
+// moveMedia 批量移动媒体文件到指定文件夹。
+func (s *Service) moveMedia(ctx context.Context, _ *sdk.CallToolRequest, in MoveMediaIn) (*sdk.CallToolResult, MoveMediaOut, error) {
+	if len(in.MediaIDs) == 0 {
+		return nil, MoveMediaOut{}, fmt.Errorf("media_ids 不能为空")
+	}
+	if len(in.MediaIDs) > 200 {
+		return nil, MoveMediaOut{}, fmt.Errorf("media_ids 单次最多支持 200 个")
+	}
+	if err := s.mediaLogic.MoveMedia(ctx, in.MediaIDs, stringPtr(in.FolderID)); err != nil {
+		return nil, MoveMediaOut{}, fmt.Errorf("移动媒体文件失败: %w", err)
+	}
+	return nil, MoveMediaOut{Moved: true, Count: len(in.MediaIDs)}, nil
+}
+
+// DeleteMediaIn delete_media 入参。
+type DeleteMediaIn struct {
+	MediaID string `json:"media_id" jsonschema:"要删除的媒体文件 ID"`
+	Force   bool   `json:"force,omitempty" jsonschema:"文件被内容引用时需传 true 强制删除"`
+	Confirm bool   `json:"confirm" jsonschema:"必须显式传 true 才会执行删除"`
+}
+
+// DeleteMediaOut delete_media 出参。
+type DeleteMediaOut struct {
+	Deleted bool   `json:"deleted"`
+	ID      string `json:"id"`
+}
+
+// deleteMedia 删除媒体文件（硬删除，含预设产物）。
+func (s *Service) deleteMedia(ctx context.Context, _ *sdk.CallToolRequest, in DeleteMediaIn) (*sdk.CallToolResult, DeleteMediaOut, error) {
+	if in.MediaID == "" {
+		return nil, DeleteMediaOut{}, fmt.Errorf("media_id 不能为空")
+	}
+	if !in.Confirm {
+		return nil, DeleteMediaOut{}, fmt.Errorf("删除是不可逆操作（将同时删除其全部预设产物），请确认后显式传 confirm=true 再执行；若文件正被内容引用需先传 force=true")
+	}
+	if err := s.mediaLogic.Delete(ctx, in.MediaID, in.Force); err != nil {
+		return nil, DeleteMediaOut{}, fmt.Errorf("删除媒体文件失败: %w", err)
+	}
+	return nil, DeleteMediaOut{Deleted: true, ID: in.MediaID}, nil
 }
 
 // fetchRemoteImage 抓取远程图片，返回字节、建议文件名与 Content-Type。

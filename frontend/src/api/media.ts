@@ -13,6 +13,8 @@ export interface MediaItem {
   height: number
   folder_id: string | null
   folder_name: string
+  /** 所属文件夹的模块 key，空=根目录或非系统文件夹；用于翻译系统文件夹显示名 */
+  folder_module_key: string
   created_at: string
 }
 

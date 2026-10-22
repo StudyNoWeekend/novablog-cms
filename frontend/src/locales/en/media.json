@@ -18,6 +18,20 @@
     "video": "Video",
     "folder": "Folder"
   },
+  "module": {
+    "article": "Articles",
+    "recipe": "Recipes",
+    "book": "Bookshelf",
+    "game": "Game Library",
+    "tech_stack": "Tech Stack",
+    "travel": "Travel",
+    "equipment": "My Gear",
+    "project": "Projects",
+    "video": "Videos",
+    "music": "Music",
+    "portfolio": "Photography",
+    "profile": "Blogger Profile"
+  },
   "search": {
     "placeholder": "Search all files..."
   },

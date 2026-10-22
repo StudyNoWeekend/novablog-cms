@@ -84,6 +84,6 @@ image_search:
 
 # 跨域配置（后台页面可动态修改，此值为首次启动默认值）
 cors:
-  allowed_origins: "http://localhost:5173,http://localhost:5174"
+  allowed_origins: "http://localhost:5173,http://localhost:5174,https://www.novablog.cn,https://api.novablog.cn"
 
 # upload 段同时用于本地存储和迁移只读源

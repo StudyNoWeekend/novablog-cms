@@ -18,6 +18,20 @@
     "video": "動画",
     "folder": "フォルダー"
   },
+  "module": {
+    "article": "記事",
+    "recipe": "レシピ",
+    "book": "読書本棚",
+    "game": "ゲームライブラリ",
+    "tech_stack": "技術スタック",
+    "travel": "旅行ガイド",
+    "equipment": "個人機材",
+    "project": "プロジェクト経歴",
+    "video": "動画作品",
+    "music": "音楽",
+    "portfolio": "写真ポートフォリオ",
+    "profile": "ブロガー情報"
+  },
   "search": {
     "placeholder": "すべてのファイルを検索..."
   },

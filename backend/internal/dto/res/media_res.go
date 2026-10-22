@@ -4,18 +4,20 @@ import "time"
 
 // MediaRes 媒体响应结构体。
 type MediaRes struct {
-	ID         string    `json:"id"`
-	Filename   string    `json:"filename"`
-	FileType   int16     `json:"file_type"`
-	MimeType   string    `json:"mime_type"`
-	Size       int64     `json:"size"`
-	URL        string    `json:"url"`
-	ThumbURL   string    `json:"thumb_url"`
-	Width      *int      `json:"width"`
-	Height     *int      `json:"height"`
-	FolderID   string    `json:"folder_id"`   // 所属文件夹，空=根目录
-	FolderName string    `json:"folder_name"` // 所属文件夹名，根目录为空
-	CreatedAt  time.Time `json:"created_at"`
+	ID         string `json:"id"`
+	Filename   string `json:"filename"`
+	FileType   int16  `json:"file_type"`
+	MimeType   string `json:"mime_type"`
+	Size       int64  `json:"size"`
+	URL        string `json:"url"`
+	ThumbURL   string `json:"thumb_url"`
+	Width      *int   `json:"width"`
+	Height     *int   `json:"height"`
+	FolderID   string `json:"folder_id"`   // 所属文件夹，空=根目录
+	FolderName string `json:"folder_name"` // 所属文件夹名，根目录为空
+	// FolderModuleKey 所属文件夹的模块 key，空=根目录或非系统文件夹；前端据此翻译系统文件夹显示名
+	FolderModuleKey string    `json:"folder_module_key"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // MediaListRes 媒体列表响应结构体。

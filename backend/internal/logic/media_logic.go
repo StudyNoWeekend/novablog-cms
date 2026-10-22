@@ -260,25 +260,30 @@ func folderIDPtr(folder *model.MediaFolder) *string {
 // toMediaRes 构建媒体响应（含所属文件夹信息）。
 func (l *MediaLogic) toMediaRes(ctx context.Context, media *model.Media) (*res.MediaRes, error) {
 	folderName := ""
+	folderModuleKey := ""
 	if media.FolderID != nil {
 		folder, err := l.folderModel.GetByID(ctx, *media.FolderID)
 		if err != nil {
 			return nil, fmt.Errorf("查询所属文件夹失败: %w", err)
 		}
 		folderName = folder.Name
+		if folder.ModuleKey != nil {
+			folderModuleKey = *folder.ModuleKey
+		}
 	}
 	return &res.MediaRes{
-		ID:         media.ID,
-		Filename:   media.Filename,
-		FileType:   media.FileType,
-		MimeType:   media.MimeType,
-		Size:       media.Size,
-		URL:        model.ResolveURL(media.URL),
-		Width:      media.Width,
-		Height:     media.Height,
-		FolderID:   ptrToString(media.FolderID),
-		FolderName: folderName,
-		CreatedAt:  media.CreatedAt,
+		ID:              media.ID,
+		Filename:        media.Filename,
+		FileType:        media.FileType,
+		MimeType:        media.MimeType,
+		Size:            media.Size,
+		URL:             model.ResolveURL(media.URL),
+		Width:           media.Width,
+		Height:          media.Height,
+		FolderID:        ptrToString(media.FolderID),
+		FolderName:      folderName,
+		FolderModuleKey: folderModuleKey,
+		CreatedAt:       media.CreatedAt,
 	}, nil
 }
 
@@ -309,6 +314,7 @@ func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.M
 		}
 	}
 	folderNames := make(map[string]string)
+	folderModuleKeys := make(map[string]string)
 	if len(folderIDs) > 0 {
 		folders, err := l.folderModel.GetByIDs(ctx, folderIDs)
 		if err != nil {
@@ -316,6 +322,9 @@ func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.M
 		}
 		for _, f := range folders {
 			folderNames[f.ID] = f.Name
+			if f.ModuleKey != nil {
+				folderModuleKeys[f.ID] = *f.ModuleKey
+			}
 		}
 	}
 
@@ -326,22 +335,25 @@ func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.M
 			thumbURL = provider.GetThumbURL(m.URL, 300)
 		}
 		folderName := ""
+		folderModuleKey := ""
 		if m.FolderID != nil {
 			folderName = folderNames[*m.FolderID]
+			folderModuleKey = folderModuleKeys[*m.FolderID]
 		}
 		items = append(items, res.MediaRes{
-			ID:         m.ID,
-			Filename:   m.Filename,
-			FileType:   m.FileType,
-			MimeType:   m.MimeType,
-			Size:       m.Size,
-			URL:        m.URL,
-			ThumbURL:   thumbURL,
-			Width:      m.Width,
-			Height:     m.Height,
-			FolderID:   ptrToString(m.FolderID),
-			FolderName: folderName,
-			CreatedAt:  m.CreatedAt,
+			ID:              m.ID,
+			Filename:        m.Filename,
+			FileType:        m.FileType,
+			MimeType:        m.MimeType,
+			Size:            m.Size,
+			URL:             m.URL,
+			ThumbURL:        thumbURL,
+			Width:           m.Width,
+			Height:          m.Height,
+			FolderID:        ptrToString(m.FolderID),
+			FolderName:      folderName,
+			FolderModuleKey: folderModuleKey,
+			CreatedAt:       m.CreatedAt,
 		})
 	}
 

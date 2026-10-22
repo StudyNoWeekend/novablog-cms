@@ -120,17 +120,17 @@ NovaBlog CMS には **MCP Server** と **Skill 形式の API ドキュメント*
 
 3. **創作を依頼**：「XX テーマの記事を書いて公開して」と AI に頼むだけです。
 
-MCP エンドポイントは Streamable HTTP（`/api/v1/mcp`）、現在 9 つのツールを提供：
+MCP エンドポイントは Streamable HTTP（`/api/v1/mcp`）、現在 **93 ツール**を提供し、管理コンソールの全コンテンツモジュールをカバーしています（削除操作はすべて誤操作防止のため明示的な `confirm=true` が必要）：
 
-| ツール | 機能 |
+| ドメイン | ツール |
 |------|------|
-| `create_article` | 記事の作成：タイトル、Markdown 本文、概要、タグ/カテゴリー（自動作成）、カバー、ステータス |
-| `update_article` | 記事の編集 |
-| `set_article_status` | 公開 / 下書きへ / 公開停止 |
-| `delete_article` | 記事の削除（誤削除防止のため明示的な confirm が必要） |
-| `list_articles` / `get_article` | 記事リストと詳細の照会（キーワード・ページング） |
-| `upload_image` | 画像アップロード：http リンクの自動転送または base64、参照可能な URL を返却 |
-| `list_categories` / `list_tags` | カテゴリーとタグの照会 |
+| 記事管理 | `list_articles` / `get_article` 照会；`create_article` 作成（Markdown 本文、概要、タグ/カテゴリー自動作成、カバー、ステータス）；`update_article` 編集；`set_article_status` 公開 / 下書き / 公開停止；`delete_article` 削除 |
+| メディアライブラリー | `upload_image` アップロード（http リンク自動転送または base64、`module` でコンテンツモジュール別に整理）；`list_media` / `list_media_folders` ファイルとフォルダー照会；`move_media` 移動；`delete_media` 削除（参照中は `force=true`） |
+| カテゴリーとタグ | `list_categories`（12 種類のモジュールタイプ対応）/ `create_category` / `update_category` / `delete_category`；`list_tags` / `create_tag` / `update_tag` / `delete_tag` |
+| 私について | `get_profile` / `update_profile` ブロガープロフィール；機材 `list_/create_/update_/delete_equipment`；プロジェクト経歴 `*_project`；技術スタック `*_tech_stack`；オープンソース `*_open_source` + `refresh_open_source` でリポジトリ情報を再取得 |
+| コンテンツ制作 | プレイリスト `*_playlist`；動画作品 `*_video` + `parse_video_url` 事前解析；旅行ガイド `*_travel` + `set_travel_status`；写真ポートフォリオ `*_portfolio` + 作品項目 `add_/update_/delete_portfolio_item` / `sort_portfolio_items`；レシピ `*_recipe`；読書 `*_book`；ゲーム `*_game`；フィットネス `*_fitness_record` |
+| コメント管理 | `list_comments` 照会；`reply_comment` ブロガーとして返信；`delete_comment` 削除（返信も連動削除） |
+| ダッシュボード（読み取り専用） | `get_dashboard_overview` 概況とトラフィックサマリー；`get_dashboard_trend` 制作/トラフィック推移（7d/30d/90d）；`get_top_content` 人気コンテンツランキング |
 
 ### 方法 2：Skill ドキュメント（AI にすべての公開 API を習得させる）
 
