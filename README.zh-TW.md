@@ -120,17 +120,17 @@ NovaBlog CMS 內建 **MCP Server** 與 **Skill 格式介面文件**，Codex、ZC
 
 3. **開口創作**：對 AI 說「幫我寫一篇 XX 主題的文章並發佈」即可。
 
-MCP 端點為 Streamable HTTP（`/api/v1/mcp`），目前提供 9 個工具：
+MCP 端點為 Streamable HTTP（`/api/v1/mcp`），目前提供 **93 個工具**，覆蓋管理後台全部內容模組（刪除操作均需顯式 `confirm=true` 防誤刪）：
 
-| 工具 | 作用 |
+| 域 | 工具 |
 |------|------|
-| `create_article` | 寫文章：標題、Markdown 正文、摘要、標籤/分類（自動建立）、封面、狀態 |
-| `update_article` | 修改文章 |
-| `set_article_status` | 發佈 / 轉草稿 / 下架 |
-| `delete_article` | 刪除文章（需顯式 confirm，防誤刪） |
-| `list_articles` / `get_article` | 查詢文章列表與詳情（關鍵字、分頁） |
-| `upload_image` | 上傳圖片：http 連結自動轉存或 base64，回傳可引用 URL |
-| `list_categories` / `list_tags` | 查詢分類與標籤 |
+| 文章管理 | `list_articles` / `get_article` 查詢；`create_article` 寫文章（Markdown 正文、摘要、標籤/分類自動建立、封面、狀態）；`update_article` 修改；`set_article_status` 發佈 / 轉草稿 / 下架；`delete_article` 刪除 |
+| 媒體庫 | `upload_image` 上傳圖片（http 連結自動轉存或 base64，`module` 按內容模組歸檔）；`list_media` / `list_media_folders` 查詢檔案與資料夾；`move_media` 移動；`delete_media` 刪除（被引用需 `force=true`） |
+| 分類與標籤 | `list_categories`（支援 12 種內容模組類型）/ `create_category` / `update_category` / `delete_category`；`list_tags` / `create_tag` / `update_tag` / `delete_tag` |
+| 關於我 | `get_profile` / `update_profile` 部落客資料；個人設備 `list_/create_/update_/delete_equipment`；專案經歷 `*_project`；技術棧 `*_tech_stack`；開源作品 `*_open_source` + `refresh_open_source` 重新拉取倉庫資訊 |
+| 內容創作 | 第三方歌單 `*_playlist`；影片作品 `*_video` + `parse_video_url` 預解析；旅行攻略 `*_travel` + `set_travel_status`；攝影作品集 `*_portfolio` + 作品項 `add_/update_/delete_portfolio_item` / `sort_portfolio_items`；美食食譜 `*_recipe`；讀書書架 `*_book`；遊戲庫 `*_game`；健身訓練 `*_fitness_record` |
+| 評論管理 | `list_comments` 查詢；`reply_comment` 以部落客身份回覆；`delete_comment` 刪除（級聯刪除回覆） |
+| 工作台（唯讀） | `get_dashboard_overview` 總覽與流量摘要；`get_dashboard_trend` 產出/流量趨勢（7d/30d/90d）；`get_top_content` 熱門內容排行 |
 
 ### 方式二：Skill 文件（讓 AI 掌握全部公開 API）
 

@@ -1,6 +1,20 @@
 import { ref } from 'vue'
+import i18n from '@/locales'
 import { mediaApi } from '@/api/media'
 import type { MediaFolderNode } from '@/api/media'
+
+/**
+ * 文件夹显示名：系统文件夹（module_key 非空）按当前语言翻译（media.module.*），
+ * 其余（用户自建、或模块未提供翻译的）显示数据库原名
+ */
+export function folderDisplayName(name: string, moduleKey?: string | null): string {
+  if (moduleKey) {
+    const key = `media.module.${moduleKey}`
+    const text = i18n.global.t(key)
+    if (text !== key) return text
+  }
+  return name
+}
 
 /** 媒体文件夹树状态与查找工具（媒体库页与选图弹窗共用） */
 export function useMediaFolders() {

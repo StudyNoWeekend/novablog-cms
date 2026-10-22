@@ -93,7 +93,7 @@
                   <span class="folder-count">{{ $t('media.itemCount', { count: folder.media_count }) }}</span>
                 </div>
                 <div class="folder-name">
-                  <span class="folder-name-text" :title="folder.name">{{ folder.name }}</span>
+                  <span class="folder-name-text" :title="folderDisplayName(folder.name, folder.module_key)">{{ folderDisplayName(folder.name, folder.module_key) }}</span>
                   <a-tag v-if="isSystemFolder(folder)" class="folder-system-tag" color="gold">{{ $t('media.folder.systemTag') }}</a-tag>
                 </div>
                 <a-dropdown :trigger="['click']">
@@ -153,7 +153,7 @@
                 <div class="media-name" :title="item.filename">
                   {{ item.filename }}
                   <span v-if="searching && item.folder_name" class="media-folder-tag">
-                    {{ item.folder_name }}
+                    {{ folderDisplayName(item.folder_name, item.folder_module_key) }}
                   </span>
                 </div>
               </div>
@@ -176,7 +176,7 @@
                   @click="enterFolder(record.folder.id)"
                 >
                   <FolderFilled class="folder-cell-icon" />
-                  <span>{{ record.folder.name }}</span>
+                  <span>{{ folderDisplayName(record.folder.name, record.folder.module_key) }}</span>
                 </a>
                 <span v-else class="media-cell">{{ record.media.filename }}</span>
               </template>
@@ -303,7 +303,7 @@ import { IMAGE_ACCEPT, VIDEO_ACCEPT, MAX_UPLOAD_SIZE } from '@/utils/upload'
 import { formatDateTime } from '@/utils/datetime'
 import { usePagination } from '@/composables/usePagination'
 import { useDebounce } from '@/composables/useDebounce'
-import { useMediaFolders } from '@/composables/useMediaFolders'
+import { useMediaFolders, folderDisplayName } from '@/composables/useMediaFolders'
 import MediaFolderBreadcrumbs from '@/components/media/MediaFolderBreadcrumbs.vue'
 import MediaPresetWorkbench from '@/components/media/MediaPresetWorkbench.vue'
 import MediaDeleteModal from '@/components/media/MediaDeleteModal.vue'
@@ -372,13 +372,14 @@ const visibleFolders = computed<MediaFolderNode[]>(() => {
 const folderModalParentName = computed(() => {
   if (folderModalMode.value === 'rename' && folderModalTarget.value) {
     const parent = folderModalTarget.value.parent_id
-      ? findFolder(folderTree.value, folderModalTarget.value.parent_id!)?.name
+      ? findFolder(folderTree.value, folderModalTarget.value.parent_id!)
       : null
-    return parent || t('media.folder.rootName')
+    return parent ? folderDisplayName(parent.name, parent.module_key) : t('media.folder.rootName')
   }
-  return currentFolderId.value === 'root'
-    ? t('media.folder.rootName')
-    : findFolder(folderTree.value, currentFolderId.value)?.name || t('media.folder.rootName')
+  const current = currentFolderId.value === 'root'
+    ? null
+    : findFolder(folderTree.value, currentFolderId.value)
+  return current ? folderDisplayName(current.name, current.module_key) : t('media.folder.rootName')
 })
 
 type FolderRow = { rowType: 'folder'; folder: MediaFolderNode; key: string }

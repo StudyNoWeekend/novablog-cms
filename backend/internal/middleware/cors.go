@@ -9,7 +9,7 @@ import (
 )
 
 // CORS 默认兜底值（仅当 DB 与 config.yaml 均未提供有效白名单时生效）
-const defaultAllowedOrigins = "http://localhost:5173,http://localhost:5174"
+const defaultAllowedOrigins = "http://localhost:5173,http://localhost:5174,https://www.novablog.cn,https://api.novablog.cn"
 
 // 包级变量：由 SetAllowedOrigins 写入，中间件从该变量读取（RWMutex 保护）。
 // DB 是唯一权威数据源：启动时由 bootstrap 从 DB 读取写入（DB 无数据时以

@@ -37,7 +37,7 @@ import { message } from 'ant-design-vue'
 import { FolderOutlined } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaFolderNode } from '@/api/media'
-import { useMediaFolders } from '@/composables/useMediaFolders'
+import { useMediaFolders, folderDisplayName } from '@/composables/useMediaFolders'
 import type { TreeProps } from 'ant-design-vue'
 
 const props = defineProps<{
@@ -84,7 +84,7 @@ const treeData = computed<TreeItem[]>(() => {
     nodes
       .filter((n) => !exclude.has(n.id))
       .map((n) => ({
-        title: n.name,
+        title: folderDisplayName(n.name, n.module_key),
         key: n.id,
         count: n.media_count,
         children: build(n.children || []),

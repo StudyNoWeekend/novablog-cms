@@ -18,6 +18,20 @@
     "video": "影片",
     "folder": "資料夾"
   },
+  "module": {
+    "article": "文章",
+    "recipe": "美食食譜",
+    "book": "閱讀書架",
+    "game": "遊戲庫",
+    "tech_stack": "技術棧",
+    "travel": "旅遊攻略",
+    "equipment": "個人設備",
+    "project": "專案經歷",
+    "video": "影片作品",
+    "music": "音樂",
+    "portfolio": "攝影作品集",
+    "profile": "博主資料"
+  },
   "search": {
     "placeholder": "搜尋全部檔案..."
   },

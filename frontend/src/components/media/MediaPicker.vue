@@ -12,10 +12,10 @@
           <a @click.prevent="enterFolder(null)">{{ $t('media.folder.rootName') }}</a>
         </a-breadcrumb-item>
         <a-breadcrumb-item v-for="folder in currentPath" :key="folder.id">
-          <a @click.prevent="enterFolder(folder.id)">{{ folder.name }}</a>
+          <a @click.prevent="enterFolder(folder.id)">{{ folderDisplayName(folder.name, folder.module_key) }}</a>
         </a-breadcrumb-item>
       </a-breadcrumb>
-      <span v-if="currentFolder" class="picker-folder-name">{{ currentFolder.name }}</span>
+      <span v-if="currentFolder" class="picker-folder-name">{{ folderDisplayName(currentFolder.name, currentFolder.module_key) }}</span>
     </div>
 
     <!-- 当前文件夹的子文件夹 -->
@@ -27,7 +27,7 @@
         @click="enterFolder(folder.id)"
       >
         <FolderFilled class="picker-folder-icon" />
-        <span class="picker-folder-title" :title="folder.name">{{ folder.name }}</span>
+        <span class="picker-folder-title" :title="folderDisplayName(folder.name, folder.module_key)">{{ folderDisplayName(folder.name, folder.module_key) }}</span>
       </div>
     </div>
 
@@ -74,7 +74,7 @@ import { CheckCircleFilled, FolderFilled } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
 import { getThumbUrl } from '@/utils/image'
-import { useMediaFolders } from '@/composables/useMediaFolders'
+import { useMediaFolders, folderDisplayName } from '@/composables/useMediaFolders'
 import MediaPresetChooser from './MediaPresetChooser.vue'
 
 /** 选图结果：选中预设时 url 为成品图 URL，presetId/presetName 标记来源预设 */

@@ -120,17 +120,17 @@ Three steps in the dashboard under "AI → MCP Service":
 
 3. **Start creating**: just tell the AI "write an article about XX and publish it".
 
-The MCP endpoint is Streamable HTTP (`/api/v1/mcp`) and currently offers 9 tools:
+The MCP endpoint is Streamable HTTP (`/api/v1/mcp`) and currently offers **93 tools** covering every content module of the admin console (all delete operations require an explicit `confirm=true` to prevent accidents):
 
-| Tool | Purpose |
+| Domain | Tools |
 |------|------|
-| `create_article` | Write an article: title, Markdown body, summary, tags/categories (auto-created), cover, status |
-| `update_article` | Edit an article |
-| `set_article_status` | Publish / to draft / unpublish |
-| `delete_article` | Delete an article (requires explicit confirm to prevent accidents) |
-| `list_articles` / `get_article` | Query article lists and details (keywords, pagination) |
-| `upload_image` | Upload an image: auto-transfer from an http URL or base64, returns a referenceable URL |
-| `list_categories` / `list_tags` | Query categories and tags |
+| Articles | `list_articles` / `get_article` query; `create_article` write (Markdown body, summary, auto-created tags/categories, cover, status); `update_article` edit; `set_article_status` publish / draft / unpublish; `delete_article` delete |
+| Media library | `upload_image` upload (auto-transfer from an http URL or base64, `module` archives by content module); `list_media` / `list_media_folders` browse files and folders; `move_media` move; `delete_media` delete (`force=true` when referenced) |
+| Categories & tags | `list_categories` (12 content-module types supported) / `create_category` / `update_category` / `delete_category`; `list_tags` / `create_tag` / `update_tag` / `delete_tag` |
+| About me | `get_profile` / `update_profile` blogger profile; equipment `list_/create_/update_/delete_equipment`; projects `*_project`; tech stack `*_tech_stack`; open source `*_open_source` + `refresh_open_source` to re-fetch repo info |
+| Content creation | Playlists `*_playlist`; videos `*_video` + `parse_video_url` pre-parse; travel guides `*_travel` + `set_travel_status`; photography portfolios `*_portfolio` + items `add_/update_/delete_portfolio_item` / `sort_portfolio_items`; recipes `*_recipe`; books `*_book`; games `*_game`; fitness `*_fitness_record` |
+| Comments | `list_comments` query; `reply_comment` reply as the blogger; `delete_comment` delete (cascades to replies) |
+| Dashboard (read-only) | `get_dashboard_overview` overview and traffic summary; `get_dashboard_trend` output/traffic trends (7d/30d/90d); `get_top_content` top content ranking |
 
 ### Option 2: Skill Doc (let AI master every public API)
 

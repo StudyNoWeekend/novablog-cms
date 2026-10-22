@@ -120,17 +120,17 @@ NovaBlog CMS에는 **MCP 서버**와 **Skill 형식 API 문서**가 내장되어
 
 3. **창작 지시**: AI에게 "OO 주제의 글을 써서 게시해 줘"라고 말하면 됩니다.
 
-MCP 엔드포인트는 Streamable HTTP(`/api/v1/mcp`)이며, 현재 9개의 도구를 제공합니다:
+MCP 엔드포인트는 Streamable HTTP(`/api/v1/mcp`)이며, 현재 **93개의 도구**를 제공해 관리 콘솔의 모든 콘텐츠 모듈을 다룹니다(삭제 작업은 실수 방지를 위해 명시적 `confirm=true` 필요):
 
-| 도구 | 기능 |
+| 도메인 | 도구 |
 |------|------|
-| `create_article` | 글쓰기: 제목, Markdown 본문, 요약, 태그/카테고리(자동 생성), 커버, 상태 |
-| `update_article` | 게시글 수정 |
-| `set_article_status` | 게시 / 초안 전환 / 게시 중단 |
-| `delete_article` | 게시글 삭제(실수 방지를 위해 명시적 confirm 필요) |
-| `list_articles` / `get_article` | 게시글 목록과 상세 조회(키워드, 페이징) |
-| `upload_image` | 이미지 업로드: http 링크 자동 전송 또는 base64, 참조 가능한 URL 반환 |
-| `list_categories` / `list_tags` | 카테고리와 태그 조회 |
+| 게시글 관리 | `list_articles` / `get_article` 조회; `create_article` 작성(Markdown 본문, 요약, 태그/카테고리 자동 생성, 커버, 상태); `update_article` 수정; `set_article_status` 게시 / 초안 / 게시 중단; `delete_article` 삭제 |
+| 미디어 라이브러리 | `upload_image` 업로드(http 링크 자동 전송 또는 base64, `module`로 콘텐츠 모듈별 정리); `list_media` / `list_media_folders` 파일·폴더 조회; `move_media` 이동; `delete_media` 삭제(참조 중이면 `force=true`) |
+| 카테고리와 태그 | `list_categories`(12가지 모듈 타입 지원) / `create_category` / `update_category` / `delete_category`; `list_tags` / `create_tag` / `update_tag` / `delete_tag` |
+| 소개 | `get_profile` / `update_profile` 블로거 프로필; 장비 `list_/create_/update_/delete_equipment`; 프로젝트 경력 `*_project`; 기술 스택 `*_tech_stack`; 오픈소스 `*_open_source` + `refresh_open_source` 저장소 정보 재조회 |
+| 콘텐츠 제작 | 플레이리스트 `*_playlist`; 영상 작품 `*_video` + `parse_video_url` 사전 파싱; 여행 가이드 `*_travel` + `set_travel_status`; 사진 포트폴리오 `*_portfolio` + 작품 항목 `add_/update_/delete_portfolio_item` / `sort_portfolio_items`; 레시피 `*_recipe`; 독서 `*_book`; 게임 `*_game`; 운동 `*_fitness_record` |
+| 댓글 관리 | `list_comments` 조회; `reply_comment` 블로거로 답글; `delete_comment` 삭제(답글 연쇄 삭제) |
+| 대시보드(읽기 전용) | `get_dashboard_overview` 개요와 트래픽 요약; `get_dashboard_trend` 작성/트래픽 추이(7d/30d/90d); `get_top_content` 인기 콘텐츠 순위 |
 
 ### 방법 2: Skill 문서(AI에게 모든 공개 API 익히기)
 

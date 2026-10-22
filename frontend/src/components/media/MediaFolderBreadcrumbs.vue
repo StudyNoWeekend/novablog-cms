@@ -7,7 +7,7 @@
     </a-breadcrumb-item>
     <a-breadcrumb-item v-for="folder in path" :key="folder.id">
       <a @click.prevent="emit('navigate', folder.id)" :class="{ current: folder.id === currentId }">
-        {{ folder.name }}
+        {{ folderDisplayName(folder.name, folder.module_key) }}
       </a>
     </a-breadcrumb-item>
   </a-breadcrumb>
@@ -15,6 +15,7 @@
 
 <script setup lang="ts">
 import { HddOutlined } from '@ant-design/icons-vue'
+import { folderDisplayName } from '@/composables/useMediaFolders'
 import type { MediaFolderNode } from '@/api/media'
 
 defineProps<{

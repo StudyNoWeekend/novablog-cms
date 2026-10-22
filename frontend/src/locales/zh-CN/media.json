@@ -18,6 +18,20 @@
     "video": "视频",
     "folder": "文件夹"
   },
+  "module": {
+    "article": "文章",
+    "recipe": "美食菜谱",
+    "book": "读书书架",
+    "game": "游戏库",
+    "tech_stack": "技术栈",
+    "travel": "旅行攻略",
+    "equipment": "个人设备",
+    "project": "项目经历",
+    "video": "视频作品",
+    "music": "音乐",
+    "portfolio": "摄影作品集",
+    "profile": "博主资料"
+  },
   "search": {
     "placeholder": "搜索全部文件..."
   },

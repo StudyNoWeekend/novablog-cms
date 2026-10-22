@@ -10,8 +10,8 @@
     "endpoint": "Server endpoint",
     "authPrefix": "Authentication: send the header",
     "authSuffix": ", and create the key below.",
-    "capabilities": "Available capabilities: create / update / publish / unpublish / delete articles (Markdown), upload images to the media library, and query categories and tags — 9 tools in total.",
-    "security": "Security limits: each key is rate-limited to 120 requests per minute; deleting an article requires explicit AI confirmation; the key secret is shown only once at creation."
+    "capabilities": "Available capabilities: article management (create / update / publish / unpublish / delete), media library (upload / query / move / delete), categories and tags, blogger profile, comment management, dashboard analytics, plus content modules for equipment, projects, tech stack, open source, playlists, videos, travel guides, photography portfolios, recipes, books, games and fitness — 93 tools in total.",
+    "security": "Security limits: each key is rate-limited to 120 requests per minute; delete operations require the AI to explicitly pass confirm=true; the key secret is shown only once at creation."
   },
   "keys": {
     "title": "API Keys",

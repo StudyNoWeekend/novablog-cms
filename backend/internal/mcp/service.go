@@ -1,6 +1,6 @@
 // Package mcp 实现 NovaBlog 的 MCP（Model Context Protocol）服务端，
-// 通过 Streamable HTTP 传输对外暴露文章发布、媒体上传等工具，
-// 供 Codex / ZCode 等 AI 客户端远程操作博客内容。
+// 通过 Streamable HTTP 传输对外暴露内容管理工具，
+// 供 Codex / ZCode 等 AI 客户端远程操作博客的全部内容模块。
 package mcp
 
 import (
@@ -32,14 +32,39 @@ func KeyIDFromContext(ctx context.Context) string {
 	return ""
 }
 
-// Service MCP 服务端结构体：聚合发布内容所需的业务 logic。
+// Service MCP 服务端结构体：聚合各内容模块的业务 logic。
 type Service struct {
-	version       string
-	logger        *zap.Logger
-	articleLogic  *logic.ArticleLogic
-	mediaLogic    *logic.MediaLogic
-	categoryLogic *logic.CategoryLogic
-	tagLogic      *logic.TagLogic
+	version string
+	logger  *zap.Logger
+
+	// 文章与媒体
+	articleLogic     *logic.ArticleLogic
+	mediaLogic       *logic.MediaLogic
+	mediaFolderLogic *logic.MediaFolderLogic
+	categoryLogic    *logic.CategoryLogic
+	tagLogic         *logic.TagLogic
+
+	// 关于我
+	bloggerLogic *logic.BloggerLogic
+
+	// 评论与统计
+	commentLogic   *logic.CommentLogic
+	analyticsLogic *logic.AnalyticsLogic
+	viewStatsLogic *logic.ViewStatsLogic
+
+	// 展示类内容模块
+	equipmentLogic  *logic.EquipmentLogic
+	projectLogic    *logic.ProjectLogic
+	techStackLogic  *logic.TechStackLogic
+	openSourceLogic *logic.OpenSourceLogic
+	playlistLogic   *logic.ThirdPartyPlaylistLogic
+	videoLogic      *logic.VideoLogic
+	travelLogic     *logic.TravelGuideLogic
+	portfolioLogic  *logic.PortfolioLogic
+	recipeLogic     *logic.RecipeLogic
+	bookLogic       *logic.BookLogic
+	gameLogic       *logic.GameLogic
+	fitnessLogic    *logic.FitnessLogic
 }
 
 // NewService 创建 MCP 服务端实例。
@@ -48,12 +73,29 @@ func NewService(version string, mediaLogic *logic.MediaLogic, logger *zap.Logger
 		logger = zap.NewNop()
 	}
 	return &Service{
-		version:       version,
-		logger:        logger,
-		articleLogic:  logic.NewArticleLogic(),
-		mediaLogic:    mediaLogic,
-		categoryLogic: logic.NewCategoryLogic(),
-		tagLogic:      logic.NewTagLogic(),
+		version:          version,
+		logger:           logger,
+		articleLogic:     logic.NewArticleLogic(),
+		mediaLogic:       mediaLogic,
+		categoryLogic:    logic.NewCategoryLogic(),
+		tagLogic:         logic.NewTagLogic(),
+		bloggerLogic:     logic.NewBloggerLogic(),
+		commentLogic:     logic.NewCommentLogic(),
+		analyticsLogic:   logic.NewAnalyticsLogic(),
+		viewStatsLogic:   logic.NewViewStatsLogic(),
+		mediaFolderLogic: logic.NewMediaFolderLogic(),
+		equipmentLogic:   logic.NewEquipmentLogic(),
+		projectLogic:     logic.NewProjectLogic(),
+		techStackLogic:   logic.NewTechStackLogic(),
+		openSourceLogic:  logic.NewOpenSourceLogic(),
+		playlistLogic:    logic.NewThirdPartyPlaylistLogic(),
+		videoLogic:       logic.NewVideoLogic(),
+		travelLogic:      logic.NewTravelGuideLogic(),
+		portfolioLogic:   logic.NewPortfolioLogic(),
+		recipeLogic:      logic.NewRecipeLogic(),
+		bookLogic:        logic.NewBookLogic(),
+		gameLogic:        logic.NewGameLogic(),
+		fitnessLogic:     logic.NewFitnessLogic(),
 	}
 }
 
@@ -63,10 +105,13 @@ func (s *Service) Handler() http.Handler {
 		Name:    "novablog",
 		Version: s.version,
 	}, &sdk.ServerOptions{
-		Instructions: "NovaBlog 博客内容发布服务。" +
-			"可用的能力：创建/更新/发布/下架/删除文章（正文为 Markdown），上传图片到媒体库（用于封面图和正文配图），查询分类与标签。" +
-			"建议流程：先上传封面图与正文图片拿到 URL，再创建文章（默认保存为草稿，明确要求发布时才置为 published）。" +
-			"复用已有分类和标签（先 list_categories / list_tags 查询），保持站点内容结构一致。",
+		Instructions: "NovaBlog 博客内容管理服务，覆盖管理后台全部内容模块。" +
+			"可用能力：创建/更新/发布/下架/删除文章（Markdown），上传图片到媒体库，管理分类与标签，" +
+			"管理关于我（博主资料、设备、项目经历、技术栈、开源作品），" +
+			"管理内容创作模块（第三方歌单、视频作品、旅行攻略、摄影作品集、美食菜谱、读书书架、游戏库、健身训练），" +
+			"查看工作台统计数据，管理评论（列表/回复/删除），查询/移动/删除媒体文件。" +
+			"建议流程：先上传封面图与正文图片拿到 URL，再创建内容（默认保存为草稿，明确要求发布时才置为 published）；" +
+			"删除操作均需显式传 confirm=true；复用已有分类与标签（先 list_categories / list_tags 查询）。",
 	})
 	s.registerTools(server)
 	return sdk.NewStreamableHTTPHandler(func(*http.Request) *sdk.Server {
@@ -113,18 +158,114 @@ func (s *Service) registerTools(server *sdk.Server) {
 	// 媒体上传
 	sdk.AddTool(server, &sdk.Tool{
 		Name:        "upload_image",
-		Description: "上传图片到媒体库并返回可直接引用的 URL。source 支持 http(s) 图片链接（自动转存）或 base64 图片数据。用于封面图和正文配图。",
+		Description: "上传图片到媒体库并返回可直接引用的 URL。source 支持 http(s) 图片链接（自动转存）或 base64 图片数据。module 决定归入哪个模块文件夹（默认 article）。",
 	}, wrapTool(s, "upload_image", s.uploadImage))
+
+	// 媒体库管理
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "list_media",
+		Description: "分页查询媒体库文件列表（含各模块文件夹归属信息），可按类型、关键词、文件夹过滤。",
+	}, wrapTool(s, "list_media", s.listMedia))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "list_media_folders",
+		Description: "查询媒体库文件夹列表（按内容模块组织的层级目录，已拍平并附完整路径 path 与文件数），用于选择 folder_id。",
+	}, wrapTool(s, "list_media_folders", s.listMediaFolders))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "move_media",
+		Description: "批量移动媒体文件到指定文件夹（folder_id 为空表示移到根目录）。",
+	}, wrapTool(s, "move_media", s.moveMedia))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "delete_media",
+		Description: "删除媒体文件（含预设产物，硬删除）。文件被引用时需传 force=true；必须显式传 confirm=true 才会执行。",
+	}, wrapTool(s, "delete_media", s.deleteMedia))
 
 	// 分类与标签
 	sdk.AddTool(server, &sdk.Tool{
 		Name:        "list_categories",
-		Description: "查询文章分类列表，创建文章前先查询以便复用。",
+		Description: "查询分类列表（type 默认 article），创建内容前先查询以便复用。",
 	}, wrapTool(s, "list_categories", s.listCategories))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "create_category",
+		Description: "创建分类，type 为内容模块 key（如 article/travel/recipe 等）。",
+	}, wrapTool(s, "create_category", s.createCategory))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "update_category",
+		Description: "更新分类的名称/slug/描述/排序（整体替换传入了的字段，未传入的保持不变）。",
+	}, wrapTool(s, "update_category", s.updateCategory))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "delete_category",
+		Description: "删除分类（被内容占用时会失败）。必须显式传 confirm=true 才会执行。",
+	}, wrapTool(s, "delete_category", s.deleteCategory))
 	sdk.AddTool(server, &sdk.Tool{
 		Name:        "list_tags",
 		Description: "查询标签列表，创建文章前先查询以便复用。",
 	}, wrapTool(s, "list_tags", s.listTags))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "create_tag",
+		Description: "创建标签。",
+	}, wrapTool(s, "create_tag", s.createTag))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "update_tag",
+		Description: "重命名标签。",
+	}, wrapTool(s, "update_tag", s.updateTag))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "delete_tag",
+		Description: "删除标签。必须显式传 confirm=true 才会执行。",
+	}, wrapTool(s, "delete_tag", s.deleteTag))
+
+	// 博主资料（关于我）
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "get_profile",
+		Description: "读取博主资料（关于我页面的全部信息：昵称、头像、简介、社交链接、博客标题等）。",
+	}, wrapTool(s, "get_profile", s.getProfile))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "update_profile",
+		Description: "更新博主资料（整体替换传入了的字段，未传入的保持不变；social_links/tags 传空数组表示清空）。",
+	}, wrapTool(s, "update_profile", s.updateProfile))
+
+	// 工作台统计（只读）
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "get_dashboard_overview",
+		Description: "获取工作台概览：各内容模块的文章/发布/评论统计、流量摘要（今日/昨日 PV/UV、总 PV）与发布节奏。",
+	}, wrapTool(s, "get_dashboard_overview", s.getDashboardOverview))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "get_dashboard_trend",
+		Description: "获取内容产出趋势与流量趋势（range: 7d/30d/90d，默认 30d）。",
+	}, wrapTool(s, "get_dashboard_trend", s.getDashboardTrend))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "get_top_content",
+		Description: "获取热门内容排行（按浏览量或评论数）。type: article/travel/all；sort: views/comments。",
+	}, wrapTool(s, "get_top_content", s.getTopContent))
+
+	// 评论管理
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "list_comments",
+		Description: "分页查询评论列表（含博主回复与访客评论），可按目标类型/目标 ID/关键词过滤。",
+	}, wrapTool(s, "list_comments", s.listComments))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "reply_comment",
+		Description: "以博主身份回复一条评论（1-2000 字）。",
+	}, wrapTool(s, "reply_comment", s.replyComment))
+	sdk.AddTool(server, &sdk.Tool{
+		Name:        "delete_comment",
+		Description: "删除评论（级联软删其下所有回复）。必须显式传 confirm=true 才会执行。",
+	}, wrapTool(s, "delete_comment", s.deleteComment))
+
+	// 展示类内容模块（个人设备 / 项目经历 / 技术栈 / 开源作品）
+	s.registerEquipmentTools(server)
+	s.registerProjectTools(server)
+	s.registerTechStackTools(server)
+	s.registerOpenSourceTools(server)
+
+	// 内容创作模块（歌单 / 视频 / 旅行 / 摄影 / 菜谱 / 书 / 游戏 / 健身）
+	s.registerPlaylistTools(server)
+	s.registerVideoTools(server)
+	s.registerTravelTools(server)
+	s.registerPortfolioTools(server)
+	s.registerRecipeTools(server)
+	s.registerBookTools(server)
+	s.registerGameTools(server)
+	s.registerFitnessTools(server)
 }
 
 // wrapTool 包装工具 handler：统一记录调用日志（密钥、工具名、耗时、结果）。

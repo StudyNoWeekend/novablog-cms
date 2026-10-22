@@ -18,6 +18,20 @@
     "video": "동영상",
     "folder": "폴더"
   },
+  "module": {
+    "article": "아티클",
+    "recipe": "레시피",
+    "book": "독서 책장",
+    "game": "게임 라이브러리",
+    "tech_stack": "기술 스택",
+    "travel": "여행 가이드",
+    "equipment": "개인 장비",
+    "project": "프로젝트 경력",
+    "video": "영상 작품",
+    "music": "음악",
+    "portfolio": "사진 포트폴리오",
+    "profile": "블로거 프로필"
+  },
   "search": {
     "placeholder": "모든 파일 검색..."
   },
