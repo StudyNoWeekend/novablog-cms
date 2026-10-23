@@ -1,0 +1,81 @@
+{
+  "title": "雲端硬碟帳號",
+  "tabs": {
+    "webdav": "WebDAV",
+    "baidu": "百度網盤",
+    "aliyun": "阿里雲盤"
+  },
+  "config": {
+    "title": "應用程式憑證",
+    "clientId": "AppKey / Client ID",
+    "clientSecret": "Secret / Client Secret",
+    "secretKeep": "編輯時留空表示不修改",
+    "callbackBaseHint": "由目前存取位址自動產生、不可修改，請將該位址登記到開放平台",
+    "save": "儲存憑證",
+    "saved": "憑證已儲存",
+    "required": "請填寫完整",
+    "applyPortal": "前往開放平台申請",
+    "callbackUrl": "回呼位址（自動產生）",
+    "copied": "已複製"
+  },
+  "webdav": {
+    "formTitle": "綁定 WebDAV 帳號",
+    "baseUrl": "伺服器位址",
+    "baseUrlPlaceholder": "如 https://dav.jianguoyun.com/dav",
+    "username": "使用者名稱",
+    "password": "密碼",
+    "appPasswordHint": "WebDAV 帳密即用、零審核：坚果雲請使用「應用程式密碼」；自架 Alist 可聚合百度/阿里/夸克等全部網盤",
+    "test": "測試連線",
+    "testOk": "連線成功",
+    "add": "綁定帳號",
+    "added": "WebDAV 帳號已綁定"
+  },
+  "accounts": {
+    "title": "已綁定帳號",
+    "empty": "暫無帳號",
+    "add": "新增帳號",
+    "added": "帳號綁定成功",
+    "oauthAccount": "OAuth 授權帳號",
+    "oauthPending": "等待授權完成，完成後自動重新整理…",
+    "expired": "授權已過期",
+    "quota": "容量",
+    "unbind": "解除綁定",
+    "unbindConfirm": "確定解除綁定該帳號？進行中的匯入任務將無法繼續",
+    "unbound": "已解除綁定"
+  },
+  "import": {
+    "entry": "雲端硬碟匯入",
+    "title": "從雲端硬碟匯入",
+    "account": "雲端硬碟帳號",
+    "selectAccount": "請選擇雲端硬碟帳號",
+    "noAccount": "尚未綁定雲端硬碟帳號",
+    "goBind": "去綁定",
+    "breadcrumbRoot": "全部檔案",
+    "selectAll": "全選",
+    "empty": "此目錄為空",
+    "loadMore": "載入更多",
+    "targetFolder": "匯入到",
+    "rootFolder": "根目錄",
+    "selectedCount": "已選 {count} 個檔案",
+    "overLimit": "超過單次 200 個上限",
+    "start": "匯入 {count} 個檔案",
+    "started": "匯入任務已開始",
+    "doneCount": "已完成 {done}/{total}",
+    "successCount": "成功 {count}",
+    "failCount": "失敗 {count}",
+    "completed": "匯入完成：成功 {succeeded} 個，失敗 {failed} 個",
+    "failedDetail": "失敗明細（{count}）",
+    "close": "關閉",
+    "cancel": "取消"
+  },
+  "errors": {
+    "loadFailed": "載入雲端硬碟資料失敗",
+    "saveFailed": "儲存失敗",
+    "listFailed": "讀取雲端硬碟目錄失敗",
+    "webdavTestFailed": "WebDAV 連線失敗",
+    "webdavAddFailed": "WebDAV 綁定失敗",
+    "authorizeFailed": "發起授權失敗",
+    "unbindFailed": "解除綁定失敗",
+    "importStartFailed": "發起匯入失敗"
+  }
+}

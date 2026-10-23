@@ -98,6 +98,22 @@ var (
 	ErrCommunityPushUpstream = NewBizError(400403, "社区服务暂不可用，请稍后再试", 400)
 	// ErrCommunityPushTargetInvalid 目标内容不存在或不支持推送
 	ErrCommunityPushTargetInvalid = NewBizError(404004, "目标内容不存在或不支持推送", 404)
+	// ErrCloudDriveProviderInvalid 云盘类型不支持
+	ErrCloudDriveProviderInvalid = NewBizError(400501, "不支持的云盘类型", 400)
+	// ErrCloudDriveConfigMissing 未配置云盘应用凭据
+	ErrCloudDriveConfigMissing = NewBizError(400502, "请先在云盘账号页填写该平台的应用凭据（AppKey/Secret）", 400)
+	// ErrCloudDriveStateInvalid OAuth 授权状态校验失败（state 无效或已过期）
+	ErrCloudDriveStateInvalid = NewBizError(400503, "授权状态校验失败，请重新发起授权", 400)
+	// ErrCloudDriveAccountNotFound 云盘账号不存在
+	ErrCloudDriveAccountNotFound = NewBizError(404005, "云盘账号不存在", 404)
+	// ErrCloudDriveTaskRunning 该账号已有导入任务进行中
+	ErrCloudDriveTaskRunning = NewBizError(400504, "该账号已有导入任务进行中，请等待完成后再发起", 400)
+	// ErrCloudDriveImportLimit 超过单次导入数量上限
+	ErrCloudDriveImportLimit = NewBizError(400505, "单次导入文件数超过上限", 400)
+	// ErrCloudDriveFileTooLarge 单文件超过导入大小上限
+	ErrCloudDriveFileTooLarge = NewBizError(400506, "存在超过单文件导入大小上限的文件", 400)
+	// ErrCloudDriveAccountExists 该云盘账号已绑定
+	ErrCloudDriveAccountExists = NewBizError(400507, "该云盘账号已绑定", 400)
 	// ErrInternalServer 系统内部错误
 	ErrInternalServer = NewBizError(500001, "系统内部错误", 500)
 )

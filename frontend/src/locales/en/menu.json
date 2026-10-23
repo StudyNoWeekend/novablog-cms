@@ -14,32 +14,63 @@
     "create": "New Article",
     "edit": "Edit Article"
   },
-  "comment": { "list": "Comments" },
-  "media": { "list": "Media Library" },
-  "portfolio": { "list": "Photo Portfolios", "edit": "Edit Portfolio" },
-  "equipment": { "list": "My Devices" },
-  "project": { "list": "Projects" },
-  "openSource": { "list": "Open Source" },
-  "recipe": { "list": "Recipes" },
-  "book": { "list": "Bookshelf" },
-  "game": { "list": "Game Library" },
-  "fitness": { "list": "Fitness Training" },
-  "techStack": { "list": "Tech Stack" },
-  "video": { "list": "Videos" },
+  "comment": {
+    "list": "Comments"
+  },
+  "media": {
+    "list": "Media Library"
+  },
+  "portfolio": {
+    "list": "Photo Portfolios",
+    "edit": "Edit Portfolio"
+  },
+  "equipment": {
+    "list": "My Devices"
+  },
+  "project": {
+    "list": "Projects"
+  },
+  "openSource": {
+    "list": "Open Source"
+  },
+  "recipe": {
+    "list": "Recipes"
+  },
+  "book": {
+    "list": "Bookshelf"
+  },
+  "game": {
+    "list": "Game Library"
+  },
+  "fitness": {
+    "list": "Fitness Training"
+  },
+  "techStack": {
+    "list": "Tech Stack"
+  },
+  "video": {
+    "list": "Videos"
+  },
   "travel": {
     "list": "Travel Guides",
     "create": "New Guide",
     "edit": "Edit Guide",
     "detail": "Guide Details"
   },
-  "playlist": { "list": "Music Playlists" },
+  "playlist": {
+    "list": "Music Playlists"
+  },
   "system": {
     "config": "System Settings",
     "module": "Module Management",
     "map": "Map Settings"
   },
-  "apiDoc": { "list": "API Docs" },
-  "mcp": { "list": "MCP Service" },
+  "apiDoc": {
+    "list": "API Docs"
+  },
+  "mcp": {
+    "list": "MCP Service"
+  },
   "security": {
     "blacklist": "Blacklist",
     "monitor": "Traffic Statistics"
@@ -48,10 +79,15 @@
     "market": "Theme Market",
     "detail": "Theme Details"
   },
+  "cloudDrive": {
+    "accounts": "Cloud Drives"
+  },
   "profile": {
     "info": "Profile",
     "cors": "CORS Settings"
   },
-  "storage": { "config": "Object Storage" },
+  "storage": {
+    "config": "Object Storage"
+  },
   "notFound": "Page Not Found"
 }

@@ -87,6 +87,13 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	migrationLogic := logic.NewMigrationLogic(storageMgr, cryptoKey, uploadDir, logger)
 	migrationController := controller.NewMigrationController(migrationLogic)
 
+	// 云盘导入依赖（WebDAV/百度网盘/阿里云盘 → 媒体库转存）
+	cloudDriveLogic := logic.NewCloudDriveLogic(cryptoKey, logger)
+	cloudImportLogic := logic.NewCloudImportLogic(cloudDriveLogic, mediaLogic, logger)
+	cloudDriveController := controller.NewCloudDriveController(cloudDriveLogic, cloudImportLogic)
+	// 启动自愈：上次服务中断遗留的 running 导入任务标记为失败
+	cloudImportLogic.RecoverInterruptedTasks(context.Background())
+
 	// 注册公开路由（无需认证）
 	public := api.Group("/public")
 	RegisterPublicRoutes(public, publicController, playlistController)
@@ -158,6 +165,9 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册图片搜索路由
 	RegisterImageSearchRoutes(api, controller.NewImageSearchController(logic.NewImageSearchLogic(mediaLogic)), authMiddleware)
+
+	// 注册云盘导入路由（WebDAV/百度网盘/阿里云盘 → 媒体库转存）
+	RegisterCloudDriveRoutes(api, cloudDriveController, authMiddleware)
 
 	// 注册官方主题市场代理路由
 	themeMarketController := controller.NewThemeMarketController()

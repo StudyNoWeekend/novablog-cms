@@ -1,0 +1,81 @@
+{
+  "title": "云盘账号",
+  "tabs": {
+    "webdav": "WebDAV",
+    "baidu": "百度网盘",
+    "aliyun": "阿里云盘"
+  },
+  "config": {
+    "title": "应用凭据",
+    "clientId": "AppKey / Client ID",
+    "clientSecret": "Secret / Client Secret",
+    "secretKeep": "编辑时留空表示不修改",
+    "callbackBaseHint": "由当前访问地址自动生成、不可修改，请将该地址登记到开放平台",
+    "save": "保存凭据",
+    "saved": "凭据已保存",
+    "required": "请填写完整",
+    "applyPortal": "前往开放平台申请",
+    "callbackUrl": "回调地址（自动生成）",
+    "copied": "已复制"
+  },
+  "webdav": {
+    "formTitle": "绑定 WebDAV 账号",
+    "baseUrl": "服务器地址",
+    "baseUrlPlaceholder": "如 https://dav.jianguoyun.com/dav",
+    "username": "用户名",
+    "password": "密码",
+    "appPasswordHint": "WebDAV 账密即用、零审核：坚果云请使用「应用密码」；自建 Alist 可聚合百度/阿里/夸克等全部网盘",
+    "test": "测试连接",
+    "testOk": "连接成功",
+    "add": "绑定账号",
+    "added": "WebDAV 账号已绑定"
+  },
+  "accounts": {
+    "title": "已绑定账号",
+    "empty": "暂无账号",
+    "add": "添加账号",
+    "added": "账号绑定成功",
+    "oauthAccount": "OAuth 授权账号",
+    "oauthPending": "等待授权完成，完成后自动刷新…",
+    "expired": "授权已过期",
+    "quota": "容量",
+    "unbind": "解绑",
+    "unbindConfirm": "确定解绑该账号？进行中的导入任务将无法继续",
+    "unbound": "已解绑"
+  },
+  "import": {
+    "entry": "云盘导入",
+    "title": "从云盘导入",
+    "account": "云盘账号",
+    "selectAccount": "请选择云盘账号",
+    "noAccount": "尚未绑定云盘账号",
+    "goBind": "去绑定",
+    "breadcrumbRoot": "全部文件",
+    "selectAll": "全选",
+    "empty": "此目录为空",
+    "loadMore": "加载更多",
+    "targetFolder": "导入到",
+    "rootFolder": "根目录",
+    "selectedCount": "已选 {count} 个文件",
+    "overLimit": "超过单次 200 个上限",
+    "start": "导入 {count} 个文件",
+    "started": "导入任务已开始",
+    "doneCount": "已完成 {done}/{total}",
+    "successCount": "成功 {count}",
+    "failCount": "失败 {count}",
+    "completed": "导入完成：成功 {succeeded} 个，失败 {failed} 个",
+    "failedDetail": "失败明细（{count}）",
+    "close": "关闭",
+    "cancel": "取消"
+  },
+  "errors": {
+    "loadFailed": "加载云盘数据失败",
+    "saveFailed": "保存失败",
+    "listFailed": "读取云盘目录失败",
+    "webdavTestFailed": "WebDAV 连接失败",
+    "webdavAddFailed": "WebDAV 绑定失败",
+    "authorizeFailed": "发起授权失败",
+    "unbindFailed": "解绑失败",
+    "importStartFailed": "发起导入失败"
+  }
+}

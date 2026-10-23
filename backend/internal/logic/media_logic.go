@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"mime/multipart"
 	"path/filepath"
 	"sort"
@@ -144,6 +145,18 @@ func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileH
 
 // SaveRemoteBytes 将外部图片字节写入当前存储并登记媒体记录（供图片搜索转存等使用）。
 func (l *MediaLogic) SaveRemoteBytes(ctx context.Context, filename, contentType string, data []byte, opts MediaUploadOptions) (*res.MediaRes, error) {
+	return l.saveReaderMedia(ctx, filename, contentType, int64(len(data)), bytes.NewReader(data), opts)
+}
+
+// SaveRemoteStream 将外部文件流式写入当前存储并登记媒体记录（供云盘导入使用）。
+// reader 直接透传 provider.Upload（单次流式读取），避免大文件全量进内存；
+// contentType 为空时按扩展名推断；size 为已知文件大小（用于对象存储上传，未知传 0）。
+func (l *MediaLogic) SaveRemoteStream(ctx context.Context, filename, contentType string, size int64, reader io.Reader, opts MediaUploadOptions) (*res.MediaRes, error) {
+	return l.saveReaderMedia(ctx, filename, contentType, size, reader, opts)
+}
+
+// saveReaderMedia 外部内容入库公共链路：解析文件夹归属 → 生成存储 key → 上传 → 创建媒体记录。
+func (l *MediaLogic) saveReaderMedia(ctx context.Context, filename, contentType string, size int64, reader io.Reader, opts MediaUploadOptions) (*res.MediaRes, error) {
 	folder, err := l.resolveTargetFolder(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -167,17 +180,21 @@ func (l *MediaLogic) SaveRemoteBytes(ctx context.Context, filename, contentType 
 		key = fmt.Sprintf("%s/%s", strings.Trim(activeCfg.PathPrefix, "/"), key)
 	}
 
-	url, err := provider.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), contentType)
+	if contentType == "" {
+		contentType = getMimeType(ext)
+	}
+
+	url, err := provider.Upload(ctx, key, reader, size, contentType)
 	if err != nil {
-		return nil, fmt.Errorf("转存图片失败: %w", err)
+		return nil, fmt.Errorf("转存文件失败: %w", err)
 	}
 
 	media := &model.Media{
 		ID:          uuid.New().String(),
 		Filename:    filename,
 		FileType:    getFileType(ext),
-		MimeType:    getMimeType(ext),
-		Size:        int64(len(data)),
+		MimeType:    contentType,
+		Size:        size,
 		URL:         url,
 		StoragePath: key,
 		StorageType: provider.Type(),

@@ -155,6 +155,10 @@ func autoMigrate(db *gorm.DB) error {
 		&model.MCPAPIKey{},
 		&model.CommunityPushConfig{},
 		&model.CommunitySyncRecord{},
+		&model.CloudDriveConfig{},
+		&model.CloudDriveAccount{},
+		&model.CloudImportTask{},
+		&model.CloudImportItem{},
 	)
 }
 

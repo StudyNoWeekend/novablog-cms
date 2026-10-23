@@ -1,0 +1,81 @@
+{
+  "title": "클라우드 드라이브 계정",
+  "tabs": {
+    "webdav": "WebDAV",
+    "baidu": "바이두 넷디스크",
+    "aliyun": "알리윈 드라이브"
+  },
+  "config": {
+    "title": "앱 자격 증명",
+    "clientId": "AppKey / Client ID",
+    "clientSecret": "Secret / Client Secret",
+    "secretKeep": "편집 시 비워 두면 변경되지 않습니다",
+    "callbackBaseHint": "현재 접속 URL에서 자동 생성되며 수정할 수 없습니다. 개발자 플랫폼에 등록해 주세요",
+    "save": "자격 증명 저장",
+    "saved": "자격 증명이 저장되었습니다",
+    "required": "필수 항목을 모두 입력해 주세요",
+    "applyPortal": "개발자 플랫폼에서 신청",
+    "callbackUrl": "리다이렉트 URI(자동 생성)",
+    "copied": "복사됨"
+  },
+  "webdav": {
+    "formTitle": "WebDAV 계정 연동",
+    "baseUrl": "서버 URL",
+    "baseUrlPlaceholder": "예: https://dav.jianguoyun.com/dav",
+    "username": "사용자 이름",
+    "password": "비밀번호",
+    "appPasswordHint": "WebDAV는 계정과 비밀번호만으로 사용할 수 있으며 심사가 필요 없습니다: 坚果云는「앱 비밀번호」를 사용하세요. 자체 호스팅 Alist를 사용하면 바이두/알리윈/쿠크 등을 모두 연동할 수 있습니다",
+    "test": "연결 테스트",
+    "testOk": "연결 성공",
+    "add": "계정 연동",
+    "added": "WebDAV 계정이 연동되었습니다"
+  },
+  "accounts": {
+    "title": "연동된 계정",
+    "empty": "아직 계정이 없습니다",
+    "add": "계정 추가",
+    "added": "계정 연동에 성공했습니다",
+    "oauthAccount": "OAuth 연동 계정",
+    "oauthPending": "인증 완료를 기다리는 중…",
+    "expired": "인증이 만료되었습니다",
+    "quota": "저장 용량",
+    "unbind": "연동 해제",
+    "unbindConfirm": "이 계정의 연동을 해제하시겠습니까? 진행 중인 가져오기 작업이 중단됩니다",
+    "unbound": "연동이 해제되었습니다"
+  },
+  "import": {
+    "entry": "클라우드에서 가져오기",
+    "title": "클라우드 드라이브에서 가져오기",
+    "account": "클라우드 계정",
+    "selectAccount": "클라우드 계정을 선택하세요",
+    "noAccount": "연동된 클라우드 계정이 없습니다",
+    "goBind": "연동하러 가기",
+    "breadcrumbRoot": "전체 파일",
+    "selectAll": "전체 선택",
+    "empty": "이 폴더는 비어 있습니다",
+    "loadMore": "더 불러오기",
+    "targetFolder": "가져올 위치",
+    "rootFolder": "루트",
+    "selectedCount": "{count}개 파일 선택됨",
+    "overLimit": "1회 가져오기 한도(200개)를 초과했습니다",
+    "start": "{count}개 파일 가져오기",
+    "started": "가져오기 작업이 시작되었습니다",
+    "doneCount": "{done}/{total} 완료",
+    "successCount": "성공 {count}",
+    "failCount": "실패 {count}",
+    "completed": "가져오기 완료: 성공 {succeeded}건, 실패 {failed}건",
+    "failedDetail": "실패 상세({count})",
+    "close": "닫기",
+    "cancel": "취소"
+  },
+  "errors": {
+    "loadFailed": "클라우드 드라이브 데이터를 불러오지 못했습니다",
+    "saveFailed": "저장에 실패했습니다",
+    "listFailed": "클라우드 드라이브 폴더를 읽지 못했습니다",
+    "webdavTestFailed": "WebDAV 연결에 실패했습니다",
+    "webdavAddFailed": "WebDAV 계정 연동에 실패했습니다",
+    "authorizeFailed": "인증 시작에 실패했습니다",
+    "unbindFailed": "연동 해제에 실패했습니다",
+    "importStartFailed": "가져오기 시작에 실패했습니다"
+  }
+}

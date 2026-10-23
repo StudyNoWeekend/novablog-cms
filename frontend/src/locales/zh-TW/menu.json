@@ -14,32 +14,63 @@
     "create": "新增文章",
     "edit": "編輯文章"
   },
-  "comment": { "list": "留言管理" },
-  "media": { "list": "媒體庫" },
-  "portfolio": { "list": "攝影作品集", "edit": "編輯作品集" },
-  "equipment": { "list": "個人設備" },
-  "project": { "list": "專案經歷" },
-  "openSource": { "list": "開源作品" },
-  "recipe": { "list": "美食食譜" },
-  "book": { "list": "讀書書架" },
-  "game": { "list": "遊戲庫" },
-  "fitness": { "list": "健身訓練" },
-  "techStack": { "list": "技術棧" },
-  "video": { "list": "影片作品" },
+  "comment": {
+    "list": "留言管理"
+  },
+  "media": {
+    "list": "媒體庫"
+  },
+  "portfolio": {
+    "list": "攝影作品集",
+    "edit": "編輯作品集"
+  },
+  "equipment": {
+    "list": "個人設備"
+  },
+  "project": {
+    "list": "專案經歷"
+  },
+  "openSource": {
+    "list": "開源作品"
+  },
+  "recipe": {
+    "list": "美食食譜"
+  },
+  "book": {
+    "list": "讀書書架"
+  },
+  "game": {
+    "list": "遊戲庫"
+  },
+  "fitness": {
+    "list": "健身訓練"
+  },
+  "techStack": {
+    "list": "技術棧"
+  },
+  "video": {
+    "list": "影片作品"
+  },
   "travel": {
     "list": "旅遊攻略",
     "create": "新增攻略",
     "edit": "編輯攻略",
     "detail": "攻略詳情"
   },
-  "playlist": { "list": "音樂播放清單" },
+  "playlist": {
+    "list": "音樂播放清單"
+  },
   "system": {
     "config": "系統設定",
     "module": "模組管理",
     "map": "地圖設定"
   },
-  "apiDoc": { "list": "API 文件" },
-  "mcp": { "list": "MCP 服務" },
+  "apiDoc": {
+    "list": "API 文件"
+  },
+  "mcp": {
+    "list": "MCP 服務"
+  },
   "security": {
     "blacklist": "黑名單管理",
     "monitor": "存取統計"
@@ -48,10 +79,15 @@
     "market": "主題市場",
     "detail": "主題詳情"
   },
+  "cloudDrive": {
+    "accounts": "雲端硬碟帳號"
+  },
   "profile": {
     "info": "個人資料",
     "cors": "跨網域設定"
   },
-  "storage": { "config": "物件儲存" },
+  "storage": {
+    "config": "物件儲存"
+  },
   "notFound": "頁面不存在"
 }

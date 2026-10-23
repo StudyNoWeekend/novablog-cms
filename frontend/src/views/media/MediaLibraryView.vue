@@ -26,6 +26,9 @@
             <VideoCameraOutlined /> {{ $t('media.upload.video') }}
           </a-button>
         </a-upload>
+        <a-button @click="cloudImportVisible = true">
+          <CloudDownloadOutlined /> {{ $t('cloudDrive.import.entry') }}
+        </a-button>
       </a-space>
     </div>
 
@@ -274,6 +277,8 @@
         <p class="folder-modal-hint">{{ $t('media.folder.nameRule', { name: folderModalParentName }) }}</p>
       </a-form>
     </a-modal>
+
+    <CloudDriveImportModal v-model:visible="cloudImportVisible" @imported="refreshAll" />
   </div>
 </template>
 
@@ -295,9 +300,11 @@ import {
   FolderOpenOutlined,
   EditOutlined,
   MoreOutlined,
+  CloudDownloadOutlined,
 } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem, MediaFolderNode } from '@/api/media'
+import CloudDriveImportModal from '@/components/media/CloudDriveImportModal.vue'
 import { getThumbUrl } from '@/utils/image'
 import { IMAGE_ACCEPT, VIDEO_ACCEPT, MAX_UPLOAD_SIZE } from '@/utils/upload'
 import { formatDateTime } from '@/utils/datetime'
@@ -323,6 +330,7 @@ const loading = ref(false)
 const uploading = ref(false)
 
 const currentFolderId = ref('root')
+const cloudImportVisible = ref(false)
 const {
   folderTree,
   folderLoading,
