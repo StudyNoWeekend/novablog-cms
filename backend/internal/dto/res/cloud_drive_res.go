@@ -55,14 +55,15 @@ type CloudFileListRes struct {
 
 // CloudImportItemRes 导入条目响应。
 type CloudImportItemRes struct {
-	ID           string `json:"id"`
-	SourceFileID string `json:"source_file_id"`
-	SourcePath   string `json:"source_path"`
-	Filename     string `json:"filename"`
-	FileSize     int64  `json:"file_size"`
-	Status       string `json:"status"`
-	MediaID      string `json:"media_id"`
-	Error        string `json:"error"`
+	ID               string `json:"id"`
+	SourceFileID     string `json:"source_file_id"`
+	SourcePath       string `json:"source_path"`
+	Filename         string `json:"filename"`
+	FileSize         int64  `json:"file_size"`
+	TransferredBytes int64  `json:"transferred_bytes"` // 已下载字节（下载中节流回写，前端逐文件进度/速度）
+	Status           string `json:"status"`
+	MediaID          string `json:"media_id"`
+	Error            string `json:"error"`
 }
 
 // CloudImportTaskRes 导入任务响应。
@@ -81,8 +82,9 @@ type CloudImportTaskRes struct {
 	CreatedAt      time.Time  `json:"created_at"`
 }
 
-// CloudImportStatusRes 导入进度响应（任务 + 失败明细）。
+// CloudImportStatusRes 导入进度响应（任务 + 全部条目逐文件进度 + 失败明细）。
 type CloudImportStatusRes struct {
 	Task   CloudImportTaskRes   `json:"task"`
-	Failed []CloudImportItemRes `json:"failed"`
+	Items  []CloudImportItemRes `json:"items"`  // 全部条目（含下载中条目的 transferred_bytes，供前端逐文件进度条）
+	Failed []CloudImportItemRes `json:"failed"` // 失败明细（结果页折叠面板）
 }

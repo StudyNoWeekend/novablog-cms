@@ -32,16 +32,17 @@ func (CloudImportTask) TableName() string {
 
 // CloudImportItem 云盘导入条目模型，对应 cloud_import_items 数据表。
 type CloudImportItem struct {
-	ID           string    `gorm:"type:uuid;primaryKey"`
-	TaskID       string    `gorm:"column:task_id;type:uuid;not null;index"`
-	SourceFileID string    `gorm:"column:source_file_id;type:varchar(255);not null"` // 盘方文件 ID（WebDAV 为路径）
-	SourcePath   string    `gorm:"column:source_path;type:varchar(500)"`             // 盘内完整路径
-	Filename     string    `gorm:"type:varchar(255)"`
-	FileSize     int64     `gorm:"type:bigint"`
-	Status       string    `gorm:"type:varchar(20);not null;default:pending"` // pending/success/failed
-	MediaID      *string   `gorm:"column:media_id;type:uuid"`                 // 入库成功后回填
-	Error        string    `gorm:"type:text"`
-	CreatedAt    time.Time `gorm:"type:timestamptz;autoCreateTime"`
+	ID               string    `gorm:"type:uuid;primaryKey"`
+	TaskID           string    `gorm:"column:task_id;type:uuid;not null;index"`
+	SourceFileID     string    `gorm:"column:source_file_id;type:varchar(255);not null"` // 盘方文件 ID（WebDAV 为路径）
+	SourcePath       string    `gorm:"column:source_path;type:varchar(500)"`             // 盘内完整路径
+	Filename         string    `gorm:"type:varchar(255)"`
+	FileSize         int64     `gorm:"type:bigint"`
+	TransferredBytes int64     `gorm:"column:transferred_bytes;type:bigint;default:0"` // 已下载字节（进度轮询用，下载中节流回写）
+	Status           string    `gorm:"type:varchar(20);not null;default:pending"`      // pending/success/failed
+	MediaID          *string   `gorm:"column:media_id;type:uuid"`                      // 入库成功后回填
+	Error            string    `gorm:"type:text"`
+	CreatedAt        time.Time `gorm:"type:timestamptz;autoCreateTime"`
 }
 
 // TableName 指定数据表名称。
@@ -123,9 +124,16 @@ func (m *CloudImportModel) UpdateItem(ctx context.Context, item *CloudImportItem
 	return m.db.WithContext(ctx).Save(item).Error
 }
 
-// GetItemsByTaskID 根据任务 ID 查询所有导入条目。
+// UpdateItemProgress 按列更新条目已下载字节（下载中高频进度回写，避免 Save 全量）。
+func (m *CloudImportModel) UpdateItemProgress(ctx context.Context, itemID string, transferred int64) error {
+	return m.db.WithContext(ctx).Model(&CloudImportItem{}).
+		Where("id = ?", itemID).
+		Updates(map[string]interface{}{"transferred_bytes": transferred}).Error
+}
+
+// GetItemsByTaskID 根据任务 ID 查询所有导入条目（按创建顺序）。
 func (m *CloudImportModel) GetItemsByTaskID(ctx context.Context, taskID string) ([]CloudImportItem, error) {
 	var items []CloudImportItem
-	err := m.db.WithContext(ctx).Where("task_id = ?", taskID).Find(&items).Error
+	err := m.db.WithContext(ctx).Where("task_id = ?", taskID).Order("created_at").Find(&items).Error
 	return items, err
 }
