@@ -113,6 +113,7 @@ import {
   RocketOutlined,
   HeartOutlined,
   CodeOutlined,
+  CloudOutlined,
   EyeOutlined,
   UserOutlined,
   SettingOutlined,
@@ -167,6 +168,7 @@ const menuGroupDefs: { titleKey: string; items: SidebarMenuItem[] }[] = [
     titleKey: 'menu.group.system',
     items: [
       { path: '/themes', labelKey: 'menu.theme.market', icon: SkinOutlined },
+      { path: '/cloud-drive', labelKey: 'menu.cloudDrive.accounts', icon: CloudOutlined },
       { path: '/system-config', labelKey: 'menu.system.config', icon: SettingOutlined },
       { path: '/security/monitor', labelKey: 'menu.security.monitor', icon: EyeOutlined },
     ],

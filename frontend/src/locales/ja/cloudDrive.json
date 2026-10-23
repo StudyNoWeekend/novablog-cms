@@ -1,0 +1,81 @@
+{
+  "title": "クラウドドライブアカウント",
+  "tabs": {
+    "webdav": "WebDAV",
+    "baidu": "Baidu ネットディスク",
+    "aliyun": "Aliyun ドライブ"
+  },
+  "config": {
+    "title": "アプリ資格情報",
+    "clientId": "AppKey / Client ID",
+    "clientSecret": "Secret / Client Secret",
+    "secretKeep": "編集時に空欄のままなら変更なし",
+    "callbackBaseHint": "現在のアクセス URL から自動生成され、変更できません。開発者プラットフォームに登録してください",
+    "save": "資格情報を保存",
+    "saved": "資格情報を保存しました",
+    "required": "すべての必須項目を入力してください",
+    "applyPortal": "開発者プラットフォームで申請",
+    "callbackUrl": "リダイレクト URI（自動生成）",
+    "copied": "コピーしました"
+  },
+  "webdav": {
+    "formTitle": "WebDAV アカウントを連携",
+    "baseUrl": "サーバー URL",
+    "baseUrlPlaceholder": "例：https://dav.jianguoyun.com/dav",
+    "username": "ユーザー名",
+    "password": "パスワード",
+    "appPasswordHint": "WebDAV はアカウントとパスワードだけで利用でき、審査不要です：坚果云は「アプリパスワード」を使用してください。自前の Alist なら Baidu/Aliyun/Quark などをまとめて接続できます",
+    "test": "接続テスト",
+    "testOk": "接続成功",
+    "add": "アカウントを連携",
+    "added": "WebDAV アカウントを連携しました"
+  },
+  "accounts": {
+    "title": "連携済みアカウント",
+    "empty": "アカウントはまだありません",
+    "add": "アカウントを追加",
+    "added": "アカウントの連携に成功しました",
+    "oauthAccount": "OAuth 連携アカウント",
+    "oauthPending": "認証の完了を待っています…",
+    "expired": "認証の有効期限が切れています",
+    "quota": "容量",
+    "unbind": "連携解除",
+    "unbindConfirm": "このアカウントを連携解除しますか？実行中のインポートタスクは中断されます",
+    "unbound": "連携を解除しました"
+  },
+  "import": {
+    "entry": "クラウドからインポート",
+    "title": "クラウドドライブからインポート",
+    "account": "クラウドアカウント",
+    "selectAccount": "クラウドアカウントを選択",
+    "noAccount": "クラウドアカウントが未連携です",
+    "goBind": "連携する",
+    "breadcrumbRoot": "すべてのファイル",
+    "selectAll": "すべて選択",
+    "empty": "このフォルダは空です",
+    "loadMore": "さらに読み込む",
+    "targetFolder": "インポート先",
+    "rootFolder": "ルート",
+    "selectedCount": "{count} 個のファイルを選択中",
+    "overLimit": "1 回のインポート上限（200 件）を超えています",
+    "start": "{count} 個のファイルをインポート",
+    "started": "インポートタスクを開始しました",
+    "doneCount": "{done}/{total} 完了",
+    "successCount": "成功 {count}",
+    "failCount": "失敗 {count}",
+    "completed": "インポート完了：成功 {succeeded} 件、失敗 {failed} 件",
+    "failedDetail": "失敗明細（{count}）",
+    "close": "閉じる",
+    "cancel": "キャンセル"
+  },
+  "errors": {
+    "loadFailed": "クラウドドライブデータの読み込みに失敗しました",
+    "saveFailed": "保存に失敗しました",
+    "listFailed": "クラウドドライブのフォルダ読み取りに失敗しました",
+    "webdavTestFailed": "WebDAV 接続に失敗しました",
+    "webdavAddFailed": "WebDAV アカウントの連携に失敗しました",
+    "authorizeFailed": "認証の開始に失敗しました",
+    "unbindFailed": "連携解除に失敗しました",
+    "importStartFailed": "インポートの開始に失敗しました"
+  }
+}

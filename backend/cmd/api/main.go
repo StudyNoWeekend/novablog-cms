@@ -163,6 +163,13 @@ func main() {
 
 	model.BaseURL = app.Config.GetString("upload.base_url")
 
+	// 注入云盘导入模块配置（WebDAV/百度网盘/阿里云盘）
+	logic.SetCloudDriveSettings(&logic.CloudDriveSettings{
+		ProxyURL:         app.Config.GetString("clouddrive.proxy_url"),
+		MaxFileSizeMB:    app.Config.GetInt("clouddrive.max_file_size_mb"),
+		ImportBatchLimit: app.Config.GetInt("clouddrive.import_batch_limit"),
+	})
+
 	// 注册路由
 	router.RegisterRoutes(
 		r, app.Logger, app.DB,

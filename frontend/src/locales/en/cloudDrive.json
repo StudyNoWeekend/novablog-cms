@@ -1,0 +1,81 @@
+{
+  "title": "Cloud Drive Accounts",
+  "tabs": {
+    "webdav": "WebDAV",
+    "baidu": "Baidu Netdisk",
+    "aliyun": "Aliyun Drive"
+  },
+  "config": {
+    "title": "App Credentials",
+    "clientId": "AppKey / Client ID",
+    "clientSecret": "Secret / Client Secret",
+    "secretKeep": "Leave empty to keep unchanged when editing",
+    "callbackBaseHint": "Auto-generated from the current access URL and read-only; register it on the developer platform",
+    "save": "Save Credentials",
+    "saved": "Credentials saved",
+    "required": "Please fill in all required fields",
+    "applyPortal": "Apply on the developer platform",
+    "callbackUrl": "Redirect URI (auto-generated)",
+    "copied": "Copied"
+  },
+  "webdav": {
+    "formTitle": "Bind a WebDAV Account",
+    "baseUrl": "Server URL",
+    "baseUrlPlaceholder": "e.g. https://dav.jianguoyun.com/dav",
+    "username": "Username",
+    "password": "Password",
+    "appPasswordHint": "WebDAV works with just account & password, no review needed: Jianguoyun requires an app password; a self-hosted Alist can aggregate Baidu/Aliyun/Quark and more",
+    "test": "Test Connection",
+    "testOk": "Connection successful",
+    "add": "Bind Account",
+    "added": "WebDAV account bound"
+  },
+  "accounts": {
+    "title": "Bound Accounts",
+    "empty": "No accounts yet",
+    "add": "Add Account",
+    "added": "Account bound successfully",
+    "oauthAccount": "OAuth authorized account",
+    "oauthPending": "Waiting for authorization to complete…",
+    "expired": "Authorization expired",
+    "quota": "Storage",
+    "unbind": "Unbind",
+    "unbindConfirm": "Unbind this account? Ongoing import tasks will stop",
+    "unbound": "Unbound"
+  },
+  "import": {
+    "entry": "Cloud Import",
+    "title": "Import from Cloud Drive",
+    "account": "Cloud account",
+    "selectAccount": "Select a cloud account",
+    "noAccount": "No cloud account bound yet",
+    "goBind": "Bind Now",
+    "breadcrumbRoot": "All Files",
+    "selectAll": "Select all",
+    "empty": "This folder is empty",
+    "loadMore": "Load more",
+    "targetFolder": "Import to",
+    "rootFolder": "Root",
+    "selectedCount": "{count} files selected",
+    "overLimit": "Exceeds the 200-file limit per import",
+    "start": "Import {count} files",
+    "started": "Import task started",
+    "doneCount": "{done}/{total} done",
+    "successCount": "{count} succeeded",
+    "failCount": "{count} failed",
+    "completed": "Import finished: {succeeded} succeeded, {failed} failed",
+    "failedDetail": "Failed items ({count})",
+    "close": "Close",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "loadFailed": "Failed to load cloud drive data",
+    "saveFailed": "Save failed",
+    "listFailed": "Failed to list cloud drive folder",
+    "webdavTestFailed": "WebDAV connection failed",
+    "webdavAddFailed": "Failed to bind WebDAV account",
+    "authorizeFailed": "Failed to start authorization",
+    "unbindFailed": "Unbind failed",
+    "importStartFailed": "Failed to start import"
+  }
+}

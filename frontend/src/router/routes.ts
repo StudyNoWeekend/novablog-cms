@@ -47,6 +47,12 @@ export default [
         component: () => import('@/views/media/MediaLibraryView.vue'),
       },
       {
+        path: 'cloud-drive',
+        name: 'CloudDriveAccounts',
+        meta: { title: 'menu.cloudDrive.accounts', icon: 'CloudOutlined' },
+        component: () => import('@/views/media/CloudDriveAccountsView.vue'),
+      },
+      {
         path: 'portfolios',
         name: 'Portfolios',
         meta: { title: 'menu.portfolio.list', icon: 'CameraOutlined' },
