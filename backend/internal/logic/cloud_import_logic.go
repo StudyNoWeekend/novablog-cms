@@ -3,6 +3,8 @@ package logic
 import (
 	"context"
 	"fmt"
+	"io"
+	"sync/atomic"
 	"time"
 
 	"novablog/enum"
@@ -146,7 +148,8 @@ func (l *CloudImportLogic) runImport(taskID, accountID string) {
 
 	var succeeded, failed int
 	for _, item := range items {
-		if err := l.importOne(ctx, client, &item, targetFolderID); err != nil {
+		transferred, err := l.importOne(ctx, client, &item, targetFolderID)
+		if err != nil {
 			failed++
 			item.Status = "failed"
 			item.Error = err.Error()
@@ -158,6 +161,7 @@ func (l *CloudImportLogic) runImport(taskID, accountID string) {
 			succeeded++
 			item.Status = "success"
 		}
+		item.TransferredBytes = transferred
 		if uerr := l.importModel.UpdateItem(ctx, &item); uerr != nil {
 			l.logger.Error("更新导入条目失败", zap.Error(uerr))
 		}
@@ -183,11 +187,27 @@ func (l *CloudImportLogic) runImport(taskID, accountID string) {
 	}
 }
 
+// importIdleTimeout 空闲看门狗阈值：下载流持续无字节超过该时长判定为死挂，取消该文件。
+const importIdleTimeout = 120 * time.Second
+
+// progressFlushBytes/progressFlushInterval 进度回写节流：增量达到 1MiB 且距上次 ≥1s 才写库。
+// 用变量便于测试中调小阈值观察中间进度。
+var (
+	progressFlushBytes    int64 = 1 << 20
+	progressFlushInterval = time.Second
+)
+
 // importOne 导入单个文件：云盘下载 → 流式写入媒体库 → 回填 media_id。
-func (l *CloudImportLogic) importOne(ctx context.Context, client clouddrive.Client, item *model.CloudImportItem, targetFolderID string) error {
-	reader, size, contentType, err := client.Download(ctx, item.SourceFileID)
+// 下载流经 progressReader 计数并节流回写条目进度（前端逐文件进度条与速度展示），
+// 同时带空闲看门狗：网盘直链死挂（长时间无字节）时取消下载，避免任务无限期阻塞。
+// 返回该文件最终已下载字节数（无论成败，供条目记录展示）。
+func (l *CloudImportLogic) importOne(ctx context.Context, client clouddrive.Client, item *model.CloudImportItem, targetFolderID string) (int64, error) {
+	dlCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	reader, size, contentType, err := client.Download(dlCtx, item.SourceFileID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer reader.Close()
 
@@ -199,17 +219,29 @@ func (l *CloudImportLogic) importOne(ctx context.Context, client clouddrive.Clie
 		size = item.FileSize
 	}
 
-	media, err := l.mediaLogic.SaveRemoteStream(ctx, filename, contentType, size, reader,
+	// 进度计数 + 节流回写 + 空闲看门狗（读路径为单协程顺序消费）
+	progress := newProgressReader(reader)
+	defer progress.stopWatchdog()
+
+	progress.onFlush = func(total int64) {
+		if err := l.importModel.UpdateItemProgress(ctx, item.ID, total); err != nil {
+			l.logger.Error("回写导入进度失败", zap.String("item_id", item.ID), zap.Error(err))
+		}
+	}
+
+	go progress.watchdog(dlCtx, cancel)
+
+	media, err := l.mediaLogic.SaveRemoteStream(dlCtx, filename, contentType, size, progress,
 		MediaUploadOptions{FolderID: targetFolderID})
 	if err != nil {
-		return err
+		return progress.bytes(), err
 	}
 	mediaID := media.ID
 	item.MediaID = &mediaID
-	return nil
+	return progress.bytes(), nil
 }
 
-// GetImportStatus 查询导入进度与失败明细。
+// GetImportStatus 查询导入进度（全部条目含逐文件进度）与失败明细。
 func (l *CloudImportLogic) GetImportStatus(ctx context.Context, taskID string) (*res.CloudImportStatusRes, error) {
 	task, err := l.importModel.GetTaskByID(ctx, taskID)
 	if err != nil {
@@ -220,14 +252,18 @@ func (l *CloudImportLogic) GetImportStatus(ctx context.Context, taskID string) (
 		return nil, fmt.Errorf("查询导入条目失败: %w", err)
 	}
 
+	itemsRes := make([]res.CloudImportItemRes, 0, len(items))
 	failed := make([]res.CloudImportItemRes, 0)
 	for _, item := range items {
+		itemRes := l.toItemRes(item)
+		itemsRes = append(itemsRes, itemRes)
 		if item.Status == "failed" {
-			failed = append(failed, l.toItemRes(item))
+			failed = append(failed, itemRes)
 		}
 	}
 	return &res.CloudImportStatusRes{
 		Task:   l.toTaskRes(task),
+		Items:  itemsRes,
 		Failed: failed,
 	}, nil
 }
@@ -254,14 +290,15 @@ func (l *CloudImportLogic) GetImportTasks(ctx context.Context, page, pageSize in
 // toItemRes 条目模型转 DTO。
 func (l *CloudImportLogic) toItemRes(item model.CloudImportItem) res.CloudImportItemRes {
 	return res.CloudImportItemRes{
-		ID:           item.ID,
-		SourceFileID: item.SourceFileID,
-		SourcePath:   item.SourcePath,
-		Filename:     item.Filename,
-		FileSize:     item.FileSize,
-		Status:       item.Status,
-		MediaID:      ptrToString(item.MediaID),
-		Error:        item.Error,
+		ID:               item.ID,
+		SourceFileID:     item.SourceFileID,
+		SourcePath:       item.SourcePath,
+		Filename:         item.Filename,
+		FileSize:         item.FileSize,
+		TransferredBytes: item.TransferredBytes,
+		Status:           item.Status,
+		MediaID:          ptrToString(item.MediaID),
+		Error:            item.Error,
 	}
 }
 
@@ -319,5 +356,75 @@ func (l *CloudImportLogic) RecoverInterruptedTasks(ctx context.Context) {
 	}
 	if count > 0 {
 		l.logger.Warn("已将上次服务中断遗留的导入任务标记为失败", zap.Int64("count", count))
+	}
+}
+
+// progressReader 包装云盘下载流：统计已读字节数，按「增量 ≥1MiB 且距上次 ≥1s」节流
+// 触发 onFlush 回写条目进度；同时维护最后活跃时间供空闲看门狗探测直链死挂。
+type progressReader struct {
+	r io.Reader
+
+	total      atomic.Int64
+	lastActive atomic.Int64 // 最后一次读到字节的 unix 纳秒
+
+	onFlush func(total int64) // 节流后的进度回写回调（仅 Read 路径单协程调用）
+	flushed int64             // 上次回写时已读字节数（仅 Read 路径访问）
+	flushAt time.Time
+
+	stopCh     chan struct{}
+	stopCalled atomic.Bool
+}
+
+// newProgressReader 创建计数 reader；onFlush 可为 nil。
+func newProgressReader(r io.Reader) *progressReader {
+	p := &progressReader{r: r, stopCh: make(chan struct{})}
+	p.lastActive.Store(time.Now().UnixNano())
+	return p
+}
+
+// Read 透传读取并累计字节数；按双阈值触发 onFlush 回调。
+func (p *progressReader) Read(buf []byte) (int, error) {
+	n, err := p.r.Read(buf)
+	if n > 0 {
+		total := p.total.Add(int64(n))
+		p.lastActive.Store(time.Now().UnixNano())
+		if p.onFlush != nil && total-p.flushed >= progressFlushBytes && time.Since(p.flushAt) >= progressFlushInterval {
+			p.flushed = total
+			p.flushAt = time.Now()
+			p.onFlush(total)
+		}
+	}
+	return n, err
+}
+
+// total 返回累计已读字节数。
+func (p *progressReader) bytes() int64 {
+	return p.total.Load()
+}
+
+// watchdog 空闲看门狗：超过 importIdleTimeout 无字节读取时调用 cancel 终止下载。
+func (p *progressReader) watchdog(ctx context.Context, cancel context.CancelFunc) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-p.stopCh:
+			return
+		case <-ticker.C:
+			idle := time.Since(time.Unix(0, p.lastActive.Load()))
+			if idle > importIdleTimeout {
+				cancel()
+				return
+			}
+		}
+	}
+}
+
+// stopWatchdog 停止看门狗（importOne 结束时调用）。
+func (p *progressReader) stopWatchdog() {
+	if p.stopCalled.CompareAndSwap(false, true) {
+		close(p.stopCh)
 	}
 }

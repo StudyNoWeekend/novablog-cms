@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -207,43 +208,73 @@ func TestStartImport_RunningTaskLock(t *testing.T) {
 	assert.Contains(t, err.Error(), "已有导入任务")
 }
 
-// TestStartImport_EndToEnd 完整链路：httptest WebDAV → 下载 → 本地存储入库 → 计数器回填。
+// TestStartImport_EndToEnd 完整链路：httptest WebDAV → 下载 → 本地存储入库 → 计数器回填，
+// 并验证下载中的逐文件进度（transferred_bytes）可见。
 func TestStartImport_EndToEnd(t *testing.T) {
 	importLogic, uploadDir := setupCloudImportTest(t)
 	ctx := context.Background()
 
-	fileBodies := map[string]string{
-		"/photos/a.jpg": "jpeg-data-alpha",
-		"/photos/b.png": "png-data-beta",
-	}
+	// a.jpg 分两段返回：先给前半，等测试观察到中间进度后再放行后半
+	body := "jpeg-data-alpha"
+	release := make(chan struct{})
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
 		if !ok || username != "user" || password != "pass" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		body, ok := fileBodies[r.URL.Path]
-		if !ok {
-			w.WriteHeader(http.StatusNotFound)
+		if !strings.HasSuffix(r.URL.Path, "a.jpg") {
+			_, _ = w.Write([]byte("png-data-beta"))
 			return
 		}
-		_, _ = w.Write([]byte(body))
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
+		_, _ = w.Write([]byte(body[:8]))
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}
+		<-release
+		_, _ = w.Write([]byte(body[len(body)-7:]))
 	}))
 	defer srv.Close()
 	account := newTestWebDAVAccount(t, srv.URL)
 
+	// 调小进度回写阈值：httptest 文件仅 15 字节，默认 1MiB 阈值下中间块不会触发回写
+	prevFlushBytes, prevFlushInterval := progressFlushBytes, progressFlushInterval
+	progressFlushBytes, progressFlushInterval = 1, 0
+	t.Cleanup(func() {
+		progressFlushBytes, progressFlushInterval = prevFlushBytes, prevFlushInterval
+	})
+
 	taskID, err := importLogic.StartImport(ctx, &req.CloudImportStartReq{
 		AccountID: account.ID,
 		Files: []req.CloudFile{
-			{FileID: "/photos/a.jpg", Path: "/photos/a.jpg", Name: "a.jpg", Size: int64(len("jpeg-data-alpha"))},
+			{FileID: "/photos/a.jpg", Path: "/photos/a.jpg", Name: "a.jpg", Size: int64(len(body))},
 			{FileID: "/photos/b.png", Path: "/photos/b.png", Name: "b.png", Size: int64(len("png-data-beta"))},
 		},
 	})
 	require.NoError(t, err)
 
-	// 轮询等待异步任务完成
-	var statusRes *res.CloudImportStatusRes
+	// 阶段一：等第一个文件出现中间进度（transferred_bytes > 0 且未完成）
+	var midProgress bool
 	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		result, err := importLogic.GetImportStatus(ctx, taskID)
+		require.NoError(t, err)
+		if len(result.Items) > 0 && result.Items[0].TransferredBytes > 0 {
+			midProgress = true
+			break
+		}
+		if result.Task.Status == "completed" || result.Task.Status == "failed" {
+			break // 进度过快已跑完（不应发生：handler 卡在 release）
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	require.True(t, midProgress, "下载进行中应观察到条目进度（transferred_bytes > 0）")
+	close(release)
+
+	// 阶段二：等待任务完成
+	var statusRes *res.CloudImportStatusRes
+	deadline = time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		result, err := importLogic.GetImportStatus(ctx, taskID)
 		require.NoError(t, err)
@@ -259,6 +290,13 @@ func TestStartImport_EndToEnd(t *testing.T) {
 	assert.Equal(t, 0, statusRes.Task.Failed)
 	assert.Empty(t, statusRes.Failed)
 
+	// 完成后每个条目的 transferred_bytes 应等于文件大小
+	require.Len(t, statusRes.Items, 2)
+	for _, item := range statusRes.Items {
+		assert.Equal(t, item.FileSize, item.TransferredBytes, "file: "+item.Filename)
+		assert.NotEmpty(t, item.MediaID)
+	}
+
 	// 校验媒体入库：文件名保留、本地落盘、大小与内容正确
 	mediaList, _, err := model.NewMedia().GetList(ctx, nil, nil, nil, false, 1, 10)
 	require.NoError(t, err)
@@ -269,11 +307,11 @@ func TestStartImport_EndToEnd(t *testing.T) {
 	}
 	a := byName["a.jpg"]
 	require.NotEmpty(t, a.ID)
-	assert.Equal(t, int64(len("jpeg-data-alpha")), a.Size)
+	assert.Equal(t, int64(len(body)), a.Size)
 	assert.Equal(t, "local", a.StorageType)
 	content, err := os.ReadFile(filepath.Join(uploadDir, a.StoragePath))
 	require.NoError(t, err)
-	assert.Equal(t, "jpeg-data-alpha", string(content))
+	assert.Equal(t, body, string(content))
 
 	// 条目回填 media_id
 	items, err := model.NewCloudImport().GetItemsByTaskID(ctx, taskID)

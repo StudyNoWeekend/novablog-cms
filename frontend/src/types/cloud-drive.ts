@@ -86,13 +86,15 @@ export interface CloudImportTask {
   created_at: string
 }
 
-/** 导入条目（失败明细） */
+/** 导入条目（全部条目含逐文件进度；failed 字段单独返回失败明细） */
 export interface CloudImportItem {
   id: string
   source_file_id: string
   source_path: string
   filename: string
   file_size: number
+  /** 已下载字节数（下载中由后端节流回写，约 1s 粒度） */
+  transferred_bytes: number
   status: string
   media_id: string
   error: string
@@ -101,6 +103,8 @@ export interface CloudImportItem {
 /** 导入进度响应 */
 export interface CloudImportStatusRes {
   task: CloudImportTask
+  /** 全部条目（含下载中条目的实时进度，供逐文件进度条/速度展示） */
+  items: CloudImportItem[]
   failed: CloudImportItem[]
 }
 

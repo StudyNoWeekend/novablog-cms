@@ -123,6 +123,29 @@
           </span>
         </div>
 
+        <!-- 逐文件进度：网盘限速下载时每个文件独立进度条 + 实时速度 -->
+        <div class="item-list">
+          <div v-for="item in importItems" :key="item.id" class="item-row">
+            <span class="item-icon">
+              <CheckCircleFilled v-if="item.status === 'success'" class="icon-ok" />
+              <CloseCircleFilled v-else-if="item.status === 'failed'" class="icon-fail" />
+              <LoadingOutlined v-else-if="isDownloading(item)" spin />
+              <ClockCircleOutlined v-else class="icon-queued" />
+            </span>
+            <span class="item-name" :title="item.error || item.filename">{{ item.filename }}</span>
+            <span class="item-size">{{ formatSize(item.file_size) }}</span>
+            <div class="item-progress">
+              <a-progress
+                :percent="itemPercent(item)"
+                size="small"
+                :show-info="item.file_size > 0"
+                :status="item.status === 'failed' ? 'exception' : item.status === 'success' ? 'success' : 'active'"
+              />
+            </div>
+            <span class="item-speed">{{ itemSpeedText(item) }}</span>
+          </div>
+        </div>
+
         <template v-if="phase === 'done'">
           <a-alert
             v-if="taskFailed && task?.error"
@@ -162,15 +185,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted } from 'vue'
+import { computed, reactive, ref, watch, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   CloudOutlined,
   CloudDownloadOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
+  ClockCircleOutlined,
   FileOutlined,
   FolderOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons-vue'
 import { cloudDriveApi } from '@/api/cloud-drive'
 import type {
@@ -228,6 +255,11 @@ const starting = ref(false)
 
 const task = ref<CloudImportTask | null>(null)
 const failedItems = ref<CloudImportItem[]>([])
+/** 全部条目（含下载中条目的 transferred_bytes，逐文件进度条数据源） */
+const importItems = ref<CloudImportItem[]>([])
+/** 相邻轮询快照：itemID → {bytes, ts}，用于计算实时下载速度 */
+const speedSamples = new Map<string, { bytes: number; ts: number }>()
+const lastSpeeds = reactive<Record<string, number>>({})
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const selectedProvider = computed(
@@ -252,6 +284,50 @@ const progressPercent = computed(() => {
   return Math.min(100, Math.round((doneCount.value / total) * 100))
 })
 const taskFailed = computed(() => (task.value?.failed ?? 0) > 0)
+
+// ===== 逐文件进度与速度 =====
+
+/** 串行导入：第一个 pending 条目即当前下载中的文件 */
+const firstPendingId = computed(() => importItems.value.find((i) => i.status === 'pending')?.id ?? '')
+
+function isDownloading(item: CloudImportItem): boolean {
+  return item.status === 'pending' && (item.transferred_bytes > 0 || item.id === firstPendingId.value)
+}
+
+function itemPercent(item: CloudImportItem): number {
+  if (item.status === 'success') return 100
+  if (item.file_size <= 0) return 0
+  return Math.min(100, Math.round((item.transferred_bytes / item.file_size) * 100))
+}
+
+/** 用相邻两次轮询的字节差计算实时速度（后端 ≥1s 节流回写，与 2s 轮询粒度匹配） */
+function updateSpeeds(items: CloudImportItem[]) {
+  const now = Date.now()
+  for (const item of items) {
+    if (item.status !== 'pending') {
+      speedSamples.delete(item.id)
+      continue
+    }
+    const prev = speedSamples.get(item.id)
+    if (prev) {
+      const dt = (now - prev.ts) / 1000
+      const db = item.transferred_bytes - prev.bytes
+      if (dt > 0 && db > 0) {
+        lastSpeeds[item.id] = db / dt
+      } else if (!(item.id in lastSpeeds)) {
+        lastSpeeds[item.id] = 0
+      }
+    }
+    speedSamples.set(item.id, { bytes: item.transferred_bytes, ts: now })
+  }
+}
+
+function itemSpeedText(item: CloudImportItem): string {
+  if (item.status !== 'pending') return ''
+  const speed = lastSpeeds[item.id]
+  if (!speed) return ''
+  return `${formatSize(Math.round(speed))}/s`
+}
 
 function providerLabel(provider: string): string {
   return t(`cloudDrive.tabs.${provider}`)
@@ -429,10 +505,11 @@ function startPolling(taskId: string) {
   stopPolling()
   pollTimer = setInterval(async () => {
     try {
-      const { cloudDriveApi } = await import('@/api/cloud-drive')
       const status = await cloudDriveApi.getImportStatus(taskId)
       task.value = status.task
       failedItems.value = status.failed || []
+      importItems.value = status.items || []
+      updateSpeeds(status.items || [])
       if (status.task.status === 'completed' || status.task.status === 'failed') {
         phase.value = 'done'
         stopPolling()
@@ -476,6 +553,11 @@ watch(
       phase.value = 'browse'
       task.value = null
       failedItems.value = []
+      importItems.value = []
+      speedSamples.clear()
+      for (const key of Object.keys(lastSpeeds)) {
+        delete lastSpeeds[key]
+      }
       selectedFiles.value = []
       breadcrumbs.value = []
       files.value = []
@@ -613,6 +695,82 @@ onUnmounted(stopPolling)
 
 .progress-area {
   padding: 8px 0;
+}
+
+.item-list {
+  margin-top: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #e5e9f2;
+  border-radius: 8px;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #f0f2f7;
+  font-size: 13px;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: #8a93a8;
+}
+
+.item-icon .icon-ok {
+  color: #389e0d;
+}
+
+.item-icon .icon-fail {
+  color: #d4380d;
+}
+
+.item-icon .icon-queued {
+  color: #b7bfd3;
+}
+
+.item-name {
+  flex: 0 1 auto;
+  max-width: 34%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #29365c;
+}
+
+.item-size {
+  flex-shrink: 0;
+  color: #8a93a8;
+  font-size: 12px;
+}
+
+.item-progress {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-progress :deep(.ant-progress) {
+  margin: 0;
+  line-height: 1;
+}
+
+.item-progress :deep(.ant-progress-line) {
+  padding-bottom: 0;
+}
+
+.item-speed {
+  flex-shrink: 0;
+  min-width: 76px;
+  text-align: right;
+  color: #526fe8;
+  font-variant-numeric: tabular-nums;
 }
 
 .progress-stats {
