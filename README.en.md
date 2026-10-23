@@ -85,11 +85,19 @@ Modules can be toggled anytime in the dashboard under "System Settings → Modul
 |------|----------|
 | Dashboard | Traffic/content metrics, per-module content cards, ECharts trend charts |
 | Comments | Aggregates visitor comments from articles, travel guides and more, three-level moderation, threaded replies, IP blacklist |
-| Media Library | Image/video/audio upload (chunked for large files), folder management, size-preset workbench, external image import and search |
+| Media Library | Image/video/audio upload (chunked for large files), folder management, size-preset workbench, external image import and search, cloud drive import (WebDAV / Baidu Netdisk / Aliyun Drive, batch transfer with per-file progress and real-time speed) |
 | Theme Market | Browse, preview and one-click install official themes (see the theme section below) |
 | System Settings | Module switches, object storage (local/MinIO/Aliyun OSS/Tencent COS with hot switching and migration), CORS, map keys, IP blacklist, community push |
 | Traffic Statistics | Visitor IP stats with offline ip2region geolocation, no external services required |
 | API Docs / MCP Service | Browse public auth-free APIs online, download the Skill doc, manage MCP keys (see the AI section below) |
+
+---
+
+## 🌐 Five UI Languages & Unified Categories
+
+The admin console ships in **five UI languages** — 简体中文 (default), 繁體中文, English, 日本語, 한국어: a language switcher lives in the top bar, the login page and the setup wizard; the first visit follows your browser preferences automatically and manual choices are remembered; chart labels, dates and number formats localize along with the UI.
+
+Eight content modules — bookshelf, game library, recipes, videos, projects, open source, tech stack and fitness — share one unified structured category system: categories are typed per module, same-name categories can coexist across modules, and every module's list supports filtering by category.
 
 ---
 
