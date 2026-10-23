@@ -137,10 +137,10 @@ func (c *Client) List(ctx context.Context, parent string, cursor string, limit i
 	return files, next, nil
 }
 
-// metasResp filemetas 接口响应（含下载直链）。
+// metasResp filemetas 接口响应（含下载直链）。注意：响应数组字段为 info（列表接口才是 list）。
 type metasResp struct {
 	baiduResp
-	List []metaEntry `json:"list"`
+	Info []metaEntry `json:"info"`
 }
 
 type metaEntry struct {
@@ -174,10 +174,14 @@ func (c *Client) GetDownloadURL(ctx context.Context, fileID string) (string, int
 	if resp.Errno != 0 {
 		return "", 0, baiduErr(resp.Errno)
 	}
-	if len(resp.List) == 0 || resp.List[0].Dlink == "" {
-		return "", 0, fmt.Errorf("未获取到下载直链")
+	if len(resp.Info) == 0 {
+		return "", 0, fmt.Errorf("未获取到文件信息（fs_id=%s）", fileID)
 	}
-	return resp.List[0].Dlink, resp.List[0].Size, nil
+	if resp.Info[0].Dlink == "" {
+		// 空直链常见于未开放下载权限：个人开发者应用仅能下载「我的应用数据」（/apps/<应用名>/）目录内的文件
+		return "", 0, fmt.Errorf("百度网盘未返回该文件的下载直链（可能不在应用目录内）：请将文件移动到「我的应用数据」目录，或在开放平台申请下载权限")
+	}
+	return resp.Info[0].Dlink, resp.Info[0].Size, nil
 }
 
 // Download 获取文件下载流：filemetas 取 dlink → 携带约定 UA 请求直链。
