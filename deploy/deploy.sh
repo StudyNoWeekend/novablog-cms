@@ -1384,9 +1384,9 @@ do_upgrade_one() { # $1=博客名称 $2=目标版本
   update_env_version "$ENV_FILE" "$target"
 
   if [ "$BUILD" = 0 ] && [ "$SKIP_IMAGE_CHECK" = 0 ]; then
-    c_info "校验镜像 $image_repo:$target ..."
-    if ! docker buildx imagetools inspect "$image_repo:$target" >/dev/null 2>&1; then
-      c_err "镜像 $image_repo:$target 不可用（版本号不存在或未登录 ghcr.io）。"
+    c_info "拉取镜像 $image_repo:$target ..."
+    if ! docker pull -q "$image_repo:$target" >/dev/null 2>&1; then
+      c_err "镜像 $image_repo:$target 拉取失败（版本号不存在、网络不可达或未登录 ghcr.io）。"
       return 1
     fi
   fi
@@ -2113,8 +2113,8 @@ ENV
 
   # ============================== 镜像校验 ==============================
   if [ "$BUILD" = 0 ] && [ "$SKIP_IMAGE_CHECK" = 0 ]; then
-    c_info "校验镜像 $IMAGE_REPO:$VERSION ..."
-    if ! docker buildx imagetools inspect "$IMAGE_REPO:$VERSION" >/dev/null 2>&1; then
+    c_info "拉取镜像 $IMAGE_REPO:$VERSION ..."
+    if ! docker pull -q "$IMAGE_REPO:$VERSION" >/dev/null 2>&1; then
       c_err "镜像 $IMAGE_REPO:$VERSION 不可用。"
       cat <<EOF
 
