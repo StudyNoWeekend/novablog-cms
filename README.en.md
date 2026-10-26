@@ -101,6 +101,10 @@ Eight content modules — bookshelf, game library, recipes, videos, projects, op
 
 ---
 
+## 🔗 Media References: File-ID Indexed, Survive Storage Migrations
+
+Media library images are now referenced **by file ID**: covers, avatars and icons across all content and profile modules store a media file ID, and access URLs are assembled on read from the current object-storage configuration — switching a custom domain or migrating storage (local / MinIO / Aliyun OSS / Tencent COS) updates every image site-wide instantly with zero database rewrites. Rich-text/Markdown illustrations use stable ID-indexed links, so legacy content never breaks. Deleting a file shows per-module, per-field usage details for a confirmation step first.
+
 ## 🤖 Let AI Write for You: MCP + Skill
 
 NovaBlog CMS ships with a built-in **MCP Server** and **Skill-format API docs**, so AI agents like Codex, ZCode, Claude Code and Cursor can create content directly on your blog — you talk, it types.
