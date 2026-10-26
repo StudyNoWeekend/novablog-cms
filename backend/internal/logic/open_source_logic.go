@@ -15,7 +15,7 @@ import (
 )
 
 // OpenSourceSettings 开源作品模块配置，由 bootstrap 阶段注入。
-// 与主题模块共用 GitHub 访问配置（config.yaml 的 themes.github_token / themes.proxy_url）。
+// 与主题模块共用 GitHub 访问配置（system_configs 的 github_token / proxy_url，后台「系统配置-站点信息」维护）。
 type OpenSourceSettings struct {
 	GithubToken string // 可选 GitHub PAT（提升 API 限流额度）
 	ProxyURL    string // 可选 HTTP 代理（空=直连；代理不可用自动降级直连）

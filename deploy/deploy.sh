@@ -109,7 +109,7 @@ REDIS_MODE=""
 REDIS_HOST="" REDIS_PORT="" REDIS_PASSWORD="" REDIS_DB=""
 REDIS_HOST_SET=0          # 用户是否显式传了 --redis-host
 
-CONFIG_DIR="" UPLOADS_DIR="" THEMES_DIR="" LOGS_DIR="" FRONTEND_DIR="" FRONTEND_DIR_INPUT=""
+CONFIG_DIR="" UPLOADS_DIR="" THEMES_DIR="" LOGS_DIR="" FRONTEND_DIR="" FRONTEND_DIR_INPUT="" GEOIP_DIR=""
 PGDATA_DIR="" REDISDATA_DIR=""
 EXTRA_MOUNTS=""           # 升级补写的新增挂载（宿主机路径:容器路径，分号分隔；.env 持久化）
 MARKET_URL=""
@@ -179,7 +179,7 @@ NovaBlog 部署脚本
   --redisdata-dir <目录> 内置 Redis 数据目录（默认 ./<名称>/data/redis）
 
 其他
-  --market-url <地址>    官方主题市场地址（首装拉取默认主题用，可留空）
+  --market-url <地址>    官方站点地址首装默认值（播种数据库；后续在后台「系统配置」修改）
   --install-code <值|auto> 官方部署首装安装码：auto=自动生成 UUID。写入 config.yaml
                          (install.init_code) 后首装必须携带，防止恶意抢先初始化；
                          部署完成后在摘要中展示，请随邮件发给用户。不传时交互安装会
@@ -231,7 +231,7 @@ while [ $# -gt 0 ]; do
     --frontend-dir) FRONTEND_DIR_INPUT="${2:?--frontend-dir 需要一个值}"; shift 2 ;;
     --pgdata-dir) PGDATA_DIR="${2:?--pgdata-dir 需要一个值}"; shift 2 ;;
     --redisdata-dir) REDISDATA_DIR="${2:?--redisdata-dir 需要一个值}"; shift 2 ;;
-    --market-url) MARKET_URL="${2:?--market-url 需要一个值}"; shift 2 ;;
+    --market-url) MARKET_URL="${2:?--market-url 需要一个值}"; shift 2 ;;  # 播种 community.base_url
     --install-code) INSTALL_CODE="${2:?--install-code 需要一个值}"; shift 2 ;;
     --host-nginx) NGINX_MODE=1; shift ;;
     --no-host-nginx) NGINX_MODE=0; shift ;;
@@ -1739,6 +1739,7 @@ deploy_blog() {
   [ -z "$UPLOADS_DIR" ] && UPLOADS_DIR="$(env_get NOVABLOG_UPLOADS_DIR)"
   [ -z "$THEMES_DIR" ] && THEMES_DIR="$(env_get NOVABLOG_THEMES_DIR)"
   [ -z "$LOGS_DIR" ] && LOGS_DIR="$(env_get NOVABLOG_LOGS_DIR)"
+  [ -z "$GEOIP_DIR" ] && GEOIP_DIR="$(env_get NOVABLOG_GEOIP_DIR)"
   [ -z "$FRONTEND_DIR" ] && FRONTEND_DIR="$(env_get NOVABLOG_BLOG_FRONTEND_DIR)"
   [ -z "$PGDATA_DIR" ] && PGDATA_DIR="$(env_get NOVABLOG_PGDATA_DIR)"
   [ -z "$REDISDATA_DIR" ] && REDISDATA_DIR="$(env_get NOVABLOG_REDISDATA_DIR)"
@@ -1859,6 +1860,7 @@ deploy_blog() {
   UPLOADS_DIR="$(abs_dir "${UPLOADS_DIR:-./$NAME/data/uploads}")"
   THEMES_DIR="$(abs_dir "${THEMES_DIR:-./$NAME/data/themes}")"
   LOGS_DIR="$(abs_dir "${LOGS_DIR:-./$NAME/data/logs}")"
+  GEOIP_DIR="$(abs_dir "${GEOIP_DIR:-./$NAME/data/geoip}")"
   if [ "$DB_MODE" = "local" ]; then
     PGDATA_DIR="$(abs_dir "${PGDATA_DIR:-./$NAME/data/pg}")"
   fi
@@ -1995,24 +1997,18 @@ jwt:
 crypto:
   secret_key: "$(yaml_quote "$CRYPTO_SECRET")"
 
-security:
-  enabled: true
-  blacklist_ttl_minutes: 60
-  log_retention_days: 7
-
 geoip:
   data_dir: /app/data/geoip
+  # [播种] IP 离线库下载地址首装默认值(国内镜像源),导入 system_configs 后以后台配置为准
   download_url: "https://cdn.jsdelivr.net/gh/lionsoul2014/ip2region@v3.18.0/data/ip2region_v4.xdb"
-  proxy_url: ""
+
+# [播种] 官方站点地址首装默认值,导入 community_push_configs 后以后台「社区推送配置」页为准
+community:
+  base_url: "$(yaml_quote "$MARKET_URL")"
 
 themes:
   data_dir: /app/data/themes
   frontend_dir: "$(yaml_quote "$FRONTEND_DIR_YAML")"
-  market_base_url: "$(yaml_quote "$MARKET_URL")"
-  github_token: ""
-  public_api_base: ""
-  proxy_url: ""                      # 主题下载与 GitHub API 的 HTTP 代理；空=直连，代理不可用时自动降级直连
-  max_artifact_mb: 100
 
 cors:
   allowed_origins: "$(yaml_quote "$CORS_ORIGINS")"
@@ -2090,6 +2086,7 @@ NOVABLOG_CONFIG_DIR=$CONFIG_DIR
 NOVABLOG_UPLOADS_DIR=$UPLOADS_DIR
 NOVABLOG_THEMES_DIR=$THEMES_DIR
 NOVABLOG_LOGS_DIR=$LOGS_DIR
+NOVABLOG_GEOIP_DIR=$GEOIP_DIR
 NOVABLOG_BLOG_FRONTEND_DIR=$FRONTEND_DIR
 NOVABLOG_FRONTEND_ENABLED=$([ -n "$FRONTEND_DIR_INPUT" ] && printf 1 || printf 0)
 

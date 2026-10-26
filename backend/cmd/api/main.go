@@ -19,7 +19,6 @@ import (
 	"novablog/pkg/geoip"
 
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -27,11 +26,17 @@ import (
 var version = "dev"
 
 // startAccessLogCleanup 启动访问日志清理定时任务。
-// 每隔一小时删除超过 log_retention_days 天（默认 7 天）的访问日志。
-func startAccessLogCleanup(cfg *viper.Viper, logger *zap.Logger) {
-	days := cfg.GetInt("security.log_retention_days")
-	if days <= 0 {
-		days = 7
+// 每隔一小时删除超过保留天数的访问日志；保留天数为运行时配置，
+// 以 security_configs 表为权威（后台可改），读取失败时回退内置默认 7 天。
+func startAccessLogCleanup(logger *zap.Logger) {
+	securityModel := model.NewSecurityConfig()
+	resolveDays := func() int {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if sec, err := securityModel.GetConfig(ctx); err == nil && sec.LogRetentionDays > 0 {
+			return sec.LogRetentionDays
+		}
+		return 7
 	}
 
 	accessLogModel := model.NewAccessLog()
@@ -39,10 +44,10 @@ func startAccessLogCleanup(cfg *viper.Viper, logger *zap.Logger) {
 	defer ticker.Stop()
 
 	// 启动时立即执行一次清理
-	cleanupAccessLogs(accessLogModel, days, logger)
+	cleanupAccessLogs(accessLogModel, resolveDays(), logger)
 
 	for range ticker.C {
-		cleanupAccessLogs(accessLogModel, days, logger)
+		cleanupAccessLogs(accessLogModel, resolveDays(), logger)
 	}
 }
 
@@ -131,11 +136,13 @@ func main() {
 
 	// 初始化 IP 归属地解析器（访问日志写入时记录地区）
 	// 数据文件缺失时转为后台下载，不阻塞启动；完成前 Lookup 返回空地区
+	// 下载地址与代理为运行时配置（system_configs 表，后台「系统配置-站点信息」维护）
 	{
+		systemConfig := logic.NewSystemConfig()
 		geoipSearcher := geoip.New(geoip.Config{
 			DataDir:     app.Config.GetString("geoip.data_dir"),
-			DownloadURL: app.Config.GetString("geoip.download_url"),
-			ProxyURL:    app.Config.GetString("geoip.proxy_url"),
+			DownloadURL: systemConfig.GetGeoipDownloadURL(context.Background()),
+			ProxyURL:    systemConfig.GetProxyURL(context.Background()),
 		}, app.Logger)
 		if err := geoipSearcher.Load(context.Background()); err != nil {
 			// 加载失败仅降级（地区列为空），不影响服务启动
@@ -162,17 +169,24 @@ func main() {
 	}
 
 	model.BaseURL = app.Config.GetString("upload.base_url")
+	// 站点对外地址权威值在数据库（后台「系统配置-站点信息」维护），非空时覆盖 yaml 首装默认
+	if siteURL := logic.NewSystemConfig().GetSiteURL(context.Background()); siteURL != "" {
+		model.BaseURL = siteURL
+	}
 
 	// 注入媒体 URL 动态拼接器：model 层按媒体 storage_type 与相对 key
 	// 经 storage.Manager 拼接当前配置下的完整 URL（换域名/换平台零改写）
 	model.ResolveStorageURL = storageMgr.ResolvePublicURL
 
-	// 注入云盘导入模块配置（WebDAV/百度网盘/阿里云盘）
-	logic.SetCloudDriveSettings(&logic.CloudDriveSettings{
-		ProxyURL:         app.Config.GetString("clouddrive.proxy_url"),
-		MaxFileSizeMB:    app.Config.GetInt("clouddrive.max_file_size_mb"),
-		ImportBatchLimit: app.Config.GetInt("clouddrive.import_batch_limit"),
-	})
+	// 注入云盘导入模块配置（WebDAV/百度网盘/阿里云盘；代理与限额为运行时配置走数据库）
+	{
+		systemConfig := logic.NewSystemConfig()
+		logic.SetCloudDriveSettings(&logic.CloudDriveSettings{
+			ProxyURL:         systemConfig.GetProxyURL(context.Background()),
+			MaxFileSizeMB:    systemConfig.GetCloudMaxFileSizeMB(context.Background()),
+			ImportBatchLimit: systemConfig.GetCloudImportBatchLimit(context.Background()),
+		})
+	}
 
 	// 注册路由
 	router.RegisterRoutes(
@@ -200,7 +214,7 @@ func main() {
 	}()
 
 	// 启动访问日志清理定时任务
-	go startAccessLogCleanup(app.Config, app.Logger)
+	go startAccessLogCleanup(app.Logger)
 
 	// 启动访问统计维护定时任务（按日聚合 + 明细清理）
 	go startViewStatsMaintenance(app.Logger)

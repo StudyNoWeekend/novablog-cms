@@ -83,42 +83,38 @@ func NewApp(cfgPath string) (*App, error) {
 	logic.CommentLogger = logger
 	logic.MediaLogger = logger
 
-	// 注入主题模块配置（官方站点地址统一由 official_site_settings 托管，见下方解析）
+	// 运行时配置统一：system_configs 表为唯一主源。先把存量 config.yaml 旧键幂等导入
+	// （首次升级生效，此后 yaml 旧键不再读取），再以 DB 值注入各模块（后台可改，即时热更）。
+	seedSystemConfigs(cfg, logger)
+	systemConfig := logic.NewSystemConfig()
+
+	// 注入主题模块配置（目录为容器路径约定走 config.yaml；token/代理/上限为运行时配置走数据库）
 	logic.SetThemeSettings(&logic.ThemeSettings{
 		DataDir:       cfg.GetString("themes.data_dir"),
 		FrontendDir:   cfg.GetString("themes.frontend_dir"),
-		GithubToken:   cfg.GetString("themes.github_token"),
-		PublicAPIBase: cfg.GetString("themes.public_api_base"),
-		ProxyURL:      cfg.GetString("themes.proxy_url"),
-		MaxArtifactMB: cfg.GetInt("themes.max_artifact_mb"),
+		GithubToken:   systemConfig.GetGitHubToken(context.Background()),
+		ProxyURL:      systemConfig.GetProxyURL(context.Background()),
+		MaxArtifactMB: systemConfig.GetMaxArtifactMB(context.Background()),
 	})
 	logic.ThemeLogger = logger
 
 	// 注入开源作品模块配置：与主题模块共用 GitHub 访问配置（token 提升限流额度、代理走探测降级）
 	logic.SetOpenSourceSettings(&logic.OpenSourceSettings{
-		GithubToken: cfg.GetString("themes.github_token"),
-		ProxyURL:    cfg.GetString("themes.proxy_url"),
+		GithubToken: systemConfig.GetGitHubToken(context.Background()),
+		ProxyURL:    systemConfig.GetProxyURL(context.Background()),
 	})
 
 	// 注入图片搜索模块配置（管理端在线搜图标/封面，代理不可用自动降级直连）
 	logic.SetImageSearchSettings(&logic.ImageSearchSettings{
-		ProxyURL: cfg.GetString("image_search.proxy_url"),
-	})
-
-	// 注入社区推送模块配置（官方站点地址统一由 official_site_settings 托管，见下方解析）
-	logic.SetCommunityPushSettings(&logic.CommunityPushSettings{
-		SiteURL: cfg.GetString("community.site_url"),
+		ProxyURL: systemConfig.GetProxyURL(context.Background()),
 	})
 	logic.CommunityPushLogger = logger
 
-	// 主题模块运行配置：DB 持久化值（后台修改）优先于 config.yaml 出厂值；
-	// 旧版主题市场地址仅作官方站点地址的存量兜底，不再写入
-	var legacyThemeBase string
+	// 主题市场运行配置：博客公开 API 地址以 DB 持久化值为权威（后台修改后热更并重注入主题制品）
 	if themeConfig, err := model.NewThemeMarketConfig().GetConfig(context.Background()); err == nil {
 		logic.SetThemePublicAPIBase(themeConfig.PublicAPIBase)
-		legacyThemeBase = themeConfig.MarketBaseURL
 	} else {
-		logger.Warn("读取主题运行配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
+		logger.Warn("读取主题运行配置失败，使用同域相对路径取数", zap.Error(err))
 	}
 
 	// 社区推送配置：DB 持久化值优先（后台修改），config.yaml 出厂值兜底
@@ -128,19 +124,16 @@ func NewApp(cfgPath string) (*App, error) {
 		logic.SetCommunitySiteURL(pushConfig.SiteURL)
 		logic.SetCommunityPushKey(pushConfig.PushKey)
 	} else {
-		logger.Warn("读取社区推送配置失败，使用 config.yaml 出厂默认值", zap.Error(err))
+		logger.Warn("读取社区推送配置失败，使用内置默认官方站点地址", zap.Error(err))
 	}
 
-	// 官方站点地址统一解析（社区推送与主题市场共用，后台「社区推送配置」页为唯一维护入口）：
-	// 社区推送 DB 权威值 → community.base_url 出厂值 → 旧版主题市场 DB 值 → 旧版 themes 出厂值
+	// 官方站点地址解析（社区推送与主题市场共用，后台「社区推送配置」页为唯一维护入口）：
+	// 社区推送 DB 权威值 → community.base_url 首装播种键 → 内置默认
 	if officialBase == "" {
 		officialBase = cfg.GetString("community.base_url")
 	}
 	if officialBase == "" {
-		officialBase = legacyThemeBase
-	}
-	if officialBase == "" {
-		officialBase = cfg.GetString("themes.market_base_url")
+		officialBase = logic.DefaultOfficialSiteBase()
 	}
 	logic.SetOfficialSiteBaseURL(officialBase)
 
