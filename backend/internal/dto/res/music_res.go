@@ -4,20 +4,22 @@ import "time"
 
 // SongRes 歌曲响应结构体。
 type SongRes struct {
-	ID         string    `json:"id"`
-	Title      string    `json:"title"`
-	Artist     string    `json:"artist"`
-	CoverURL   string    `json:"cover_url"`
-	BVID       string    `json:"bvid"`
-	CID        int64     `json:"cid"`
-	SourceURL  string    `json:"source_url"`
-	SourceType string    `json:"source_type"`
-	CategoryID *string   `json:"category_id"`
-	Duration   int       `json:"duration"`
-	SortOrder  int       `json:"sort_order"`
-	ViewCount  int64     `json:"view_count"` // 浏览量（兼作播放量）
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID            string    `json:"id"`
+	Title         string    `json:"title"`
+	Artist        string    `json:"artist"`
+	CoverURL      string    `json:"cover_url"`
+	CoverMediaID  string    `json:"cover_media_id"`
+	CoverPresetID string    `json:"cover_preset_id"`
+	BVID          string    `json:"bvid"`
+	CID           int64     `json:"cid"`
+	SourceURL     string    `json:"source_url"`
+	SourceType    string    `json:"source_type"`
+	CategoryID    *string   `json:"category_id"`
+	Duration      int       `json:"duration"`
+	SortOrder     int       `json:"sort_order"`
+	ViewCount     int64     `json:"view_count"` // 浏览量（兼作播放量）
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // ParseResultRes 解析结果响应结构体。

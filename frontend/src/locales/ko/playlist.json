@@ -21,6 +21,8 @@
     "nameRequired": "재생목록 이름을 입력해 주세요",
     "coverUrl": "커버 이미지 URL",
     "coverUrlPlaceholder": "재생목록 커버 이미지 URL(선택 사항)",
+    "selectCoverFromMedia": "미디어 라이브러리에서 커버 선택",
+    "mediaLibrary": "미디어 라이브러리",
     "descriptionPlaceholder": "이 재생목록에 대한 간단한 설명(선택 사항)",
     "showOnFront": "프론트 노출",
     "addSuccess": "추가되었습니다"

@@ -5,6 +5,8 @@ export interface Article {
   summary: string
   content: string
   cover_image: string
+  cover_media_id?: string
+  cover_preset_id?: string
   category_id: string
   category_name?: string
   tag_ids?: string[]
@@ -32,6 +34,8 @@ export interface ArticleCreateReq {
   content: string
   summary?: string
   cover_image?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   category_id?: string
   tag_ids?: string[]
   status?: number          // 默认1草稿，可选2直接发布

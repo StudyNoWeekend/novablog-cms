@@ -22,6 +22,8 @@ type Blogger struct {
 	PasswordHash    string         `gorm:"type:varchar(255);not null"`            // 密码哈希值
 	Nickname        string         `gorm:"type:varchar(50)"`                      // 昵称
 	Avatar          string         `gorm:"type:varchar(500)"`                     // 头像 URL
+	// 头像媒体引用：存媒体库文件 ID 时 avatar 留空，读取时动态解析；外链场景仍存 avatar
+	AvatarMediaID *string `gorm:"column:avatar_media_id;type:uuid;index"`
 	Bio             string         `gorm:"type:text"`                             // 个人简介
 	Email           string         `gorm:"type:varchar(100)"`                     // 邮箱
 	City            string         `gorm:"type:varchar(100)"`                     // 所在城市（省/市）
@@ -34,7 +36,11 @@ type Blogger struct {
 	BlogTitle       string         `gorm:"type:varchar(100)"`                     // 博客标题
 	BlogDescription string         `gorm:"type:text"`                             // 博客描述
 	BlogIcon        string         `gorm:"type:varchar(500)"`                     // 博客 icon 图 URL
-	PageBackground  string         `gorm:"type:varchar(500)"`                     // 页面背景图 URL
+	// 博客 icon 媒体引用：存媒体库文件 ID 时 blog_icon 留空，读取时动态解析；外链场景仍存 blog_icon
+	BlogIconMediaID *string `gorm:"column:blog_icon_media_id;type:uuid;index"`
+	PageBackground  string  `gorm:"type:varchar(500)"` // 页面背景图 URL
+	// 页面背景媒体引用：存媒体库文件 ID 时 page_background 留空，读取时动态解析；外链场景仍存 page_background
+	PageBackgroundMediaID *string `gorm:"column:page_background_media_id;type:uuid;index"`
 	SocialLinks     string         `gorm:"type:jsonb"`                            // 社交平台链接 JSON 数组
 	Tags            string         `gorm:"type:jsonb"`                            // 标签 JSON 字符串数组
 	Role            string         `gorm:"type:varchar(200);default:''"`          // 创作方向（首装向导所选角色 key，多选逗号分隔，如 tech/travel）
@@ -43,6 +49,20 @@ type Blogger struct {
 	CreatedAt       time.Time      `gorm:"type:timestamptz;autoCreateTime"`       // 创建时间
 	UpdatedAt       time.Time      `gorm:"type:timestamptz;autoUpdateTime"`       // 更新时间
 	DeletedAt       gorm.DeletedAt `gorm:"index"`                                 // 软删除时间
+}
+
+// BeforeSave 保存前归一图片引用：ID 模式下清空对应 URL 列，避免解析出的完整 URL 被写回落库。
+func (b *Blogger) BeforeSave(tx *gorm.DB) error {
+	if b.AvatarMediaID != nil {
+		b.Avatar = ""
+	}
+	if b.BlogIconMediaID != nil {
+		b.BlogIcon = ""
+	}
+	if b.PageBackgroundMediaID != nil {
+		b.PageBackground = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

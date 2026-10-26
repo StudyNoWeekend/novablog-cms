@@ -35,7 +35,17 @@
 
       <!-- 封面URL -->
       <a-form-item :label="$t('playlist.form.coverUrl')">
-        <a-input v-model:value="formState.cover_url" :placeholder="$t('playlist.form.coverUrlPlaceholder')" />
+        <a-input
+          v-model:value="formState.cover_url"
+          :placeholder="$t('playlist.form.coverUrlPlaceholder')"
+          @change="handleCoverUrlInput"
+        >
+          <template #addonAfter>
+            <a :aria-label="$t('playlist.form.selectCoverFromMedia')" @click.prevent="mediaPickerVisible = true">
+              <PictureOutlined /> {{ $t('playlist.form.mediaLibrary') }}
+            </a>
+          </template>
+        </a-input>
       </a-form-item>
 
       <!-- 描述 -->
@@ -59,6 +69,9 @@
         <a-switch v-model:checked="formState.enabled" />
       </a-form-item>
     </a-form>
+
+    <!-- 媒体库选择封面 -->
+    <MediaPicker v-model:visible="mediaPickerVisible" module="music" @selected="handleMediaSelected" />
   </a-modal>
 </template>
 
@@ -66,9 +79,11 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
+import { PictureOutlined } from '@ant-design/icons-vue'
 import { playlistApi } from '@/api/playlist'
 import { PLATFORM_CONFIGS } from '@/utils/platformConfig'
 import type { ThirdPartyPlaylist, CreatePlaylistReq, UpdatePlaylistReq } from '@/types/playlist'
+import MediaPicker from '@/components/media/MediaPicker.vue'
 
 const props = defineProps<{
   open: boolean
@@ -90,14 +105,18 @@ const visible = computed({
 const isEdit = computed(() => !!props.playlist)
 
 const saving = ref(false)
+const mediaPickerVisible = ref(false)
 
 const platformOptions = Object.values(PLATFORM_CONFIGS)
 
-const formState = reactive<CreatePlaylistReq>({
+// 表单媒体引用字段（coverMediaId 非空时后端优先按 ID 解析，手输 URL 则为外链模式）
+const formState = reactive<CreatePlaylistReq & { coverMediaId: string; coverPresetId: string }>({
   title: '',
   platform: '',
   platform_url: '',
   cover_url: '',
+  coverMediaId: '',
+  coverPresetId: '',
   description: '',
   sort_order: 0,
   enabled: true,
@@ -113,6 +132,8 @@ watch(
         formState.platform = props.playlist.platform
         formState.platform_url = props.playlist.platform_url
         formState.cover_url = props.playlist.cover_url
+        formState.coverMediaId = props.playlist.cover_media_id || ''
+        formState.coverPresetId = props.playlist.cover_preset_id || ''
         formState.description = props.playlist.description
         formState.sort_order = props.playlist.sort_order
         formState.enabled = props.playlist.enabled
@@ -121,6 +142,8 @@ watch(
         formState.platform = ''
         formState.platform_url = ''
         formState.cover_url = ''
+        formState.coverMediaId = ''
+        formState.coverPresetId = ''
         formState.description = ''
         formState.sort_order = 0
         formState.enabled = true
@@ -128,6 +151,19 @@ watch(
     }
   },
 )
+
+// 媒体库选图：记录媒体引用并回填 URL 用于展示
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
+  formState.cover_url = media.url
+  formState.coverMediaId = media.id
+  formState.coverPresetId = media.presetId || ''
+}
+
+// 手输 URL = 外链模式，清空媒体引用
+function handleCoverUrlInput() {
+  formState.coverMediaId = ''
+  formState.coverPresetId = ''
+}
 
 async function handleSave() {
   if (!formState.title.trim()) {
@@ -151,6 +187,8 @@ async function handleSave() {
         platform: formState.platform,
         platform_url: formState.platform_url,
         cover_url: formState.cover_url || undefined,
+        cover_media_id: formState.coverMediaId || undefined,
+        cover_preset_id: formState.coverPresetId || undefined,
         description: formState.description || undefined,
         sort_order: formState.sort_order,
         enabled: formState.enabled,
@@ -163,6 +201,8 @@ async function handleSave() {
         platform: formState.platform,
         platform_url: formState.platform_url,
         cover_url: formState.cover_url,
+        cover_media_id: formState.coverMediaId || undefined,
+        cover_preset_id: formState.coverPresetId || undefined,
         description: formState.description,
         sort_order: formState.sort_order,
         enabled: formState.enabled,

@@ -427,8 +427,10 @@ function handleLocationSelect(location: MapLocationResult) {
   locationPickerVisible.value = false
 }
 
-function onImageSelected(payload: { url: string }) {
-  form.image = payload.url
+// 景点图写入 jsonb：优先取按媒体 ID 索引的稳定链接 fileUrl，无则回退 url
+// （当前来源 TravelCoverPicker 的载荷为 { mediaId, presetId, url }，不带 fileUrl 时走 url 兜底）
+function onImageSelected(payload: { url: string; fileUrl?: string }) {
+  form.image = payload.fileUrl || payload.url
   imagePickerVisible.value = false
 }
 

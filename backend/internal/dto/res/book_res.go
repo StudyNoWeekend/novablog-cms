@@ -4,10 +4,13 @@ import "time"
 
 // BookRes 书籍响应结构体（含书评，用于详情）。
 type BookRes struct {
-	ID            string     `json:"id"`
-	Title         string     `json:"title"`
-	Author        string     `json:"author"`
-	Cover         string     `json:"cover"`
+	ID     string `json:"id"`
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	Cover  string `json:"cover"`
+	// 封面媒体引用（CMS 编辑回显用）：媒体库文件 ID / 预设 ID，空=外链或历史 URL 模式
+	CoverMediaID  string     `json:"cover_media_id"`
+	CoverPresetID string     `json:"cover_preset_id"`
 	Rating        int        `json:"rating"`
 	ReadingStatus string     `json:"reading_status"`
 	Review        string     `json:"review"`

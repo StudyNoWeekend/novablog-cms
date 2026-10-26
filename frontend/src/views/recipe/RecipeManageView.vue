@@ -77,7 +77,7 @@
         </a-form-item>
         <a-form-item :label="t('recipe.form.cover')">
           <MediaPicker v-model:visible="mediaPickerVisible" module="recipe" @selected="handleMediaSelected" />
-          <ImageField v-model="form.cover" type="recipe" with-preset :search-keyword="form.title" :placeholder="t('recipe.form.coverUrlPlaceholder')">
+          <ImageField v-model="form.cover" v-model:media-id="form.coverMediaId" v-model:preset-id="form.coverPresetId" type="recipe" with-preset :search-keyword="form.title" :placeholder="t('recipe.form.coverUrlPlaceholder')">
             <template #extra>
               <a-button size="small" @click="mediaPickerVisible = true">
                 <PictureOutlined /> {{ t('recipe.form.mediaLibrary') }}
@@ -192,6 +192,8 @@ const mediaPickerVisible = ref(false)
 const form = reactive({
   title: '',
   cover: '',
+  coverMediaId: '',
+  coverPresetId: '',
   summary: '',
   difficulty: 1,
   minutes: 0,
@@ -269,6 +271,8 @@ function difficultyLabel(d: number): string {
 function resetForm() {
   form.title = ''
   form.cover = ''
+  form.coverMediaId = ''
+  form.coverPresetId = ''
   form.summary = ''
   form.difficulty = 1
   form.minutes = 0
@@ -293,6 +297,8 @@ function handleEdit(record: Recipe) {
   resetForm()
   form.title = record.title
   form.cover = record.cover || ''
+  form.coverMediaId = record.cover_media_id || ''
+  form.coverPresetId = record.cover_preset_id || ''
   form.summary = record.summary || ''
   form.difficulty = record.difficulty || 1
   form.minutes = record.minutes || 0
@@ -305,14 +311,18 @@ function handleEdit(record: Recipe) {
   modalVisible.value = true
 }
 
-function handleMediaSelected(media: { url: string }) {
-  form.cover = media.url
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
+  form.coverMediaId = media.id
+  form.coverPresetId = media.presetId || ''
+  form.cover = media.url // 仅展示；后端按 ID 优先解析
 }
 
 function buildPayload() {
   return {
     title: form.title.trim(),
     cover: form.cover.trim() || undefined,
+    cover_media_id: form.coverMediaId || undefined,
+    cover_preset_id: form.coverPresetId || undefined,
     summary: form.summary.trim() || undefined,
     difficulty: form.difficulty,
     minutes: form.minutes,

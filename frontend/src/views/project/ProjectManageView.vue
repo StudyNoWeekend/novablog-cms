@@ -332,6 +332,8 @@ const form = reactive({
   role: '',
   client: '',
   cover_url: '',
+  coverMediaId: '',
+  coverPresetId: '',
   summary: '',
   description: '',
   techStack: [] as string[],
@@ -391,6 +393,8 @@ function resetForm() {
   form.role = ''
   form.client = ''
   form.cover_url = ''
+  form.coverMediaId = ''
+  form.coverPresetId = ''
   form.summary = ''
   form.description = ''
   form.techStack = []
@@ -418,6 +422,8 @@ function handleEdit(item: Project) {
   form.role = item.role || ''
   form.client = item.client || ''
   form.cover_url = item.cover_url || ''
+  form.coverMediaId = item.cover_media_id || ''
+  form.coverPresetId = item.cover_preset_id || ''
   form.summary = item.summary || ''
   form.description = item.description || ''
   form.techStack = splitTechStack(item.tech_stack)
@@ -430,8 +436,10 @@ function handleEdit(item: Project) {
   modalVisible.value = true
 }
 
-function handleMediaSelected(media: { url: string }) {
-  form.cover_url = media.url
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
+  form.coverMediaId = media.id
+  form.coverPresetId = media.presetId || ''
+  form.cover_url = media.url // 仅展示；后端按 ID 优先解析
 }
 
 function splitTechStack(techStack?: string): string[] {
@@ -463,6 +471,8 @@ async function handleSubmit() {
         role: form.role.trim() || undefined,
         client: form.client.trim() || undefined,
         cover_url: form.cover_url.trim() || undefined,
+        cover_media_id: form.coverMediaId || undefined,
+        cover_preset_id: form.coverPresetId || undefined,
         summary: form.summary.trim() || undefined,
         description: form.description.trim() || undefined,
         tech_stack: form.techStack.join(',') || undefined,
@@ -481,6 +491,8 @@ async function handleSubmit() {
         role: form.role.trim(),
         client: form.client.trim(),
         cover_url: form.cover_url.trim(),
+        cover_media_id: form.coverMediaId || undefined,
+        cover_preset_id: form.coverPresetId || undefined,
         summary: form.summary.trim(),
         description: form.description.trim(),
         tech_stack: form.techStack.join(','),

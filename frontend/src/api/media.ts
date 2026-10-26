@@ -8,6 +8,8 @@ export interface MediaItem {
   mime_type: string
   size: number
   url: string
+  /** 稳定访问链接（按媒体 ID 索引，存储迁移/换域名后不变），供富文本/Markdown 正文等长期引用 */
+  file_url: string
   thumb_url: string
   width: number
   height: number

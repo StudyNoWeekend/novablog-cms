@@ -12,6 +12,9 @@ type PhotoEquipment struct {
 	ID          string         `gorm:"type:uuid;primaryKey"`
 	Name        string         `gorm:"type:varchar(255);not null"`
 	ImageURL    string         `gorm:"column:image_url;type:varchar(1024)"`
+	// 图片媒体引用：存媒体库文件 ID 时 image_url 留空，读取时动态解析；外链场景仍存 image_url
+	ImageMediaID  *string `gorm:"column:image_media_id;type:uuid;index"`
+	ImagePresetID *string `gorm:"column:image_preset_id;type:uuid;index"`
 	Brand       string         `gorm:"type:varchar(255)"`
 	Description string         `gorm:"type:text"`
 	SortOrder   int            `gorm:"column:sort_order;type:int;default:0"`
@@ -19,6 +22,14 @@ type PhotoEquipment struct {
 	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+// BeforeSave 保存前归一图片引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (e *PhotoEquipment) BeforeSave(tx *gorm.DB) error {
+	if e.ImageMediaID != nil || e.ImagePresetID != nil {
+		e.ImageURL = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

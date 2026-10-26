@@ -51,24 +51,34 @@ func (l *MusicLogic) CreateSong(ctx context.Context, r *req.CreateSongReq) (*res
 		sourceType = "bilibili"
 	}
 
+	// 封面：媒体库引用（ID 索引）与外链互斥写入；外链仍走自动转存
+	coverMediaID, coverPresetID, coverURL, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.CoverURL)
+	if err != nil {
+		return nil, err
+	}
+
 	song := &model.Song{
-		ID:         uuid.New().String(),
-		Title:      r.Title,
-		Artist:     r.Artist,
-		CoverURL:   l.saveCoverToStorage(ctx, r.CoverURL),
-		BVID:       r.BVID,
-		CID:        r.CID,
-		SourceURL:  r.SourceURL,
-		SourceType: sourceType,
-		CategoryID: r.CategoryID,
-		Duration:   r.Duration,
-		SortOrder:  r.SortOrder,
+		ID:            uuid.New().String(),
+		Title:         r.Title,
+		Artist:        r.Artist,
+		CoverURL:      l.saveCoverToStorage(ctx, coverURL),
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
+		BVID:          r.BVID,
+		CID:           r.CID,
+		SourceURL:     r.SourceURL,
+		SourceType:    sourceType,
+		CategoryID:    r.CategoryID,
+		Duration:      r.Duration,
+		SortOrder:     r.SortOrder,
 	}
 
 	if err := l.songModel.Create(ctx, song); err != nil {
 		return nil, fmt.Errorf("创建歌曲失败: %w", err)
 	}
 
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, song)
 	return l.toSongRes(song), nil
 }
 
@@ -87,6 +97,9 @@ func (l *MusicLogic) GetSongList(ctx context.Context, r *req.SongListReq) (*res.
 		return nil, fmt.Errorf("查询歌曲列表失败: %w", err)
 	}
 
+	// 批量解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURLs(ctx, songs)
+
 	items := make([]res.SongRes, 0, len(songs))
 	for i := range songs {
 		items = append(items, *l.toSongRes(&songs[i]))
@@ -101,6 +114,8 @@ func (l *MusicLogic) GetSongByID(ctx context.Context, id string) (*res.SongRes, 
 	if err != nil {
 		return nil, fmt.Errorf("歌曲不存在")
 	}
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, song)
 	return l.toSongRes(song), nil
 }
 
@@ -119,8 +134,26 @@ func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSon
 	if r.Artist != nil {
 		song.Artist = *r.Artist
 	}
-	if r.CoverURL != nil {
-		song.CoverURL = l.saveCoverToStorage(ctx, *r.CoverURL)
+	if r.CoverURL != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.CoverURL != nil {
+			coverURL = *r.CoverURL
+		}
+		// 封面：媒体库引用（ID 索引）与外链互斥写入；外链仍走自动转存
+		coverMediaID, coverPresetID, coverImage, err := normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		song.CoverURL = l.saveCoverToStorage(ctx, coverImage)
+		song.CoverMediaID = mediaRefPtr(coverMediaID)
+		song.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.CategoryID != nil {
 		if strings.TrimSpace(*r.CategoryID) == "" {
@@ -141,6 +174,8 @@ func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSon
 		return nil, fmt.Errorf("更新歌曲失败: %w", err)
 	}
 
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, song)
 	return l.toSongRes(song), nil
 }
 
@@ -214,22 +249,31 @@ func (l *MusicLogic) BatchCreateSongs(ctx context.Context, r *req.BatchCreateSon
 		if sourceType == "" {
 			sourceType = "bilibili"
 		}
+		// 封面：媒体库引用（ID 索引）与外链互斥写入；外链仍走自动转存
+		coverMediaID, coverPresetID, coverURL, err := normalizeMediaRef(ctx, songReq.CoverMediaID, songReq.CoverPresetID, songReq.CoverURL)
+		if err != nil {
+			return nil, err
+		}
 		song := &model.Song{
-			ID:         uuid.New().String(),
-			Title:      songReq.Title,
-			Artist:     songReq.Artist,
-			CoverURL:   l.saveCoverToStorage(ctx, songReq.CoverURL),
-			BVID:       songReq.BVID,
-			CID:        songReq.CID,
-			SourceURL:  songReq.SourceURL,
-			SourceType: sourceType,
-			CategoryID: songReq.CategoryID,
-			Duration:   songReq.Duration,
-			SortOrder:  songReq.SortOrder,
+			ID:            uuid.New().String(),
+			Title:         songReq.Title,
+			Artist:        songReq.Artist,
+			CoverURL:      l.saveCoverToStorage(ctx, coverURL),
+			CoverMediaID:  mediaRefPtr(coverMediaID),
+			CoverPresetID: mediaRefPtr(coverPresetID),
+			BVID:          songReq.BVID,
+			CID:           songReq.CID,
+			SourceURL:     songReq.SourceURL,
+			SourceType:    sourceType,
+			CategoryID:    songReq.CategoryID,
+			Duration:      songReq.Duration,
+			SortOrder:     songReq.SortOrder,
 		}
 		if err := l.songModel.Create(ctx, song); err != nil {
 			return nil, fmt.Errorf("批量创建歌曲失败: %w", err)
 		}
+		// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+		l.resolveCoverURL(ctx, song)
 		results = append(results, *l.toSongRes(song))
 	}
 	return results, nil
@@ -365,19 +409,41 @@ func isSelfHostedURL(coverURL string, activeCfg *model.StorageConfig) bool {
 // toSongRes 转换为歌曲响应。
 func (l *MusicLogic) toSongRes(s *model.Song) *res.SongRes {
 	return &res.SongRes{
-		ID:         s.ID,
-		Title:      s.Title,
-		Artist:     s.Artist,
-		CoverURL:   s.CoverURL,
-		BVID:       s.BVID,
-		CID:        s.CID,
-		SourceURL:  s.SourceURL,
-		SourceType: s.SourceType,
-		CategoryID: s.CategoryID,
-		Duration:   s.Duration,
-		SortOrder:  s.SortOrder,
-		ViewCount:  int64(s.ViewCount),
-		CreatedAt:  s.CreatedAt,
-		UpdatedAt:  s.UpdatedAt,
+		ID:            s.ID,
+		Title:         s.Title,
+		Artist:        s.Artist,
+		CoverURL:      s.CoverURL,
+		CoverMediaID:  refStr(s.CoverMediaID),
+		CoverPresetID: refStr(s.CoverPresetID),
+		BVID:          s.BVID,
+		CID:           s.CID,
+		SourceURL:     s.SourceURL,
+		SourceType:    s.SourceType,
+		CategoryID:    s.CategoryID,
+		Duration:      s.Duration,
+		SortOrder:     s.SortOrder,
+		ViewCount:     int64(s.ViewCount),
+		CreatedAt:     s.CreatedAt,
+		UpdatedAt:     s.UpdatedAt,
 	}
+}
+
+// resolveCoverURLs 批量解析歌曲封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *MusicLogic) resolveCoverURLs(ctx context.Context, songs []model.Song) {
+	ptrs := make([]*model.Song, len(songs))
+	for i := range songs {
+		ptrs[i] = &songs[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(s *model.Song) (string, string) { return refStr(s.CoverMediaID), refStr(s.CoverPresetID) },
+		func(s *model.Song, u string) { s.CoverURL = u },
+	)
+}
+
+// resolveCoverURL 解析单首歌曲封面媒体引用。
+func (l *MusicLogic) resolveCoverURL(ctx context.Context, s *model.Song) {
+	model.ResolveCoverURLs(ctx, []*model.Song{s},
+		func(x *model.Song) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.Song, u string) { x.CoverURL = u },
+	)
 }

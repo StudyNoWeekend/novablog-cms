@@ -30,11 +30,11 @@ func (Media) TableName() string {
 	return "media"
 }
 
-// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+// AfterFind GORM 查询后钩子，按存储类型将相对路径动态拼接为完整 URL。
 func (m *Media) AfterFind(tx *gorm.DB) error {
-	m.URL = resolveURL(m.URL)
+	m.URL = resolveMediaURL(m.StorageType, m.URL)
 	if m.ThumbURL != nil {
-		resolved := resolveURL(*m.ThumbURL)
+		resolved := resolveMediaURL(m.StorageType, *m.ThumbURL)
 		m.ThumbURL = &resolved
 	}
 	return nil
@@ -115,9 +115,13 @@ func (m *MediaModel) GetByIDRaw(ctx context.Context, id string) (*Media, error) 
 	return &media, nil
 }
 
-// HardDeleteWithPresets 物理删除媒体及其全部预设记录（含软删记录）。
-func (m *MediaModel) HardDeleteWithPresets(ctx context.Context, id string) error {
+// HardDeleteWithPresets 物理删除媒体及其全部预设记录（含软删记录），
+// 并在同一事务内清空各业务表对该媒体/预设的引用列，避免遗留死 ID。
+func (m *MediaModel) HardDeleteWithPresets(ctx context.Context, id string, presetIDs []string) error {
 	return m.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := clearMediaReferences(tx, id, presetIDs); err != nil {
+			return err
+		}
 		if err := tx.Unscoped().Where("media_id = ?", id).Delete(&MediaPreset{}).Error; err != nil {
 			return err
 		}

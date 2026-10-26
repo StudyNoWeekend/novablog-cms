@@ -8,22 +8,26 @@ type PlatformLinkReq struct {
 
 // CreateVideoReq 创建视频作品请求参数。
 type CreateVideoReq struct {
-	Title       string            `json:"title" binding:"required,min=1,max=255"`
-	CoverURL    string            `json:"cover_url"`
-	Description string            `json:"description"`
-	CategoryID  *string           `json:"category_id"`
-	Status      *int              `json:"status"`
-	Platforms   []PlatformLinkReq `json:"platforms" binding:"required,min=1,dive"`
+	Title         string `json:"title" binding:"required,min=1,max=255"`
+	CoverURL      string `json:"cover_url"`
+	CoverMediaID  string `json:"cover_media_id"`  // 封面媒体引用，与 cover_url 互斥
+	CoverPresetID string `json:"cover_preset_id"` // 封面预设引用，与 cover_url 互斥
+	Description   string `json:"description"`
+	CategoryID    *string `json:"category_id"`
+	Status        *int    `json:"status"`
+	Platforms     []PlatformLinkReq `json:"platforms" binding:"required,min=1,dive"`
 }
 
 // UpdateVideoReq 更新视频作品请求参数。
 type UpdateVideoReq struct {
-	Title       *string           `json:"title" binding:"omitempty,min=1,max=255"`
-	CoverURL    *string           `json:"cover_url"`
-	Description *string           `json:"description"`
-	CategoryID  *string           `json:"category_id"`
-	Status      *int              `json:"status"`
-	Platforms   []PlatformLinkReq `json:"platforms" binding:"omitempty,dive"`
+	Title         *string `json:"title" binding:"omitempty,min=1,max=255"`
+	CoverURL      *string `json:"cover_url"`
+	CoverMediaID  *string `json:"cover_media_id"`  // 封面媒体引用，与 cover_url 互斥处理
+	CoverPresetID *string `json:"cover_preset_id"` // 封面预设引用，与 cover_url 互斥处理
+	Description   *string `json:"description"`
+	CategoryID    *string `json:"category_id"`
+	Status        *int    `json:"status"`
+	Platforms     []PlatformLinkReq `json:"platforms" binding:"omitempty,dive"`
 }
 
 // VideoListReq 视频作品列表查询请求参数。

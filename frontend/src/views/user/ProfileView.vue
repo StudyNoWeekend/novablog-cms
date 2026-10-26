@@ -375,9 +375,15 @@ const avatarCropFile = ref<File | null>(null)
 // 图片加载失败标记：key 为 'icon' | 'background' | 'avatar'
 const brokenImages = reactive<Record<string, boolean>>({})
 
-const form = reactive<UpdateProfileReq>({
+// 图片媒体引用（上传成功后由 media_id 回填，保存资料时随表单提交）
+const form = reactive<UpdateProfileReq & {
+  avatarMediaId: string
+  pageBackgroundMediaId: string
+  blogIconMediaId: string
+}>({
   nickname: '',
   avatar: '',
+  avatarMediaId: '',
   bio: '',
   email: '',
   personality: '',
@@ -387,7 +393,9 @@ const form = reactive<UpdateProfileReq>({
   show_zodiac: true,
   show_personality: true,
   page_background: '',
+  pageBackgroundMediaId: '',
   blog_icon: '',
+  blogIconMediaId: '',
   blog_title: '',
   blog_description: '',
 })
@@ -480,6 +488,7 @@ async function loadProfile() {
     const data = await authApi.getProfile()
     form.nickname = data.nickname || ''
     form.avatar = data.avatar || ''
+    form.avatarMediaId = data.avatar_media_id || ''
     form.bio = data.bio || ''
     form.email = data.email || ''
     form.personality = data.personality || ''
@@ -489,7 +498,9 @@ async function loadProfile() {
     form.show_zodiac = data.show_zodiac ?? true
     form.show_personality = data.show_personality ?? true
     form.page_background = data.page_background || ''
+    form.pageBackgroundMediaId = data.page_background_media_id || ''
     form.blog_icon = data.blog_icon || ''
+    form.blogIconMediaId = data.blog_icon_media_id || ''
     form.blog_title = data.blog_title || ''
     form.blog_description = data.blog_description || ''
     // 城市：拆分 "广东省/广州市" → ['广东省', '广州市']
@@ -509,7 +520,14 @@ async function loadProfile() {
 async function handleSave() {
   saving.value = true
   try {
-    await authApi.updateProfile({ ...form, social_links: socialLinks.value, tags: tags.value })
+    await authApi.updateProfile({
+      ...form,
+      avatar_media_id: form.avatarMediaId || undefined,
+      page_background_media_id: form.pageBackgroundMediaId || undefined,
+      blog_icon_media_id: form.blogIconMediaId || undefined,
+      social_links: socialLinks.value,
+      tags: tags.value,
+    })
     message.success(t('common.message.saveSuccess'))
   } catch {
     message.error(t('profile.message.saveFailed'))
@@ -546,8 +564,10 @@ async function handleFileChange(e: Event, type: ImageField) {
       : await authApi.uploadBackground(file)
     if (type === 'icon') {
       form.blog_icon = res.url
+      form.blogIconMediaId = res.media_id
     } else {
       form.page_background = res.url
+      form.pageBackgroundMediaId = res.media_id
     }
     brokenImages[type] = false
     message.success(t('common.message.uploadSuccess'))
@@ -565,6 +585,7 @@ async function handleAvatarCropped(blob: Blob) {
     const file = new File([blob], 'avatar.png', { type: 'image/png' })
     const res = await authApi.uploadAvatar(file)
     form.avatar = res.url
+    form.avatarMediaId = res.media_id
     brokenImages.avatar = false
     message.success(t('common.message.uploadSuccess'))
     avatarCropVisible.value = false
@@ -579,10 +600,13 @@ async function handleAvatarCropped(blob: Blob) {
 function clearImage(type: ImageField) {
   if (type === 'icon') {
     form.blog_icon = ''
+    form.blogIconMediaId = ''
   } else if (type === 'background') {
     form.page_background = ''
+    form.pageBackgroundMediaId = ''
   } else {
     form.avatar = ''
+    form.avatarMediaId = ''
   }
   brokenImages[type] = false
 }

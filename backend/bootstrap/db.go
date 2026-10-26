@@ -7,11 +7,11 @@ import (
 
 	"novablog/internal/model"
 
+	_ "github.com/lib/pq" // PostgreSQL 驱动
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-
-	_ "github.com/lib/pq" // PostgreSQL 驱动
+	gormlogger "gorm.io/gorm/logger"
 )
 
 // DBConfig 数据库配置参数。
@@ -28,7 +28,8 @@ type DBConfig struct {
 
 // InitDB 初始化 PostgreSQL 数据库连接，自动迁移模型。
 // 如果数据库不存在，会自动创建数据库，然后迁移所有模型表。
-func InitDB(cfg *DBConfig) (*gorm.DB, error) {
+// logger 用于启动数据回填的日志（媒体引用回填异步执行，不阻塞本函数返回）。
+func InitDB(cfg *DBConfig, logger *zap.Logger) (*gorm.DB, error) {
 	// 1. 先连接默认数据库 postgres，检查目标数据库是否存在
 	if err := ensureDatabaseExists(cfg); err != nil {
 		return nil, fmt.Errorf("确保数据库存在失败: %w", err)
@@ -41,7 +42,7 @@ func InitDB(cfg *DBConfig) (*gorm.DB, error) {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: gormlogger.Default.LogMode(gormlogger.Info),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("连接数据库失败: %w", err)
@@ -74,6 +75,10 @@ func InitDB(cfg *DBConfig) (*gorm.DB, error) {
 
 	// 7. 媒体文件夹初始化（仅首次启动）：播种模块顶级文件夹并归类存量媒体
 	initMediaFolders(db)
+
+	// 8. 媒体引用改造数据回填（幂等）：media.url 归一为相对对象键 + 业务表图片字段回填媒体引用。
+	// 独立 goroutine 异步执行，不阻塞启动；读取解析在回填完成前走 URL 兜底，页面无感知。
+	backfillMediaReferencesAsync(db, logger)
 
 	return db, nil
 }

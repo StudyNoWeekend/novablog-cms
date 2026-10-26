@@ -82,6 +82,7 @@
         <a-form-item :label="t('common.field.icon')">
           <ImageField
             v-model="form.icon"
+            v-model:media-id="form.iconMediaId"
             type="tech"
             :search-keyword="form.name"
             :placeholder="t('techStack.form.iconPlaceholder')"
@@ -133,6 +134,7 @@ const form = reactive({
   name: '',
   category_id: undefined as string | undefined,
   icon: '',
+  iconMediaId: '',
   level: 2,
   description: '',
   status: 0,
@@ -225,6 +227,7 @@ function resetForm() {
   form.name = ''
   form.category_id = undefined
   form.icon = ''
+  form.iconMediaId = ''
   form.level = 2
   form.description = ''
   form.status = 0
@@ -244,6 +247,7 @@ function handleEdit(record: TechStackItem) {
   form.name = record.name
   form.category_id = record.category_id || undefined
   form.icon = record.icon || ''
+  form.iconMediaId = record.icon_media_id || ''
   form.level = record.level || 1
   form.description = record.description || ''
   form.status = record.status
@@ -255,6 +259,7 @@ function buildPayload() {
     name: form.name.trim(),
     category_id: form.category_id,
     icon: form.icon.trim() || undefined,
+    icon_media_id: form.iconMediaId || undefined,
     level: form.level,
     description: form.description.trim() || undefined,
     status: form.status,

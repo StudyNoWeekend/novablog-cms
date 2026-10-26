@@ -14,10 +14,12 @@ type VideoPlatformLinkRes struct {
 
 // VideoWorkRes 视频作品响应结构体。
 type VideoWorkRes struct {
-	ID           string                 `json:"id"`
-	Title        string                 `json:"title"`
-	CoverURL     string                 `json:"cover_url"`
-	Description  string                 `json:"description"`
+	ID            string                 `json:"id"`
+	Title         string                 `json:"title"`
+	CoverURL      string                 `json:"cover_url"`
+	CoverMediaID  string                 `json:"cover_media_id"`
+	CoverPresetID string                 `json:"cover_preset_id"`
+	Description   string                 `json:"description"`
 	Status       int                    `json:"status"`
 	SortOrder    int                    `json:"sort_order"`
 	CategoryID   string                 `json:"category_id"`

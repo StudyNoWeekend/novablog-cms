@@ -12,6 +12,8 @@ export interface Recipe {
   id: string
   title: string
   cover: string
+  cover_media_id?: string
+  cover_preset_id?: string
   summary: string
   ingredients: RecipeIngredient[] | null
   steps: RecipeStep[] | null
@@ -38,6 +40,8 @@ export interface RecipeListRes {
 export interface CreateRecipeReq {
   title: string
   cover?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   summary?: string
   ingredients?: RecipeIngredient[]
   steps?: RecipeStep[]

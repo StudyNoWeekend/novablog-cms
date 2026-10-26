@@ -10,10 +10,12 @@ type MediaRes struct {
 	MimeType   string `json:"mime_type"`
 	Size       int64  `json:"size"`
 	URL        string `json:"url"`
-	ThumbURL   string `json:"thumb_url"`
-	Width      *int   `json:"width"`
-	Height     *int   `json:"height"`
-	FolderID   string `json:"folder_id"`   // 所属文件夹，空=根目录
+	// FileURL 稳定访问链接（按媒体 ID 索引，后端按当前存储动态解析），供富文本/Markdown 正文等场景嵌入。
+	FileURL   string `json:"file_url"`
+	ThumbURL  string `json:"thumb_url"`
+	Width     *int   `json:"width"`
+	Height    *int   `json:"height"`
+	FolderID  string `json:"folder_id"`   // 所属文件夹，空=根目录
 	FolderName string `json:"folder_name"` // 所属文件夹名，根目录为空
 	// FolderModuleKey 所属文件夹的模块 key，空=根目录或非系统文件夹；前端据此翻译系统文件夹显示名
 	FolderModuleKey string    `json:"folder_module_key"`
@@ -53,6 +55,8 @@ type MediaPresetRes struct {
 	FrameConfig       string    `json:"frame_config"`
 	DisplayParams     string    `json:"display_params"`
 	OutputURL         string    `json:"output_url"`
+	// FileURL 稳定访问链接（按原图媒体 ID 索引 + preset 参数），供 jsonb 内嵌等场景长期引用
+	FileURL           string    `json:"file_url"`
 	OutputStoragePath string    `json:"output_storage_path"`
 	OutputSize        int64     `json:"output_size"`
 	MimeType          string    `json:"mime_type"`

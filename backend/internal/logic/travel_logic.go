@@ -34,24 +34,32 @@ func (l *TravelGuideLogic) Create(ctx context.Context, r *req.CreateTravelGuideR
 		days = 1
 	}
 
+	// 封面：媒体库引用（ID 索引）与外链互斥写入
+	coverMediaID, coverPresetID, coverImage, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.CoverImage)
+	if err != nil {
+		return nil, err
+	}
+
 	guide := &model.TravelGuide{
-		ID:          uuid.New().String(),
-		Title:       r.Title,
-		Summary:     r.Summary,
-		CoverImage:  r.CoverImage,
-		Status:      status,
-		Destination: r.Destination,
-		Region:      r.Region,
-		CategoryID:  r.CategoryID,
-		Days:        days,
-		BestMonth:   r.BestMonth,
-		ViewCount:   0,
-		LikeCount:   0,
-		Rating:      0,
-		ReviewCount: 0,
-		Attractions: r.Attractions,
-		Itinerary:   r.Itinerary,
-		Reviews:     r.Reviews,
+		ID:            uuid.New().String(),
+		Title:         r.Title,
+		Summary:       r.Summary,
+		CoverImage:    coverImage,
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
+		Status:        status,
+		Destination:   r.Destination,
+		Region:        r.Region,
+		CategoryID:    r.CategoryID,
+		Days:          days,
+		BestMonth:     r.BestMonth,
+		ViewCount:     0,
+		LikeCount:     0,
+		Rating:        0,
+		ReviewCount:   0,
+		Attractions:   r.Attractions,
+		Itinerary:     r.Itinerary,
+		Reviews:       r.Reviews,
 	}
 
 	if err := l.model.Create(ctx, guide); err != nil {
@@ -75,8 +83,26 @@ func (l *TravelGuideLogic) Update(ctx context.Context, id string, r *req.UpdateT
 	if r.Summary != nil {
 		guide.Summary = *r.Summary
 	}
-	if r.CoverImage != nil {
-		guide.CoverImage = *r.CoverImage
+	if r.CoverImage != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.CoverImage != nil {
+			coverURL = *r.CoverImage
+		}
+		// 封面：媒体库引用（ID 索引）与外链互斥写入
+		coverMediaID, coverPresetID, coverImage, err := normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		guide.CoverImage = coverImage
+		guide.CoverMediaID = mediaRefPtr(coverMediaID)
+		guide.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.Status != nil {
 		guide.Status = *r.Status
@@ -129,6 +155,9 @@ func (l *TravelGuideLogic) GetList(ctx context.Context, r *req.TravelGuideListRe
 		return nil, err
 	}
 
+	// 批量解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURLs(ctx, guides)
+
 	var items []res.TravelGuideRes
 	for i := range guides {
 		items = append(items, l.toGuideRes(&guides[i]))
@@ -143,6 +172,8 @@ func (l *TravelGuideLogic) GetDetail(ctx context.Context, id string) (*res.Trave
 	if err != nil {
 		return nil, fmt.Errorf("旅行攻略不存在")
 	}
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, guide)
 	return l.toGuideDetailRes(guide), nil
 }
 
@@ -188,6 +219,8 @@ func (l *TravelGuideLogic) GetPublicDetail(ctx context.Context, id string) (*res
 	if guide.Status != 2 {
 		return nil, fmt.Errorf("旅行攻略不存在")
 	}
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, guide)
 	return l.toGuideDetailRes(guide), nil
 }
 
@@ -197,6 +230,8 @@ func (l *TravelGuideLogic) GetHotList(ctx context.Context, count int) ([]res.Tra
 	if err != nil {
 		return nil, fmt.Errorf("查询热门旅行攻略失败: %w", err)
 	}
+	// 批量解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURLs(ctx, guides)
 	items := make([]res.TravelGuideRes, 0, len(guides))
 	for i := range guides {
 		items = append(items, l.toGuideRes(&guides[i]))
@@ -225,24 +260,46 @@ func (l *TravelGuideLogic) toGuideRes(g *model.TravelGuide) res.TravelGuideRes {
 		categoryName = g.Category.Name
 	}
 	return res.TravelGuideRes{
-		ID:           g.ID,
-		Title:        g.Title,
-		Summary:      g.Summary,
-		CoverImage:   g.CoverImage,
-		Status:       g.Status,
-		Destination:  g.Destination,
-		Region:       g.Region,
-		CategoryID:   categoryID,
-		CategoryName: categoryName,
-		Days:         g.Days,
-		BestMonth:    g.BestMonth,
-		ViewCount:    g.ViewCount,
-		LikeCount:    g.LikeCount,
-		Rating:       g.Rating,
-		ReviewCount:  g.ReviewCount,
-		CreatedAt:    g.CreatedAt,
-		UpdatedAt:    g.UpdatedAt,
+		ID:            g.ID,
+		Title:         g.Title,
+		Summary:       g.Summary,
+		CoverImage:    g.CoverImage,
+		CoverMediaID:  refStr(g.CoverMediaID),
+		CoverPresetID: refStr(g.CoverPresetID),
+		Status:        g.Status,
+		Destination:   g.Destination,
+		Region:        g.Region,
+		CategoryID:    categoryID,
+		CategoryName:  categoryName,
+		Days:          g.Days,
+		BestMonth:     g.BestMonth,
+		ViewCount:     g.ViewCount,
+		LikeCount:     g.LikeCount,
+		Rating:        g.Rating,
+		ReviewCount:   g.ReviewCount,
+		CreatedAt:     g.CreatedAt,
+		UpdatedAt:     g.UpdatedAt,
 	}
+}
+
+// resolveCoverURLs 批量解析旅行攻略封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *TravelGuideLogic) resolveCoverURLs(ctx context.Context, guides []model.TravelGuide) {
+	ptrs := make([]*model.TravelGuide, len(guides))
+	for i := range guides {
+		ptrs[i] = &guides[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(g *model.TravelGuide) (string, string) { return refStr(g.CoverMediaID), refStr(g.CoverPresetID) },
+		func(g *model.TravelGuide, u string) { g.CoverImage = u },
+	)
+}
+
+// resolveCoverURL 解析单篇旅行攻略封面媒体引用。
+func (l *TravelGuideLogic) resolveCoverURL(ctx context.Context, g *model.TravelGuide) {
+	model.ResolveCoverURLs(ctx, []*model.TravelGuide{g},
+		func(x *model.TravelGuide) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.TravelGuide, u string) { x.CoverImage = u },
+	)
 }
 
 // toGuideDetailRes 转换为详情响应。

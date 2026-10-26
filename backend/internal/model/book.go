@@ -13,6 +13,9 @@ type Book struct {
 	Title         string         `gorm:"type:varchar(255);not null" json:"title"`
 	Author        string         `gorm:"type:varchar(255);default:''" json:"author"`
 	Cover         string         `gorm:"type:varchar(500)" json:"cover"`
+	// 封面媒体引用：存媒体库文件 ID 时 cover 留空，读取时动态解析；外链场景仍存 cover
+	CoverMediaID  *string `gorm:"column:cover_media_id;type:uuid;index" json:"cover_media_id"`
+	CoverPresetID *string `gorm:"column:cover_preset_id;type:uuid;index" json:"cover_preset_id"`
 	Rating        int            `gorm:"type:int;default:0" json:"rating"`                                            // 0-5 星，0=未评分
 	ReadingStatus string         `gorm:"column:reading_status;type:varchar(20);default:'want'" json:"reading_status"` // want=想读, reading=在读, done=读完
 	Review        string         `gorm:"type:text" json:"review"`                                                     // 书评（Markdown）
@@ -26,6 +29,14 @@ type Book struct {
 	CreatedAt     time.Time      `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time      `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+// BeforeSave 保存前归一封面引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (b *Book) BeforeSave(tx *gorm.DB) error {
+	if b.CoverMediaID != nil || b.CoverPresetID != nil {
+		b.Cover = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

@@ -5,6 +5,10 @@ export interface Song {
   title: string
   artist: string
   cover_url: string
+  /** 封面对应的媒体库文件 ID（非空时后端优先按 ID 解析） */
+  cover_media_id?: string
+  /** 封面对应的预设成品图 ID */
+  cover_preset_id?: string
   bvid: string
   cid: number
   source_url: string
@@ -20,6 +24,8 @@ export interface SongCreateReq {
   title: string
   artist: string
   cover_url?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   bvid: string
   cid: number
   source_url: string
@@ -33,6 +39,8 @@ export interface SongUpdateReq {
   title?: string
   artist?: string
   cover_url?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   category_id?: string | null
   duration?: number
   sort_order?: number

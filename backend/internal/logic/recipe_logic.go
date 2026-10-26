@@ -24,14 +24,20 @@ func NewRecipeLogic() *RecipeLogic {
 
 // Create 创建菜谱。
 func (l *RecipeLogic) Create(ctx context.Context, r *req.CreateRecipeReq) (*res.RecipeRes, error) {
+	coverMediaID, coverPresetID, cover, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.Cover)
+	if err != nil {
+		return nil, err
+	}
 	m := &model.Recipe{
-		ID:          uuid.New().String(),
-		Title:       strings.TrimSpace(r.Title),
-		Cover:       r.Cover,
-		Summary:     r.Summary,
-		Ingredients: emptyIfNil(r.Ingredients),
-		Steps:       emptyIfNil(r.Steps),
-		Tags:        r.Tags,
+		ID:            uuid.New().String(),
+		Title:         strings.TrimSpace(r.Title),
+		Cover:         cover,
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
+		Summary:       r.Summary,
+		Ingredients:   emptyIfNil(r.Ingredients),
+		Steps:         emptyIfNil(r.Steps),
+		Tags:          r.Tags,
 	}
 	if r.Difficulty != nil {
 		m.Difficulty = *r.Difficulty
@@ -67,6 +73,7 @@ func (l *RecipeLogic) GetList(ctx context.Context, r *req.RecipeListReq) (*res.R
 	}
 
 	items := make([]res.RecipeCardRes, 0, len(list))
+	l.resolveCoverURLs(ctx, list)
 	for i := range list {
 		items = append(items, l.toCard(&list[i]))
 	}
@@ -85,6 +92,7 @@ func (l *RecipeLogic) GetByID(ctx context.Context, id string) (*res.RecipeRes, e
 	if err != nil {
 		return nil, fmt.Errorf("菜谱不存在")
 	}
+	l.resolveCoverURL(ctx, m)
 	return l.toRes(m), nil
 }
 
@@ -98,8 +106,25 @@ func (l *RecipeLogic) Update(ctx context.Context, id string, r *req.UpdateRecipe
 	if r.Title != nil {
 		m.Title = strings.TrimSpace(*r.Title)
 	}
-	if r.Cover != nil {
-		m.Cover = *r.Cover
+	if r.Cover != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.Cover != nil {
+			coverURL = *r.Cover
+		}
+		coverMediaID, coverPresetID, cover, err := normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		m.Cover = cover
+		m.CoverMediaID = mediaRefPtr(coverMediaID)
+		m.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.Summary != nil {
 		m.Summary = *r.Summary
@@ -164,7 +189,30 @@ func (l *RecipeLogic) GetPublicDetail(ctx context.Context, id string) (*res.Reci
 	if err != nil || m.Status != 1 {
 		return nil, fmt.Errorf("菜谱不存在")
 	}
+	l.resolveCoverURL(ctx, m)
 	return l.toRes(m), nil
+}
+
+// resolveCoverURLs 批量解析菜谱封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *RecipeLogic) resolveCoverURLs(ctx context.Context, recipes []model.Recipe) {
+	ptrs := make([]*model.Recipe, len(recipes))
+	for i := range recipes {
+		ptrs[i] = &recipes[i]
+	}
+	l.resolveCoverPtrs(ctx, ptrs)
+}
+
+// resolveCoverURL 解析单条菜谱封面媒体引用（原指针，解析结果直接写回）。
+func (l *RecipeLogic) resolveCoverURL(ctx context.Context, m *model.Recipe) {
+	l.resolveCoverPtrs(ctx, []*model.Recipe{m})
+}
+
+// resolveCoverPtrs 按指针切片解析封面。
+func (l *RecipeLogic) resolveCoverPtrs(ctx context.Context, ptrs []*model.Recipe) {
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(r *model.Recipe) (string, string) { return refStr(r.CoverMediaID), refStr(r.CoverPresetID) },
+		func(r *model.Recipe, u string) { r.Cover = u },
+	)
 }
 
 // emptyIfNil jsonb 数组字段为 nil 时返回空切片，避免入库为 JSON null。
@@ -178,23 +226,25 @@ func emptyIfNil(items []map[string]any) []map[string]any {
 // toRes 转换为菜谱详情响应。
 func (l *RecipeLogic) toRes(m *model.Recipe) *res.RecipeRes {
 	return &res.RecipeRes{
-		ID:           m.ID,
-		Title:        m.Title,
-		Cover:        m.Cover,
-		Summary:      m.Summary,
-		Ingredients:  m.Ingredients,
-		Steps:        m.Steps,
-		Difficulty:   m.Difficulty,
-		Minutes:      m.Minutes,
-		Servings:     m.Servings,
-		Tags:         m.Tags,
-		Status:       m.Status,
-		SortOrder:    m.SortOrder,
-		CategoryID:   categoryIDOf(m.CategoryID),
-		CategoryName: categoryNameOf(m.Category),
-		ViewCount:    int64(m.ViewCount),
-		CreatedAt:    m.CreatedAt,
-		UpdatedAt:    m.UpdatedAt,
+		ID:            m.ID,
+		Title:         m.Title,
+		Cover:         m.Cover,
+		CoverMediaID:  refStr(m.CoverMediaID),
+		CoverPresetID: refStr(m.CoverPresetID),
+		Summary:       m.Summary,
+		Ingredients:   m.Ingredients,
+		Steps:         m.Steps,
+		Difficulty:    m.Difficulty,
+		Minutes:       m.Minutes,
+		Servings:      m.Servings,
+		Tags:          m.Tags,
+		Status:        m.Status,
+		SortOrder:     m.SortOrder,
+		CategoryID:    categoryIDOf(m.CategoryID),
+		CategoryName:  categoryNameOf(m.Category),
+		ViewCount:     int64(m.ViewCount),
+		CreatedAt:     m.CreatedAt,
+		UpdatedAt:     m.UpdatedAt,
 	}
 }
 

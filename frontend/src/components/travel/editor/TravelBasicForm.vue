@@ -129,7 +129,7 @@
                 size="small"
                 class="cover-remove"
                 :aria-label="$t('travel.form.removeCoverAria')"
-                @click.stop="form.coverImage = null"
+                @click.stop="onCoverRemove"
               >
                 <template #icon>
                   <CloseOutlined />
@@ -232,9 +232,19 @@ onMounted(async () => {
   finally { categoriesLoading.value = false }
 })
 
-function onCoverSelected(payload: { url: string }) {
+// 选封面：保存媒体引用 ID（非空时后端优先按 ID 解析），URL 仅用于展示
+function onCoverSelected(payload: { mediaId: string; presetId?: string; url: string }) {
   form.coverImage = payload.url
+  form.coverMediaId = payload.mediaId
+  form.coverPresetId = payload.presetId || ''
   pickerVisible.value = false
+}
+
+// 移除封面时同步清空媒体引用
+function onCoverRemove() {
+  form.coverImage = null
+  form.coverMediaId = null
+  form.coverPresetId = null
 }
 
 let isSyncingFromParent = false

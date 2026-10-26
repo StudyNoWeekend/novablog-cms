@@ -6,6 +6,8 @@ export interface TechStackItem {
   category_id: string
   category_name: string
   icon: string
+  /** 图标对应的媒体库文件 ID（非空时后端优先按 ID 解析） */
+  icon_media_id?: string
   level: number
   description: string
   status: number
@@ -28,6 +30,8 @@ export interface CreateTechStackReq {
   /** 兼容保留，建议用 category_id */
   category?: string
   icon?: string
+  /** 图标对应的媒体库文件 ID（非空时后端优先按 ID 解析，为空时用 icon 外链） */
+  icon_media_id?: string
   level?: number
   description?: string
   status?: number

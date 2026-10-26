@@ -59,12 +59,11 @@ func (l *ArticleLogic) Create(ctx context.Context, r *req.CreateArticleReq) (*re
 	}
 
 	article := &model.Article{
-		ID:         articleID,
-		Title:      r.Title,
-		Slug:       slug,
-		Summary:    r.Summary,
-		Content:    r.Content,
-		CoverImage: r.CoverImage,
+		ID:      articleID,
+		Title:   r.Title,
+		Slug:    slug,
+		Summary: r.Summary,
+		Content: r.Content,
 		CategoryID: r.CategoryID,
 		Status:     r.Status,
 		Type:       editorType,
@@ -72,6 +71,14 @@ func (l *ArticleLogic) Create(ctx context.Context, r *req.CreateArticleReq) (*re
 		IsTop:      isTop,
 		IsComment:  isComment,
 	}
+	// 封面：媒体库引用（ID 索引）与外链互斥写入
+	coverMediaID, coverPresetID, coverImage, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.CoverImage)
+	if err != nil {
+		return nil, err
+	}
+	article.CoverImage = coverImage
+	article.CoverMediaID = mediaRefPtr(coverMediaID)
+	article.CoverPresetID = mediaRefPtr(coverPresetID)
 
 	// 如果状态为已发布，设置发布时间
 	if r.Status == 2 {
@@ -116,8 +123,25 @@ func (l *ArticleLogic) Update(ctx context.Context, id string, r *req.UpdateArtic
 	if r.Summary != nil {
 		article.Summary = *r.Summary
 	}
-	if r.CoverImage != nil {
-		article.CoverImage = *r.CoverImage
+	if r.CoverImage != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.CoverImage != nil {
+			coverURL = *r.CoverImage
+		}
+		coverMediaID, coverPresetID, coverImage, err := normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		article.CoverImage = coverImage
+		article.CoverMediaID = mediaRefPtr(coverMediaID)
+		article.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.CategoryID != nil {
 		article.CategoryID = r.CategoryID
@@ -173,6 +197,7 @@ func (l *ArticleLogic) GetList(ctx context.Context, r *req.ArticleListReq) (*res
 	}
 
 	var items []res.ArticleRes
+	l.resolveCoverURLs(ctx, articles)
 	for _, a := range articles {
 		item := l.toArticleRes(&a)
 		items = append(items, item)
@@ -187,6 +212,7 @@ func (l *ArticleLogic) GetDetail(ctx context.Context, id string) (*res.ArticleDe
 	if err != nil {
 		return nil, fmt.Errorf("文章不存在")
 	}
+	l.resolveCoverURL(ctx, article)
 	return l.toArticleDetail(article), nil
 }
 
@@ -196,6 +222,7 @@ func (l *ArticleLogic) GetBySlug(ctx context.Context, slug string) (*res.Article
 	if err != nil {
 		return nil, fmt.Errorf("文章不存在")
 	}
+	l.resolveCoverURL(ctx, article)
 	return l.toArticleDetail(article), nil
 }
 
@@ -233,6 +260,7 @@ func (l *ArticleLogic) GetHotList(ctx context.Context, count int) ([]res.Article
 	}
 
 	items := make([]res.ArticleRes, 0, len(articles))
+	l.resolveCoverURLs(ctx, articles)
 	for i := range articles {
 		items = append(items, l.toArticleRes(&articles[i]))
 	}
@@ -247,6 +275,7 @@ func (l *ArticleLogic) GetRandomList(ctx context.Context, count int) ([]res.Arti
 	}
 
 	items := make([]res.ArticleRes, 0, len(articles))
+	l.resolveCoverURLs(ctx, articles)
 	for i := range articles {
 		items = append(items, l.toArticleRes(&articles[i]))
 	}
@@ -290,25 +319,47 @@ func (l *ArticleLogic) toArticleRes(a *model.Article) res.ArticleRes {
 	}
 
 	return res.ArticleRes{
-		ID:           a.ID,
-		Title:        a.Title,
-		Slug:         a.Slug,
-		Summary:      a.Summary,
-		CoverImage:   a.CoverImage,
-		CategoryID:   categoryID,
-		CategoryName: categoryName,
-		TagIDs:       tagIDs,
-		TagNames:     tagNames,
-		Status:       a.Status,
-		Type:         a.Type,
-		ViewCount:    a.ViewCount,
-		CommentCount: a.CommentCount,
-		IsTop:        a.IsTop,
-		IsComment:    a.IsComment,
-		PublishedAt:  a.PublishedAt,
-		CreatedAt:    a.CreatedAt,
-		UpdatedAt:    a.UpdatedAt,
+		ID:            a.ID,
+		Title:         a.Title,
+		Slug:          a.Slug,
+		Summary:       a.Summary,
+		CoverImage:    a.CoverImage,
+		CoverMediaID:  refStr(a.CoverMediaID),
+		CoverPresetID: refStr(a.CoverPresetID),
+		CategoryID:    categoryID,
+		CategoryName:  categoryName,
+		TagIDs:        tagIDs,
+		TagNames:      tagNames,
+		Status:        a.Status,
+		Type:          a.Type,
+		ViewCount:     a.ViewCount,
+		CommentCount:  a.CommentCount,
+		IsTop:         a.IsTop,
+		IsComment:     a.IsComment,
+		PublishedAt:   a.PublishedAt,
+		CreatedAt:     a.CreatedAt,
+		UpdatedAt:     a.UpdatedAt,
 	}
+}
+
+// resolveCoverURLs 批量解析文章封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *ArticleLogic) resolveCoverURLs(ctx context.Context, articles []model.Article) {
+	ptrs := make([]*model.Article, len(articles))
+	for i := range articles {
+		ptrs[i] = &articles[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(a *model.Article) (string, string) { return refStr(a.CoverMediaID), refStr(a.CoverPresetID) },
+		func(a *model.Article, u string) { a.CoverImage = u },
+	)
+}
+
+// resolveCoverURL 解析单篇文章封面媒体引用。
+func (l *ArticleLogic) resolveCoverURL(ctx context.Context, a *model.Article) {
+	model.ResolveCoverURLs(ctx, []*model.Article{a},
+		func(x *model.Article) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.Article, u string) { x.CoverImage = u },
+	)
 }
 
 // toArticleDetail 转换为详情响应

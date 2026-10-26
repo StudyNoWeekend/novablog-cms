@@ -12,6 +12,9 @@ type VideoWork struct {
 	ID          string         `gorm:"type:uuid;primaryKey"`
 	Title       string         `gorm:"type:varchar(255);not null"`
 	CoverURL    string         `gorm:"column:cover_url;type:varchar(1024)"`
+	// 封面媒体引用：存媒体库文件 ID 时 cover_url 留空，读取时动态解析；外链（B站解析等）仍存 cover_url
+	CoverMediaID  *string `gorm:"column:cover_media_id;type:uuid;index"`
+	CoverPresetID *string `gorm:"column:cover_preset_id;type:uuid;index"`
 	Description string         `gorm:"type:text"`
 	Status      int            `gorm:"type:int;default:0"` // 0=草稿, 1=已发布
 	SortOrder   int            `gorm:"column:sort_order;type:int;default:0"`
@@ -21,6 +24,14 @@ type VideoWork struct {
 	CreatedAt   time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+// BeforeSave 保存前归一封面引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (v *VideoWork) BeforeSave(tx *gorm.DB) error {
+	if v.CoverMediaID != nil || v.CoverPresetID != nil {
+		v.CoverURL = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

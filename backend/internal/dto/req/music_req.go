@@ -2,26 +2,30 @@ package req
 
 // CreateSongReq 创建歌曲请求参数。
 type CreateSongReq struct {
-	Title      string  `json:"title" binding:"required,min=1,max=500"`
-	Artist     string  `json:"artist" binding:"required,min=1,max=255"`
-	CoverURL   string  `json:"cover_url"`
-	BVID       string  `json:"bvid" binding:"required"`
-	CID        int64   `json:"cid" binding:"required"`
-	SourceURL  string  `json:"source_url" binding:"required"`
-	SourceType string  `json:"source_type"`
-	CategoryID *string `json:"category_id"`
-	Duration   int     `json:"duration"`
-	SortOrder  int     `json:"sort_order"`
+	Title         string  `json:"title" binding:"required,min=1,max=500"`
+	Artist        string  `json:"artist" binding:"required,min=1,max=255"`
+	CoverURL      string  `json:"cover_url"`
+	CoverMediaID  string  `json:"cover_media_id"`  // 封面媒体引用，与 cover_url 互斥
+	CoverPresetID string  `json:"cover_preset_id"` // 封面预设引用，与 cover_url 互斥
+	BVID          string  `json:"bvid" binding:"required"`
+	CID           int64   `json:"cid" binding:"required"`
+	SourceURL     string  `json:"source_url" binding:"required"`
+	SourceType    string  `json:"source_type"`
+	CategoryID    *string `json:"category_id"`
+	Duration      int     `json:"duration"`
+	SortOrder     int     `json:"sort_order"`
 }
 
 // UpdateSongReq 更新歌曲请求参数。
 type UpdateSongReq struct {
-	Title      *string `json:"title"`
-	Artist     *string `json:"artist"`
-	CoverURL   *string `json:"cover_url"`
-	CategoryID *string `json:"category_id"`
-	Duration   *int    `json:"duration"`
-	SortOrder  *int    `json:"sort_order"`
+	Title         *string `json:"title"`
+	Artist        *string `json:"artist"`
+	CoverURL      *string `json:"cover_url"`
+	CoverMediaID  *string `json:"cover_media_id"`  // 封面媒体引用，与 cover_url 互斥处理
+	CoverPresetID *string `json:"cover_preset_id"` // 封面预设引用，与 cover_url 互斥处理
+	CategoryID    *string `json:"category_id"`
+	Duration      *int    `json:"duration"`
+	SortOrder     *int    `json:"sort_order"`
 }
 
 // SongListReq 歌曲列表请求参数。

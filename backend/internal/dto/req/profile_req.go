@@ -11,6 +11,7 @@ type SocialLinkReq struct {
 type UpdateProfileReq struct {
 	Nickname        *string          `json:"nickname" binding:"omitempty,max=50"`         // 昵称
 	Avatar          *string          `json:"avatar" binding:"omitempty,max=500"`          // 头像 URL
+	AvatarMediaID   *string          `json:"avatar_media_id"`                             // 头像媒体引用，与 avatar 互斥处理
 	Bio             *string          `json:"bio" binding:"omitempty"`                     // 个人简介
 	Email           *string          `json:"email" binding:"omitempty,max=100"`           // 邮箱
 	City            *string          `json:"city" binding:"omitempty,max=100"`            // 所在城市
@@ -21,10 +22,14 @@ type UpdateProfileReq struct {
 	ShowZodiac      *bool            `json:"show_zodiac"`                                 // 星座是否对外展示
 	ShowPersonality *bool            `json:"show_personality"`                            // 性格是否对外展示
 	PageBackground  *string          `json:"page_background" binding:"omitempty,max=500"` // 页面背景图 URL
-	BlogIcon        *string          `json:"blog_icon" binding:"omitempty,max=500"`       // 博客 icon 图 URL
-	BlogTitle       *string          `json:"blog_title" binding:"omitempty,max=100"`      // 博客标题
-	BlogDescription *string          `json:"blog_description" binding:"omitempty"`        // 博客描述
-	SocialLinks     *[]SocialLinkReq `json:"social_links" binding:"omitempty"`            // 社交平台链接数组
+	// 页面背景媒体引用，与 page_background 互斥处理
+	PageBackgroundMediaID *string `json:"page_background_media_id"`
+	BlogIcon              *string `json:"blog_icon" binding:"omitempty,max=500"` // 博客 icon 图 URL
+	// 博客 icon 媒体引用，与 blog_icon 互斥处理
+	BlogIconMediaID *string          `json:"blog_icon_media_id"`
+	BlogTitle       *string          `json:"blog_title" binding:"omitempty,max=100"` // 博客标题
+	BlogDescription *string          `json:"blog_description" binding:"omitempty"`   // 博客描述
+	SocialLinks     *[]SocialLinkReq `json:"social_links" binding:"omitempty"`       // 社交平台链接数组
 	Tags            *[]string        `json:"tags" binding:"omitempty,max=20,dive,max=30"` // 标签数组
 }
 

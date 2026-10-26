@@ -101,7 +101,7 @@
         </div>
         <a-form-item :label="t('book.form.cover')">
           <MediaPicker v-model:visible="mediaPickerVisible" module="book" @selected="handleMediaSelected" />
-          <ImageField v-model="form.cover" type="book" with-preset :search-keyword="form.title" :placeholder="t('book.form.coverUrlPlaceholder')">
+          <ImageField v-model="form.cover" v-model:media-id="form.coverMediaId" v-model:preset-id="form.coverPresetId" type="book" with-preset :search-keyword="form.title" :placeholder="t('book.form.coverUrlPlaceholder')">
             <template #extra>
               <a-button size="small" @click="mediaPickerVisible = true">
                 <PictureOutlined /> {{ t('book.form.mediaLibrary') }}
@@ -169,6 +169,8 @@ const form = reactive({
   title: '',
   author: '',
   cover: '',
+  coverMediaId: '',
+  coverPresetId: '',
   rating: 0,
   reading_status: 'want' as Book['reading_status'],
   review: '',
@@ -253,6 +255,8 @@ function resetForm() {
   form.title = ''
   form.author = ''
   form.cover = ''
+  form.coverMediaId = ''
+  form.coverPresetId = ''
   form.rating = 0
   form.reading_status = 'want'
   form.review = ''
@@ -276,6 +280,8 @@ function handleEdit(record: Book) {
   form.title = record.title
   form.author = record.author || ''
   form.cover = record.cover || ''
+  form.coverMediaId = record.cover_media_id || ''
+  form.coverPresetId = record.cover_preset_id || ''
   form.rating = record.rating || 0
   form.reading_status = record.reading_status
   form.review = record.review || ''
@@ -286,8 +292,10 @@ function handleEdit(record: Book) {
   modalVisible.value = true
 }
 
-function handleMediaSelected(media: { url: string }) {
-  form.cover = media.url
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
+  form.coverMediaId = media.id
+  form.coverPresetId = media.presetId || ''
+  form.cover = media.url // 仅展示；后端按 ID 优先解析
 }
 
 function buildPayload() {
@@ -295,6 +303,8 @@ function buildPayload() {
     title: form.title.trim(),
     author: form.author.trim() || undefined,
     cover: form.cover.trim() || undefined,
+    cover_media_id: form.coverMediaId || undefined,
+    cover_preset_id: form.coverPresetId || undefined,
     rating: form.rating,
     reading_status: form.reading_status,
     review: form.review.trim() || undefined,

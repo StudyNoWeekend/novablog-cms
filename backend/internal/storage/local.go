@@ -76,6 +76,11 @@ func (p *LocalProvider) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
+// PublicURL 本地存储的完整 URL 由 model 层 resolveURL 统一拼接，此处返回相对键。
+func (p *LocalProvider) PublicURL(key string) string {
+	return key
+}
+
 // Type 返回 provider 类型标识。
 func (p *LocalProvider) Type() string {
 	return "local"

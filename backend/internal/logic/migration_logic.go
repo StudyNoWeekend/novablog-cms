@@ -533,9 +533,8 @@ func (l *MigrationLogic) migrateOne(ctx context.Context, item model.StorageMigra
 	}
 	defer reader.Close()
 
-	// 上传到目标存储
-	newURL, err := targetProvider.Upload(ctx, media.StoragePath, reader, media.Size, media.MimeType)
-	if err != nil {
+	// 上传到目标存储（key 沿用原 storage_path，平台间共用）
+	if _, err := targetProvider.Upload(ctx, media.StoragePath, reader, media.Size, media.MimeType); err != nil {
 		return fmt.Errorf("上传到目标存储失败: %w", err)
 	}
 
@@ -548,14 +547,14 @@ func (l *MigrationLogic) migrateOne(ctx context.Context, item model.StorageMigra
 		return fmt.Errorf("上传后文件不存在，验证失败")
 	}
 
-	// 更新 media 记录
-	if err := l.mediaModel.UpdateStorageInfo(ctx, media.ID, newURL, targetProviderType); err != nil {
+	// 更新 media 记录：只改 storage_type，url 保持相对 key，完整 URL 读取时动态拼接
+	if err := l.mediaModel.UpdateStorageInfo(ctx, media.ID, media.StoragePath, targetProviderType); err != nil {
 		return fmt.Errorf("更新媒体记录失败: %w", err)
 	}
 
-	// 更新内容管理中的 URL 引用
-	oldURL := media.URL // This is the resolved URL (after AfterFind hook)
-	resolvedNewURL := model.ResolveURL(newURL)
+	// 同步历史正文中内嵌的旧绝对 URL（结构化字段已走 media_id 动态解析，无需改写）
+	oldURL := media.URL // AfterFind 解析出的旧平台完整 URL
+	resolvedNewURL := model.ResolveMediaURL(targetProviderType, media.StoragePath)
 	if oldURL != "" && resolvedNewURL != "" && oldURL != resolvedNewURL {
 		if err := l.updateContentURLs(ctx, oldURL, resolvedNewURL); err != nil {
 			l.logger.Error("更新内容URL失败", zap.String("old_url", oldURL), zap.String("new_url", resolvedNewURL), zap.Error(err))
@@ -605,28 +604,27 @@ func (l *MigrationLogic) migratePreset(ctx context.Context, item model.StorageMi
 	}
 	defer reader.Close()
 
-	// 上传到目标存储
-	newURL, err := targetProvider.Upload(ctx, preset.OutputStoragePath, reader, preset.OutputSize, preset.MimeType)
-	if err != nil {
+	// 上传到目标存储（key 沿用原 output_storage_path，平台间共用）
+	if _, err := targetProvider.Upload(ctx, preset.OutputStoragePath, reader, preset.OutputSize, preset.MimeType); err != nil {
 		return fmt.Errorf("上传预设到目标存储失败: %w", err)
 	}
 
-	// 验证上传成功
+	// 验证上传结果
 	exists, err := targetProvider.Exists(ctx, preset.OutputStoragePath)
 	if err != nil || !exists {
 		return fmt.Errorf("预设上传后验证失败")
 	}
 
-	// 保存旧 URL 用于内容更新
-	oldURL := preset.OutputURL // resolved URL after AfterFind
+	// 保存旧 URL 用于内容更新（AfterFind 解析出的旧平台完整 URL）
+	oldURL := preset.OutputURL
 
-	// 更新预设记录
-	if err := l.presetModel.UpdateStorageInfo(ctx, preset.ID, newURL); err != nil {
+	// 更新预设记录：只改 storage_type，output_url 保持相对 key
+	if err := l.presetModel.UpdateStorageInfo(ctx, preset.ID, preset.OutputStoragePath, targetProviderType); err != nil {
 		return fmt.Errorf("更新预设记录失败: %w", err)
 	}
 
-	// 更新内容管理中的 URL 引用
-	resolvedNewURL := model.ResolveURL(newURL)
+	// 同步历史正文中内嵌的旧绝对 URL
+	resolvedNewURL := model.ResolveMediaURL(targetProviderType, preset.OutputStoragePath)
 	if oldURL != "" && resolvedNewURL != "" && oldURL != resolvedNewURL {
 		if err := l.updateContentURLs(ctx, oldURL, resolvedNewURL); err != nil {
 			l.logger.Error("更新内容URL失败", zap.Error(err))
@@ -636,43 +634,31 @@ func (l *MigrationLogic) migratePreset(ctx context.Context, item model.StorageMi
 	return nil
 }
 
-// updateContentURLs 更新内容管理表中的 URL 引用。
-// TODO: 此处直接使用 model.DB 更新多张表，后续应考虑通过各 Model 方法封装。
+// updateContentURLs 同步内容正文中内嵌的旧绝对 URL。
+// 结构化图片字段已改为引用媒体 ID（读取时动态解析，平台迁移自动跟随），无需改写；
+// 仅正文（articles.content）与 jsonb 内嵌图（菜谱步骤图、旅行景点图/行程图）是
+// 历史落库的完整 URL 字符串，需要在此做 REPLACE（新内容已改用稳定链接，不再产生此类引用）。
 func (l *MigrationLogic) updateContentURLs(ctx context.Context, oldURL, newURL string) error {
 	db := model.DB.WithContext(ctx)
 
-	// articles.cover_image (exact match)
-	if err := db.Table("articles").Where("cover_image = ?", oldURL).Update("cover_image", newURL).Error; err != nil {
-		return fmt.Errorf("更新文章封面失败: %w", err)
-	}
 	// articles.content (REPLACE in HTML)
 	if err := db.Table("articles").Where("content LIKE ?", "%"+oldURL+"%").
 		UpdateColumn("content", gorm.Expr("REPLACE(content, ?, ?)", oldURL, newURL)).Error; err != nil {
 		return fmt.Errorf("更新文章内容失败: %w", err)
 	}
-	// travel_guides.cover_image
-	if err := db.Table("travel_guides").Where("cover_image = ?", oldURL).Update("cover_image", newURL).Error; err != nil {
-		return fmt.Errorf("更新攻略封面失败: %w", err)
+	// recipes.steps（jsonb 步骤图）
+	if err := db.Table("recipes").Where("steps::text LIKE ?", "%"+oldURL+"%").
+		UpdateColumn("steps", gorm.Expr("REPLACE(steps::text, ?, ?)::jsonb", oldURL, newURL)).Error; err != nil {
+		return fmt.Errorf("更新菜谱步骤图失败: %w", err)
 	}
-	// video_works.cover_url
-	if err := db.Table("video_works").Where("cover_url = ?", oldURL).Update("cover_url", newURL).Error; err != nil {
-		return fmt.Errorf("更新视频封面失败: %w", err)
+	// travel_guides.attractions / itinerary（jsonb 景点图/行程图）
+	if err := db.Table("travel_guides").Where("attractions::text LIKE ?", "%"+oldURL+"%").
+		UpdateColumn("attractions", gorm.Expr("REPLACE(attractions::text, ?, ?)::jsonb", oldURL, newURL)).Error; err != nil {
+		return fmt.Errorf("更新旅行景点图失败: %w", err)
 	}
-	// songs.cover_url
-	if err := db.Table("songs").Where("cover_url = ?", oldURL).Update("cover_url", newURL).Error; err != nil {
-		return fmt.Errorf("更新歌曲封面失败: %w", err)
-	}
-	// bloggers.avatar
-	if err := db.Table("bloggers").Where("avatar = ?", oldURL).Update("avatar", newURL).Error; err != nil {
-		return fmt.Errorf("更新博主头像失败: %w", err)
-	}
-	// bloggers.blog_icon
-	if err := db.Table("bloggers").Where("blog_icon = ?", oldURL).Update("blog_icon", newURL).Error; err != nil {
-		return fmt.Errorf("更新博客图标失败: %w", err)
-	}
-	// bloggers.page_background
-	if err := db.Table("bloggers").Where("page_background = ?", oldURL).Update("page_background", newURL).Error; err != nil {
-		return fmt.Errorf("更新页面背景失败: %w", err)
+	if err := db.Table("travel_guides").Where("itinerary::text LIKE ?", "%"+oldURL+"%").
+		UpdateColumn("itinerary", gorm.Expr("REPLACE(itinerary::text, ?, ?)::jsonb", oldURL, newURL)).Error; err != nil {
+		return fmt.Errorf("更新旅行行程图失败: %w", err)
 	}
 
 	return nil

@@ -10,6 +10,7 @@ import (
 	"image/png"
 	"io"
 	"mime/multipart"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -119,8 +120,7 @@ func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileH
 	fileType := getFileType(ext)
 	mimeType := getMimeType(ext)
 
-	url, err := provider.Upload(ctx, key, src, fileHeader.Size, mimeType)
-	if err != nil {
+	if _, err := provider.Upload(ctx, key, src, fileHeader.Size, mimeType); err != nil {
 		return nil, fmt.Errorf("上传文件到对象存储失败: %w", err)
 	}
 
@@ -130,7 +130,7 @@ func (l *MediaLogic) UploadFile(ctx context.Context, fileHeader *multipart.FileH
 		FileType:    fileType,
 		MimeType:    mimeType,
 		Size:        fileHeader.Size,
-		URL:         url,
+		URL:         key, // 只存相对对象键，完整 URL 读取时按当前存储配置动态拼接
 		StoragePath: key,
 		StorageType: provider.Type(),
 		FolderID:    folderIDPtr(folder),
@@ -184,8 +184,7 @@ func (l *MediaLogic) saveReaderMedia(ctx context.Context, filename, contentType 
 		contentType = getMimeType(ext)
 	}
 
-	url, err := provider.Upload(ctx, key, reader, size, contentType)
-	if err != nil {
+	if _, err := provider.Upload(ctx, key, reader, size, contentType); err != nil {
 		return nil, fmt.Errorf("转存文件失败: %w", err)
 	}
 
@@ -195,7 +194,7 @@ func (l *MediaLogic) saveReaderMedia(ctx context.Context, filename, contentType 
 		FileType:    getFileType(ext),
 		MimeType:    contentType,
 		Size:        size,
-		URL:         url,
+		URL:         key, // 只存相对对象键，完整 URL 读取时按当前存储配置动态拼接
 		StoragePath: key,
 		StorageType: provider.Type(),
 		FolderID:    folderIDPtr(folder),
@@ -294,7 +293,8 @@ func (l *MediaLogic) toMediaRes(ctx context.Context, media *model.Media) (*res.M
 		FileType:        media.FileType,
 		MimeType:        media.MimeType,
 		Size:            media.Size,
-		URL:             model.ResolveURL(media.URL),
+		URL:             model.ResolveMediaURL(media.StorageType, media.URL),
+		FileURL:         mediaStableFileURL(media.ID),
 		Width:           media.Width,
 		Height:          media.Height,
 		FolderID:        ptrToString(media.FolderID),
@@ -302,6 +302,56 @@ func (l *MediaLogic) toMediaRes(ctx context.Context, media *model.Media) (*res.M
 		FolderModuleKey: folderModuleKey,
 		CreatedAt:       media.CreatedAt,
 	}, nil
+}
+
+// presetStableFileURL 构建预设成品图的稳定访问链接（按原图媒体 ID 索引 + preset 参数）。
+func presetStableFileURL(mediaID, presetID string) string {
+	return mediaStableFileURL(mediaID) + "?preset=" + presetID
+}
+
+// mediaStableFileURL 构建媒体稳定访问链接（按媒体 ID 索引，由后端按当前存储动态解析）。
+// BaseURL 未配置时退化为站内绝对路径。
+func mediaStableFileURL(mediaID string) string {
+	p := "/api/v1/public/media/" + mediaID + "/file"
+	if model.BaseURL == "" {
+		return p
+	}
+	return strings.TrimRight(model.BaseURL, "/") + p
+}
+
+// ResolveMediaFile 解析媒体的当前可访问地址（稳定链接端点用）：
+// local 返回本地文件路径 localPath；对象存储返回重定向地址 redirectURL。
+// presetID 非空时解析该媒体的指定预设成品图（校验归属）。
+func (l *MediaLogic) ResolveMediaFile(ctx context.Context, id, presetID string) (redirectURL, localPath string, err error) {
+	media, err := l.model.GetByIDRaw(ctx, id)
+	if err != nil {
+		return "", "", fmt.Errorf("媒体不存在")
+	}
+
+	storagePath := media.StoragePath
+	storageType := media.StorageType
+	if presetID != "" {
+		preset, err := l.presetModel.GetByID(ctx, presetID)
+		if err != nil || preset.MediaID != media.ID {
+			return "", "", fmt.Errorf("预设不存在或不属于该媒体")
+		}
+		storagePath = preset.OutputStoragePath
+		storageType = preset.StorageType
+	}
+
+	if storageType == "" || storageType == "local" {
+		uploadRoot := filepath.Clean(l.uploadDir)
+		full := filepath.Join(uploadRoot, filepath.FromSlash(storagePath))
+		if !strings.HasPrefix(full, uploadRoot+string(os.PathSeparator)) {
+			return "", "", fmt.Errorf("非法存储路径")
+		}
+		return "", full, nil
+	}
+	provider := l.manager.GetProviderByType(ctx, storageType)
+	if provider == nil {
+		return "", "", fmt.Errorf("存储平台 %s 不可用", storageType)
+	}
+	return provider.PublicURL(storagePath), "", nil
 }
 
 // GetList 获取媒体列表。FolderID 取值：nil=全部；"root"=根目录；其他=指定文件夹。
@@ -348,8 +398,15 @@ func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.M
 	items := make([]res.MediaRes, 0, len(list))
 	for _, m := range list {
 		thumbURL := ptrToString(m.ThumbURL)
-		if thumbURL == "" && provider != nil {
-			thumbURL = provider.GetThumbURL(m.URL, 300)
+		if thumbURL == "" {
+			// 缩略参数仅对应平台的图片服务能识别，按媒体自身 storage_type 取 Provider
+			thumbProvider := provider
+			if m.StorageType != "" && m.StorageType != "local" && (provider == nil || m.StorageType != provider.Type()) {
+				thumbProvider = l.manager.GetProviderByType(ctx, m.StorageType)
+			}
+			if thumbProvider != nil {
+				thumbURL = thumbProvider.GetThumbURL(m.URL, 300)
+			}
 		}
 		folderName := ""
 		folderModuleKey := ""
@@ -364,6 +421,7 @@ func (l *MediaLogic) GetList(ctx context.Context, req *req.MediaListReq) (*res.M
 			MimeType:        m.MimeType,
 			Size:            m.Size,
 			URL:             m.URL,
+			FileURL:         mediaStableFileURL(m.ID),
 			ThumbURL:        thumbURL,
 			Width:           m.Width,
 			Height:          m.Height,
@@ -412,7 +470,7 @@ func (l *MediaLogic) GetUsages(ctx context.Context, id string) (*res.MediaUsageR
 		return nil, err
 	}
 
-	hits, err := l.usageModel.FindUsages(ctx, media.URL, media.StoragePath, presetIDs(presets), presetOutputKeys(presets))
+	hits, err := l.usageModel.FindUsages(ctx, media.ID, media.URL, media.StoragePath, presetIDs(presets), presetOutputKeys(presets))
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +491,7 @@ func (l *MediaLogic) Delete(ctx context.Context, id string, force bool) error {
 		return err
 	}
 
-	hits, err := l.usageModel.FindUsages(ctx, media.URL, media.StoragePath, presetIDs(presets), presetOutputKeys(presets))
+	hits, err := l.usageModel.FindUsages(ctx, media.ID, media.URL, media.StoragePath, presetIDs(presets), presetOutputKeys(presets))
 	if err != nil {
 		return err
 	}
@@ -441,7 +499,7 @@ func (l *MediaLogic) Delete(ctx context.Context, id string, force bool) error {
 		return fmt.Errorf("该文件被 %d 处内容引用，无法直接删除", len(hits))
 	}
 
-	if err := l.model.HardDeleteWithPresets(ctx, id); err != nil {
+	if err := l.model.HardDeleteWithPresets(ctx, id, presetIDs(presets)); err != nil {
 		return fmt.Errorf("删除媒体记录失败: %w", err)
 	}
 
@@ -585,8 +643,7 @@ func (l *MediaLogic) CreatePreset(ctx context.Context, req *req.CreatePresetReq,
 	}
 
 	mimeType := "image/jpeg"
-	url, err := provider.Upload(ctx, key, src, fileHeader.Size, mimeType)
-	if err != nil {
+	if _, err := provider.Upload(ctx, key, src, fileHeader.Size, mimeType); err != nil {
 		return nil, fmt.Errorf("上传预设成品图失败: %w", err)
 	}
 
@@ -596,10 +653,11 @@ func (l *MediaLogic) CreatePreset(ctx context.Context, req *req.CreatePresetReq,
 		Name:              req.Name,
 		FrameConfig:       req.FrameConfig,
 		DisplayParams:     req.DisplayParams,
-		OutputURL:         url,
+		OutputURL:         key, // 只存相对对象键，完整 URL 读取时按当前存储配置动态拼接
 		OutputStoragePath: key,
 		OutputSize:        fileHeader.Size,
 		MimeType:          mimeType,
+		StorageType:       provider.Type(),
 	}
 	if err := l.presetModel.Create(ctx, preset); err != nil {
 		return nil, fmt.Errorf("保存预设记录失败: %w", err)
@@ -611,7 +669,8 @@ func (l *MediaLogic) CreatePreset(ctx context.Context, req *req.CreatePresetReq,
 		Name:              preset.Name,
 		FrameConfig:       preset.FrameConfig,
 		DisplayParams:     preset.DisplayParams,
-		OutputURL:         preset.OutputURL,
+		OutputURL:         model.ResolveMediaURL(preset.StorageType, preset.OutputURL),
+		FileURL:           presetStableFileURL(preset.MediaID, preset.ID),
 		OutputStoragePath: preset.OutputStoragePath,
 		OutputSize:        preset.OutputSize,
 		MimeType:          preset.MimeType,
@@ -667,8 +726,7 @@ func (l *MediaLogic) UploadWithPreset(ctx context.Context, req *req.UploadWithPr
 	}
 
 	mimeType := "image/jpeg"
-	url, err := provider.Upload(ctx, key, bytes.NewReader(buf.Bytes()), int64(buf.Len()), mimeType)
-	if err != nil {
+	if _, err := provider.Upload(ctx, key, bytes.NewReader(buf.Bytes()), int64(buf.Len()), mimeType); err != nil {
 		return nil, fmt.Errorf("上传预设成品图失败: %w", err)
 	}
 
@@ -685,10 +743,11 @@ func (l *MediaLogic) UploadWithPreset(ctx context.Context, req *req.UploadWithPr
 		Name:              name,
 		FrameConfig:       frameConfig,
 		DisplayParams:     displayParams,
-		OutputURL:         url,
+		OutputURL:         key, // 只存相对对象键，完整 URL 读取时按当前存储配置动态拼接
 		OutputStoragePath: key,
 		OutputSize:        int64(buf.Len()),
 		MimeType:          mimeType,
+		StorageType:       provider.Type(),
 	}
 	if err := l.presetModel.Create(ctx, preset); err != nil {
 		return nil, fmt.Errorf("保存预设记录失败: %w", err)
@@ -702,7 +761,8 @@ func (l *MediaLogic) UploadWithPreset(ctx context.Context, req *req.UploadWithPr
 			Name:              preset.Name,
 			FrameConfig:       preset.FrameConfig,
 			DisplayParams:     preset.DisplayParams,
-			OutputURL:         preset.OutputURL,
+			OutputURL:         model.ResolveMediaURL(preset.StorageType, preset.OutputURL),
+			FileURL:           presetStableFileURL(preset.MediaID, preset.ID),
 			OutputStoragePath: preset.OutputStoragePath,
 			OutputSize:        preset.OutputSize,
 			MimeType:          preset.MimeType,
@@ -727,6 +787,7 @@ func (l *MediaLogic) GetPresetsByMediaID(ctx context.Context, mediaID string) (*
 			FrameConfig:       p.FrameConfig,
 			DisplayParams:     p.DisplayParams,
 			OutputURL:         p.OutputURL,
+			FileURL:           presetStableFileURL(p.MediaID, p.ID),
 			OutputStoragePath: p.OutputStoragePath,
 			OutputSize:        p.OutputSize,
 			MimeType:          p.MimeType,

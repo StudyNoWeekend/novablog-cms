@@ -21,6 +21,8 @@
     "nameRequired": "プレイリスト名を入力してください",
     "coverUrl": "カバー画像URL",
     "coverUrlPlaceholder": "プレイリストのカバー画像URL（任意）",
+    "selectCoverFromMedia": "メディアライブラリからカバーを選択",
+    "mediaLibrary": "メディアライブラリ",
     "descriptionPlaceholder": "このプレイリストの簡単な説明（任意）",
     "showOnFront": "サイトに表示",
     "addSuccess": "追加しました"

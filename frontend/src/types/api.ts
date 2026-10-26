@@ -65,9 +65,15 @@ export interface UserInfo {
   username: string
   nickname: string
   avatar: string
+  /** 头像对应的媒体库文件 ID（非空时后端优先按 ID 解析） */
+  avatar_media_id?: string
   bio: string
   page_background: string
+  /** 页面背景对应的媒体库文件 ID */
+  page_background_media_id?: string
   blog_icon: string
+  /** 博客图标对应的媒体库文件 ID */
+  blog_icon_media_id?: string
   blog_title: string
   blog_description: string
   email: string
@@ -93,6 +99,7 @@ export interface UserInfo {
 export interface UpdateProfileReq {
   nickname?: string
   avatar?: string
+  avatar_media_id?: string
   bio?: string
   email?: string
   city?: string
@@ -103,7 +110,9 @@ export interface UpdateProfileReq {
   show_zodiac?: boolean
   show_personality?: boolean
   page_background?: string
+  page_background_media_id?: string
   blog_icon?: string
+  blog_icon_media_id?: string
   blog_title?: string
   blog_description?: string
   social_links?: SocialLink[]
@@ -208,6 +217,8 @@ export interface MediaPreset {
   frame_config: string
   display_params: string
   output_url: string
+  /** 稳定访问链接（按原图媒体 ID 索引 + preset 参数），供 jsonb 内嵌等场景长期引用 */
+  file_url: string
   output_storage_path: string
   output_size: number
   mime_type: string

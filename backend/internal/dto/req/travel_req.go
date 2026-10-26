@@ -2,34 +2,38 @@ package req
 
 // CreateTravelGuideReq 创建旅行攻略请求参数。
 type CreateTravelGuideReq struct {
-	Title       string           `json:"title" binding:"required,min=1,max=200"`
-	Summary     string           `json:"summary"`
-	CoverImage  string           `json:"cover_image"`
-	Status      int16            `json:"status"`
-	Destination string           `json:"destination" binding:"required,min=1,max=200"`
-	Region      string           `json:"region" binding:"required"`
-	CategoryID  *string          `json:"category_id"`
-	Days        int              `json:"days"`
-	BestMonth   string           `json:"best_month"`
-	Attractions []map[string]any `json:"attractions"`
-	Itinerary   []map[string]any `json:"itinerary"`
-	Reviews     []map[string]any `json:"reviews"`
+	Title         string `json:"title" binding:"required,min=1,max=200"`
+	Summary       string `json:"summary"`
+	CoverImage    string `json:"cover_image"`
+	CoverMediaID  string `json:"cover_media_id"`  // 封面媒体引用，与 cover_image 互斥
+	CoverPresetID string `json:"cover_preset_id"` // 封面预设引用，与 cover_image 互斥
+	Status        int16  `json:"status"`
+	Destination   string           `json:"destination" binding:"required,min=1,max=200"`
+	Region        string           `json:"region" binding:"required"`
+	CategoryID    *string          `json:"category_id"`
+	Days          int              `json:"days"`
+	BestMonth     string           `json:"best_month"`
+	Attractions   []map[string]any `json:"attractions"`
+	Itinerary     []map[string]any `json:"itinerary"`
+	Reviews       []map[string]any `json:"reviews"`
 }
 
 // UpdateTravelGuideReq 更新旅行攻略请求参数（所有字段为指针类型）。
 type UpdateTravelGuideReq struct {
-	Title       *string          `json:"title"`
-	Summary     *string          `json:"summary"`
-	CoverImage  *string          `json:"cover_image"`
-	Status      *int16           `json:"status"`
-	Destination *string          `json:"destination"`
-	Region      *string          `json:"region"`
-	CategoryID  *string          `json:"category_id"`
-	Days        *int             `json:"days"`
-	BestMonth   *string          `json:"best_month"`
-	Attractions []map[string]any `json:"attractions"`
-	Itinerary   []map[string]any `json:"itinerary"`
-	Reviews     []map[string]any `json:"reviews"`
+	Title         *string `json:"title"`
+	Summary       *string `json:"summary"`
+	CoverImage    *string `json:"cover_image"`
+	CoverMediaID  *string `json:"cover_media_id"`  // 封面媒体引用，与 cover_image 互斥处理
+	CoverPresetID *string `json:"cover_preset_id"` // 封面预设引用，与 cover_image 互斥处理
+	Status        *int16          `json:"status"`
+	Destination   *string         `json:"destination"`
+	Region        *string         `json:"region"`
+	CategoryID    *string         `json:"category_id"`
+	Days          *int            `json:"days"`
+	BestMonth     *string         `json:"best_month"`
+	Attractions   []map[string]any `json:"attractions"`
+	Itinerary     []map[string]any `json:"itinerary"`
+	Reviews       []map[string]any `json:"reviews"`
 }
 
 // TravelGuideListReq 旅行攻略列表查询请求参数。

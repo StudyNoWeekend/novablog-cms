@@ -13,6 +13,8 @@ type TechStackItem struct {
 	Name         string         `gorm:"type:varchar(100);not null" json:"name"`
 	Category     string         `gorm:"type:varchar(50);default:''" json:"category"` // 兼容镜像：通常等于关联分类的 slug（language/framework/tool/database 等）
 	Icon         string         `gorm:"type:varchar(500)" json:"icon"`               // 图标 URL
+	// 图标媒体引用：存媒体库文件 ID 时 icon 留空，读取时动态解析；Simple Icons 等外链仍存 icon
+	IconMediaID *string `gorm:"column:icon_media_id;type:uuid;index" json:"icon_media_id"`
 	Level        int            `gorm:"type:int;default:1" json:"level"`             // 1=了解, 2=熟悉, 3=熟练, 4=精通
 	Description  string         `gorm:"type:varchar(500)" json:"description"`
 	Status       int            `gorm:"type:int;default:0" json:"status"` // 0=草稿, 1=已发布
@@ -23,6 +25,14 @@ type TechStackItem struct {
 	CreatedAt    time.Time      `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time      `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+// BeforeSave 保存前归一图标引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (t *TechStackItem) BeforeSave(tx *gorm.DB) error {
+	if t.IconMediaID != nil {
+		t.Icon = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

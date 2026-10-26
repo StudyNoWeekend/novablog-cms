@@ -49,14 +49,20 @@ func NewMediaUsage() *MediaUsageModel {
 }
 
 // FindUsages 扫描各内容表中对指定媒体的引用。
-// mediaURL 为 media.url 的原始存储值（相对路径或完整 URL），mediaKey 为
+// mediaID 为媒体 ID：结构化字段的 *_media_id/*_preset_id 引用列按 ID 精确匹配；
+// mediaURL 为 media.url 的原始存储值（相对路径或历史完整 URL），mediaKey 为
 // media.storage_path；presetIDs 为该媒体的预设 ID，presetKeys 为预设成品图
 // 的 storage_path。引用处无论存相对路径还是完整 URL 都包含 key 子串，故对
-// 文本/jsonb 以 key 做 LIKE 匹配，精确字段以 URL 全等匹配兜底。
-// songs 表无软删除列，扫描时不做 deleted_at 过滤。
-func (m *MediaUsageModel) FindUsages(ctx context.Context, mediaURL, mediaKey string, presetIDs, presetKeys []string) ([]UsageHit, error) {
+// 文本/jsonb 以 key 做 LIKE 匹配（含稳定链接 /media/{id}/file 片段），URL 列以
+// 全等/LIKE 兜底。命中按 (模块,内容ID,位置) 去重。
+// songs/third_party_playlists 表无软删除列，扫描时不做 deleted_at 过滤。
+func (m *MediaUsageModel) FindUsages(ctx context.Context, mediaID, mediaURL, mediaKey string, presetIDs, presetKeys []string) ([]UsageHit, error) {
 	keys := dedupNonEmpty(append([]string{mediaKey}, presetKeys...))
-	if mediaURL == "" && len(keys) == 0 && len(presetIDs) == 0 {
+	if mediaID != "" {
+		// 稳定链接按媒体 ID 索引，正文/jsonb 中的稳定链接引用同样可扫描到
+		keys = append(keys, "api/v1/public/media/"+mediaID+"/file")
+	}
+	if mediaURL == "" && len(keys) == 0 && len(presetIDs) == 0 && mediaID == "" {
 		return nil, nil
 	}
 
@@ -144,7 +150,95 @@ func (m *MediaUsageModel) FindUsages(ctx context.Context, mediaURL, mediaKey str
 		return nil, err
 	}
 
-	return hits, nil
+	// 结构化字段的媒体引用列（*_media_id / *_preset_id）ID 精确匹配
+	if err := m.scanMediaRefs(ctx, mediaID, presetIDs, &hits); err != nil {
+		return nil, err
+	}
+
+	return dedupeUsageHits(hits), nil
+}
+
+// mediaRefScan 结构化字段媒体引用列的扫描配置。
+type mediaRefScan struct {
+	table         string
+	module        string
+	field         string
+	titleExpr     string
+	mediaCol      string
+	presetCol     string
+	filterDeleted bool
+}
+
+// mediaRefScans 各业务表 *_media_id / *_preset_id 引用列的扫描配置（内容创作 + 关于我）。
+var mediaRefScans = []mediaRefScan{
+	{table: "articles", module: UsageModuleArticle, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id", filterDeleted: true},
+	{table: "songs", module: UsageModuleSong, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id"},
+	{table: "third_party_playlists", module: UsageModuleSong, field: "歌单封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id"},
+	{table: "video_works", module: UsageModuleVideo, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id", filterDeleted: true},
+	{table: "travel_guides", module: UsageModuleTravel, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id", filterDeleted: true},
+	{table: "recipes", module: UsageModuleRecipe, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id", filterDeleted: true},
+	{table: "books", module: UsageModuleBook, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id", filterDeleted: true},
+	{table: "games", module: UsageModuleGame, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id", filterDeleted: true},
+	{table: "photo_equipment", module: UsageModuleEquipment, field: "图片", titleExpr: "name", mediaCol: "image_media_id", presetCol: "image_preset_id", filterDeleted: true},
+	{table: "projects", module: UsageModuleProject, field: "封面", titleExpr: "title", mediaCol: "cover_media_id", presetCol: "cover_preset_id", filterDeleted: true},
+	{table: "tech_stack_items", module: UsageModuleTechStack, field: "图标", titleExpr: "name", mediaCol: "icon_media_id", filterDeleted: true},
+	{table: "bloggers", module: UsageModuleBlogger, field: "头像", titleExpr: "COALESCE(NULLIF(nickname, ''), username)", mediaCol: "avatar_media_id", filterDeleted: true},
+	{table: "bloggers", module: UsageModuleBlogger, field: "博客图标", titleExpr: "COALESCE(NULLIF(nickname, ''), username)", mediaCol: "blog_icon_media_id", filterDeleted: true},
+	{table: "bloggers", module: UsageModuleBlogger, field: "页面背景", titleExpr: "COALESCE(NULLIF(nickname, ''), username)", mediaCol: "page_background_media_id", filterDeleted: true},
+}
+
+// scanMediaRefs 按 ID 精确扫描各业务表的媒体/预设引用列。
+func (m *MediaUsageModel) scanMediaRefs(ctx context.Context, mediaID string, presetIDs []string, hits *[]UsageHit) error {
+	if mediaID == "" && len(presetIDs) == 0 {
+		return nil
+	}
+	for _, ref := range mediaRefScans {
+		conds := make([]string, 0, 2)
+		args := make([]any, 0, 2)
+		if mediaID != "" && ref.mediaCol != "" {
+			conds = append(conds, ref.mediaCol+" = ?")
+			args = append(args, mediaID)
+		}
+		if ref.presetCol != "" && len(presetIDs) > 0 {
+			conds = append(conds, ref.presetCol+" IN ?")
+			args = append(args, presetIDs)
+		}
+		if len(conds) == 0 {
+			continue
+		}
+		cond := "(" + strings.Join(conds, " OR ") + ")"
+		if ref.filterDeleted {
+			cond = "deleted_at IS NULL AND " + cond
+		}
+		var rows []usageRow
+		err := m.db.WithContext(ctx).
+			Table(ref.table).
+			Select("id, "+ref.titleExpr+" AS title").
+			Where(cond, args...).
+			Scan(&rows).Error
+		if err != nil {
+			return fmt.Errorf("扫描%s媒体引用失败: %w", ref.module, err)
+		}
+		for _, r := range rows {
+			*hits = append(*hits, UsageHit{Module: ref.module, ID: r.ID, Title: r.Title, Field: ref.field})
+		}
+	}
+	return nil
+}
+
+// dedupeUsageHits 按 (模块,内容ID,位置) 去重：同一行可能同时被 URL 兜底与 ID 精确扫描命中。
+func dedupeUsageHits(hits []UsageHit) []UsageHit {
+	seen := make(map[string]struct{}, len(hits))
+	result := make([]UsageHit, 0, len(hits))
+	for _, h := range hits {
+		key := h.Module + "|" + h.ID + "|" + h.Field
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, h)
+	}
+	return result
 }
 
 // scanPortfolios 扫描摄影作品集对媒体预设的引用：作品项的作品图、作品集独立封面。

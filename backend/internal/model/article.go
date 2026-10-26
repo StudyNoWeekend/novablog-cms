@@ -15,6 +15,9 @@ type Article struct {
 	Summary      string         `gorm:"type:varchar(500)"`
 	Content      string         `gorm:"type:text;not null"`
 	CoverImage   string         `gorm:"type:varchar(500);column:cover_image"`
+	// 封面媒体引用：存媒体库文件 ID（media.id / media_presets.id）时 URL 列留空，读取时动态解析最新链接；外链场景仍存 cover_image
+	CoverMediaID   *string `gorm:"column:cover_media_id;type:uuid;index"`
+	CoverPresetID  *string `gorm:"column:cover_preset_id;type:uuid;index"`
 	CategoryID   *string        `gorm:"column:category_id;type:uuid;index:idx_articles_category_id"`
 	Category     *Category      `gorm:"foreignKey:CategoryID"`
 	Status       int16          `gorm:"column:status;type:smallint;not null;default:1;index:idx_articles_status"`
@@ -29,6 +32,15 @@ type Article struct {
 	UpdatedAt    time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	Tags         []Tag          `gorm:"many2many:article_tags"`
+}
+
+// BeforeSave 保存前归一封面引用：ID 模式下清空 URL 列，避免 AfterFind 解析出的完整 URL 被写回落库
+// （引用列非空时读取按 ID 动态解析，URL 列仅存外链）。
+func (a *Article) BeforeSave(tx *gorm.DB) error {
+	if a.CoverMediaID != nil || a.CoverPresetID != nil {
+		a.CoverImage = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

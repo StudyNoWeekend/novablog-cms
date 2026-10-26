@@ -54,7 +54,7 @@ func NewApp(cfgPath string) (*App, error) {
 		SSLMode:      cfg.GetString("postgres.sslmode"),
 		MaxOpenConns: cfg.GetInt("postgres.max_open_conns"),
 		MaxIdleConns: cfg.GetInt("postgres.max_idle_conns"),
-	})
+	}, logger)
 	if err != nil {
 		return nil, fmt.Errorf("初始化数据库失败: %w", err)
 	}

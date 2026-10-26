@@ -8,6 +8,7 @@ import (
 
 	"novablog/enum"
 	"novablog/internal/dto/req"
+	"novablog/internal/dto/res"
 	"novablog/internal/logic"
 	"novablog/utils/response"
 
@@ -111,59 +112,55 @@ func (ctrl *ProfileController) UpdateRoles(c *gin.Context) {
 
 // UploadIcon 上传博客 Icon 图 POST /api/v1/profile/upload-icon
 func (ctrl *ProfileController) UploadIcon(c *gin.Context) {
-	url, err := ctrl.uploadImage(c, "icon")
+	media, err := ctrl.uploadImage(c, "icon")
 	if err != nil {
 		response.Error(c, err.Error())
 		return
 	}
-	response.Success(c, gin.H{"url": url})
+	response.Success(c, gin.H{"url": media.URL, "media_id": media.ID})
 }
 
 // UploadBackground 上传页面背景图 POST /api/v1/profile/upload-background
 func (ctrl *ProfileController) UploadBackground(c *gin.Context) {
-	url, err := ctrl.uploadImage(c, "background")
+	media, err := ctrl.uploadImage(c, "background")
 	if err != nil {
 		response.Error(c, err.Error())
 		return
 	}
-	response.Success(c, gin.H{"url": url})
+	response.Success(c, gin.H{"url": media.URL, "media_id": media.ID})
 }
 
 // UploadAvatar 上传头像 POST /api/v1/profile/upload-avatar
 func (ctrl *ProfileController) UploadAvatar(c *gin.Context) {
-	url, err := ctrl.uploadImage(c, "avatar")
+	media, err := ctrl.uploadImage(c, "avatar")
 	if err != nil {
 		response.Error(c, err.Error())
 		return
 	}
-	response.Success(c, gin.H{"url": url})
+	response.Success(c, gin.H{"url": media.URL, "media_id": media.ID})
 }
 
 // uploadImage 上传图片的通用方法：校验后统一走媒体库上传链路，
 // 登记到 media 表并归入「博主资料」文件夹（头像/图标/背景可在媒体库统一管理）。
 // subdir 仅为语义参数（icon、background 或 avatar），物理目录统一归属博主资料文件夹。
-func (ctrl *ProfileController) uploadImage(c *gin.Context, subdir string) (string, error) {
+func (ctrl *ProfileController) uploadImage(c *gin.Context, subdir string) (*res.MediaRes, error) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		return "", fmt.Errorf("请选择上传文件")
+		return nil, fmt.Errorf("请选择上传文件")
 	}
 
 	// 限制文件大小 10MB
 	if file.Size > 10*1024*1024 {
-		return "", fmt.Errorf("文件大小不能超过10MB")
+		return nil, fmt.Errorf("文件大小不能超过10MB")
 	}
 
 	// 校验文件扩展名
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".gif" && ext != ".webp" && ext != ".svg" && ext != ".ico" {
-		return "", fmt.Errorf("不支持的文件格式，仅支持 .jpg/.jpeg/.png/.gif/.webp/.svg/.ico")
+		return nil, fmt.Errorf("不支持的文件格式，仅支持 .jpg/.jpeg/.png/.gif/.webp/.svg/.ico")
 	}
 
-	media, err := ctrl.mediaLogic.UploadFile(c.Request.Context(), file, logic.MediaUploadOptions{
+	return ctrl.mediaLogic.UploadFile(c.Request.Context(), file, logic.MediaUploadOptions{
 		Module: enum.MediaModuleProfile,
 	})
-	if err != nil {
-		return "", err
-	}
-	return media.URL, nil
 }

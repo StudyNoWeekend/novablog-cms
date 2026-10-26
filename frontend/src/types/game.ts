@@ -2,6 +2,8 @@ export interface Game {
   id: string
   title: string
   cover: string
+  cover_media_id?: string
+  cover_preset_id?: string
   platform: string
   genre: string
   play_status: 'want' | 'playing' | 'played'
@@ -27,6 +29,8 @@ export interface GameListRes {
 export interface CreateGameReq {
   title: string
   cover?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   platform?: string
   genre?: string
   play_status?: 'want' | 'playing' | 'played'

@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+
 	"novablog/enum"
 	"novablog/internal/dto/req"
 	"novablog/internal/logic"
@@ -172,4 +174,21 @@ func (c *MediaController) DeletePreset(ctx *gin.Context) {
 		return
 	}
 	response.Success(ctx, nil)
+}
+
+// GetMediaFile 媒体稳定访问链接 GET /api/v1/public/media/:id/file
+// 按媒体 ID 索引：本地存储流式返回文件，对象存储 302 到当前配置下的访问地址。
+// 存储迁移/换域名后该链接不变，供富文本与 Markdown 正文等场景长期引用。
+func (c *MediaController) GetMediaFile(ctx *gin.Context) {
+	redirectURL, localPath, err := c.logic.ResolveMediaFile(ctx.Request.Context(), ctx.Param("id"), ctx.Query("preset"))
+	if err != nil {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+	ctx.Header("Cache-Control", "public, max-age=300")
+	if redirectURL != "" {
+		ctx.Redirect(http.StatusFound, redirectURL)
+		return
+	}
+	ctx.File(localPath)
 }

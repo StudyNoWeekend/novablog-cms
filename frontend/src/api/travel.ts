@@ -18,6 +18,9 @@ function toCreateReq(data: TravelGuideFormData) {
     title: data.title,
     summary: data.summary,
     cover_image: data.coverImage,
+    // 媒体引用 ID 非空时后端优先按 ID 解析；为空时回退用 cover_image（外链模式）
+    cover_media_id: data.coverMediaId || undefined,
+    cover_preset_id: data.coverPresetId || undefined,
     status: data.status,
     destination: data.destination,
     region: data.region,
@@ -91,6 +94,8 @@ function toTravelGuide(raw: any): TravelGuide {
     title: raw.title,
     summary: raw.summary,
     coverImage: raw.cover_image,
+    coverMediaId: raw.cover_media_id || null,
+    coverPresetId: raw.cover_preset_id || null,
     status: raw.status,
     destination: raw.destination,
     region: raw.region,

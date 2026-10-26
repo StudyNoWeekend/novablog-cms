@@ -82,7 +82,7 @@ func initMediaFolders(db *gorm.DB) {
 			presetKeys = append(presetKeys, p.OutputStoragePath)
 		}
 
-		hits, err := usageModel.FindUsages(ctx, m.URL, m.StoragePath, presetIDs, presetKeys)
+		hits, err := usageModel.FindUsages(ctx, m.ID, m.URL, m.StoragePath, presetIDs, presetKeys)
 		if err != nil {
 			logger.Warn("扫描媒体引用失败，跳过归类", zap.String("media_id", m.ID), zap.Error(err))
 			continue

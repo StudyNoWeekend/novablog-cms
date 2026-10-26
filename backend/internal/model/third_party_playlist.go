@@ -12,6 +12,9 @@ type ThirdPartyPlaylist struct {
 	ID          string    `gorm:"type:uuid;primaryKey" json:"id"`
 	Title       string    `gorm:"type:varchar(500);not null" json:"title"`
 	CoverURL    string    `gorm:"type:text;column:cover_url" json:"cover_url"`
+	// 封面媒体引用：存媒体库文件 ID 时 cover_url 留空，读取时动态解析；外链场景仍存 cover_url
+	CoverMediaID  *string `gorm:"column:cover_media_id;type:uuid;index" json:"cover_media_id"`
+	CoverPresetID *string `gorm:"column:cover_preset_id;type:uuid;index" json:"cover_preset_id"`
 	Platform    string    `gorm:"type:varchar(50);not null" json:"platform"`
 	PlatformURL string    `gorm:"type:text;column:platform_url;not null" json:"platform_url"`
 	Description string    `gorm:"type:text" json:"description"`
@@ -19,6 +22,14 @@ type ThirdPartyPlaylist struct {
 	Enabled     bool      `gorm:"default:true" json:"enabled"`
 	CreatedAt   time.Time `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
+}
+
+// BeforeSave 保存前归一封面引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (p *ThirdPartyPlaylist) BeforeSave(tx *gorm.DB) error {
+	if p.CoverMediaID != nil || p.CoverPresetID != nil {
+		p.CoverURL = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

@@ -21,9 +21,15 @@ type activeBundle struct {
 	config   *model.StorageConfig // access_secret 已清空的脱敏快照
 }
 
+// cachedProvider 按类型缓存的 Provider 包装（provider 可为 nil，表示该平台配置缺失的负缓存）。
+type cachedProvider struct {
+	provider StorageProvider
+}
+
 // Manager 存储管理器，支持热重载与连通性测试。
 type Manager struct {
 	active      atomic.Pointer[activeBundle] // 当前活跃 Provider + 配置快照（无锁读）
+	byType      sync.Map                     // providerType -> *cachedProvider，历史媒体按各自平台拼接 URL（Reload 时清空）
 	mu          sync.Mutex                   // 序列化重建
 	configModel *model.StorageConfigModel
 	cryptoKey   string
@@ -75,11 +81,64 @@ func (m *Manager) GetActiveConfig() *model.StorageConfig {
 	return bundle.config
 }
 
+// GetProviderByType 返回指定类型存储的 Provider（带缓存）。
+// 用于历史媒体按各自 storage_type 动态拼接 URL；local 由 model 层解析，返回 nil。
+// 配置缺失时缓存空结果，避免逐行解析时反复查库。
+func (m *Manager) GetProviderByType(ctx context.Context, providerType string) StorageProvider {
+	if providerType == "" || providerType == "local" {
+		return nil
+	}
+	if cached, ok := m.byType.Load(providerType); ok {
+		return cached.(*cachedProvider).provider
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	// 双检：等待锁期间可能已被其他协程加载
+	if cached, ok := m.byType.Load(providerType); ok {
+		return cached.(*cachedProvider).provider
+	}
+	config, err := m.configModel.GetByProvider(ctx, providerType)
+	if err != nil {
+		m.logger.Warn("查询存储配置失败，无法解析该平台媒体 URL",
+			zap.String("provider", providerType), zap.Error(err))
+		m.byType.Store(providerType, &cachedProvider{})
+		return nil
+	}
+	provider, err := NewProvider(config, m.cryptoKey, m.uploadDir)
+	if err != nil {
+		m.logger.Warn("构建存储 Provider 失败，无法解析该平台媒体 URL",
+			zap.String("provider", providerType), zap.Error(err))
+		m.byType.Store(providerType, &cachedProvider{})
+		return nil
+	}
+	m.byType.Store(providerType, &cachedProvider{provider: provider})
+	return provider
+}
+
+// ResolvePublicURL 按存储类型与相对对象键动态拼接完整 URL。
+// 返回空串表示无法解析（调用方应回退原始值），local 由 model 层 resolveURL 处理。
+func (m *Manager) ResolvePublicURL(providerType, key string) string {
+	if providerType == "" || key == "" || providerType == "local" {
+		return ""
+	}
+	provider := m.GetProviderByType(context.Background(), providerType)
+	if provider == nil {
+		return ""
+	}
+	return provider.PublicURL(key)
+}
+
 // Reload 从 DB 读取活跃配置，解密密钥并构建 Provider，原子替换。
 // 若无活跃配置（ErrRecordNotFound），则清空 active。
 func (m *Manager) Reload(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// 存储配置可能已被增删改，按平台类型的 Provider 缓存全部失效
+	m.byType.Range(func(key, _ any) bool {
+		m.byType.Delete(key)
+		return true
+	})
 
 	config, err := m.configModel.GetActive(ctx)
 	if err != nil {

@@ -217,6 +217,9 @@ func buildArticlePushPayload(ctx context.Context, targetID string) (*CommunityPu
 		status = "hidden"
 	}
 
+	// 封面：媒体引用动态解析（preset_id → media_id → 历史 URL）
+	cover := model.ResolveMediaRefURL(ctx, refStr(article.CoverMediaID), refStr(article.CoverPresetID), article.CoverImage)
+
 	return &CommunityPushPayload{
 		Payload: &novapush.UpsertArticlePayload{
 			ExternalID:      article.ID,
@@ -224,7 +227,7 @@ func buildArticlePushPayload(ctx context.Context, targetID string) (*CommunityPu
 			Title:           truncateRunes(article.Title, pushTitleMax),
 			Summary:         summary,
 			ContentMarkdown: content,
-			CoverImage:      resolveAbsolute(article.CoverImage),
+			CoverImage:      resolveAbsolute(cover),
 			Tags:            normalizePushTags(tags, &warnings),
 			SourceURL:       sourceURL,
 			PublishedAt:     rfc3339(publishedAtOrDefault(article.PublishedAt, article.CreatedAt)),
@@ -334,6 +337,8 @@ func buildTravelPushPayload(ctx context.Context, targetID string) (*CommunityPus
 	sourceURL, srcWarnings := pushSourceURL(TargetTypeTravel, guide.ID, "")
 	warnings = append(warnings, srcWarnings...)
 
+	cover := model.ResolveMediaRefURL(ctx, refStr(guide.CoverMediaID), refStr(guide.CoverPresetID), guide.CoverImage)
+
 	return &CommunityPushPayload{
 		Payload: &novapush.UpsertArticlePayload{
 			ExternalID:      guide.ID,
@@ -341,7 +346,7 @@ func buildTravelPushPayload(ctx context.Context, targetID string) (*CommunityPus
 			Title:           truncateRunes(guide.Title, pushTitleMax),
 			Summary:         ensureSummary(guide.Summary, md.String(), &warnings),
 			ContentMarkdown: md.String(),
-			CoverImage:      resolveAbsolute(guide.CoverImage),
+			CoverImage:      resolveAbsolute(cover),
 			Tags:            normalizePushTags(nil, &warnings),
 			SourceURL:       sourceURL,
 			PublishedAt:     rfc3339(guide.CreatedAt),
@@ -420,7 +425,7 @@ func buildRecipePushPayload(ctx context.Context, targetID string) (*CommunityPus
 	sourceURL, srcWarnings := pushSourceURL(TargetTypeRecipe, recipe.ID, "")
 	warnings = append(warnings, srcWarnings...)
 
-	cover := recipe.Cover
+	cover := model.ResolveMediaRefURL(ctx, refStr(recipe.CoverMediaID), refStr(recipe.CoverPresetID), recipe.Cover)
 	return &CommunityPushPayload{
 		Payload: &novapush.UpsertArticlePayload{
 			ExternalID:      recipe.ID,

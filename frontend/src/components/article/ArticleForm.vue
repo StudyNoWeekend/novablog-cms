@@ -87,6 +87,8 @@ export interface ArticleFormData {
   content: string
   summary: string
   cover_image: string
+  coverMediaId: string
+  coverPresetId: string
   category_id: string | undefined
   tag_ids: string[]
   type: number           // 1=Markdown 2=富文本
@@ -147,8 +149,10 @@ async function loadTags() {
   finally { tagsLoading.value = false }
 }
 
-function handleMediaSelected(media: { url: string }) {
-  form.cover_image = media.url
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
+  form.coverMediaId = media.id
+  form.coverPresetId = media.presetId || ''
+  form.cover_image = media.url // 仅展示；后端按 ID 优先解析
 }
 </script>
 

@@ -50,7 +50,9 @@ const editorConfig = computed<Partial<IEditorConfig>>(() => ({
       customUpload: async (file: File, insertFn: (url: string, alt?: string, href?: string) => void) => {
         try {
           const res = await mediaApi.upload(file, { module: 'article' })
-          insertFn(res.url, file.name, res.url)
+          // 正文使用按媒体 ID 索引的稳定链接，存储迁移/换域名后不断链
+          const stableUrl = res.file_url || res.url
+          insertFn(stableUrl, file.name, stableUrl)
         } catch {
           message.error(t('profile.editor.imageUploadFailed'))
         }
@@ -60,7 +62,7 @@ const editorConfig = computed<Partial<IEditorConfig>>(() => ({
       customUpload: async (file: File, insertFn: (url: string, poster?: string) => void) => {
         try {
           const res = await mediaApi.upload(file, { module: 'article' })
-          insertFn(res.url, '')
+          insertFn(res.file_url || res.url, '')
         } catch {
           message.error(t('profile.editor.videoUploadFailed'))
         }
