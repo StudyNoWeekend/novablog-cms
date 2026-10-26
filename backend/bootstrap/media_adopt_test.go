@@ -44,7 +44,13 @@ func setupMediaAdoptTest(t *testing.T) (*gorm.DB, string) {
 		if err != nil {
 			return
 		}
-		if err := db.AutoMigrate(&model.Media{}, &model.MediaFolder{}, &model.Blogger{}); err != nil {
+		// 迁移探测涉及的全部表(mediaBackfillNeeded 的 HasTable 前置检查要求齐备)
+		if err := db.AutoMigrate(
+			&model.Media{}, &model.MediaPreset{}, &model.MediaFolder{},
+			&model.Article{}, &model.Song{}, &model.ThirdPartyPlaylist{}, &model.VideoWork{},
+			&model.TravelGuide{}, &model.Recipe{}, &model.Book{}, &model.Game{},
+			&model.PhotoEquipment{}, &model.Project{}, &model.TechStackItem{}, &model.Blogger{},
+		); err != nil {
 			return
 		}
 		mediaAdoptTestDB = db
@@ -166,4 +172,24 @@ func TestExtractFilesKey(t *testing.T) {
 	assert.Equal(t, "", extractFilesKey("https://cdn.example.com/img/a.png"), "非 /files/ 直写形态应拒绝")
 	assert.Equal(t, "", extractFilesKey("http://evil.com/files/../../etc/passwd"), "路径穿越应拒绝")
 	assert.Equal(t, "", extractFilesKey(""))
+}
+
+// TestMediaBackfillNeededWithFilter 回归测试:带软删除过滤的业务表存在待回填行时,
+// 探测必须返回 true(修复前裸 SELECT 拼入 "t." 别名导致 SQL 错误、误判为无需回填)。
+func TestMediaBackfillNeededWithFilter(t *testing.T) {
+	db, _ := setupMediaAdoptTest(t)
+	oldDB := model.DB
+	model.DB = db
+	t.Cleanup(func() { model.DB = oldDB })
+
+	bloggerID := uuid.NewString()
+	require.NoError(t, db.Create(&model.Blogger{
+		ID:           bloggerID,
+		Username:     "probe-test",
+		PasswordHash: "x",
+		Avatar:       "http://old.example.com/files/profile/avatar/2026/09/aaa.jpeg",
+	}).Error)
+	t.Cleanup(func() { db.Where("id = ?", bloggerID).Delete(&model.Blogger{}) })
+
+	assert.True(t, mediaBackfillNeeded(db), "存在待回填行时探测必须为 true")
 }

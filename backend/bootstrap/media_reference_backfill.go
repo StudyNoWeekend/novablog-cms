@@ -114,13 +114,15 @@ func mediaBackfillNeeded(db *gorm.DB) bool {
 	}
 
 	// 业务字段待处理：存在引用列为空且 URL 非空的行（纯外链行也会命中，
-	// 但回填 UPDATE 在无匹配时是零成本扫描，可接受）
+	// 但回填 UPDATE 在无匹配时是零成本扫描，可接受）。
+	// filter 为 UPDATE...FROM 拼接用的 "t.deleted_at IS NULL"，裸 SELECT 需去掉别名前缀
+	// （否则 SQL 报错被当成"无需回填"，整个回填被跳过——v1.2.12 首发即栽在这里）。
 	for _, f := range mediaRefFields {
 		query := fmt.Sprintf(
 			"SELECT EXISTS (SELECT 1 FROM %s WHERE %s IS NULL AND COALESCE(%s, '') <> ''",
 			f.table, f.mediaCol, f.urlCol)
 		if f.filter != "" {
-			query += " AND " + f.filter
+			query += " AND " + strings.Replace(f.filter, "t.", "", 1)
 		}
 		query += ")"
 		var pending bool
