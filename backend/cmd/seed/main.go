@@ -46,7 +46,7 @@ func main() {
 		SSLMode:      cfg.GetString("postgres.sslmode"),
 		MaxOpenConns: cfg.GetInt("postgres.max_open_conns"),
 		MaxIdleConns: cfg.GetInt("postgres.max_idle_conns"),
-	}, nil)
+	}, nil, "")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "初始化数据库失败: %v\n", err)
 		os.Exit(1)

@@ -7,46 +7,57 @@
 package bootstrap
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 
+	"novablog/enum"
+	"novablog/internal/model"
+
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // mediaRefField 业务表图片字段的媒体引用回填配置。
-// table/urlCol/mediaCol/presetCol/filter 均为编译期常量，仅用于拼接 SQL，不涉及用户输入。
+// table/urlCol/mediaCol/presetCol/filter/moduleKey 均为编译期常量，仅用于拼接 SQL，不涉及用户输入。
 type mediaRefField struct {
 	table     string
 	urlCol    string
 	mediaCol  string
 	presetCol string // 空表示该字段不使用预设
 	filter    string // 附加过滤条件（已限定别名 t.，如软删除），空表示无
+	moduleKey string // 遗留文件收编时归类的媒体库模块文件夹 key
 }
 
 // mediaRefFields 全部需要回填的业务表图片字段（内容创作 + 关于我）。
 var mediaRefFields = []mediaRefField{
 	// 内容创作
-	{"articles", "cover_image", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL"},
-	{"songs", "cover_url", "cover_media_id", "cover_preset_id", ""},
-	{"third_party_playlists", "cover_url", "cover_media_id", "cover_preset_id", ""},
-	{"video_works", "cover_url", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL"},
-	{"travel_guides", "cover_image", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL"},
-	{"recipes", "cover", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL"},
-	{"books", "cover", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL"},
-	{"games", "cover", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL"},
+	{"articles", "cover_image", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL", enum.MediaModuleArticle},
+	{"songs", "cover_url", "cover_media_id", "cover_preset_id", "", enum.MediaModuleMusic},
+	{"third_party_playlists", "cover_url", "cover_media_id", "cover_preset_id", "", enum.MediaModuleMusic},
+	{"video_works", "cover_url", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL", enum.MediaModuleVideo},
+	{"travel_guides", "cover_image", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL", enum.MediaModuleTravel},
+	{"recipes", "cover", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL", enum.MediaModuleRecipe},
+	{"books", "cover", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL", enum.MediaModuleBook},
+	{"games", "cover", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL", enum.MediaModuleGame},
 	// 关于我
-	{"photo_equipment", "image_url", "image_media_id", "image_preset_id", "t.deleted_at IS NULL"},
-	{"projects", "cover_url", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL"},
-	{"tech_stack_items", "icon", "icon_media_id", "", "t.deleted_at IS NULL"},
-	{"bloggers", "avatar", "avatar_media_id", "", "t.deleted_at IS NULL"},
-	{"bloggers", "blog_icon", "blog_icon_media_id", "", "t.deleted_at IS NULL"},
-	{"bloggers", "page_background", "page_background_media_id", "", "t.deleted_at IS NULL"},
+	{"photo_equipment", "image_url", "image_media_id", "image_preset_id", "t.deleted_at IS NULL", enum.MediaModuleEquipment},
+	{"projects", "cover_url", "cover_media_id", "cover_preset_id", "t.deleted_at IS NULL", enum.MediaModuleProject},
+	{"tech_stack_items", "icon", "icon_media_id", "", "t.deleted_at IS NULL", enum.MediaModuleTechStack},
+	{"bloggers", "avatar", "avatar_media_id", "", "t.deleted_at IS NULL", enum.MediaModuleProfile},
+	{"bloggers", "blog_icon", "blog_icon_media_id", "", "t.deleted_at IS NULL", enum.MediaModuleProfile},
+	{"bloggers", "page_background", "page_background_media_id", "", "t.deleted_at IS NULL", enum.MediaModuleProfile},
 }
 
 // backfillMediaReferencesAsync 异步执行媒体引用回填（goroutine，不阻塞启动）。
+// uploadDir 为本地存储根目录（遗留文件收编时做磁盘存在性判定，空=跳过磁盘检查）。
 // 各步骤独立执行、失败仅记日志，下次启动自动重试；仅处理引用列为空的行，天然幂等，
 // 与后台并发编辑互不覆盖。
-func backfillMediaReferencesAsync(db *gorm.DB, logger *zap.Logger) {
+func backfillMediaReferencesAsync(db *gorm.DB, logger *zap.Logger, uploadDir string) {
 	go func() {
 		if logger == nil {
 			logger = zap.NewNop()
@@ -64,6 +75,7 @@ func backfillMediaReferencesAsync(db *gorm.DB, logger *zap.Logger) {
 
 		normalizeMediaURLs(db, logger)
 		backfillMediaRefFields(db, logger)
+		adoptLegacyLocalFiles(db, logger, uploadDir)
 		logger.Info("媒体引用回填完成")
 	}()
 }
@@ -184,5 +196,166 @@ WHERE t.%s IS NULL AND t.%s IS NULL
 			logger.Warn("业务表预设引用回填失败（下次启动重试）",
 				zap.String("table", f.table), zap.String("column", f.presetCol), zap.Error(err))
 		}
+	}
+}
+
+// adoptLegacyLocalFiles 遗留文件收编（引用回填之后的第三步）：
+// 早期直写磁盘流程不登记媒体库，业务表里烙的是完整 URL（含当时的域名）、文件在
+// media 表中无记录，ID 引用统一机制覆盖不到。本步骤扫描引用列为空且 URL 含
+// /files/ 的行，提取对象 key（解码中文路径，不依赖域名——旧域名失效也能处理）：
+//   - media 已有该 storage_path → 仅回填引用列；
+//   - media 无记录但磁盘文件存在（uploadDir 非空且文件存在）→ 以 local 存储补建
+//     media 记录并归类到所属模块文件夹，再回填引用列；
+//   - 磁盘也没有 → 保持 URL 模式原样。
+//
+// 幂等：仅处理引用列为空的行；media 建行按 storage_path 防重；单行失败仅记日志。
+func adoptLegacyLocalFiles(db *gorm.DB, logger *zap.Logger, uploadDir string) {
+	for _, f := range mediaRefFields {
+		query := fmt.Sprintf(
+			"SELECT id, %s AS url FROM %s WHERE %s IS NULL AND %s LIKE '%%/files/%%'",
+			f.urlCol, f.table, f.mediaCol, f.urlCol)
+		if f.filter != "" {
+			// filter 形如 "t.deleted_at IS NULL"(为 UPDATE...FROM 的歧义消解限定别名),
+			// 裸 SELECT 无别名,去掉 "t." 前缀
+			query += " AND " + strings.Replace(f.filter, "t.", "", 1)
+		}
+		var rows []struct {
+			ID  string
+			URL string
+		}
+		if err := db.Raw(query).Scan(&rows).Error; err != nil {
+			logger.Warn("遗留文件收编扫描失败", zap.String("table", f.table), zap.Error(err))
+			continue
+		}
+		for _, row := range rows {
+			key := extractFilesKey(row.URL)
+			if key == "" {
+				continue
+			}
+			mediaID, ok, err := ensureMediaForLocalFile(db, uploadDir, key, f.moduleKey)
+			if err != nil {
+				logger.Warn("遗留文件收编失败", zap.String("key", key), zap.String("table", f.table), zap.Error(err))
+				continue
+			}
+			if !ok {
+				continue // 磁盘无文件，保持 URL 模式
+			}
+			update := fmt.Sprintf("UPDATE %s SET %s = ? WHERE id = ?", f.table, f.mediaCol)
+			if err := db.Exec(update, mediaID, row.ID).Error; err != nil {
+				logger.Warn("遗留文件引用回填失败", zap.String("table", f.table), zap.Error(err))
+				continue
+			}
+			logger.Info("遗留文件已收编进媒体库", zap.String("key", key), zap.String("table", f.table))
+		}
+	}
+}
+
+// extractFilesKey 从本站 /files/ 完整 URL 中提取对象 key（解码中文路径），
+// 非 /files/ 形态或含异常片段返回空串。
+func extractFilesKey(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if i := strings.IndexAny(raw, "?#"); i >= 0 {
+		raw = raw[:i]
+	}
+	parts := strings.SplitN(raw, "/files/", 2)
+	if len(parts) != 2 || parts[1] == "" {
+		return ""
+	}
+	key, err := url.PathUnescape(parts[1])
+	if err != nil {
+		key = parts[1]
+	}
+	key = strings.Trim(key, "/")
+	if key == "" || strings.Contains(key, "..") || strings.Contains(key, "://") {
+		return ""
+	}
+	return key
+}
+
+// ensureMediaForLocalFile 保证 key 对应的媒体记录存在：
+// 已有 → 返回其 ID；缺失且磁盘文件存在 → 以 local 存储补建并归类模块文件夹；
+// 磁盘也缺失（或 uploadDir 为空无法判定）→ ok=false（调用方保持 URL 模式）。
+func ensureMediaForLocalFile(db *gorm.DB, uploadDir, key, moduleKey string) (mediaID string, ok bool, err error) {
+	var existing model.Media
+	switch findErr := db.Where("storage_path = ?", key).First(&existing).Error; {
+	case findErr == nil:
+		return existing.ID, true, nil
+	case !errors.Is(findErr, gorm.ErrRecordNotFound):
+		return "", false, findErr
+	}
+
+	if uploadDir == "" {
+		return "", false, nil
+	}
+	uploadRoot := filepath.Clean(uploadDir)
+	full := filepath.Join(uploadRoot, filepath.FromSlash(key))
+	if !strings.HasPrefix(full, uploadRoot+string(os.PathSeparator)) {
+		return "", false, nil
+	}
+	info, statErr := os.Stat(full)
+	if statErr != nil || info.IsDir() {
+		return "", false, nil
+	}
+
+	ext := strings.ToLower(filepath.Ext(key))
+	media := model.Media{
+		ID:          uuid.New().String(),
+		Filename:    filepath.Base(key),
+		FileType:    legacyFileType(ext),
+		MimeType:    legacyMimeType(ext),
+		URL:         key, // 只存相对 key，完整 URL 读取时按当前存储动态拼接
+		StoragePath: key,
+		StorageType: "local",
+	}
+	if moduleKey != "" {
+		var folder model.MediaFolder
+		if folderErr := db.Where("module_key = ? AND parent_id IS NULL", moduleKey).First(&folder).Error; folderErr == nil {
+			media.FolderID = &folder.ID
+		}
+	}
+	if createErr := db.Create(&media).Error; createErr != nil {
+		return "", false, createErr
+	}
+	return media.ID, true, nil
+}
+
+// legacyFileType 按扩展名推断媒体类型（与 logic.getFileType 口径一致）。
+func legacyFileType(ext string) int16 {
+	switch ext {
+	case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico":
+		return 1
+	case ".mp4", ".avi", ".mov", ".mkv", ".webm":
+		return 2
+	case ".mp3", ".wav", ".flac", ".aac", ".ogg":
+		return 3
+	default:
+		return 0
+	}
+}
+
+// legacyMimeType 按扩展名推断 MIME（与 logic.getMimeType 口径一致）。
+func legacyMimeType(ext string) string {
+	switch ext {
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	case ".svg":
+		return "image/svg+xml"
+	case ".ico":
+		return "image/x-icon"
+	case ".mp4":
+		return "video/mp4"
+	case ".mp3":
+		return "audio/mpeg"
+	default:
+		return "application/octet-stream"
 	}
 }
