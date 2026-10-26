@@ -1,3 +1,15 @@
+# NovaBlog CMS 后端配置（config.yaml）
+#
+# 本文件只保留【启动前置】配置：数据库/Redis 连接、HTTP 端口、日志、JWT/加密密钥——
+# 这些必须在数据库可用之前读取。
+#
+# ★ 运行时配置（站点对外地址、出网代理、GitHub Token、存储、跨域、地图、模块开关、
+#   安全参数、云盘凭据与限额等）的唯一主源是【数据库】，统一在管理后台
+#   「系统配置」维护并即时生效；本文件中的同名旧键已不再读取
+#   （存量部署升级后由启动种子逻辑自动导入数据库，旧键原样保留无害）。
+#
+# 标注 [播种] 的键：首次启动时作为对应数据库配置的初始值导入，此后以数据库为准。
+
 app:
   name: backend
   env: development
@@ -34,8 +46,8 @@ redis:
   db: 3
 
 upload:
-  dir: ./uploads                   # 本地存储目录
-  base_url: http://localhost:8111  # 本地文件访问基础URL（需与 http.port 一致）
+  dir: ./uploads                   # 本地存储目录（容器部署时与挂载卷一一对应）
+  base_url: http://localhost:8111  # [播种] 站点对外地址首装默认值，导入 system_configs.site_url 后以数据库为准
 
 jwt:
   access_secret: "<your-access-secret-key>"
@@ -51,45 +63,22 @@ crypto:
 install:
   init_code: ""
 
-security:
-  enabled: true
-  blacklist_ttl_minutes: 60
-  log_retention_days: 7
-
-# IP 归属地区解析（访问统计"地区"列）：基于 ip2region 离线数据，不依赖外部 API
+# IP 归属地解析（访问统计"地区"列）：基于 ip2region 离线数据，不依赖外部 API
 # - data_dir 下缺失 ip2region_v4.xdb 时自动下载；下载/加载失败仅降级（地区列显示"未知"），不影响服务
-# - download_url 官方发布源；如需代理可填 proxy_url（同主题模块代理语义，代理不可用自动直连）或自行放置数据文件
+# - 下载地址与代理为运行时配置（管理后台「系统配置-站点信息」维护），此处不再配置
 geoip:
   data_dir: ./data/geoip
-  download_url: "https://github.com/lionsoul2014/ip2region/raw/v3.18.0/data/ip2region_v4.xdb"
-  proxy_url: ""
 
-# NovaBlog 官方站点地址：社区推送与主题市场统一入口（出厂默认值；后台「社区推送配置」页修改后
-# 持久化到 DB 并覆盖此值，服务端直连。旧版 themes.market_base_url 仍会被读取作存量兜底，可删除）
+# [播种] NovaBlog 官方站点地址：社区推送与主题市场统一入口的首次启动默认值，
+# 导入 community_push_configs.base_url 后以后台「社区推送配置」页为准
 community:
   base_url: "http://api.novablog.cn"
 
-# 博客主题模块：安装/切换/静态托管
+# 博客主题模块（本段仅保留容器路径约定；token/代理/API 地址/下载上限为运行时配置，走数据库）
 themes:
   data_dir: ./data/themes            # 主题制品解压根目录
   frontend_dir: ""                   # 自备博客前端目录（含 theme.json 与 dist/，与主题制品包同构）；非空时优先于已安装主题，空=使用后台安装的主题
-  github_token: ""                   # 可选 GitHub PAT（提升 Release 查询与开源作品 README 拉取的限流额度）
-  public_api_base: ""                # 跨域部署时注入 theme-config.js 的 apiBase；空=同域相对路径
-  proxy_url: ""                      # 主题下载、开源作品 README 拉取与 GitHub API 的 HTTP 代理（如 http://172.17.0.1:7890）；空=直连，代理不可用时自动降级直连
-  max_artifact_mb: 100               # 制品下载上限（MB）
 
-# 图片搜索配置（管理端「在线搜索图标/封面」功能的外部图源）
-image_search:
-  proxy_url: "" # 可选 HTTP 代理；空=直连，代理不可用时自动降级直连
-
-# 跨域配置（后台页面可动态修改，此值为首次启动默认值）
+# [播种] 跨域白名单首次启动默认值，导入 cors_configs 后以后台「跨域配置」页为准
 cors:
   allowed_origins: "http://localhost:5173,http://localhost:5174,https://www.novablog.cn,https://api.novablog.cn"
-
-# upload 段同时用于本地存储和迁移只读源
-
-# 云盘导入（媒体库「云盘导入」：WebDAV/百度网盘/阿里云盘 → 转存媒体库）
-clouddrive:
-  proxy_url: ""         # 可选 HTTP 代理（云盘 API 与下载）；空=直连，代理不可用自动降级直连
-  max_file_size_mb: 2048 # 单文件导入大小上限（MB）
-  import_batch_limit: 200 # 单次导入文件数上限

@@ -189,6 +189,9 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	corsConfigController := controller.NewCorsConfigController()
 	RegisterCorsConfigRoutes(api, corsConfigController, authMiddleware)
 
+	// 注册通用系统配置路由（站点信息分组 + 配置导出/导入）
+	RegisterSystemConfigRoutes(api, controller.NewSystemConfigController(), authMiddleware)
+
 	// 注册官方主题市场配置管理路由
 	themeMarketConfigController := controller.NewThemeMarketConfigController()
 	RegisterThemeMarketConfigRoutes(api, themeMarketConfigController, authMiddleware)

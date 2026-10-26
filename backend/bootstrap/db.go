@@ -152,6 +152,7 @@ func autoMigrate(db *gorm.DB) error {
 		&model.FitnessRecord{},
 		&model.TechStackItem{},
 		&model.CorsConfig{},
+		&model.SystemConfig{},
 		&model.ThirdPartyPlaylist{},
 		&model.ThemeMarketConfig{},
 		&model.MapConfig{},
