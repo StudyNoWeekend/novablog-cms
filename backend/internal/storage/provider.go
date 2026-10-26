@@ -21,4 +21,7 @@ type StorageProvider interface {
 	// GetThumbURL 根据原始 URL 生成指定宽度的缩略图 URL。
 	// 不支持缩略图的 Provider 返回原始 URL。
 	GetThumbURL(url string, width int) string
+	// PublicURL 根据落库的相对对象键拼接当前配置下可访问的完整 URL。
+	// 用于媒体 URL 动态解析：换域名/换平台后无需改写落库值。
+	PublicURL(key string) string
 }

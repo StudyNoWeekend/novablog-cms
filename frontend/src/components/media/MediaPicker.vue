@@ -63,6 +63,7 @@
       v-model:visible="chooserVisible"
       :media-id="pendingItem?.id || null"
       :original-url="pendingItem?.url || ''"
+      :original-file-url="pendingItem?.file_url || ''"
       @confirm="handleChooserConfirm"
     />
   </a-modal>
@@ -77,10 +78,12 @@ import { getThumbUrl } from '@/utils/image'
 import { useMediaFolders, folderDisplayName } from '@/composables/useMediaFolders'
 import MediaPresetChooser from './MediaPresetChooser.vue'
 
-/** 选图结果：选中预设时 url 为成品图 URL，presetId/presetName 标记来源预设 */
+/** 选图结果：选中预设时 url 为成品图 URL，presetId/presetName 标记来源预设；
+ * fileUrl 为按媒体 ID 索引的稳定链接（jsonb 内嵌等场景用，选中预设时带 preset 参数） */
 export interface MediaPickerSelected {
   id: string
   url: string
+  fileUrl?: string
   presetId?: string
   presetName?: string
 }
@@ -177,7 +180,7 @@ function handleConfirm() {
   if (!item) return
   // 非图片（视频等）或关闭预设能力时：保持原行为直接回传
   if (!props.preset || item.file_type !== 1) {
-    emit('selected', { id: item.id, url: item.url })
+    emit('selected', { id: item.id, url: item.url, fileUrl: item.file_url })
     open.value = false
     return
   }
@@ -186,13 +189,14 @@ function handleConfirm() {
   chooserVisible.value = true
 }
 
-function handleChooserConfirm(payload: { url: string; presetId?: string; presetName?: string }) {
+function handleChooserConfirm(payload: { url: string; fileUrl?: string; presetId?: string; presetName?: string }) {
   chooserVisible.value = false
   const item = pendingItem.value
   if (item) {
     emit('selected', {
       id: item.id,
       url: payload.url,
+      fileUrl: payload.fileUrl || item.file_url,
       presetId: payload.presetId,
       presetName: payload.presetName,
     })

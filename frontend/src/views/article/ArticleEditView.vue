@@ -84,6 +84,8 @@ const form = reactive({
   content: '',
   summary: '',
   cover_image: '',
+  coverMediaId: '',
+  coverPresetId: '',
   category_id: undefined as string | undefined,
   tag_ids: [] as string[],
   type: 1,   // 默认 Markdown
@@ -102,6 +104,8 @@ onMounted(async () => {
       form.content = article.content
       form.summary = article.summary || ''
       form.cover_image = article.cover_image || ''
+      form.coverMediaId = article.cover_media_id || ''
+      form.coverPresetId = article.cover_preset_id || ''
       form.category_id = article.category_id || undefined
       form.tag_ids = article.tag_ids || []
       form.type = article.type || 1
@@ -113,6 +117,17 @@ onMounted(async () => {
   }
 })
 
+// 组装提交参数：媒体库 ID 字段转 snake_case，ID 为空时走外链 URL 模式
+function buildPayload(status: number) {
+  const { coverMediaId, coverPresetId, ...rest } = form
+  return {
+    ...rest,
+    cover_media_id: coverMediaId || undefined,
+    cover_preset_id: coverPresetId || undefined,
+    status,
+  }
+}
+
 async function handleSaveDraft() {
   if (!form.title.trim()) {
     message.warning(t('article.edit.titleRequired'))
@@ -121,10 +136,10 @@ async function handleSaveDraft() {
   saving.value = true
   try {
     if (isEdit.value) {
-      await store.update(route.params.id as string, { ...form, status: 1 })
+      await store.update(route.params.id as string, buildPayload(1))
       message.success(t('article.edit.draftSaved'))
     } else {
-      const article = await store.create({ ...form, status: 1 })
+      const article = await store.create(buildPayload(1))
       message.success(t('article.edit.draftSaved'))
       router.replace(`/articles/${article.id}/edit`)
     }
@@ -141,9 +156,9 @@ async function handlePublish() {
   saving.value = true
   try {
     if (isEdit.value) {
-      await store.update(route.params.id as string, { ...form, status: 2 })
+      await store.update(route.params.id as string, buildPayload(2))
     } else {
-      await store.create({ ...form, status: 2 })
+      await store.create(buildPayload(2))
     }
     message.success(t('article.edit.published'))
     router.push('/articles')

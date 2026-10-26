@@ -24,11 +24,17 @@ func NewBookLogic() *BookLogic {
 
 // Create 创建书籍。
 func (l *BookLogic) Create(ctx context.Context, r *req.CreateBookReq) (*res.BookRes, error) {
+	coverMediaID, coverPresetID, cover, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.Cover)
+	if err != nil {
+		return nil, err
+	}
 	m := &model.Book{
 		ID:            uuid.New().String(),
 		Title:         strings.TrimSpace(r.Title),
 		Author:        r.Author,
-		Cover:         r.Cover,
+		Cover:         cover,
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
 		ReadingStatus: "want",
 		Review:        r.Review,
 		StartedAt:     r.StartedAt,
@@ -64,6 +70,7 @@ func (l *BookLogic) GetList(ctx context.Context, r *req.BookListReq) (*res.BookL
 	}
 
 	items := make([]res.BookCardRes, 0, len(list))
+	l.resolveCoverURLs(ctx, list)
 	for i := range list {
 		items = append(items, l.toCard(&list[i]))
 	}
@@ -82,6 +89,7 @@ func (l *BookLogic) GetByID(ctx context.Context, id string) (*res.BookRes, error
 	if err != nil {
 		return nil, fmt.Errorf("书籍不存在")
 	}
+	l.resolveCoverURL(ctx, m)
 	return l.toRes(m), nil
 }
 
@@ -98,8 +106,26 @@ func (l *BookLogic) Update(ctx context.Context, id string, r *req.UpdateBookReq)
 	if r.Author != nil {
 		m.Author = *r.Author
 	}
-	if r.Cover != nil {
-		m.Cover = *r.Cover
+	if r.Cover != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.Cover != nil {
+			coverURL = *r.Cover
+		}
+		var coverMediaID, coverPresetID, cover string
+		coverMediaID, coverPresetID, cover, err = normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		m.Cover = cover
+		m.CoverMediaID = mediaRefPtr(coverMediaID)
+		m.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.Rating != nil {
 		m.Rating = *r.Rating
@@ -156,7 +182,28 @@ func (l *BookLogic) GetPublicDetail(ctx context.Context, id string) (*res.BookRe
 	if err != nil || m.Status != 1 {
 		return nil, fmt.Errorf("书籍不存在")
 	}
+	l.resolveCoverURL(ctx, m)
 	return l.toRes(m), nil
+}
+
+// resolveCoverURLs 批量解析书籍封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *BookLogic) resolveCoverURLs(ctx context.Context, books []model.Book) {
+	ptrs := make([]*model.Book, len(books))
+	for i := range books {
+		ptrs[i] = &books[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(b *model.Book) (string, string) { return refStr(b.CoverMediaID), refStr(b.CoverPresetID) },
+		func(b *model.Book, u string) { b.Cover = u },
+	)
+}
+
+// resolveCoverURL 解析单本书籍封面媒体引用。
+func (l *BookLogic) resolveCoverURL(ctx context.Context, b *model.Book) {
+	model.ResolveCoverURLs(ctx, []*model.Book{b},
+		func(x *model.Book) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.Book, u string) { x.Cover = u },
+	)
 }
 
 // toRes 转换为书籍详情响应。
@@ -166,6 +213,8 @@ func (l *BookLogic) toRes(m *model.Book) *res.BookRes {
 		Title:         m.Title,
 		Author:        m.Author,
 		Cover:         m.Cover,
+		CoverMediaID:  refStr(m.CoverMediaID),
+		CoverPresetID: refStr(m.CoverPresetID),
 		Rating:        m.Rating,
 		ReadingStatus: m.ReadingStatus,
 		Review:        m.Review,

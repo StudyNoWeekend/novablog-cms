@@ -64,7 +64,8 @@ async function handleUploadImage(files: File[]): Promise<{ title: string; url: s
       const res: MediaItem = await mediaApi.upload(file, { module: 'article' })
       results.push({
         title: file.name,
-        url: res.url,
+        // 正文使用按媒体 ID 索引的稳定链接，存储迁移/换域名后不断链
+        url: res.file_url || res.url,
       })
     } catch {
       message.error(t('profile.editor.uploadFileFailed', { name: file.name }))

@@ -64,6 +64,11 @@ func (p *MinioProvider) buildURL(key string) string {
 	return fmt.Sprintf("%s://%s/%s/%s", scheme, p.endpoint, p.bucketName, key)
 }
 
+// PublicURL 根据落库的相对对象键拼接当前配置下可访问的完整 URL。
+func (p *MinioProvider) PublicURL(key string) string {
+	return p.buildURL(p.buildKey(key))
+}
+
 // Upload 上传文件并返回可访问 URL。
 func (p *MinioProvider) Upload(ctx context.Context, key string, reader io.Reader, size int64, contentType string) (string, error) {
 	objectKey := p.buildKey(key)

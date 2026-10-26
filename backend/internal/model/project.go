@@ -16,6 +16,9 @@ type Project struct {
 	Role         string         `gorm:"type:varchar(100);default:''"` // 担任角色
 	Client       string         `gorm:"type:varchar(255);default:''"` // 客户/所属组织
 	CoverURL     string         `gorm:"column:cover_url;type:varchar(1024)"`
+	// 封面媒体引用：存媒体库文件 ID 时 cover_url 留空，读取时动态解析；外链场景仍存 cover_url
+	CoverMediaID  *string `gorm:"column:cover_media_id;type:uuid;index"`
+	CoverPresetID *string `gorm:"column:cover_preset_id;type:uuid;index"`
 	Summary      string         `gorm:"type:varchar(500);default:''"` // 一句话简介
 	Description  string         `gorm:"type:text"`
 	TechStack    string         `gorm:"type:varchar(500);default:''"` // 技能/工具标签，逗号分隔
@@ -31,6 +34,14 @@ type Project struct {
 	CreatedAt    time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	UpdatedAt    time.Time      `gorm:"type:timestamptz;autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
+}
+
+// BeforeSave 保存前归一封面引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (p *Project) BeforeSave(tx *gorm.DB) error {
+	if p.CoverMediaID != nil || p.CoverPresetID != nil {
+		p.CoverURL = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

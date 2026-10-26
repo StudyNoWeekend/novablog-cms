@@ -59,11 +59,14 @@ type BloggerPublicRes struct {
 
 // BloggerProfileRes 博主管理端资料响应结构体。
 type BloggerProfileRes struct {
-	Nickname        string          `json:"nickname"`         // 昵称
-	Avatar          string          `json:"avatar"`           // 头像 URL
-	Bio             string          `json:"bio"`              // 个人简介
-	PageBackground  string          `json:"page_background"`  // 页面背景图 URL
-	BlogIcon        string          `json:"blog_icon"`        // 博客 icon 图 URL
+	Nickname              string          `json:"nickname"`         // 昵称
+	Avatar                string          `json:"avatar"`           // 头像 URL
+	AvatarMediaID         string          `json:"avatar_media_id"`  // 头像媒体引用（CMS 回显用，空=外链模式）
+	Bio                   string          `json:"bio"`              // 个人简介
+	PageBackground        string          `json:"page_background"`  // 页面背景图 URL
+	PageBackgroundMediaID string          `json:"page_background_media_id"` // 页面背景媒体引用（空=外链模式）
+	BlogIcon              string          `json:"blog_icon"`        // 博客 icon 图 URL
+	BlogIconMediaID       string          `json:"blog_icon_media_id"` // 博客 icon 媒体引用（空=外链模式）
 	BlogTitle       string          `json:"blog_title"`       // 博客标题
 	BlogDescription string          `json:"blog_description"` // 博客描述
 	Email           string          `json:"email"`            // 邮箱

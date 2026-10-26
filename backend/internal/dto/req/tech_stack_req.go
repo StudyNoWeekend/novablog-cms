@@ -6,6 +6,7 @@ type CreateTechStackReq struct {
 	CategoryID  *string `json:"category_id"`                         // 结构化分类（type=tech_stack）
 	Category    string  `json:"category" binding:"omitempty,max=50"` // 兼容保留，建议用 category_id
 	Icon        string  `json:"icon" binding:"omitempty,max=500"`
+	IconMediaID string  `json:"icon_media_id"`                         // 图标媒体引用，与 icon 互斥
 	Level       *int    `json:"level" binding:"omitempty,min=1,max=4"` // 1=了解, 2=熟悉, 3=熟练, 4=精通
 	Description string  `json:"description" binding:"omitempty,max=500"`
 	Status      *int    `json:"status" binding:"omitempty,oneof=0 1"`
@@ -18,6 +19,7 @@ type UpdateTechStackReq struct {
 	CategoryID  *string `json:"category_id"`
 	Category    *string `json:"category" binding:"omitempty,max=50"` // 兼容保留，建议用 category_id
 	Icon        *string `json:"icon" binding:"omitempty,max=500"`
+	IconMediaID *string `json:"icon_media_id"` // 图标媒体引用，与 icon 互斥处理
 	Level       *int    `json:"level" binding:"omitempty,min=1,max=4"`
 	Description *string `json:"description" binding:"omitempty,max=500"`
 	Status      *int    `json:"status" binding:"omitempty,oneof=0 1"`

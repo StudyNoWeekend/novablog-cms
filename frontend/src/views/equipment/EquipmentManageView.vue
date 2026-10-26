@@ -172,6 +172,8 @@ const mediaPickerVisible = ref(false)
 const form = reactive({
   name: '',
   image_url: '',
+  imageMediaId: '',
+  imagePresetId: '',
   brand: '',
   description: '',
 })
@@ -213,6 +215,8 @@ function handlePageChange(newPage: number, newPageSize?: number) {
 function resetForm() {
   form.name = ''
   form.image_url = ''
+  form.imageMediaId = ''
+  form.imagePresetId = ''
   form.brand = ''
   form.description = ''
 }
@@ -230,13 +234,17 @@ function handleEdit(item: Equipment) {
   resetForm()
   form.name = item.name
   form.image_url = item.image_url || ''
+  form.imageMediaId = item.image_media_id || ''
+  form.imagePresetId = item.image_preset_id || ''
   form.brand = item.brand || ''
   form.description = item.description || ''
   modalVisible.value = true
 }
 
-function handleMediaSelected(media: { url: string }) {
-  form.image_url = media.url
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
+  form.imageMediaId = media.id
+  form.imagePresetId = media.presetId || ''
+  form.image_url = media.url // 仅展示；后端按 ID 优先解析
 }
 
 async function handleSubmit() {
@@ -250,6 +258,8 @@ async function handleSubmit() {
       await equipmentApi.create({
         name: form.name.trim(),
         image_url: form.image_url.trim() || undefined,
+        image_media_id: form.imageMediaId || undefined,
+        image_preset_id: form.imagePresetId || undefined,
         brand: form.brand.trim() || undefined,
         description: form.description.trim() || undefined,
       })
@@ -258,6 +268,8 @@ async function handleSubmit() {
       await equipmentApi.update(editingId.value, {
         name: form.name.trim(),
         image_url: form.image_url.trim() || undefined,
+        image_media_id: form.imageMediaId || undefined,
+        image_preset_id: form.imagePresetId || undefined,
         brand: form.brand.trim() || undefined,
         description: form.description.trim() || undefined,
       })

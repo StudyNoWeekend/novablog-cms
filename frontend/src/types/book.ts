@@ -3,6 +3,8 @@ export interface Book {
   title: string
   author: string
   cover: string
+  cover_media_id?: string
+  cover_preset_id?: string
   rating: number
   reading_status: 'want' | 'reading' | 'done'
   review: string
@@ -28,6 +30,8 @@ export interface CreateBookReq {
   title: string
   author?: string
   cover?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   rating?: number
   reading_status?: 'want' | 'reading' | 'done'
   review?: string

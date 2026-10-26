@@ -37,15 +37,23 @@ func (l *ThirdPartyPlaylistLogic) Create(ctx context.Context, r *req.CreatePlayl
 		enabled = *r.Enabled
 	}
 
+	// 封面：媒体库引用（ID 索引）与外链互斥写入
+	coverMediaID, coverPresetID, coverURL, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.CoverURL)
+	if err != nil {
+		return nil, err
+	}
+
 	playlist := &model.ThirdPartyPlaylist{
-		ID:          uuid.New().String(),
-		Title:       r.Title,
-		CoverURL:    r.CoverURL,
-		Platform:    r.Platform,
-		PlatformURL: r.PlatformURL,
-		Description: r.Description,
-		SortOrder:   r.SortOrder,
-		Enabled:     enabled,
+		ID:            uuid.New().String(),
+		Title:         r.Title,
+		CoverURL:      coverURL,
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
+		Platform:      r.Platform,
+		PlatformURL:   r.PlatformURL,
+		Description:   r.Description,
+		SortOrder:     r.SortOrder,
+		Enabled:       enabled,
 	}
 
 	if err := l.playlistModel.Create(ctx, playlist); err != nil {
@@ -53,6 +61,8 @@ func (l *ThirdPartyPlaylistLogic) Create(ctx context.Context, r *req.CreatePlayl
 		return nil, enum.ErrInternalServer
 	}
 
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, playlist)
 	return l.toRes(playlist), nil
 }
 
@@ -63,6 +73,9 @@ func (l *ThirdPartyPlaylistLogic) GetList(ctx context.Context, r *req.PlaylistLi
 		l.logger.Error("获取第三方歌单列表失败", zap.Error(err))
 		return nil, enum.ErrInternalServer
 	}
+
+	// 批量解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURLs(ctx, playlists)
 
 	items := make([]res.PlaylistRes, len(playlists))
 	for i, p := range playlists {
@@ -82,6 +95,8 @@ func (l *ThirdPartyPlaylistLogic) GetByID(ctx context.Context, id string) (*res.
 		l.logger.Error("获取第三方歌单详情失败", zap.Error(err))
 		return nil, enum.ErrInternalServer
 	}
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, playlist)
 	return l.toRes(playlist), nil
 }
 
@@ -99,8 +114,26 @@ func (l *ThirdPartyPlaylistLogic) Update(ctx context.Context, id string, r *req.
 	if r.Title != nil {
 		playlist.Title = *r.Title
 	}
-	if r.CoverURL != nil {
-		playlist.CoverURL = *r.CoverURL
+	if r.CoverURL != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.CoverURL != nil {
+			coverURL = *r.CoverURL
+		}
+		// 封面：媒体库引用（ID 索引）与外链互斥写入
+		coverMediaID, coverPresetID, coverImage, err := normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		playlist.CoverURL = coverImage
+		playlist.CoverMediaID = mediaRefPtr(coverMediaID)
+		playlist.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.Platform != nil {
 		playlist.Platform = *r.Platform
@@ -123,6 +156,8 @@ func (l *ThirdPartyPlaylistLogic) Update(ctx context.Context, id string, r *req.
 		return nil, enum.ErrInternalServer
 	}
 
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, playlist)
 	return l.toRes(playlist), nil
 }
 
@@ -143,6 +178,9 @@ func (l *ThirdPartyPlaylistLogic) GetPublicList(ctx context.Context) ([]res.Play
 		return nil, enum.ErrInternalServer
 	}
 
+	// 批量解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURLs(ctx, playlists)
+
 	items := make([]res.PlaylistRes, len(playlists))
 	for i, p := range playlists {
 		items[i] = *l.toRes(&p)
@@ -153,18 +191,40 @@ func (l *ThirdPartyPlaylistLogic) GetPublicList(ctx context.Context) ([]res.Play
 // toRes 将模型转换为响应结构体。
 func (l *ThirdPartyPlaylistLogic) toRes(p *model.ThirdPartyPlaylist) *res.PlaylistRes {
 	return &res.PlaylistRes{
-		ID:           p.ID,
-		Title:        p.Title,
-		CoverURL:     p.CoverURL,
-		Platform:     p.Platform,
-		PlatformURL:  p.PlatformURL,
-		PlatformLogo: platformLogoURL(p.Platform),
-		Description:  p.Description,
-		SortOrder:    p.SortOrder,
-		Enabled:      p.Enabled,
-		CreatedAt:    p.CreatedAt,
-		UpdatedAt:    p.UpdatedAt,
+		ID:            p.ID,
+		Title:         p.Title,
+		CoverURL:      p.CoverURL,
+		CoverMediaID:  refStr(p.CoverMediaID),
+		CoverPresetID: refStr(p.CoverPresetID),
+		Platform:      p.Platform,
+		PlatformURL:   p.PlatformURL,
+		PlatformLogo:  platformLogoURL(p.Platform),
+		Description:   p.Description,
+		SortOrder:     p.SortOrder,
+		Enabled:       p.Enabled,
+		CreatedAt:     p.CreatedAt,
+		UpdatedAt:     p.UpdatedAt,
 	}
+}
+
+// resolveCoverURLs 批量解析第三方歌单封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *ThirdPartyPlaylistLogic) resolveCoverURLs(ctx context.Context, playlists []model.ThirdPartyPlaylist) {
+	ptrs := make([]*model.ThirdPartyPlaylist, len(playlists))
+	for i := range playlists {
+		ptrs[i] = &playlists[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(p *model.ThirdPartyPlaylist) (string, string) { return refStr(p.CoverMediaID), refStr(p.CoverPresetID) },
+		func(p *model.ThirdPartyPlaylist, u string) { p.CoverURL = u },
+	)
+}
+
+// resolveCoverURL 解析单个第三方歌单封面媒体引用。
+func (l *ThirdPartyPlaylistLogic) resolveCoverURL(ctx context.Context, p *model.ThirdPartyPlaylist) {
+	model.ResolveCoverURLs(ctx, []*model.ThirdPartyPlaylist{p},
+		func(x *model.ThirdPartyPlaylist) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.ThirdPartyPlaylist, u string) { x.CoverURL = u },
+	)
 }
 
 // platformLogoURL 拼接平台 Logo 完整 URL；与歌曲封面 resolveURL 一致，BaseURL 未配置时返回相对路径。

@@ -18,6 +18,7 @@ type MediaPreset struct {
 	OutputStoragePath string         `gorm:"column:output_storage_path;type:varchar(500);not null"`
 	OutputSize        int64          `gorm:"column:output_size;type:bigint"`
 	MimeType          string         `gorm:"column:mime_type;type:varchar(100)"`
+	StorageType       string         `gorm:"column:storage_type;type:varchar(20)"` // 所属媒体的存储平台，用于动态拼接 output_url
 	CreatedAt         time.Time      `gorm:"type:timestamptz;autoCreateTime"`
 	DeletedAt         gorm.DeletedAt `gorm:"index"`
 }
@@ -27,9 +28,9 @@ func (MediaPreset) TableName() string {
 	return "media_presets"
 }
 
-// AfterFind GORM 查询后钩子，将相对路径 URL 拼接为完整 URL。
+// AfterFind GORM 查询后钩子，按存储类型将相对路径动态拼接为完整 URL。
 func (m *MediaPreset) AfterFind(tx *gorm.DB) error {
-	m.OutputURL = resolveURL(m.OutputURL)
+	m.OutputURL = resolveMediaURL(m.StorageType, m.OutputURL)
 	return nil
 }
 
@@ -112,9 +113,12 @@ func (m *MediaPresetModel) GetAll(ctx context.Context, page, pageSize int) ([]Me
 	return presets, total, nil
 }
 
-// UpdateStorageInfo updates output_url for a preset.
-func (m *MediaPresetModel) UpdateStorageInfo(ctx context.Context, id, outputURL string) error {
+// UpdateStorageInfo updates output_url and storage_type for a preset (migration).
+func (m *MediaPresetModel) UpdateStorageInfo(ctx context.Context, id, outputURL, storageType string) error {
 	return m.db.WithContext(ctx).Model(&MediaPreset{}).
 		Where("id = ?", id).
-		Update("output_url", outputURL).Error
+		Updates(map[string]interface{}{
+			"output_url":   outputURL,
+			"storage_type": storageType,
+		}).Error
 }

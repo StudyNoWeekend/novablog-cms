@@ -137,6 +137,7 @@ func (l *BloggerLogic) GetPublicInfo(ctx context.Context) (*res.BloggerPublicRes
 	if err != nil {
 		return nil, fmt.Errorf("获取博主信息失败: %w", err)
 	}
+	l.resolveMediaURLs(ctx, blogger)
 
 	// 邮箱 / 城市：未开启对外展示时返回空串
 	email := ""
@@ -199,25 +200,36 @@ func (l *BloggerLogic) GetProfileMeta() *res.ProfileMetaRes {
 // newProfileRes 博主模型 → 管理端资料响应 DTO。
 func newProfileRes(blogger *model.Blogger) *res.BloggerProfileRes {
 	return &res.BloggerProfileRes{
-		Nickname:        blogger.Nickname,
-		Avatar:          blogger.Avatar,
-		Bio:             blogger.Bio,
-		PageBackground:  blogger.PageBackground,
-		BlogIcon:        blogger.BlogIcon,
-		BlogTitle:       blogger.BlogTitle,
-		BlogDescription: blogger.BlogDescription,
-		Email:           blogger.Email,
-		City:            blogger.City,
-		Personality:     blogger.Personality,
-		Zodiac:          blogger.Zodiac,
-		ShowEmail:       blogger.ShowEmail,
-		ShowCity:        blogger.ShowCity,
-		ShowZodiac:      blogger.ShowZodiac,
-		ShowPersonality: blogger.ShowPersonality,
-		Role:            blogger.Role,
-		SocialLinks:     parseSocialLinks(blogger.SocialLinks),
-		Tags:            parseTags(blogger.Tags),
+		Nickname:              blogger.Nickname,
+		Avatar:                blogger.Avatar,
+		AvatarMediaID:         refStr(blogger.AvatarMediaID),
+		Bio:                   blogger.Bio,
+		PageBackground:        blogger.PageBackground,
+		PageBackgroundMediaID: refStr(blogger.PageBackgroundMediaID),
+		BlogIcon:              blogger.BlogIcon,
+		BlogIconMediaID:       refStr(blogger.BlogIconMediaID),
+		BlogTitle:             blogger.BlogTitle,
+		BlogDescription:       blogger.BlogDescription,
+		Email:                 blogger.Email,
+		City:                  blogger.City,
+		Personality:           blogger.Personality,
+		Zodiac:                blogger.Zodiac,
+		ShowEmail:             blogger.ShowEmail,
+		ShowCity:              blogger.ShowCity,
+		ShowZodiac:            blogger.ShowZodiac,
+		ShowPersonality:       blogger.ShowPersonality,
+		Role:                  blogger.Role,
+		SocialLinks:           parseSocialLinks(blogger.SocialLinks),
+		Tags:                  parseTags(blogger.Tags),
 	}
+}
+
+// resolveMediaURLs 解析博主头像/博客icon/页面背景的媒体引用为当前完整 URL（外链行保持原值）。
+// 三列均无预设引用，按 media_id → 历史落库 URL 优先级解析。
+func (l *BloggerLogic) resolveMediaURLs(ctx context.Context, blogger *model.Blogger) {
+	blogger.Avatar = model.ResolveMediaRefURL(ctx, refStr(blogger.AvatarMediaID), "", blogger.Avatar)
+	blogger.BlogIcon = model.ResolveMediaRefURL(ctx, refStr(blogger.BlogIconMediaID), "", blogger.BlogIcon)
+	blogger.PageBackground = model.ResolveMediaRefURL(ctx, refStr(blogger.PageBackgroundMediaID), "", blogger.PageBackground)
 }
 
 // GetProfile 获取博主管理端资料信息。
@@ -226,6 +238,7 @@ func (l *BloggerLogic) GetProfile(ctx context.Context, userID string) (*res.Blog
 	if err != nil {
 		return nil, fmt.Errorf("获取博主信息失败: %w", err)
 	}
+	l.resolveMediaURLs(ctx, blogger)
 
 	return newProfileRes(blogger), nil
 }
@@ -240,8 +253,21 @@ func (l *BloggerLogic) UpdateProfile(ctx context.Context, userID string, r *req.
 	if r.Nickname != nil {
 		blogger.Nickname = *r.Nickname
 	}
-	if r.Avatar != nil {
-		blogger.Avatar = *r.Avatar
+	if r.Avatar != nil || r.AvatarMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.AvatarMediaID != nil {
+			mediaID = *r.AvatarMediaID
+		}
+		avatarURL := ""
+		if r.Avatar != nil {
+			avatarURL = *r.Avatar
+		}
+		avatarMediaID, _, avatar, err := normalizeMediaRef(ctx, mediaID, presetID, avatarURL)
+		if err != nil {
+			return nil, err
+		}
+		blogger.Avatar = avatar
+		blogger.AvatarMediaID = mediaRefPtr(avatarMediaID)
 	}
 	if r.Bio != nil {
 		blogger.Bio = *r.Bio
@@ -278,11 +304,37 @@ func (l *BloggerLogic) UpdateProfile(ctx context.Context, userID string, r *req.
 	if r.ShowPersonality != nil {
 		blogger.ShowPersonality = *r.ShowPersonality
 	}
-	if r.PageBackground != nil {
-		blogger.PageBackground = *r.PageBackground
+	if r.PageBackground != nil || r.PageBackgroundMediaID != nil {
+		mediaID := ""
+		if r.PageBackgroundMediaID != nil {
+			mediaID = *r.PageBackgroundMediaID
+		}
+		bgURL := ""
+		if r.PageBackground != nil {
+			bgURL = *r.PageBackground
+		}
+		bgMediaID, _, bg, err := normalizeMediaRef(ctx, mediaID, "", bgURL)
+		if err != nil {
+			return nil, err
+		}
+		blogger.PageBackground = bg
+		blogger.PageBackgroundMediaID = mediaRefPtr(bgMediaID)
 	}
-	if r.BlogIcon != nil {
-		blogger.BlogIcon = *r.BlogIcon
+	if r.BlogIcon != nil || r.BlogIconMediaID != nil {
+		mediaID := ""
+		if r.BlogIconMediaID != nil {
+			mediaID = *r.BlogIconMediaID
+		}
+		iconURL := ""
+		if r.BlogIcon != nil {
+			iconURL = *r.BlogIcon
+		}
+		iconMediaID, _, icon, err := normalizeMediaRef(ctx, mediaID, "", iconURL)
+		if err != nil {
+			return nil, err
+		}
+		blogger.BlogIcon = icon
+		blogger.BlogIconMediaID = mediaRefPtr(iconMediaID)
 	}
 	if r.BlogTitle != nil {
 		blogger.BlogTitle = *r.BlogTitle
@@ -309,6 +361,8 @@ func (l *BloggerLogic) UpdateProfile(ctx context.Context, userID string, r *req.
 		return nil, fmt.Errorf("更新博主信息失败: %w", err)
 	}
 
+	// ID 引用模式下落库 URL 为空，返回前解析为当前完整链接供前端回显
+	l.resolveMediaURLs(ctx, blogger)
 	return newProfileRes(blogger), nil
 }
 

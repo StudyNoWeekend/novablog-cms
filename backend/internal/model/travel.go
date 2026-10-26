@@ -13,6 +13,9 @@ type TravelGuide struct {
 	Title       string           `gorm:"type:varchar(200);not null" json:"title"`
 	Summary     string           `gorm:"type:varchar(500)" json:"summary"`
 	CoverImage  string           `gorm:"type:varchar(500);column:cover_image" json:"cover_image"`
+	// 封面媒体引用：存媒体库文件 ID 时 cover_image 留空，读取时动态解析；外链场景仍存 cover_image
+	CoverMediaID  *string `gorm:"column:cover_media_id;type:uuid;index" json:"cover_media_id"`
+	CoverPresetID *string `gorm:"column:cover_preset_id;type:uuid;index" json:"cover_preset_id"`
 	Status      int16            `gorm:"type:smallint;default:1" json:"status"` // 1=草稿 2=已发布 3=已下架
 	Destination string           `gorm:"type:varchar(200);not null" json:"destination"`
 	Region      string           `gorm:"type:varchar(50);not null" json:"region"`
@@ -30,6 +33,14 @@ type TravelGuide struct {
 	CreatedAt   time.Time        `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time        `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"-"`
+}
+
+// BeforeSave 保存前归一封面引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (t *TravelGuide) BeforeSave(tx *gorm.DB) error {
+	if t.CoverMediaID != nil || t.CoverPresetID != nil {
+		t.CoverImage = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

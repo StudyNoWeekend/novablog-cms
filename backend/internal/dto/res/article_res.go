@@ -9,6 +9,9 @@ type ArticleRes struct {
 	Slug         string     `json:"slug"`
 	Summary      string     `json:"summary"`
 	CoverImage   string     `json:"cover_image"`
+	// 封面媒体引用（CMS 编辑回显用）：媒体库文件 ID / 预设 ID，空=外链或历史 URL 模式
+	CoverMediaID  string     `json:"cover_media_id"`
+	CoverPresetID string     `json:"cover_preset_id"`
 	CategoryID   string     `json:"category_id"`
 	CategoryName string     `json:"category_name"`
 	TagIDs       []string   `json:"tag_ids"`

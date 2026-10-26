@@ -8,6 +8,8 @@ export interface Project {
   role: string
   client: string
   cover_url: string
+  cover_media_id?: string
+  cover_preset_id?: string
   summary: string
   description: string
   /** 技能/工具标签，逗号分隔 */
@@ -39,6 +41,8 @@ export interface CreateProjectReq {
   role?: string
   client?: string
   cover_url?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   summary?: string
   description?: string
   tech_stack?: string
@@ -56,6 +60,8 @@ export interface UpdateProjectReq {
   role?: string
   client?: string
   cover_url?: string
+  cover_media_id?: string
+  cover_preset_id?: string
   summary?: string
   description?: string
   tech_stack?: string

@@ -91,6 +91,7 @@ interface VersionCard {
   key: string
   name: string
   url: string
+  fileUrl?: string
 }
 
 const props = defineProps<{
@@ -98,12 +99,14 @@ const props = defineProps<{
   mediaId: string | null
   /** 原图 URL（"使用原图"选项） */
   originalUrl: string
+  /** 原图稳定链接（按媒体 ID 索引，jsonb 内嵌场景用） */
+  originalFileUrl?: string
   visible: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
-  (e: 'confirm', payload: { url: string; presetId?: string; presetName?: string }): void
+  (e: 'confirm', payload: { url: string; fileUrl?: string; presetId?: string; presetName?: string }): void
 }>()
 
 const router = useRouter()
@@ -117,8 +120,8 @@ const choiceKind = ref<string>(CHOICE_ORIGINAL)
 const workbenchVisible = ref(false)
 
 const cards = computed<VersionCard[]>(() => [
-  { key: CHOICE_ORIGINAL, name: t('media.chooser.original'), url: props.originalUrl },
-  ...presets.value.map((p) => ({ key: p.id, name: p.name, url: p.output_url })),
+  { key: CHOICE_ORIGINAL, name: t('media.chooser.original'), url: props.originalUrl, fileUrl: props.originalFileUrl },
+  ...presets.value.map((p) => ({ key: p.id, name: p.name, url: p.output_url, fileUrl: p.file_url })),
 ])
 
 watch(
@@ -164,9 +167,9 @@ function handleConfirm() {
   const card = cards.value.find((c) => c.key === choiceKind.value)
   if (!card) return
   if (card.key === CHOICE_ORIGINAL) {
-    emit('confirm', { url: card.url })
+    emit('confirm', { url: card.url, fileUrl: card.fileUrl })
   } else {
-    emit('confirm', { url: card.url, presetId: card.key, presetName: card.name })
+    emit('confirm', { url: card.url, fileUrl: card.fileUrl, presetId: card.key, presetName: card.name })
   }
   open.value = false
 }

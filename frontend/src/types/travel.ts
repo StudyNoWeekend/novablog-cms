@@ -252,6 +252,10 @@ export interface TravelGuide {
   title: string
   summary: string
   coverImage: string | null
+  /** 封面对应的媒体库文件 ID（非空时后端优先按 ID 解析） */
+  coverMediaId?: string | null
+  /** 封面对应的预设成品图 ID */
+  coverPresetId?: string | null
   status: TravelStatus
   destination: string
   region: TravelRegion
@@ -274,6 +278,10 @@ export interface TravelGuideFormData {
   title: string
   summary: string
   coverImage: string | null
+  /** 封面对应的媒体库文件 ID（非空时后端优先按 ID 解析） */
+  coverMediaId?: string | null
+  /** 封面对应的预设成品图 ID */
+  coverPresetId?: string | null
   status: TravelStatus
   destination: string
   region: TravelRegion

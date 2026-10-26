@@ -137,6 +137,7 @@
           <a-input
             v-model:value="form.cover_url"
             :placeholder="t('video.form.coverUrlPlaceholder')"
+            @change="handleCoverUrlInput"
           >
             <template #addonAfter>
               <a :aria-label="t('video.form.selectCoverFromMedia')" @click.prevent="mediaPickerVisible = true">
@@ -268,6 +269,8 @@ const mediaPickerVisible = ref(false)
 const form = reactive({
   title: '',
   cover_url: '',
+  coverMediaId: '',
+  coverPresetId: '',
   description: '',
   category_id: undefined as string | undefined,
   published: true,
@@ -328,6 +331,8 @@ function handleCategorySelect(id: string | undefined) {
 function resetForm() {
   form.title = ''
   form.cover_url = ''
+  form.coverMediaId = ''
+  form.coverPresetId = ''
   form.description = ''
   form.category_id = undefined
   form.published = true
@@ -341,8 +346,17 @@ function openCreateModal() {
   modalVisible.value = true
 }
 
-function handleMediaSelected(media: { url: string }) {
+// 媒体库选图：记录媒体引用（结构化封面字段走 ID 优先），同时回填 URL 用于展示
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
   form.cover_url = media.url
+  form.coverMediaId = media.id
+  form.coverPresetId = media.presetId || ''
+}
+
+// 手输 URL = 外链模式，清空媒体引用
+function handleCoverUrlInput() {
+  form.coverMediaId = ''
+  form.coverPresetId = ''
 }
 
 function handleEdit(item: VideoWork) {
@@ -351,6 +365,8 @@ function handleEdit(item: VideoWork) {
   resetForm()
   form.title = item.title
   form.cover_url = item.cover_url || ''
+  form.coverMediaId = item.cover_media_id || ''
+  form.coverPresetId = item.cover_preset_id || ''
   form.description = item.description || ''
   form.category_id = item.category_id || undefined
   form.published = item.status === 1
@@ -388,7 +404,12 @@ async function handleParse(platformKey: string) {
     const hasExisting = form.title || form.cover_url || form.description
     const doFill = () => {
       if (res.title) form.title = res.title
-      if (res.cover_url) form.cover_url = res.cover_url
+      if (res.cover_url) {
+        // 解析到的封面为平台外链，切换为外链模式并清空媒体引用
+        form.cover_url = res.cover_url
+        form.coverMediaId = ''
+        form.coverPresetId = ''
+      }
       if (res.description) form.description = res.description
       message.success(t('video.message.parseSuccess'))
     }
@@ -425,6 +446,8 @@ async function handleSubmit() {
     const payload = {
       title: form.title.trim(),
       cover_url: form.cover_url.trim() || undefined,
+      cover_media_id: form.coverMediaId || undefined,
+      cover_preset_id: form.coverPresetId || undefined,
       description: form.description.trim() || undefined,
       category_id: form.category_id,
       status: form.published ? 1 : 0,

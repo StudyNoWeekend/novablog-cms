@@ -110,7 +110,7 @@
         </div>
         <a-form-item :label="t('game.form.cover')">
           <MediaPicker v-model:visible="mediaPickerVisible" module="game" @selected="handleMediaSelected" />
-          <ImageField v-model="form.cover" type="game" with-preset :search-keyword="form.title" :placeholder="t('game.form.coverUrlPlaceholder')">
+          <ImageField v-model="form.cover" v-model:media-id="form.coverMediaId" v-model:preset-id="form.coverPresetId" type="game" with-preset :search-keyword="form.title" :placeholder="t('game.form.coverUrlPlaceholder')">
             <template #extra>
               <a-button size="small" @click="mediaPickerVisible = true">
                 <PictureOutlined /> {{ t('game.form.mediaLibrary') }}
@@ -166,6 +166,8 @@ const mediaPickerVisible = ref(false)
 const form = reactive({
   title: '',
   cover: '',
+  coverMediaId: '',
+  coverPresetId: '',
   platform: '',
   genre: '',
   play_status: 'want' as Game['play_status'],
@@ -252,6 +254,8 @@ function statusColor(s: string): string {
 function resetForm() {
   form.title = ''
   form.cover = ''
+  form.coverMediaId = ''
+  form.coverPresetId = ''
   form.platform = ''
   form.genre = ''
   form.play_status = 'want'
@@ -275,6 +279,8 @@ function handleEdit(record: Game) {
   resetForm()
   form.title = record.title
   form.cover = record.cover || ''
+  form.coverMediaId = record.cover_media_id || ''
+  form.coverPresetId = record.cover_preset_id || ''
   form.platform = record.platform || ''
   form.genre = record.genre || ''
   form.play_status = record.play_status
@@ -286,14 +292,18 @@ function handleEdit(record: Game) {
   modalVisible.value = true
 }
 
-function handleMediaSelected(media: { url: string }) {
-  form.cover = media.url
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
+  form.coverMediaId = media.id
+  form.coverPresetId = media.presetId || ''
+  form.cover = media.url // 仅展示；后端按 ID 优先解析
 }
 
 function buildPayload() {
   return {
     title: form.title.trim(),
     cover: form.cover.trim() || undefined,
+    cover_media_id: form.coverMediaId || undefined,
+    cover_preset_id: form.coverPresetId || undefined,
     platform: form.platform.trim() || undefined,
     genre: form.genre.trim() || undefined,
     play_status: form.play_status,

@@ -163,6 +163,10 @@ func main() {
 
 	model.BaseURL = app.Config.GetString("upload.base_url")
 
+	// 注入媒体 URL 动态拼接器：model 层按媒体 storage_type 与相对 key
+	// 经 storage.Manager 拼接当前配置下的完整 URL（换域名/换平台零改写）
+	model.ResolveStorageURL = storageMgr.ResolvePublicURL
+
 	// 注入云盘导入模块配置（WebDAV/百度网盘/阿里云盘）
 	logic.SetCloudDriveSettings(&logic.CloudDriveSettings{
 		ProxyURL:         app.Config.GetString("clouddrive.proxy_url"),

@@ -96,6 +96,8 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 注册公开路由（无需认证）
 	public := api.Group("/public")
+	// 媒体稳定访问链接（免鉴权）：按媒体 ID 索引，本地流式返回 / 对象存储 302，供正文长期引用
+	public.GET("/media/:id/file", mediaController.GetMediaFile)
 	RegisterPublicRoutes(public, publicController, playlistController)
 
 	// 注册认证路由

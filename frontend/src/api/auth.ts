@@ -1,6 +1,12 @@
 import request from './request'
 import type { LoginReq, LoginRes, UserInfo, UpdateProfileReq, UpdateRolesReq, ProfileMeta } from '@/types/api'
 
+/** 资料图片上传响应：url 用于展示，media_id 为媒体库文件 ID（保存资料时随表单提交） */
+export interface ProfileUploadRes {
+  url: string
+  media_id: string
+}
+
 export const authApi = {
   login(data: LoginReq) { return request.post<LoginRes>('/auth/login', data) },
   refresh(refreshToken: string) { return request.post<LoginRes>('/auth/refresh', { refresh_token: refreshToken }) },
@@ -15,7 +21,7 @@ export const authApi = {
   uploadIcon(file: File, onProgress?: (percent: number) => void) {
     const formData = new FormData()
     formData.append('file', file)
-    return request.post<{ url: string }>('/profile/upload-icon', formData, {
+    return request.post<ProfileUploadRes>('/profile/upload-icon', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (e) => {
         if (e.total && onProgress) {
@@ -27,7 +33,7 @@ export const authApi = {
   uploadBackground(file: File, onProgress?: (percent: number) => void) {
     const formData = new FormData()
     formData.append('file', file)
-    return request.post<{ url: string }>('/profile/upload-background', formData, {
+    return request.post<ProfileUploadRes>('/profile/upload-background', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (e) => {
         if (e.total && onProgress) {
@@ -39,7 +45,7 @@ export const authApi = {
   uploadAvatar(file: File, onProgress?: (percent: number) => void) {
     const formData = new FormData()
     formData.append('file', file)
-    return request.post<{ url: string }>('/profile/upload-avatar', formData, {
+    return request.post<ProfileUploadRes>('/profile/upload-avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (e) => {
         if (e.total && onProgress) {

@@ -57,7 +57,7 @@
               </div>
             </div>
             <div class="cover-input">
-              <a-input v-model:value="formState.cover_url" :placeholder="$t('music.form.coverUrlPlaceholder')" />
+              <a-input v-model:value="formState.cover_url" :placeholder="$t('music.form.coverUrlPlaceholder')" @change="handleCoverUrlInput" />
               <div class="cover-input-hint">{{ $t('music.form.coverHint') }}</div>
             </div>
           </div>
@@ -160,10 +160,13 @@ const parseStatusText = computed(() => {
   }
 })
 
-const formState = reactive<SongCreateReq>({
+// 表单媒体引用字段（coverMediaId 非空时后端优先按 ID 解析，手输 URL 则为外链模式）
+const formState = reactive<SongCreateReq & { coverMediaId: string; coverPresetId: string }>({
   title: '',
   artist: '',
   cover_url: '',
+  coverMediaId: '',
+  coverPresetId: '',
   bvid: '',
   cid: 0,
   source_url: '',
@@ -240,6 +243,8 @@ watch(
         formState.title = props.song.title
         formState.artist = props.song.artist
         formState.cover_url = props.song.cover_url
+        formState.coverMediaId = props.song.cover_media_id || ''
+        formState.coverPresetId = props.song.cover_preset_id || ''
         formState.bvid = props.song.bvid
         formState.cid = props.song.cid
         formState.source_url = props.song.source_url
@@ -262,6 +267,8 @@ function resetForm() {
   formState.title = ''
   formState.artist = ''
   formState.cover_url = ''
+  formState.coverMediaId = ''
+  formState.coverPresetId = ''
   formState.bvid = ''
   formState.cid = 0
   formState.source_url = ''
@@ -313,11 +320,13 @@ async function handleParse() {
 
 function applyParseResults(results: ParseResult[]) {
   if (results.length === 1) {
-    // 单首：填充表单
+    // 单首：填充表单（封面为平台外链，清空媒体引用）
     const r = results[0]
     formState.title = r.title
     formState.artist = r.artist
     formState.cover_url = r.cover_url
+    formState.coverMediaId = ''
+    formState.coverPresetId = ''
     formState.bvid = r.bvid
     formState.cid = r.cid
     formState.source_url = biliUrl.value.trim()
@@ -333,8 +342,17 @@ function applyParseResults(results: ParseResult[]) {
   }
 }
 
-function handleMediaSelected(media: { id: string; url: string }) {
+// 媒体库选图：记录媒体引用并回填 URL 用于展示
+function handleMediaSelected(media: { id: string; url: string; presetId?: string }) {
   formState.cover_url = media.url
+  formState.coverMediaId = media.id
+  formState.coverPresetId = media.presetId || ''
+}
+
+// 手输 URL = 外链模式，清空媒体引用
+function handleCoverUrlInput() {
+  formState.coverMediaId = ''
+  formState.coverPresetId = ''
 }
 
 async function handleSave() {
@@ -358,6 +376,8 @@ async function handleSave() {
         title: formState.title,
         artist: formState.artist,
         cover_url: formState.cover_url,
+        cover_media_id: formState.coverMediaId || undefined,
+        cover_preset_id: formState.coverPresetId || undefined,
         // 空字符串表示清空分类（后端将其置为 NULL）
         category_id: categoryId,
         duration: formState.duration,
@@ -434,6 +454,8 @@ async function handleSave() {
       title: formState.title,
       artist: formState.artist,
       cover_url: formState.cover_url,
+      cover_media_id: formState.coverMediaId || undefined,
+      cover_preset_id: formState.coverPresetId || undefined,
       bvid: formState.bvid,
       cid: formState.cid,
       source_url: formState.source_url,

@@ -21,6 +21,8 @@
     "nameRequired": "請輸入歌單名稱",
     "coverUrl": "封面圖 URL",
     "coverUrlPlaceholder": "歌單封面圖片URL（可選）",
+    "selectCoverFromMedia": "從媒體庫選擇封面",
+    "mediaLibrary": "媒體庫",
     "descriptionPlaceholder": "簡短描述這個歌單（可選）",
     "showOnFront": "前台顯示",
     "addSuccess": "新增成功"

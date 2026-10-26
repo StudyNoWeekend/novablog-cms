@@ -4,6 +4,8 @@ package req
 type CreateRecipeReq struct {
 	Title       string           `json:"title" binding:"required,min=1,max=255"`
 	Cover       string           `json:"cover" binding:"omitempty,max=500"`
+	CoverMediaID  string         `json:"cover_media_id"`   // 封面媒体引用，与 cover 互斥
+	CoverPresetID string         `json:"cover_preset_id"` // 封面预设引用，与 cover 互斥
 	Summary     string           `json:"summary" binding:"omitempty,max=500"`
 	Ingredients []map[string]any `json:"ingredients"`                                // 食材清单 [{name,amount}]
 	Steps       []map[string]any `json:"steps"`                                      // 步骤 [{text,image}]
@@ -18,18 +20,20 @@ type CreateRecipeReq struct {
 
 // UpdateRecipeReq 更新菜谱请求参数（部分更新语义）。
 type UpdateRecipeReq struct {
-	Title       *string          `json:"title" binding:"omitempty,min=1,max=255"`
-	Cover       *string          `json:"cover" binding:"omitempty,max=500"`
-	Summary     *string          `json:"summary" binding:"omitempty,max=500"`
-	Ingredients []map[string]any `json:"ingredients"`
-	Steps       []map[string]any `json:"steps"`
-	Difficulty  *int             `json:"difficulty" binding:"omitempty,min=1,max=3"`
-	Minutes     *int             `json:"minutes" binding:"omitempty,min=0"`
-	Servings    *int             `json:"servings" binding:"omitempty,min=1"`
-	Tags        *string          `json:"tags" binding:"omitempty,max=500"`
-	CategoryID  *string          `json:"category_id"`
-	Status      *int             `json:"status" binding:"omitempty,oneof=0 1"`
-	SortOrder   *int             `json:"sort_order"`
+	Title         *string          `json:"title" binding:"omitempty,min=1,max=255"`
+	Cover         *string          `json:"cover" binding:"omitempty,max=500"`
+	CoverMediaID  *string          `json:"cover_media_id"`   // 封面媒体引用，与 cover 互斥处理
+	CoverPresetID *string          `json:"cover_preset_id"` // 封面预设引用，与 cover 互斥处理
+	Summary       *string          `json:"summary" binding:"omitempty,max=500"`
+	Ingredients   []map[string]any `json:"ingredients"`
+	Steps         []map[string]any `json:"steps"`
+	Difficulty    *int             `json:"difficulty" binding:"omitempty,min=1,max=3"`
+	Minutes       *int             `json:"minutes" binding:"omitempty,min=0"`
+	Servings      *int             `json:"servings" binding:"omitempty,min=1"`
+	Tags          *string          `json:"tags" binding:"omitempty,max=500"`
+	CategoryID    *string          `json:"category_id"`
+	Status        *int             `json:"status" binding:"omitempty,oneof=0 1"`
+	SortOrder     *int             `json:"sort_order"`
 }
 
 // RecipeListReq 菜谱列表查询请求参数。

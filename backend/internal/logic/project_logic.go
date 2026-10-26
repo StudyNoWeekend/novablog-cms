@@ -29,6 +29,10 @@ func NewProjectLogic() *ProjectLogic {
 
 // Create 创建项目经历。
 func (l *ProjectLogic) Create(ctx context.Context, r *req.CreateProjectReq) (*res.ProjectRes, error) {
+	coverMediaID, coverPresetID, coverURL, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.CoverURL)
+	if err != nil {
+		return nil, err
+	}
 	startDate, err := parseMonthPtr(r.StartDate)
 	if err != nil {
 		return nil, err
@@ -48,20 +52,22 @@ func (l *ProjectLogic) Create(ctx context.Context, r *req.CreateProjectReq) (*re
 	}
 
 	p := &model.Project{
-		ID:          uuid.New().String(),
-		Title:       r.Title,
-		Role:        r.Role,
-		Client:      r.Client,
-		CoverURL:    r.CoverURL,
-		Summary:     r.Summary,
-		Description: r.Description,
-		TechStack:   r.TechStack,
-		StartDate:   startDate,
-		EndDate:     endDate,
-		ProjectURL:  r.ProjectURL,
-		RepoURL:     r.RepoURL,
-		Status:      status,
-		SortOrder:   sortOrder,
+		ID:            uuid.New().String(),
+		Title:         r.Title,
+		Role:          r.Role,
+		Client:        r.Client,
+		CoverURL:      coverURL,
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
+		Summary:       r.Summary,
+		Description:   r.Description,
+		TechStack:     r.TechStack,
+		StartDate:     startDate,
+		EndDate:       endDate,
+		ProjectURL:    r.ProjectURL,
+		RepoURL:       r.RepoURL,
+		Status:        status,
+		SortOrder:     sortOrder,
 	}
 	if r.CategoryID != nil {
 		p.CategoryID = r.CategoryID
@@ -85,6 +91,7 @@ func (l *ProjectLogic) GetList(ctx context.Context, r *req.ProjectListReq) (*res
 	}
 
 	items := make([]res.ProjectRes, 0, len(list))
+	l.resolveCoverURLs(ctx, list)
 	for i := range list {
 		items = append(items, *l.toProjectRes(&list[i]))
 	}
@@ -104,6 +111,7 @@ func (l *ProjectLogic) GetByID(ctx context.Context, id string) (*res.ProjectRes,
 	if err != nil {
 		return nil, fmt.Errorf("项目经历不存在")
 	}
+	l.resolveCoverURL(ctx, p)
 
 	return l.toProjectRes(p), nil
 }
@@ -127,8 +135,26 @@ func (l *ProjectLogic) Update(ctx context.Context, id string, r *req.UpdateProje
 	if r.Client != nil {
 		p.Client = *r.Client
 	}
-	if r.CoverURL != nil {
-		p.CoverURL = *r.CoverURL
+	if r.CoverURL != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.CoverURL != nil {
+			coverURL = *r.CoverURL
+		}
+		var coverMediaID, coverPresetID, url string
+		coverMediaID, coverPresetID, url, err = normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		p.CoverURL = url
+		p.CoverMediaID = mediaRefPtr(coverMediaID)
+		p.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.Summary != nil {
 		p.Summary = *r.Summary
@@ -205,33 +231,56 @@ func (l *ProjectLogic) GetPublicDetail(ctx context.Context, id string) (*res.Pro
 	if p.Status != 1 {
 		return nil, fmt.Errorf("项目经历不存在")
 	}
+	l.resolveCoverURL(ctx, p)
 
 	return l.toProjectRes(p), nil
+}
+
+// resolveCoverURLs 批量解析项目封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *ProjectLogic) resolveCoverURLs(ctx context.Context, projects []model.Project) {
+	ptrs := make([]*model.Project, len(projects))
+	for i := range projects {
+		ptrs[i] = &projects[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(p *model.Project) (string, string) { return refStr(p.CoverMediaID), refStr(p.CoverPresetID) },
+		func(p *model.Project, u string) { p.CoverURL = u },
+	)
+}
+
+// resolveCoverURL 解析单个项目封面媒体引用。
+func (l *ProjectLogic) resolveCoverURL(ctx context.Context, p *model.Project) {
+	model.ResolveCoverURLs(ctx, []*model.Project{p},
+		func(x *model.Project) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.Project, u string) { x.CoverURL = u },
+	)
 }
 
 // toProjectRes 转换为项目经历响应。
 func (l *ProjectLogic) toProjectRes(p *model.Project) *res.ProjectRes {
 	return &res.ProjectRes{
-		ID:           p.ID,
-		Title:        p.Title,
-		Category:     p.Category,
-		CategoryID:   categoryIDOf(p.CategoryID),
-		CategoryName: categoryNameOf(p.CategoryInfo),
-		Role:         p.Role,
-		Client:       p.Client,
-		CoverURL:     p.CoverURL,
-		Summary:      p.Summary,
-		Description:  p.Description,
-		TechStack:    p.TechStack,
-		StartDate:    formatMonthPtr(p.StartDate),
-		EndDate:      formatMonthPtr(p.EndDate),
-		ProjectURL:   p.ProjectURL,
-		RepoURL:      p.RepoURL,
-		Status:       p.Status,
-		SortOrder:    p.SortOrder,
-		ViewCount:    int64(p.ViewCount),
-		CreatedAt:    p.CreatedAt,
-		UpdatedAt:    p.UpdatedAt,
+		ID:            p.ID,
+		Title:         p.Title,
+		Category:      p.Category,
+		CategoryID:    categoryIDOf(p.CategoryID),
+		CategoryName:  categoryNameOf(p.CategoryInfo),
+		Role:          p.Role,
+		Client:        p.Client,
+		CoverURL:      p.CoverURL,
+		CoverMediaID:  refStr(p.CoverMediaID),
+		CoverPresetID: refStr(p.CoverPresetID),
+		Summary:       p.Summary,
+		Description:   p.Description,
+		TechStack:     p.TechStack,
+		StartDate:     formatMonthPtr(p.StartDate),
+		EndDate:       formatMonthPtr(p.EndDate),
+		ProjectURL:    p.ProjectURL,
+		RepoURL:       p.RepoURL,
+		Status:        p.Status,
+		SortOrder:     p.SortOrder,
+		ViewCount:     int64(p.ViewCount),
+		CreatedAt:     p.CreatedAt,
+		UpdatedAt:     p.UpdatedAt,
 	}
 }
 

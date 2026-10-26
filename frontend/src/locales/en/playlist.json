@@ -21,6 +21,8 @@
     "nameRequired": "Please enter a playlist name",
     "coverUrl": "Cover Image URL",
     "coverUrlPlaceholder": "Playlist cover image URL (optional)",
+    "selectCoverFromMedia": "Select cover from media library",
+    "mediaLibrary": "Media Library",
     "descriptionPlaceholder": "Briefly describe this playlist (optional)",
     "showOnFront": "Show on Front Site",
     "addSuccess": "Added successfully"

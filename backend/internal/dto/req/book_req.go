@@ -7,6 +7,8 @@ type CreateBookReq struct {
 	Title         string     `json:"title" binding:"required,min=1,max=255"`
 	Author        string     `json:"author" binding:"omitempty,max=255"`
 	Cover         string     `json:"cover" binding:"omitempty,max=500"`
+	CoverMediaID  string     `json:"cover_media_id"`  // 封面媒体引用，与 cover 互斥
+	CoverPresetID string     `json:"cover_preset_id"` // 封面预设引用，与 cover 互斥
 	Rating        *int       `json:"rating" binding:"omitempty,min=0,max=5"`
 	ReadingStatus string     `json:"reading_status" binding:"omitempty,oneof=want reading done"`
 	Review        string     `json:"review" binding:"omitempty,max=65535"`
@@ -22,6 +24,8 @@ type UpdateBookReq struct {
 	Title         *string    `json:"title" binding:"omitempty,min=1,max=255"`
 	Author        *string    `json:"author" binding:"omitempty,max=255"`
 	Cover         *string    `json:"cover" binding:"omitempty,max=500"`
+	CoverMediaID  *string    `json:"cover_media_id"`  // 封面媒体引用，与 cover 互斥处理
+	CoverPresetID *string    `json:"cover_preset_id"` // 封面预设引用，与 cover 互斥处理
 	Rating        *int       `json:"rating" binding:"omitempty,min=0,max=5"`
 	ReadingStatus *string    `json:"reading_status" binding:"omitempty,oneof=want reading done"`
 	Review        *string    `json:"review" binding:"omitempty,max=65535"`

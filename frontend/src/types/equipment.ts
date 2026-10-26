@@ -2,6 +2,8 @@ export interface Equipment {
   id: string
   name: string
   image_url: string
+  image_media_id?: string
+  image_preset_id?: string
   brand: string
   description: string
   sort_order: number
@@ -20,6 +22,8 @@ export interface EquipmentListRes {
 export interface CreateEquipmentReq {
   name: string
   image_url?: string
+  image_media_id?: string
+  image_preset_id?: string
   brand?: string
   description?: string
 }
@@ -27,6 +31,8 @@ export interface CreateEquipmentReq {
 export interface UpdateEquipmentReq {
   name?: string
   image_url?: string
+  image_media_id?: string
+  image_preset_id?: string
   brand?: string
   description?: string
 }

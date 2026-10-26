@@ -24,14 +24,20 @@ func NewGameLogic() *GameLogic {
 
 // Create 创建游戏。
 func (l *GameLogic) Create(ctx context.Context, r *req.CreateGameReq) (*res.GameRes, error) {
+	coverMediaID, coverPresetID, cover, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.Cover)
+	if err != nil {
+		return nil, err
+	}
 	m := &model.Game{
-		ID:          uuid.New().String(),
-		Title:       strings.TrimSpace(r.Title),
-		Cover:       r.Cover,
-		Platform:    r.Platform,
-		Genre:       r.Genre,
-		PlayStatus:  "want",
-		ShortReview: r.ShortReview,
+		ID:            uuid.New().String(),
+		Title:         strings.TrimSpace(r.Title),
+		Cover:         cover,
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
+		Platform:      r.Platform,
+		Genre:         r.Genre,
+		PlayStatus:    "want",
+		ShortReview:   r.ShortReview,
 	}
 	if r.PlayStatus != "" {
 		m.PlayStatus = r.PlayStatus
@@ -66,6 +72,7 @@ func (l *GameLogic) GetList(ctx context.Context, r *req.GameListReq) (*res.GameL
 	}
 
 	items := make([]res.GameCardRes, 0, len(list))
+	l.resolveCoverURLs(ctx, list)
 	for i := range list {
 		items = append(items, l.toCard(&list[i]))
 	}
@@ -84,6 +91,7 @@ func (l *GameLogic) GetByID(ctx context.Context, id string) (*res.GameRes, error
 	if err != nil {
 		return nil, fmt.Errorf("游戏不存在")
 	}
+	l.resolveCoverURL(ctx, m)
 	return l.toRes(m), nil
 }
 
@@ -97,8 +105,26 @@ func (l *GameLogic) Update(ctx context.Context, id string, r *req.UpdateGameReq)
 	if r.Title != nil {
 		m.Title = strings.TrimSpace(*r.Title)
 	}
-	if r.Cover != nil {
-		m.Cover = *r.Cover
+	if r.Cover != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.Cover != nil {
+			coverURL = *r.Cover
+		}
+		var coverMediaID, coverPresetID, cover string
+		coverMediaID, coverPresetID, cover, err = normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		m.Cover = cover
+		m.CoverMediaID = mediaRefPtr(coverMediaID)
+		m.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.Platform != nil {
 		m.Platform = *r.Platform
@@ -158,28 +184,51 @@ func (l *GameLogic) GetPublicDetail(ctx context.Context, id string) (*res.GameRe
 	if err != nil || m.Status != 1 {
 		return nil, fmt.Errorf("游戏不存在")
 	}
+	l.resolveCoverURL(ctx, m)
 	return l.toRes(m), nil
+}
+
+// resolveCoverURLs 批量解析游戏封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *GameLogic) resolveCoverURLs(ctx context.Context, games []model.Game) {
+	ptrs := make([]*model.Game, len(games))
+	for i := range games {
+		ptrs[i] = &games[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(g *model.Game) (string, string) { return refStr(g.CoverMediaID), refStr(g.CoverPresetID) },
+		func(g *model.Game, u string) { g.Cover = u },
+	)
+}
+
+// resolveCoverURL 解析单个游戏封面媒体引用。
+func (l *GameLogic) resolveCoverURL(ctx context.Context, g *model.Game) {
+	model.ResolveCoverURLs(ctx, []*model.Game{g},
+		func(x *model.Game) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.Game, u string) { x.Cover = u },
+	)
 }
 
 // toRes 转换为游戏详情响应。
 func (l *GameLogic) toRes(m *model.Game) *res.GameRes {
 	return &res.GameRes{
-		ID:           m.ID,
-		Title:        m.Title,
-		Cover:        m.Cover,
-		Platform:     m.Platform,
-		Genre:        m.Genre,
-		PlayStatus:   m.PlayStatus,
-		PlayHours:    m.PlayHours,
-		Rating:       m.Rating,
-		ShortReview:  m.ShortReview,
-		Status:       m.Status,
-		SortOrder:    m.SortOrder,
-		CategoryID:   categoryIDOf(m.CategoryID),
-		CategoryName: categoryNameOf(m.Category),
-		ViewCount:    int64(m.ViewCount),
-		CreatedAt:    m.CreatedAt,
-		UpdatedAt:    m.UpdatedAt,
+		ID:            m.ID,
+		Title:         m.Title,
+		Cover:         m.Cover,
+		CoverMediaID:  refStr(m.CoverMediaID),
+		CoverPresetID: refStr(m.CoverPresetID),
+		Platform:      m.Platform,
+		Genre:         m.Genre,
+		PlayStatus:    m.PlayStatus,
+		PlayHours:     m.PlayHours,
+		Rating:        m.Rating,
+		ShortReview:   m.ShortReview,
+		Status:        m.Status,
+		SortOrder:     m.SortOrder,
+		CategoryID:    categoryIDOf(m.CategoryID),
+		CategoryName:  categoryNameOf(m.Category),
+		ViewCount:     int64(m.ViewCount),
+		CreatedAt:     m.CreatedAt,
+		UpdatedAt:     m.UpdatedAt,
 	}
 }
 

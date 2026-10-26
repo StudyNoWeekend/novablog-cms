@@ -12,6 +12,9 @@ type Recipe struct {
 	ID          string           `gorm:"type:uuid;primaryKey" json:"id"`
 	Title       string           `gorm:"type:varchar(255);not null" json:"title"`
 	Cover       string           `gorm:"type:varchar(500)" json:"cover"`
+	// 封面媒体引用：存媒体库文件 ID 时 cover 留空，读取时动态解析；外链场景仍存 cover
+	CoverMediaID  *string `gorm:"column:cover_media_id;type:uuid;index" json:"cover_media_id"`
+	CoverPresetID *string `gorm:"column:cover_preset_id;type:uuid;index" json:"cover_preset_id"`
 	Summary     string           `gorm:"type:varchar(500)" json:"summary"`
 	Ingredients []map[string]any `gorm:"type:jsonb;serializer:json" json:"ingredients"` // 食材清单 [{name,amount}]
 	Steps       []map[string]any `gorm:"type:jsonb;serializer:json" json:"steps"`       // 步骤 [{text,image}]
@@ -27,6 +30,14 @@ type Recipe struct {
 	CreatedAt   time.Time        `gorm:"type:timestamptz;autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time        `gorm:"type:timestamptz;autoUpdateTime" json:"updated_at"`
 	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"-"`
+}
+
+// BeforeSave 保存前归一封面引用：ID 模式下清空 URL 列，避免解析出的完整 URL 被写回落库。
+func (r *Recipe) BeforeSave(tx *gorm.DB) error {
+	if r.CoverMediaID != nil || r.CoverPresetID != nil {
+		r.Cover = ""
+	}
+	return nil
 }
 
 // TableName 指定数据表名称。

@@ -86,7 +86,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
-  (e: 'selected', url: string): void
+  // mediaId: 转存入媒体库时返回的文件 ID，纯外链（品牌图标直链）为 undefined
+  (e: 'selected', url: string, mediaId?: string): void
 }>()
 
 /** 语义类型 → 后端图源类型 */
@@ -190,7 +191,7 @@ async function handlePick(item: ImageResult) {
     saving.value = true
     try {
       const media = await imageSearchApi.save(item.url, saveModule.value)
-      emit('selected', media.url)
+      emit('selected', media.url, media.id)
       message.success(t('media.external.savedWithTransfer'))
       open.value = false
     } catch {

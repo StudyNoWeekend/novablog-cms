@@ -113,6 +113,7 @@
         v-model:visible="chooserVisible"
         :media-id="selectedId"
         :original-url="selectedUrl"
+        :original-file-url="selectedFileUrl"
         @confirm="handleChooserConfirm"
       />
     </div>
@@ -141,7 +142,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
-  (e: 'selected', payload: { mediaId: string; presetId?: string; url: string }): void
+  // fileUrl 为按媒体 ID 索引的稳定链接（jsonb 内嵌等场景用；选中预设时带 preset 参数）
+  (e: 'selected', payload: { mediaId: string; presetId?: string; url: string; fileUrl?: string }): void
 }>()
 
 const open = ref(false)
@@ -154,6 +156,7 @@ const keyword = ref('')
 const selectedId = ref<string | null>(null)
 const selectedUrl = ref('')
 const selectedPresetId = ref<string | undefined>(undefined)
+const selectedFileUrl = ref<string | undefined>(undefined)
 const uploading = ref(false)
 const uploadPercent = ref(0)
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -257,6 +260,7 @@ async function handleFileChange(e: Event) {
       selectedId.value = res.media.id
       selectedUrl.value = res.preset.output_url || res.media.url
       selectedPresetId.value = res.preset.id
+      selectedFileUrl.value = res.preset.file_url || res.media.file_url
       await fetchMedia()
     }
   } catch {
@@ -280,10 +284,11 @@ function handleConfirm() {
   chooserVisible.value = true
 }
 
-function handleChooserConfirm(payload: { url: string; presetId?: string; presetName?: string }) {
+function handleChooserConfirm(payload: { url: string; fileUrl?: string; presetId?: string; presetName?: string }) {
   chooserVisible.value = false
   selectedUrl.value = payload.url
   selectedPresetId.value = payload.presetId
+  selectedFileUrl.value = payload.fileUrl
   emitSelected()
 }
 
@@ -293,6 +298,7 @@ function emitSelected() {
     mediaId: selectedId.value,
     presetId: selectedPresetId.value,
     url: selectedUrl.value,
+    fileUrl: selectedFileUrl.value,
   })
   open.value = false
 }

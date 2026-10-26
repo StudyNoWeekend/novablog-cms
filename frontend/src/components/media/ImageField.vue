@@ -64,6 +64,10 @@ import ExternalImagePickerModal from './ExternalImagePickerModal.vue'
 const props = defineProps<{
   /** 图片地址（v-model） */
   modelValue: string
+  /** 媒体库文件 ID（v-model:media-id，可选）：本地上传/转存入库时回填，与 modelValue 互斥语义（ID 优先） */
+  mediaId?: string
+  /** 预设成品图 ID（v-model:preset-id，可选）：带预设上传时回填 */
+  presetId?: string
   /** 图源类型：tech=品牌图标, game=游戏封面, book=书籍封面, recipe=美食图片 */
   type: 'tech' | 'game' | 'book' | 'recipe'
   /** 打开在线搜索时预填的关键词（通常传表单里的名称字段） */
@@ -76,11 +80,18 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
+  (e: 'update:mediaId', value: string): void
+  (e: 'update:presetId', value: string): void
 }>()
 
 const modelValueProxy = computed({
   get: () => props.modelValue,
-  set: (v: string) => emit('update:modelValue', v || ''),
+  set: (v: string) => {
+    // 手动输入 URL = 切换为外链模式，清空媒体引用
+    emit('update:mediaId', '')
+    emit('update:presetId', '')
+    emit('update:modelValue', v || '')
+  },
 })
 
 const { t } = useI18n()
@@ -100,8 +111,10 @@ const pickerVisible = ref(false)
 const uploading = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
-function handlePicked(url: string) {
+function handlePicked(url: string, mediaId?: string) {
   emit('update:modelValue', url)
+  emit('update:mediaId', mediaId || '')
+  emit('update:presetId', '')
 }
 
 function handleUploadClick() {
@@ -130,12 +143,16 @@ async function handleFileChange(e: Event) {
       const url = res?.preset?.output_url || res?.media?.url
       if (url) {
         emit('update:modelValue', url)
+        emit('update:mediaId', res?.media?.id || '')
+        emit('update:presetId', res?.preset?.id || '')
         message.success(t('common.message.uploadSuccess'))
       }
     } else {
       const res = await mediaApi.upload(file, { module: moduleKey.value })
       if (res?.url) {
         emit('update:modelValue', res.url)
+        emit('update:mediaId', res?.id || '')
+        emit('update:presetId', '')
         message.success(t('common.message.uploadSuccess'))
       }
     }
@@ -151,6 +168,8 @@ async function handleFileChange(e: Event) {
 
 function handleClear() {
   emit('update:modelValue', '')
+  emit('update:mediaId', '')
+  emit('update:presetId', '')
 }
 </script>
 

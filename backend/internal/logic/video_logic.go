@@ -28,11 +28,19 @@ func NewVideoLogic() *VideoLogic {
 
 // Create 创建视频作品，事务内创建视频及平台链接。
 func (l *VideoLogic) Create(ctx context.Context, r *req.CreateVideoReq) (*res.VideoWorkRes, error) {
+	// 封面：媒体库引用（ID 索引）与外链互斥写入
+	coverMediaID, coverPresetID, coverURL, err := normalizeMediaRef(ctx, r.CoverMediaID, r.CoverPresetID, r.CoverURL)
+	if err != nil {
+		return nil, err
+	}
+
 	video := &model.VideoWork{
-		ID:          uuid.New().String(),
-		Title:       r.Title,
-		CoverURL:    r.CoverURL,
-		Description: r.Description,
+		ID:            uuid.New().String(),
+		Title:         r.Title,
+		CoverURL:      coverURL,
+		CoverMediaID:  mediaRefPtr(coverMediaID),
+		CoverPresetID: mediaRefPtr(coverPresetID),
+		Description:   r.Description,
 	}
 	if r.Status != nil {
 		video.Status = *r.Status
@@ -63,6 +71,8 @@ func (l *VideoLogic) Create(ctx context.Context, r *req.CreateVideoReq) (*res.Vi
 		return nil, err
 	}
 
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, video)
 	return l.toVideoWorkRes(video, links), nil
 }
 
@@ -72,6 +82,9 @@ func (l *VideoLogic) GetList(ctx context.Context, r *req.VideoListReq) (*res.Vid
 	if err != nil {
 		return nil, fmt.Errorf("查询视频作品列表失败: %w", err)
 	}
+
+	// 批量解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURLs(ctx, list)
 
 	ids := make([]string, 0, len(list))
 	for _, v := range list {
@@ -108,6 +121,9 @@ func (l *VideoLogic) GetByID(ctx context.Context, id string) (*res.VideoWorkRes,
 	if err != nil {
 		return nil, fmt.Errorf("视频作品不存在")
 	}
+
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, video)
 
 	links, err := l.platformLinkModel.GetByVideoID(ctx, id)
 	if err != nil {
@@ -146,8 +162,26 @@ func (l *VideoLogic) Update(ctx context.Context, id string, r *req.UpdateVideoRe
 	if r.Title != nil {
 		video.Title = *r.Title
 	}
-	if r.CoverURL != nil {
-		video.CoverURL = *r.CoverURL
+	if r.CoverURL != nil || r.CoverMediaID != nil {
+		mediaID, presetID := "", ""
+		if r.CoverMediaID != nil {
+			mediaID = *r.CoverMediaID
+		}
+		if r.CoverPresetID != nil {
+			presetID = *r.CoverPresetID
+		}
+		coverURL := ""
+		if r.CoverURL != nil {
+			coverURL = *r.CoverURL
+		}
+		// 封面：媒体库引用（ID 索引）与外链互斥写入
+		coverMediaID, coverPresetID, coverImage, err := normalizeMediaRef(ctx, mediaID, presetID, coverURL)
+		if err != nil {
+			return nil, err
+		}
+		video.CoverURL = coverImage
+		video.CoverMediaID = mediaRefPtr(coverMediaID)
+		video.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.Description != nil {
 		video.Description = *r.Description
@@ -196,6 +230,8 @@ func (l *VideoLogic) Update(ctx context.Context, id string, r *req.UpdateVideoRe
 		return nil, fmt.Errorf("查询平台链接失败: %w", err)
 	}
 
+	// 解析封面媒体引用为当前完整 URL（外链行保持原值）
+	l.resolveCoverURL(ctx, video)
 	return l.toVideoWorkRes(video, links), nil
 }
 
@@ -243,17 +279,39 @@ func (l *VideoLogic) toVideoWorkRes(v *model.VideoWork, links []model.VideoPlatf
 		})
 	}
 	return &res.VideoWorkRes{
-		ID:           v.ID,
-		Title:        v.Title,
-		CoverURL:     v.CoverURL,
-		Description:  v.Description,
-		Status:       v.Status,
-		SortOrder:    v.SortOrder,
-		CategoryID:   categoryIDOf(v.CategoryID),
-		CategoryName: categoryNameOf(v.Category),
-		Platforms:    platforms,
-		ViewCount:    int64(v.ViewCount),
-		CreatedAt:    v.CreatedAt,
-		UpdatedAt:    v.UpdatedAt,
+		ID:            v.ID,
+		Title:         v.Title,
+		CoverURL:      v.CoverURL,
+		CoverMediaID:  refStr(v.CoverMediaID),
+		CoverPresetID: refStr(v.CoverPresetID),
+		Description:   v.Description,
+		Status:        v.Status,
+		SortOrder:     v.SortOrder,
+		CategoryID:    categoryIDOf(v.CategoryID),
+		CategoryName:  categoryNameOf(v.Category),
+		Platforms:     platforms,
+		ViewCount:     int64(v.ViewCount),
+		CreatedAt:     v.CreatedAt,
+		UpdatedAt:     v.UpdatedAt,
 	}
+}
+
+// resolveCoverURLs 批量解析视频作品封面媒体引用为当前完整 URL（外链行保持原值）。
+func (l *VideoLogic) resolveCoverURLs(ctx context.Context, videos []model.VideoWork) {
+	ptrs := make([]*model.VideoWork, len(videos))
+	for i := range videos {
+		ptrs[i] = &videos[i]
+	}
+	model.ResolveCoverURLs(ctx, ptrs,
+		func(v *model.VideoWork) (string, string) { return refStr(v.CoverMediaID), refStr(v.CoverPresetID) },
+		func(v *model.VideoWork, u string) { v.CoverURL = u },
+	)
+}
+
+// resolveCoverURL 解析单个视频作品封面媒体引用。
+func (l *VideoLogic) resolveCoverURL(ctx context.Context, v *model.VideoWork) {
+	model.ResolveCoverURLs(ctx, []*model.VideoWork{v},
+		func(x *model.VideoWork) (string, string) { return refStr(x.CoverMediaID), refStr(x.CoverPresetID) },
+		func(x *model.VideoWork, u string) { x.CoverURL = u },
+	)
 }
