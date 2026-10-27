@@ -68,7 +68,7 @@ func (l *MusicLogic) CreateSong(ctx context.Context, r *req.CreateSongReq) (*res
 		CID:           r.CID,
 		SourceURL:     r.SourceURL,
 		SourceType:    sourceType,
-		CategoryID:    r.CategoryID,
+		CategoryID:    categoryRefPtr(r.CategoryID),
 		Duration:      r.Duration,
 		SortOrder:     r.SortOrder,
 	}
@@ -156,12 +156,8 @@ func (l *MusicLogic) UpdateSong(ctx context.Context, id string, r *req.UpdateSon
 		song.CoverPresetID = mediaRefPtr(coverPresetID)
 	}
 	if r.CategoryID != nil {
-		if strings.TrimSpace(*r.CategoryID) == "" {
-			// 空字符串表示清空分类，置为 NULL（避免写空串触发 uuid 外键错误）
-			song.CategoryID = nil
-		} else {
-			song.CategoryID = r.CategoryID
-		}
+		// 空字符串表示清空分类，置为 NULL（避免写空串触发 uuid 外键错误）
+		song.CategoryID = categoryRefPtr(r.CategoryID)
 	}
 	if r.Duration != nil {
 		song.Duration = *r.Duration
@@ -265,7 +261,7 @@ func (l *MusicLogic) BatchCreateSongs(ctx context.Context, r *req.BatchCreateSon
 			CID:           songReq.CID,
 			SourceURL:     songReq.SourceURL,
 			SourceType:    sourceType,
-			CategoryID:    songReq.CategoryID,
+			CategoryID:    categoryRefPtr(songReq.CategoryID),
 			Duration:      songReq.Duration,
 			SortOrder:     songReq.SortOrder,
 		}

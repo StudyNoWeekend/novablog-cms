@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"novablog/internal/model"
 )
@@ -35,6 +36,15 @@ func mediaRefPtr(v string) *string {
 		return nil
 	}
 	return &v
+}
+
+// categoryRefPtr 归一化分类引用：未选择（nil 或空串/纯空白）统一置为 NULL。
+// CategoryID 是 uuid 列，落库空串会触发 22P02 invalid input syntax for type uuid。
+func categoryRefPtr(v *string) *string {
+	if v == nil || strings.TrimSpace(*v) == "" {
+		return nil
+	}
+	return v
 }
 
 // refStr 空指针转空串（logic 包别名，与 model.DerefStr 等价）。
