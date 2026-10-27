@@ -1,87 +1,84 @@
 <template>
   <div class="dashboard">
-    <!-- Loading skeleton -->
-    <div v-if="loading" class="dashboard-skeleton">
-      <div class="skeleton-strip"></div>
-      <div class="skeleton-row">
-        <div class="skeleton-block skeleton-left"></div>
-        <div class="skeleton-block skeleton-right"></div>
+    <!-- 核心指标条 -->
+    <div class="metric-strip">
+      <div class="metric-item">
+        <div class="metric-value">
+          <span v-if="metricsLoading" class="metric-skeleton"></span>
+          <template v-else>{{ formatNumber(trafficSummary?.today_pv ?? 0) }}</template>
+        </div>
+        <div class="metric-label">{{ $t('dashboard.metrics.todayVisits') }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">
+          <span v-if="metricsLoading" class="metric-skeleton"></span>
+          <template v-else>{{ formatNumber(trafficSummary?.today_uv ?? 0) }}</template>
+        </div>
+        <div class="metric-label">{{ $t('dashboard.metrics.todayVisitors') }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">
+          <span v-if="metricsLoading" class="metric-skeleton"></span>
+          <template v-else>{{ formatNumber(trafficSummary?.total_pv ?? 0) }}</template>
+        </div>
+        <div class="metric-label">{{ $t('dashboard.metrics.totalVisits') }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">
+          <span v-if="metricsLoading" class="metric-skeleton"></span>
+          <template v-else>{{ formatNumber(totalContentCount) }}</template>
+        </div>
+        <div class="metric-label">{{ $t('dashboard.metrics.totalContent') }}</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-value">
+          <span v-if="metricsLoading" class="metric-skeleton"></span>
+          <template v-else>{{ formatNumber(overview?.comment_total ?? 0) }}</template>
+        </div>
+        <div class="metric-label">{{ $t('dashboard.metrics.totalComments') }}</div>
       </div>
     </div>
 
-    <!-- Empty state -->
-    <div v-else-if="!overview" class="empty-state">
-      <div class="empty-icon">
-        <FileTextOutlined />
+    <!-- 待办提醒区 -->
+    <div v-if="todoReminder.show" class="todo-reminder">
+      <div class="todo-item" @click="goToArticles">
+        <span class="todo-count">{{ todoReminder.drafts }}</span>
+        <span class="todo-text">{{ $t('dashboard.todo.draftsPending') }}</span>
+        <span class="todo-arrow">&rarr;</span>
       </div>
-      <p class="empty-text">{{ $t('dashboard.empty') }}</p>
     </div>
 
-    <!-- Main content -->
-    <template v-else>
-      <!-- 核心指标条 -->
-      <div class="metric-strip">
-        <div class="metric-item">
-          <div class="metric-value">{{ formatNumber(trafficSummary?.today_pv ?? 0) }}</div>
-          <div class="metric-label">{{ $t('dashboard.metrics.todayVisits') }}</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-value">{{ formatNumber(trafficSummary?.today_uv ?? 0) }}</div>
-          <div class="metric-label">{{ $t('dashboard.metrics.todayVisitors') }}</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-value">{{ formatNumber(trafficSummary?.total_pv ?? 0) }}</div>
-          <div class="metric-label">{{ $t('dashboard.metrics.totalVisits') }}</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-value">{{ formatNumber(totalContentCount) }}</div>
-          <div class="metric-label">{{ $t('dashboard.metrics.totalContent') }}</div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-value">{{ formatNumber(overview.comment_total) }}</div>
-          <div class="metric-label">{{ $t('dashboard.metrics.totalComments') }}</div>
-        </div>
-      </div>
-
-      <!-- 待办提醒区 -->
-      <div v-if="todoReminder.show" class="todo-reminder">
-        <div class="todo-item" @click="goToArticles">
-          <span class="todo-count">{{ todoReminder.drafts }}</span>
-          <span class="todo-text">{{ $t('dashboard.todo.draftsPending') }}</span>
-          <span class="todo-arrow">&rarr;</span>
-        </div>
-      </div>
-
-      <!-- 趋势卡：访问量 / 内容产出 -->
-      <div class="card trend-card">
-        <div class="chart-header">
-          <div class="header-tabs">
-            <div class="time-tabs">
-              <button
-                :class="['tab-btn', { active: metricTab === 'traffic' }]"
-                @click="metricTab = 'traffic'"
-              >
-                {{ $t('dashboard.tabs.visits') }}
-              </button>
-              <button
-                :class="['tab-btn', { active: metricTab === 'production' }]"
-                @click="metricTab = 'production'"
-              >
-                {{ $t('dashboard.tabs.production') }}
-              </button>
-            </div>
-          </div>
+    <!-- 趋势卡：访问量 / 内容产出 -->
+    <div class="card trend-card">
+      <div class="chart-header">
+        <div class="header-tabs">
           <div class="time-tabs">
             <button
-              v-for="tab in timeTabs"
-              :key="tab.value"
-              :class="['tab-btn', { active: activeRange === tab.value }]"
-              @click="switchRange(tab.value)"
+              :class="['tab-btn', { active: metricTab === 'traffic' }]"
+              @click="metricTab = 'traffic'"
             >
-              {{ tab.label }}
+              {{ $t('dashboard.tabs.visits') }}
+            </button>
+            <button
+              :class="['tab-btn', { active: metricTab === 'production' }]"
+              @click="metricTab = 'production'"
+            >
+              {{ $t('dashboard.tabs.production') }}
             </button>
           </div>
         </div>
+        <div class="time-tabs">
+          <button
+            v-for="tab in timeTabs"
+            :key="tab.value"
+            :class="['tab-btn', { active: activeRange === tab.value }]"
+            @click="switchRange(tab.value)"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+      </div>
+      <a-spin :spinning="trendLoading">
         <div class="chart-wrap">
           <v-chart
             v-if="trendChartDataReady"
@@ -91,63 +88,66 @@
           />
           <div v-else class="chart-empty">{{ $t('dashboard.chart.noTrendData') }}</div>
         </div>
-        <div v-if="metricTab === 'production'" class="summary-bar">
-          <div v-for="(item, idx) in productionSummary" :key="idx" class="summary-pill">
-            <div class="summary-pill-label">{{ item.label }}</div>
-            <div class="summary-pill-value">{{ item.value }}</div>
-          </div>
+      </a-spin>
+      <div v-if="metricTab === 'production'" class="summary-bar">
+        <div v-for="(item, idx) in productionSummary" :key="idx" class="summary-pill">
+          <div class="summary-pill-label">{{ item.label }}</div>
+          <div class="summary-pill-value">{{ item.value }}</div>
         </div>
       </div>
+    </div>
 
-      <!-- 中间两列布局：模块数据表 + 访问分布 -->
-      <div class="dashboard-row">
-        <div class="dashboard-col-left">
-          <div class="card">
-            <h3 class="card-title">{{ $t('dashboard.moduleData.title') }}</h3>
-            <table v-if="moduleRows.length" class="module-table">
-              <thead>
-                <tr>
-                  <th>{{ $t('dashboard.moduleData.module') }}</th>
-                  <th>{{ $t('dashboard.moduleData.published') }}</th>
-                  <th>{{ $t('dashboard.moduleData.totalViews') }}</th>
-                  <th>{{ $t('dashboard.moduleData.today') }}</th>
-                  <th class="col-week">{{ $t('dashboard.moduleData.last7Days') }}</th>
-                  <th class="col-share">{{ $t('dashboard.moduleData.share') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in moduleRows" :key="row.type">
-                  <td>
-                    <span class="legend-dot" :style="{ background: colorOf(row.type) }" />
-                    <span class="module-name">{{ labelOf(row.type) }}</span>
-                  </td>
-                  <td>
-                    {{ formatNumber(row.total) }}
-                    <span class="cell-sub">{{ $t('dashboard.moduleData.publishedCount', { count: formatNumber(row.published) }) }}</span>
-                  </td>
-                  <td>{{ formatNumber(row.total_views) }}</td>
-                  <td>{{ formatNumber(row.today_views) }}</td>
-                  <td class="col-week">{{ formatNumber(row.week_views) }}</td>
-                  <td class="col-share">
-                    <div class="share-cell">
-                      <div class="share-bar">
-                        <div
-                          class="share-fill"
-                          :style="{ width: shareOf(row) + '%', background: colorOf(row.type) }"
-                        />
-                      </div>
-                      <span class="share-text">{{ shareOf(row) }}%</span>
+    <!-- 中间两列布局：模块数据表 + 访问分布 -->
+    <div class="dashboard-row">
+      <div class="dashboard-col-left">
+        <div class="card">
+          <h3 class="card-title">{{ $t('dashboard.moduleData.title') }}</h3>
+          <a-skeleton v-if="moduleStatsLoading" active :title="false" :paragraph="{ rows: 6 }" />
+          <table v-else-if="moduleRows.length" class="module-table">
+            <thead>
+              <tr>
+                <th>{{ $t('dashboard.moduleData.module') }}</th>
+                <th>{{ $t('dashboard.moduleData.published') }}</th>
+                <th>{{ $t('dashboard.moduleData.totalViews') }}</th>
+                <th>{{ $t('dashboard.moduleData.today') }}</th>
+                <th class="col-week">{{ $t('dashboard.moduleData.last7Days') }}</th>
+                <th class="col-share">{{ $t('dashboard.moduleData.share') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in moduleRows" :key="row.type">
+                <td>
+                  <span class="legend-dot" :style="{ background: colorOf(row.type) }" />
+                  <span class="module-name">{{ labelOf(row.type) }}</span>
+                </td>
+                <td>
+                  {{ formatNumber(row.total) }}
+                  <span class="cell-sub">{{ $t('dashboard.moduleData.publishedCount', { count: formatNumber(row.published) }) }}</span>
+                </td>
+                <td>{{ formatNumber(row.total_views) }}</td>
+                <td>{{ formatNumber(row.today_views) }}</td>
+                <td class="col-week">{{ formatNumber(row.week_views) }}</td>
+                <td class="col-share">
+                  <div class="share-cell">
+                    <div class="share-bar">
+                      <div
+                        class="share-fill"
+                        :style="{ width: shareOf(row) + '%', background: colorOf(row.type) }"
+                      />
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-else class="list-empty">{{ $t('dashboard.moduleData.empty') }}</div>
-          </div>
+                    <span class="share-text">{{ shareOf(row) }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-else class="list-empty">{{ $t('dashboard.moduleData.empty') }}</div>
         </div>
-        <div class="dashboard-col-right">
-          <div class="card">
-            <h3 class="card-title">{{ $t('dashboard.distribution.title') }}</h3>
+      </div>
+      <div class="dashboard-col-right">
+        <div class="card">
+          <h3 class="card-title">{{ $t('dashboard.distribution.title') }}</h3>
+          <a-spin :spinning="moduleStatsLoading">
             <div class="pie-wrap">
               <v-chart
                 v-if="viewDistribution.length"
@@ -157,23 +157,26 @@
               />
               <div v-else class="chart-empty">{{ $t('dashboard.distribution.empty') }}</div>
             </div>
-            <div class="pie-legend">
-              <div v-for="(item, idx) in viewLegend" :key="idx" class="legend-row">
-                <span class="legend-dot" :style="{ background: item.color }" />
-                <span class="legend-name">{{ item.name }}</span>
-                <span class="legend-percent">{{ formatPercentage(item.percentage) }}</span>
-              </div>
+          </a-spin>
+          <div class="pie-legend">
+            <div v-for="(item, idx) in viewLegend" :key="idx" class="legend-row">
+              <span class="legend-dot" :style="{ background: item.color }" />
+              <span class="legend-name">{{ item.name }}</span>
+              <span class="legend-percent">{{ formatPercentage(item.percentage) }}</span>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 底部：热门内容排行 + 最近评论 -->
-      <div class="dashboard-row bottom-row">
-        <div class="dashboard-col-left">
-          <div class="card top-content-card">
-            <h3 class="card-title">{{ $t('dashboard.topContent.title') }}</h3>
-            <div class="top-content-list">
+    <!-- 底部：热门内容排行 + 最近评论 -->
+    <div class="dashboard-row bottom-row">
+      <div class="dashboard-col-left">
+        <div class="card top-content-card">
+          <h3 class="card-title">{{ $t('dashboard.topContent.title') }}</h3>
+          <div class="top-content-list">
+            <a-skeleton v-if="topContentLoading" active :title="false" :paragraph="{ rows: 5 }" />
+            <template v-else>
               <div
                 v-for="(item, idx) in topContentList"
                 :key="item.id"
@@ -188,13 +191,16 @@
                 <span class="top-content-comments">{{ item.comment_count }} {{ $t('dashboard.topContent.comments') }}</span>
               </div>
               <div v-if="topContentList.length === 0" class="list-empty">{{ $t('dashboard.topContent.empty') }}</div>
-            </div>
+            </template>
           </div>
         </div>
-        <div class="dashboard-col-right">
-          <div class="card">
-            <h3 class="card-title">{{ $t('dashboard.recentComments.title') }}</h3>
-            <div class="comment-list">
+      </div>
+      <div class="dashboard-col-right">
+        <div class="card">
+          <h3 class="card-title">{{ $t('dashboard.recentComments.title') }}</h3>
+          <div class="comment-list">
+            <a-skeleton v-if="recentCommentsLoading" active :title="false" :paragraph="{ rows: 4 }" />
+            <template v-else>
               <div v-for="item in recentCommentsList" :key="item.id" class="comment-item">
                 <div class="comment-avatar" :class="{ blogger: item.is_blogger }">
                   {{ item.nickname.charAt(0) }}
@@ -210,11 +216,11 @@
                 </div>
               </div>
               <div v-if="recentCommentsList.length === 0" class="list-empty">{{ $t('dashboard.recentComments.empty') }}</div>
-            </div>
+            </template>
           </div>
         </div>
       </div>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -222,7 +228,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { FileTextOutlined } from '@ant-design/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
@@ -265,7 +270,15 @@ const timeTabs = computed(() => [
   { label: t('dashboard.range.days90'), value: '90d' },
 ])
 
-const loading = ref(true)
+// 各数据源独立 loading：页面结构即时渲染，区块就绪即展示，互不阻塞
+const overviewLoading = ref(true)
+const trafficSummaryLoading = ref(true)
+const trafficTrendLoading = ref(true)
+const productionTrendLoading = ref(true)
+const moduleStatsLoading = ref(true)
+const topContentLoading = ref(true)
+const recentCommentsLoading = ref(true)
+
 const overview = ref<OverviewData | null>(null)
 const trafficSummary = ref<TrafficSummaryData | null>(null)
 const trafficTrend = ref<TrafficTrendData | null>(null)
@@ -278,84 +291,112 @@ const metricTab = ref<'traffic' | 'production'>('traffic')
 const router = useRouter()
 const moduleStore = useModuleStore()
 
+// 指标条数值依赖三个接口，任一未就绪即展示骨架
+const metricsLoading = computed(
+  () => overviewLoading.value || trafficSummaryLoading.value || moduleStatsLoading.value
+)
+
+// 趋势卡 loading 随当前页签取对应接口（切换时间范围时同样生效）
+const trendLoading = computed(() =>
+  metricTab.value === 'traffic' ? trafficTrendLoading.value : productionTrendLoading.value
+)
+
 // formatNumber 按当前语言格式化数字（千分位），替代硬编码 locale 的 toLocaleString
 function formatNumber(value: number): string {
   return new Intl.NumberFormat(locale.value).format(value)
 }
 
 async function loadOverview() {
+  overviewLoading.value = true
   try {
     overview.value = await analyticsApi.getOverview()
   } catch (e) {
     console.error('Failed to load overview:', e)
+  } finally {
+    overviewLoading.value = false
   }
 }
 
 async function loadTrafficSummary() {
+  trafficSummaryLoading.value = true
   try {
     trafficSummary.value = await analyticsApi.getTrafficSummary()
   } catch (e) {
     console.error('Failed to load traffic summary:', e)
+  } finally {
+    trafficSummaryLoading.value = false
   }
 }
 
 async function loadTrafficTrend(range: string) {
+  trafficTrendLoading.value = true
   try {
     trafficTrend.value = await analyticsApi.getTrafficTrend({
       range: range as '7d' | '30d' | '90d',
     })
   } catch (e) {
     console.error('Failed to load traffic trend:', e)
+  } finally {
+    trafficTrendLoading.value = false
   }
 }
 
 async function loadProductionTrend(range: string) {
+  productionTrendLoading.value = true
   try {
     productionTrend.value = await analyticsApi.getContentTrend({
       range: range as '7d' | '30d' | '90d',
     })
   } catch (e) {
     console.error('Failed to load production trend:', e)
+  } finally {
+    productionTrendLoading.value = false
   }
 }
 
 async function loadModuleStats() {
+  moduleStatsLoading.value = true
   try {
     moduleStats.value = await analyticsApi.getModuleStats()
   } catch (e) {
     console.error('Failed to load module stats:', e)
+  } finally {
+    moduleStatsLoading.value = false
   }
 }
 
 async function loadTopContent() {
+  topContentLoading.value = true
   try {
     topContent.value = await analyticsApi.getTopContent({ limit: 5 })
   } catch (e) {
     console.error('Failed to load top content:', e)
+  } finally {
+    topContentLoading.value = false
   }
 }
 
 async function loadRecentComments() {
+  recentCommentsLoading.value = true
   try {
     recentComments.value = await analyticsApi.getRecentComments({ limit: 5 })
   } catch (e) {
     console.error('Failed to load recent comments:', e)
+  } finally {
+    recentCommentsLoading.value = false
   }
 }
 
-onMounted(async () => {
-  await Promise.all([
-    // 模块开关就绪后再渲染，避免首屏闪烁；拉取失败按全部开启处理
-    moduleStore.fetchConfig().catch(() => {}),
-    loadOverview(),
-    loadTrafficSummary(),
-    loadTrafficTrend('30d'),
-    loadProductionTrend('30d'),
-    loadModuleStats(),
-    loadTopContent(),
-    loadRecentComments(),
-  ])
-  loading.value = false
+onMounted(() => {
+  // 并行发起全部请求，各区块独立渲染；模块开关拉取失败按全部开启处理
+  moduleStore.fetchConfig().catch(() => {})
+  loadOverview()
+  loadTrafficSummary()
+  loadTrafficTrend('30d')
+  loadProductionTrend('30d')
+  loadModuleStats()
+  loadTopContent()
+  loadRecentComments()
 })
 
 async function switchRange(range: string) {
@@ -618,6 +659,16 @@ function formatPercentage(value: number): string {
   color: #29365C;
   line-height: 1.2;
   margin-bottom: 6px;
+}
+
+.metric-skeleton {
+  display: inline-block;
+  width: 64px;
+  height: 24px;
+  background: #F5F7FC;
+  border-radius: 6px;
+  vertical-align: middle;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 .metric-label {
@@ -1065,41 +1116,6 @@ function formatPercentage(value: number): string {
   color: #B7791F;
 }
 
-/* Skeleton */
-.dashboard-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.skeleton-strip {
-  height: 96px;
-  background: #F5F7FC;
-  border-radius: 12px;
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-.skeleton-row {
-  display: flex;
-  gap: 20px;
-}
-
-.skeleton-block {
-  background: #F5F7FC;
-  border-radius: 12px;
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-.skeleton-left {
-  flex: 0 0 65%;
-  height: 400px;
-}
-
-.skeleton-right {
-  flex: 0 0 35%;
-  height: 400px;
-}
-
 @keyframes skeleton-pulse {
   0%,
   100% {
@@ -1108,27 +1124,6 @@ function formatPercentage(value: number): string {
   50% {
     opacity: 0.5;
   }
-}
-
-/* Empty State */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  color: #8A93A8;
-}
-
-.empty-text {
-  font-size: 15px;
-  color: #8A93A8;
-  margin: 0;
 }
 
 /* Responsive */
@@ -1143,16 +1138,6 @@ function formatPercentage(value: number): string {
 
   .dashboard-col-left,
   .dashboard-col-right {
-    flex: 1 1 auto;
-    max-width: 100%;
-  }
-
-  .skeleton-row {
-    flex-direction: column;
-  }
-
-  .skeleton-left,
-  .skeleton-right {
     flex: 1 1 auto;
     max-width: 100%;
   }
