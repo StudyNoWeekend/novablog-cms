@@ -9,6 +9,15 @@
 #   （存量部署升级后由启动种子逻辑自动导入数据库，旧键原样保留无害）。
 #
 # 标注 [播种] 的键：首次启动时作为对应数据库配置的初始值导入，此后以数据库为准。
+#
+# ★ 敏感项环境变量覆盖：任意配置键均可用环境变量覆盖 yaml 值（优先级：env > yaml），
+#   规则：前缀 NOVABLOG_ + 键路径（点号转下划线，字母全大写）。常用：
+#     postgres.password      ← NOVABLOG_POSTGRES_PASSWORD
+#     redis.password         ← NOVABLOG_REDIS_PASSWORD
+#     jwt.access_secret      ← NOVABLOG_JWT_ACCESS_SECRET
+#     jwt.refresh_secret     ← NOVABLOG_JWT_REFRESH_SECRET
+#     crypto.secret_key      ← NOVABLOG_CRYPTO_SECRET_KEY
+#   生产部署建议：yaml 中留占位符，真实密钥仅通过环境变量注入。
 
 app:
   name: backend

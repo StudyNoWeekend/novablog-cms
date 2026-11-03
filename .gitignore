@@ -44,6 +44,7 @@ dist-ssr/
 # ===== 编辑器 / IDE / 系统 =====
 .vscode/*
 !.vscode/extensions.json
+.zcodeignore
 .idea/
 .DS_Store
 *.suo
@@ -51,8 +52,8 @@ dist-ssr/
 *.njsproj
 *.sln
 *.sw?
-.trae/*
 .zcode/*
+.idea/*
 
 # ===== 部署 =====
 deploy/.env
@@ -66,3 +67,7 @@ backend/data/
 backend/config/config.local.yaml
 backend/config/config.e2e.yaml
 backend/uploads_e2e/
+
+# ===== 文档 =====
+# 内部核查报告等 md 文档仅保留本地，禁止上传仓库
+docs/*.md

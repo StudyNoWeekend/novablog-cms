@@ -175,7 +175,7 @@ func (l *SystemConfigLogic) GetSiteSettings(ctx context.Context) ([]model.System
 }
 
 // UpdateSiteSettings 批量更新站点信息分组（nil 或 nil 指针表示不修改该项）。
-// siteURL 变化时通过 onSiteURLChange 回调通知调用方热更（如 model.BaseURL）。
+// 站点对外地址为媒体 URL 基址的权威值：写库成功后在此统一热更 model.BaseURL，即时生效。
 func (l *SystemConfigLogic) UpdateSiteSettings(ctx context.Context, values map[string]*string) (siteURLChanged bool, err error) {
 	valid := make(map[string]bool, len(systemConfigFields))
 	for _, f := range systemConfigFields {
@@ -194,6 +194,11 @@ func (l *SystemConfigLogic) UpdateSiteSettings(ctx context.Context, values map[s
 		}
 		if err := l.set(ctx, key, newValue, descriptionOf(key)); err != nil {
 			return siteURLChanged, fmt.Errorf("更新配置项 %s 失败: %w", key, err)
+		}
+	}
+	if siteURLChanged {
+		if siteURL := l.GetSiteURL(ctx); siteURL != "" {
+			model.BaseURL = siteURL
 		}
 	}
 	return siteURLChanged, nil
@@ -403,6 +408,10 @@ func (l *SystemConfigLogic) ApplyConfigImport(ctx context.Context, export *res.S
 				return applied, fmt.Errorf("导入 %s.%s 失败: %w", group, k, err)
 			}
 		}
+	}
+	// 导入可能包含站点对外地址，统一热更媒体 URL 基址
+	if siteURL := l.GetSiteURL(ctx); siteURL != "" {
+		model.BaseURL = siteURL
 	}
 	return applied, nil
 }

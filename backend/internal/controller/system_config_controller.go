@@ -8,7 +8,6 @@ import (
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/logic"
-	"novablog/internal/model"
 	"novablog/utils/response"
 
 	"github.com/gin-gonic/gin"
@@ -57,12 +56,6 @@ func (c *SystemConfigController) UpdateSystemConfig(ctx *gin.Context) {
 		return
 	}
 
-	// 站点对外地址为媒体 URL 基址的权威值，热更全局变量即时生效
-	if siteURLChanged {
-		if siteURL := c.logic.GetSiteURL(ctx.Request.Context()); siteURL != "" {
-			model.BaseURL = siteURL
-		}
-	}
 	response.Success(ctx, res.SystemConfigUpdateRes{SiteURLChanged: siteURLChanged})
 }
 
@@ -94,9 +87,5 @@ func (c *SystemConfigController) ImportConfig(ctx *gin.Context) {
 		return
 	}
 
-	// 导入可能包含站点对外地址，热更媒体 URL 基址
-	if siteURL := c.logic.GetSiteURL(ctx.Request.Context()); siteURL != "" {
-		model.BaseURL = siteURL
-	}
 	response.Success(ctx, res.SystemConfigImportRes{Applied: applied})
 }

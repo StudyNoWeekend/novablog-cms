@@ -101,36 +101,3 @@ type ArticleTagModel struct {
 func NewArticleTag() *ArticleTagModel {
 	return &ArticleTagModel{db: DB}
 }
-
-// ReplaceTags 替换文章标签关联：先删除旧关联，再批量插入新关联，使用事务。
-func (m *ArticleTagModel) ReplaceTags(ctx context.Context, articleID string, tagIDs []string) error {
-	return m.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("article_id = ?", articleID).Delete(&ArticleTag{}).Error; err != nil {
-			return err
-		}
-		if len(tagIDs) == 0 {
-			return nil
-		}
-		articleTags := make([]ArticleTag, 0, len(tagIDs))
-		for _, tagID := range tagIDs {
-			articleTags = append(articleTags, ArticleTag{
-				ArticleID: articleID,
-				TagID:     tagID,
-			})
-		}
-		return tx.Create(&articleTags).Error
-	})
-}
-
-// GetTagIDsByArticle 根据文章 ID 获取关联的标签 ID 列表。
-func (m *ArticleTagModel) GetTagIDsByArticle(ctx context.Context, articleID string) ([]string, error) {
-	var tagIDs []string
-	err := m.db.WithContext(ctx).
-		Model(&ArticleTag{}).
-		Where("article_id = ?", articleID).
-		Pluck("tag_id", &tagIDs).Error
-	if err != nil {
-		return nil, err
-	}
-	return tagIDs, nil
-}

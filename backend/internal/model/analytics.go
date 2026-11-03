@@ -252,23 +252,6 @@ func (m *AnalyticsModel) CountComments(ctx context.Context) (total int64, err er
 	return total, nil
 }
 
-// SumArticleViews 统计文章浏览量总和。
-func (m *AnalyticsModel) SumArticleViews(ctx context.Context) (int64, error) {
-	type sumRow struct {
-		Total int64 `gorm:"column:total"`
-	}
-	var row sumRow
-	err := m.db.WithContext(ctx).
-		Table("articles").
-		Select("COALESCE(SUM(view_count), 0) AS total").
-		Where("deleted_at IS NULL").
-		Scan(&row).Error
-	if err != nil {
-		return 0, fmt.Errorf("统计文章浏览量失败: %w", err)
-	}
-	return row.Total, nil
-}
-
 // SumTravelViews 统计旅行攻略浏览量总和。
 func (m *AnalyticsModel) SumTravelViews(ctx context.Context) (int64, error) {
 	type sumRow struct {

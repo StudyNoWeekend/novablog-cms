@@ -12,14 +12,33 @@ import (
 
 	"novablog/enum"
 	"novablog/internal/model"
-	"novablog/utils/response"
 
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 // mountedFrontendKey 自备博客前端在托管缓存中的保留键（与安装实例 ID 不冲突）。
 const mountedFrontendKey = "@mounted-frontend"
+
+// 响应决策类型（由 logic 计算由 controller 执行）。
+const (
+	// ThemeHostKindFile 静态文件，直接 http.ServeFile。
+	ThemeHostKindFile = "file"
+	// ThemeHostKindHTML HTML 字节（fallback/占位/404 页）。
+	ThemeHostKindHTML = "html"
+	// ThemeHostKindText 纯文本或裸状态码。
+	ThemeHostKindText = "text"
+)
+
+// ThemeHostResponse 主题托管请求的响应决策。
+// logic 层只计算「响应什么」，HTTP 执行（ServeFile/响应头/状态码）由 controller 完成。
+type ThemeHostResponse struct {
+	Kind      string // ThemeHostKind* 之一
+	FilePath  string // Kind=file：直接响应的文件绝对路径
+	Immutable bool   // Kind=file：是否长缓存（Next.js 哈希资源）
+	Status    int    // Kind=html/text：HTTP 状态码
+	HTML      []byte // Kind=html：页面字节
+	Text      string // Kind=text：文本内容（空则仅返回状态码）
+}
 
 // hostedTheme 已解析的托管主题（制品目录 + 清单）。
 type hostedTheme struct {
@@ -31,7 +50,7 @@ type hostedTheme struct {
 // 全局单例：路由兜底处理器与激活/卸载时的缓存失效共享同一实例。
 var ThemeHost = &ThemeHostLogic{cache: map[string]*hostedTheme{}}
 
-// ThemeHostLogic 主题静态托管逻辑。
+// ThemeHostLogic 主题静态托管逻辑（纯解析与决策，不依赖 HTTP 框架）。
 type ThemeHostLogic struct {
 	mu    sync.RWMutex
 	cache map[string]*hostedTheme
@@ -44,72 +63,46 @@ func (h *ThemeHostLogic) Invalidate() {
 	h.cache = map[string]*hostedTheme{}
 }
 
-// Handler 博客托管兜底路由（NoRoute）：非保留路径按激活主题静态解析。
-func (h *ThemeHostLogic) Handler(themeLogic *ThemeLogic) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		reqPath := c.Request.URL.Path
-
-		// 仅 GET/HEAD 参与托管，其余方法按接口 404 处理
-		if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead {
-			response.Fail(c, enum.ErrNotFound.Code, "接口不存在", http.StatusNotFound)
-			return
+// ResolveHosted 博客托管兜底入口：解析自备前端或激活主题，返回响应决策。
+func (h *ThemeHostLogic) ResolveHosted(ctx context.Context, themeLogic *ThemeLogic, reqPath string) (ThemeHostResponse, error) {
+	// 自备博客前端优先（config: themes.frontend_dir，挂载目录与主题制品包同构）
+	if dir := getThemeSettings().FrontendDir; dir != "" {
+		if ht, err := h.resolveMounted(dir); err == nil && ht != nil {
+			return h.ResolveThemePath(ht, reqPath), nil
 		}
-		// 保留路径（API/媒体文件/预览/健康检查）兜底 404
-		if strings.HasPrefix(reqPath, "/api/") || strings.HasPrefix(reqPath, "/files/") ||
-			strings.HasPrefix(reqPath, "/preview/") || reqPath == "/health" || reqPath == "/ready" {
-			response.Fail(c, enum.ErrNotFound.Code, "接口不存在", http.StatusNotFound)
-			return
-		}
-
-		// 自备博客前端优先（config: themes.frontend_dir，挂载目录与主题制品包同构）
-		if dir := getThemeSettings().FrontendDir; dir != "" {
-			if ht, err := h.resolveMounted(dir); err == nil && ht != nil {
-				h.serveTheme(c, ht, reqPath)
-				return
-			}
-			// 不可用时静默回退到已安装主题流程（首次失败已记录日志）
-		}
-
-		theme, err := themeLogic.GetActiveTheme(c.Request.Context())
-		if err != nil {
-			response.HandleError(c, err)
-			return
-		}
-		if theme == nil {
-			serveNoTheme(c)
-			return
-		}
-
-		ht, err := h.resolve(c.Request.Context(), theme.ID)
-		if err != nil {
-			response.HandleError(c, err)
-			return
-		}
-		h.serveTheme(c, ht, reqPath)
+		// 不可用时静默回退到已安装主题流程（首次失败已记录日志）
 	}
+
+	theme, err := themeLogic.GetActiveTheme(ctx)
+	if err != nil {
+		return ThemeHostResponse{}, err
+	}
+	if theme == nil {
+		return ThemeHostResponse{Kind: ThemeHostKindHTML, Status: http.StatusOK, HTML: []byte(noThemeHTML())}, nil
+	}
+
+	ht, err := h.resolve(ctx, theme.ID)
+	if err != nil {
+		return ThemeHostResponse{}, err
+	}
+	return h.ResolveThemePath(ht, reqPath), nil
 }
 
-// PreviewHandler 主题预览路由：以指定主题（最新安装实例）响应同一套托管逻辑。
-func (h *ThemeHostLogic) PreviewHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		themeID := c.Param("theme_id")
-		subPath := c.Param("path")
-		if subPath == "" {
-			subPath = "/"
-		}
-
-		theme, err := model.NewTheme().GetLatestByThemeID(c.Request.Context(), themeID)
-		if err != nil {
-			response.Fail(c, enum.ErrThemeNotFound.Code, enum.ErrThemeNotFound.Msg, http.StatusNotFound)
-			return
-		}
-		ht, err := h.resolve(c.Request.Context(), theme.ID)
-		if err != nil {
-			response.HandleError(c, err)
-			return
-		}
-		h.serveTheme(c, ht, subPath)
+// ResolvePreview 主题预览入口：以指定主题（最新安装实例）解析同一套托管逻辑。
+func (h *ThemeHostLogic) ResolvePreview(ctx context.Context, themeID, subPath string) (ThemeHostResponse, error) {
+	if subPath == "" {
+		subPath = "/"
 	}
+
+	theme, err := model.NewTheme().GetLatestByThemeID(ctx, themeID)
+	if err != nil {
+		return ThemeHostResponse{}, enum.ErrThemeNotFound
+	}
+	ht, err := h.resolve(ctx, theme.ID)
+	if err != nil {
+		return ThemeHostResponse{}, err
+	}
+	return h.ResolveThemePath(ht, subPath), nil
 }
 
 // resolve 解析指定安装实例的托管主题（制品目录 + 清单，带缓存）。
@@ -182,16 +175,15 @@ func loadMountedFrontend(dir string) (*hostedTheme, error) {
 	return &hostedTheme{root: root, manifest: manifest}, nil
 }
 
-// serveTheme 按托管解析顺序响应：
+// ResolveThemePath 按托管解析顺序把请求路径解析为响应决策：
 // 精确文件 → {path}.html → 目录 index.html → fallback 壳页面 → 404.html → 404。
-func (h *ThemeHostLogic) serveTheme(c *gin.Context, ht *hostedTheme, reqPath string) {
+func (h *ThemeHostLogic) ResolveThemePath(ht *hostedTheme, reqPath string) ThemeHostResponse {
 	clean := path.Clean("/" + reqPath)
 
 	// 拒绝 dotfile 与清单直出
 	rel := strings.Trim(clean, "/")
 	if rel == "theme.json" || strings.HasPrefix(path.Base(clean), ".") || containsDotSegment(rel) {
-		c.Status(http.StatusNotFound)
-		return
+		return ThemeHostResponse{Kind: ThemeHostKindText, Status: http.StatusNotFound}
 	}
 	if rel == "" {
 		rel = "index.html"
@@ -203,8 +195,7 @@ func (h *ThemeHostLogic) serveTheme(c *gin.Context, ht *hostedTheme, reqPath str
 		}
 		full := filepath.Join(ht.root, filepath.FromSlash(cand))
 		if isRegularFile(full) {
-			serveThemeStatic(c, full, cand)
-			return
+			return themeHostFileDecision(full, cand)
 		}
 	}
 
@@ -212,30 +203,36 @@ func (h *ThemeHostLogic) serveTheme(c *gin.Context, ht *hostedTheme, reqPath str
 	if shell, ok := matchFallback(ht.manifest, clean); ok {
 		shellRel := strings.TrimPrefix(shell, "/")
 		if full := filepath.Join(ht.root, filepath.FromSlash(shellRel)); isRegularFile(full) {
-			serveThemeStatic(c, full, shellRel)
-			return
+			return themeHostFileDecision(full, shellRel)
 		}
 	}
 
 	// 404.html
 	if full := filepath.Join(ht.root, "404.html"); isRegularFile(full) {
-		data, err := os.ReadFile(full)
-		if err == nil {
-			c.Data(http.StatusNotFound, "text/html; charset=utf-8", data)
-			return
+		if data, err := os.ReadFile(full); err == nil {
+			return ThemeHostResponse{Kind: ThemeHostKindHTML, Status: http.StatusNotFound, HTML: data}
 		}
 	}
-	c.String(http.StatusNotFound, "404 page not found")
+	return ThemeHostResponse{Kind: ThemeHostKindText, Status: http.StatusNotFound, Text: "404 page not found"}
 }
 
-// serveThemeStatic 响应静态文件并设置缓存策略（Next.js 哈希资源长缓存）。
-func serveThemeStatic(c *gin.Context, fullPath, rel string) {
-	if strings.HasPrefix(rel, "_next/") || strings.HasPrefix(rel, "static/") {
-		c.Header("Cache-Control", "public, max-age=31536000, immutable")
-	} else {
-		c.Header("Cache-Control", "no-cache")
-	}
-	http.ServeFile(c.Writer, c.Request, fullPath)
+// themeHostFileDecision 构造静态文件响应决策（Next.js 哈希资源长缓存）。
+func themeHostFileDecision(fullPath, rel string) ThemeHostResponse {
+	immutable := strings.HasPrefix(rel, "_next/") || strings.HasPrefix(rel, "static/")
+	return ThemeHostResponse{Kind: ThemeHostKindFile, FilePath: fullPath, Immutable: immutable}
+}
+
+// noThemeHTML 未激活主题时的占位页（首装未完成或未切换主题）。
+func noThemeHTML() string {
+	return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>NovaBlog</title>
+<style>body{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;background:#0a0a0a;color:#e5e5e5;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}main{text-align:center;padding:24px}h1{font-size:22px;margin-bottom:12px}p{color:#8a8a8a;margin:6px 0}a{color:#4ade80}</style></head>
+<body><main>
+<h1>博客即将上线</h1>
+<p>尚未启用博客主题，请前往管理后台完成初始化。</p>
+</main></body></html>
+`
 }
 
 // matchFallback 在清单 fallback 声明中做最长前缀匹配（pattern 形如 /articles/*）。
@@ -270,18 +267,4 @@ func containsDotSegment(rel string) bool {
 func isRegularFile(p string) bool {
 	info, err := os.Stat(p)
 	return err == nil && info.Mode().IsRegular()
-}
-
-// serveNoTheme 未激活主题时的占位页（首装未完成或未切换主题）。
-func serveNoTheme(c *gin.Context) {
-	c.Header("Content-Type", "text/html; charset=utf-8")
-	c.String(http.StatusOK, `<!DOCTYPE html>
-<html lang="zh-CN">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>NovaBlog</title>
-<style>body{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;background:#0a0a0a;color:#e5e5e5;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}main{text-align:center;padding:24px}h1{font-size:22px;margin-bottom:12px}p{color:#8a8a8a;margin:6px 0}a{color:#4ade80}</style></head>
-<body><main>
-<h1>博客即将上线</h1>
-<p>尚未启用博客主题，请前往管理后台完成初始化。</p>
-</main></body></html>
-`)
 }

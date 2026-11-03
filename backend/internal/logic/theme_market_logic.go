@@ -13,8 +13,8 @@ import (
 
 // ThemeMarketLogic 官方主题市场转发逻辑。
 //
-// 官方地址与 Token 由控制器从请求头读出后传入（请求头为空时回退后端统一配置的官方站点地址，
-// 见 official_site_settings）；官方地址的持久化统一由社区推送配置托管，登录不再落库。
+// 官方地址统一取后端托管的官方站点地址（见 official_site_settings，DB 持久化值优先、
+// 出厂值为 config.yaml community 段）；官方地址的持久化统一由社区推送配置托管，登录不再落库。
 type ThemeMarketLogic struct{}
 
 // NewThemeMarketLogic 创建 ThemeMarketLogic 实例。
@@ -22,13 +22,12 @@ func NewThemeMarketLogic() *ThemeMarketLogic {
 	return &ThemeMarketLogic{}
 }
 
-// normalizeBaseURL 归一化官方地址，失败时转为业务错误。
-// 请求头未携带地址时回退后端统一配置（DB 持久化值优先，出厂值为 config.yaml community 段）。
-func normalizeBaseURL(raw string) (string, error) {
-	if strings.TrimSpace(raw) == "" {
-		raw = OfficialSiteBaseURL()
+// normalizeBaseURL 归一化统一托管的官方站点地址，失败时转为业务错误。
+func normalizeBaseURL() (string, error) {
+	if strings.TrimSpace(OfficialSiteBaseURL()) == "" {
+		return "", enum.ErrThemeMarketNotConfigured
 	}
-	base, err := novablogapi.NormalizeBaseURL(raw)
+	base, err := novablogapi.NormalizeBaseURL(OfficialSiteBaseURL())
 	if err != nil {
 		return "", enum.NewBizError(enum.ErrMarketBaseURLInvalid.Code, err.Error(), enum.ErrMarketBaseURLInvalid.HttpCode)
 	}
@@ -92,8 +91,8 @@ func mapThemeList(list novablogapi.ThemeList, page, pageSize int) *res.PageRes[r
 }
 
 // MarketLogin 登录官方主题市场，返回官方双 Token 与用户信息。
-func (l *ThemeMarketLogic) MarketLogin(ctx context.Context, baseURL string, r *req.MarketLoginReq) (*res.MarketLoginRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) MarketLogin(ctx context.Context, r *req.MarketLoginReq) (*res.MarketLoginRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -124,8 +123,8 @@ func (l *ThemeMarketLogic) MarketLogin(ctx context.Context, baseURL string, r *r
 }
 
 // MarketLogout 登出官方账号（Token 拉黑）。Token 已失效时视为成功，便于本地退出。
-func (l *ThemeMarketLogic) MarketLogout(ctx context.Context, baseURL, token string) error {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) MarketLogout(ctx context.Context, token string) error {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return err
 	}
@@ -141,8 +140,8 @@ func (l *ThemeMarketLogic) MarketLogout(ctx context.Context, baseURL, token stri
 }
 
 // GetList 查询官方主题市场列表（仅已上架）。
-func (l *ThemeMarketLogic) GetList(ctx context.Context, baseURL, token string, r *req.ThemeMarketListReq) (*res.PageRes[res.ThemeMarketItemRes], error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetList(ctx context.Context, token string, r *req.ThemeMarketListReq) (*res.PageRes[res.ThemeMarketItemRes], error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +163,8 @@ func (l *ThemeMarketLogic) GetList(ctx context.Context, baseURL, token string, r
 }
 
 // GetDetail 查询主题详情（携带官方 Token 时返回个人点赞/评分状态）。
-func (l *ThemeMarketLogic) GetDetail(ctx context.Context, baseURL, token, id string) (*res.ThemeMarketDetailRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetDetail(ctx context.Context, token, id string) (*res.ThemeMarketDetailRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -184,8 +183,8 @@ func (l *ThemeMarketLogic) GetDetail(ctx context.Context, baseURL, token, id str
 }
 
 // GetReleases 查询主题版本历史与更新日志（按发布时间倒序，无记录返回空数组）。
-func (l *ThemeMarketLogic) GetReleases(ctx context.Context, baseURL, token, id string) ([]res.ThemeMarketReleaseRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetReleases(ctx context.Context, token, id string) ([]res.ThemeMarketReleaseRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -208,8 +207,8 @@ func (l *ThemeMarketLogic) GetReleases(ctx context.Context, baseURL, token, id s
 }
 
 // GetStats 查询市场统计。
-func (l *ThemeMarketLogic) GetStats(ctx context.Context, baseURL string) (*res.ThemeMarketStatsRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetStats(ctx context.Context) (*res.ThemeMarketStatsRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -227,8 +226,8 @@ func (l *ThemeMarketLogic) GetStats(ctx context.Context, baseURL string) (*res.T
 }
 
 // GetHotTags 查询热门风格标签。
-func (l *ThemeMarketLogic) GetHotTags(ctx context.Context, baseURL string) ([]res.ThemeMarketHotTagRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetHotTags(ctx context.Context) ([]res.ThemeMarketHotTagRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +245,8 @@ func (l *ThemeMarketLogic) GetHotTags(ctx context.Context, baseURL string) ([]re
 }
 
 // Like 点赞/取消点赞官方主题（toggle）。
-func (l *ThemeMarketLogic) Like(ctx context.Context, baseURL, token, id string) (*res.ThemeMarketLikeRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) Like(ctx context.Context, token, id string) (*res.ThemeMarketLikeRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -260,8 +259,8 @@ func (l *ThemeMarketLogic) Like(ctx context.Context, baseURL, token, id string) 
 }
 
 // Favorite 收藏/取消收藏官方主题（toggle）。
-func (l *ThemeMarketLogic) Favorite(ctx context.Context, baseURL, token, id string) (*res.ThemeMarketFavoriteRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) Favorite(ctx context.Context, token, id string) (*res.ThemeMarketFavoriteRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -274,8 +273,8 @@ func (l *ThemeMarketLogic) Favorite(ctx context.Context, baseURL, token, id stri
 }
 
 // Rating 为官方主题评分（1-5 分，覆盖式）。
-func (l *ThemeMarketLogic) Rating(ctx context.Context, baseURL, token, id string, r *req.ThemeMarketRatingReq) (*res.ThemeMarketRatingRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) Rating(ctx context.Context, token, id string, r *req.ThemeMarketRatingReq) (*res.ThemeMarketRatingRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -289,8 +288,8 @@ func (l *ThemeMarketLogic) Rating(ctx context.Context, baseURL, token, id string
 
 // Download 下载官方主题：请求官方代理下载接口（计数 +1）并解析出真实下载地址，
 // 前端拿到 GitHub 直链后可直接新窗口打开下载，无需携带官方 Token。
-func (l *ThemeMarketLogic) Download(ctx context.Context, baseURL, token, id string) (*res.ThemeMarketDownloadRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) Download(ctx context.Context, token, id string) (*res.ThemeMarketDownloadRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -306,8 +305,8 @@ func (l *ThemeMarketLogic) Download(ctx context.Context, baseURL, token, id stri
 }
 
 // GetFavorites 查询我的收藏列表（按收藏时间倒序）。
-func (l *ThemeMarketLogic) GetFavorites(ctx context.Context, baseURL, token string, r *req.ThemeMarketPageReq) (*res.PageRes[res.ThemeMarketItemRes], error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetFavorites(ctx context.Context, token string, r *req.ThemeMarketPageReq) (*res.PageRes[res.ThemeMarketItemRes], error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -320,8 +319,8 @@ func (l *ThemeMarketLogic) GetFavorites(ctx context.Context, baseURL, token stri
 }
 
 // GetFavoriteIds 查询收藏主题 ID 集合。
-func (l *ThemeMarketLogic) GetFavoriteIds(ctx context.Context, baseURL, token string) ([]int64, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetFavoriteIds(ctx context.Context, token string) ([]int64, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -337,8 +336,8 @@ func (l *ThemeMarketLogic) GetFavoriteIds(ctx context.Context, baseURL, token st
 }
 
 // GetDefault 查询官方默认主题（部署首装直接拉取；未设置或已下架时官方返回 404）。
-func (l *ThemeMarketLogic) GetDefault(ctx context.Context, baseURL string) (*res.ThemeMarketDefaultRes, error) {
-	base, err := normalizeBaseURL(baseURL)
+func (l *ThemeMarketLogic) GetDefault(ctx context.Context) (*res.ThemeMarketDefaultRes, error) {
+	base, err := normalizeBaseURL()
 	if err != nil {
 		return nil, err
 	}

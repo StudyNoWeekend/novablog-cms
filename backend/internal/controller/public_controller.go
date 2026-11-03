@@ -70,7 +70,9 @@ func NewPublicController(manager *storage.Manager, cryptoKey, uploadDir string) 
 
 // recordContentView 公开详情请求触发的浏览计数（内容已确认存在，内部完成 IP 去重与异步落库）。
 func (ctrl *PublicController) recordContentView(ctx *gin.Context, contentType, contentID string) {
-	_, _ = ctrl.viewStats.RecordView(ctx.Request.Context(), contentType, contentID, ctx.ClientIP())
+	if _, err := ctrl.viewStats.RecordView(ctx.Request.Context(), contentType, contentID, ctx.ClientIP()); err != nil {
+		logRecordViewFailure(contentType, contentID, err)
+	}
 }
 
 // TrackView 通用浏览量上报 POST /api/v1/public/views/track
@@ -182,7 +184,10 @@ type InitThemeReq struct {
 // InitTheme 首装初始化博客外观：拉取官方默认主题并激活 POST /api/v1/public/install/theme
 func (ctrl *PublicController) InitTheme(c *gin.Context) {
 	var r InitThemeReq
-	_ = c.ShouldBindJSON(&r)
+	if err := c.ShouldBindJSON(&r); err != nil {
+		response.Fail(c, enum.ErrInvalidParam.Code, "请求格式不正确", enum.ErrInvalidParam.HttpCode)
+		return
+	}
 	result, err := ctrl.setupLogic.StartThemeInstall(c.Request.Context(), r.MarketBaseURL, r.MarketEmail, r.MarketPassword)
 	if err != nil {
 		var bizErr *enum.BizError
@@ -771,10 +776,22 @@ func (ctrl *PublicController) GetPlaylists(ctx *gin.Context) {
 // recordArticleView 记录文章浏览：统一走访问统计管道（IP 去重 + 明细落库 + 浏览量自增），
 // 与其他模块共用 content_view_logs，保证工作台趋势图 / 今日 / 7日口径一致。
 func (ctrl *PublicController) recordArticleView(ctx *gin.Context, articleID, slug, ip string) {
-	_, _ = ctrl.viewStats.RecordView(ctx.Request.Context(), "article", articleID, ip)
+	if _, err := ctrl.viewStats.RecordView(ctx.Request.Context(), "article", articleID, ip); err != nil {
+		logRecordViewFailure("article", articleID, err)
+	}
 }
 
 // recordTravelView 记录旅行攻略浏览：统一走访问统计管道（同上）。
 func (ctrl *PublicController) recordTravelView(ctx *gin.Context, travelID, ip string) {
-	_, _ = ctrl.viewStats.RecordView(ctx.Request.Context(), "travel", travelID, ip)
+	if _, err := ctrl.viewStats.RecordView(ctx.Request.Context(), "travel", travelID, ip); err != nil {
+		logRecordViewFailure("travel", travelID, err)
+	}
+}
+
+// logRecordViewFailure 浏览计数失败仅记录日志（计数为 best-effort，不阻断详情响应）。
+func logRecordViewFailure(contentType, contentID string, err error) {
+	if response.ErrorLogger != nil {
+		response.ErrorLogger.Warn("内容浏览计数失败",
+			zap.String("type", contentType), zap.String("id", contentID), zap.Error(err))
+	}
 }

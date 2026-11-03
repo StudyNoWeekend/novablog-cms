@@ -50,16 +50,6 @@ func (m *SystemConfigModel) GetAll(ctx context.Context) ([]SystemConfig, error) 
 	return list, err
 }
 
-// GetByKey 按键查询单条（无记录返回 gorm.ErrRecordNotFound）。
-func (m *SystemConfigModel) GetByKey(ctx context.Context, key string) (*SystemConfig, error) {
-	var cfg SystemConfig
-	err := m.db.WithContext(ctx).Where("\"key\" = ?", key).First(&cfg).Error
-	if err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
 // Upsert 写入或更新配置项（description 仅在新建时落库）。
 func (m *SystemConfigModel) Upsert(ctx context.Context, key, value, description string) error {
 	cfg := SystemConfig{Key: key, Value: value, Description: description}

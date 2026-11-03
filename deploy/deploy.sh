@@ -153,6 +153,9 @@ NovaBlog 部署脚本
   脚本会生成 /etc/nginx/conf.d/<博客名>.conf（nginx -t 校验通过后 systemctl reload nginx）；
   重复部署覆盖该文件，--down 时删除并 reload。域名必须是裸域名（不带 http://）；
   博客域名为 _ 时表示直连任意 IP，无法做反代路由，须先填具体域名再启用。
+  生成内容：博客入口 + 后台入口 + 公开接口/媒体入口（域名取 --public-url，与博客/后台域名重复时不生成）；
+  HTTPS 证书自动探测自宿主机 nginx 既有配置与常见证书目录（须同时覆盖全部对外域名，未命中则生成纯 HTTP）；
+  容器升级时自动同步反代配置：缺失补写、本脚本生成的按当前模板重新生成、手工维护的保持不变。
 
 数据库（PostgreSQL，外部实例；容器网络内勿用 localhost/127.0.0.1）
   --db-host <主机>     PostgreSQL 地址（宿主机实例填宿主机 IP 或 host.docker.internal）
@@ -455,16 +458,113 @@ host_nginx_conf_name() { printf '%s.conf' "$NAME"; }
 # host_nginx_map_var：nginx 变量名不允许连字符，'a-b' → 'a_b'
 host_nginx_map_var() { printf '%s' "$NAME" | tr '-' '_'; }
 
-# host_nginx_generate <输出到 stdout>：渲染本博客的反代配置（博客块 + 可选的 CMS 块）
-# 依赖已确定的 BLOG_PORT / ADMIN_PORT / DOMAIN / ADMIN_DOMAIN
+# host_nginx_public_host：从 PUBLIC_URL 提取对外域名（去协议/路径/端口）；空、本机地址或占位符时输出空
+host_nginx_public_host() {
+  local v="${1:-}"
+  v="${v#http://}"; v="${v#https://}"; v="${v%%/*}"; v="${v%%:*}"
+  case "$v" in
+    ""|"_"|"localhost"|"127.0.0.1"|"::1"|"[::1]") return 0 ;;
+  esac
+  printf '%s' "$v"
+}
+
+# host_nginx_collect_ssl_pairs：收集宿主机 nginx 既有配置引用的证书对（每行 "cert<TAB>key"，去重）
+# 只做静态文本解析：ssl_certificate 与 ssl_certificate_key 按出现顺序配对，含 nginx 变量的路径原样保留由上层过滤
+host_nginx_collect_ssl_pairs() {
+  local d f
+  {
+    [ -d "$NGINX_CONF_DIR" ] && find "$NGINX_CONF_DIR" -maxdepth 1 -type f -name '*.conf' -print
+    for d in "$NGINX_CONF_DIR/sites-enabled" "$NGINX_CONF_DIR/../sites-enabled"; do
+      [ -d "$d" ] && find "$d" -maxdepth 1 \( -type f -o -type l \) -print
+    done
+  } 2>/dev/null | sort -u | while IFS= read -r f; do
+    awk '
+      $1=="ssl_certificate"     { c=$2; gsub(/;/,"",c) }
+      $1=="ssl_certificate_key" { k=$2; gsub(/;/,"",k) }
+      c!="" && k!="" { print c "\t" k; c=""; k="" }
+    ' "$f" 2>/dev/null || true
+  done | sort -u
+}
+
+# host_nginx_cert_covers <证书> <域名...>：openssl 校验证书覆盖全部给定域名
+# openssl 缺失或版本过旧（不支持 -checkhost）一律判否，回退纯 HTTP 生成
+host_nginx_cert_covers() {
+  local cert="$1"; shift
+  local d
+  command -v openssl >/dev/null 2>&1 || return 1
+  [ -f "$cert" ] || return 1
+  for d in "$@"; do
+    [ -n "$d" ] || continue
+    openssl x509 -in "$cert" -noout -checkhost "$d" >/dev/null 2>&1 || return 1
+  done
+  return 0
+}
+
+# host_nginx_detect_ssl_cert <域名...>：自动探测同时覆盖全部域名的证书，输出 "cert<TAB>key"；找不到返回非 0
+# 探测顺序：宿主机 nginx 既有 conf 引用的证书（与现网同源）→ 常见证书目录约定位置；不落盘任何状态
+host_nginx_detect_ssl_cert() {
+  [ "$#" -gt 0 ] || return 1
+  command -v openssl >/dev/null 2>&1 || return 1
+  local cert key
+  while IFS=$'\t' read -r cert key; do
+    [ -n "$cert" ] && [ -n "$key" ] || continue
+    case "$cert$key" in *'$'*) continue ;; esac
+    case "$cert" in /*) : ;; *) cert="/etc/nginx/$cert" ;; esac
+    case "$key" in /*) : ;; *) key="/etc/nginx/$key" ;; esac
+    if [ -f "$cert" ] && [ -f "$key" ] && host_nginx_cert_covers "$cert" "$@"; then
+      printf '%s\t%s\n' "$cert" "$key"
+      return 0
+    fi
+  done <<EOF
+$(host_nginx_collect_ssl_pairs)
+EOF
+  # 常见目录约定：certbot 的 fullchain/privkey 与手工放置的 <名>.crt/<名>.key
+  local dir cand_cert cand_key
+  for dir in /etc/letsencrypt/live /etc/nginx/certs /etc/nginx/ssl; do
+    [ -d "$dir" ] || continue
+    for cand_cert in "$dir"/*/fullchain.pem "$dir"/*.crt; do
+      [ -f "$cand_cert" ] || continue
+      case "$cand_cert" in
+        */fullchain.pem) cand_key="${cand_cert%fullchain.pem}privkey.pem" ;;
+        *.crt)           cand_key="${cand_cert%.crt}.key" ;;
+        *)               continue ;;
+      esac
+      if [ -f "$cand_key" ] && host_nginx_cert_covers "$cand_cert" "$@"; then
+        printf '%s\t%s\n' "$cand_cert" "$cand_key"
+        return 0
+      fi
+    done
+  done
+  return 1
+}
+
+# host_nginx_generate <输出到 stdout>：渲染本博客的反代配置（博客块 + 可选的 CMS 块 + 可选的公开 API 块）
+# 用法：host_nginx_generate [公开接口域名(可空)] [证书路径(可空)] [私钥路径(可空)]
+# 依赖已确定的 NAME / BLOG_PORT / ADMIN_PORT / DOMAIN / ADMIN_DOMAIN
+# 证书路径非空时生成 HTTPS 结构（80 跳转 + 443 各块），否则保持纯 HTTP（80 直连）
 host_nginx_generate() {
-  local map_var blog_server admin_server
+  local map_var public_host ssl_cert ssl_key
   map_var="$(host_nginx_map_var)"
+  public_host="${1:-}"
+  ssl_cert="${2:-}"
+  ssl_key="${3:-}"
+
+  local blog_listen="80" ssl_lines=""
+  if [ -n "$ssl_cert" ] && [ -n "$ssl_key" ]; then
+    blog_listen="443 ssl"
+    ssl_lines="    ssl_certificate     ${ssl_cert};
+    ssl_certificate_key ${ssl_key};"
+  fi
+  local comment_public="" comment_ssl=""
+  [ -n "$public_host" ] && comment_public="；公开接口 → ${public_host}（仅公开只读接口与媒体）"
+  [ -n "$ssl_cert" ] && comment_ssl="
+# HTTPS 证书：${ssl_cert}（自动探测自宿主机 nginx 既有配置，更换证书后重新生成即自动跟随）"
+
   # map 变量名带博客名后缀，多博客同机时各自的 conf 互不冲突
   cat <<EOF
 # NovaBlog 外层 nginx 反代配置 —— 由 deploy.sh 生成（$(date '+%Y-%m-%d %H:%M:%S')）
 # 博客名称：${NAME}；重复部署会自动覆盖本文件，请勿手工修改；--down 会删除本文件。
-# 博客入口 → ${DOMAIN} → 127.0.0.1:${BLOG_PORT}；后台入口 → ${ADMIN_DOMAIN} → 127.0.0.1:${ADMIN_PORT}
+# 博客入口 → ${DOMAIN} → 127.0.0.1:${BLOG_PORT}；后台入口 → ${ADMIN_DOMAIN} → 127.0.0.1:${ADMIN_PORT}${comment_public}${comment_ssl}
 
 # WebSocket 升级映射（conf.d 会在 http 上下文加载，此处顶层 map 即可）
 map \$http_upgrade \$connection_upgrade_${map_var} {
@@ -473,11 +573,29 @@ map \$http_upgrade \$connection_upgrade_${map_var} {
 }
 
 EOF
+
+  # HTTPS：80 端口统一跳转（覆盖本博客全部对外域名）
+  if [ -n "$ssl_lines" ]; then
+    local all_names="${DOMAIN}"
+    if [ "$ADMIN_DOMAIN" != "_" ]; then all_names="${all_names} ${ADMIN_DOMAIN}"; fi
+    if [ -n "$public_host" ]; then all_names="${all_names} ${public_host}"; fi
+    cat <<EOF
+# ---- HTTP → HTTPS 跳转 ----
+server {
+    listen 80;
+    server_name ${all_names};
+    return 301 https://\$host\$request_uri;
+}
+
+EOF
+  fi
+
   cat <<EOF
 # ---- 博客前台（访客入口）----
 server {
-    listen 80;
+    listen ${blog_listen};
     server_name ${DOMAIN};
+${ssl_lines}
 
     client_max_body_size 200m;
 
@@ -498,17 +616,24 @@ server {
 EOF
   # CMS 后台块：仅当填了独立后台域名才生成（否则后台直接走端口访问）
   if [ "$ADMIN_DOMAIN" != "_" ]; then
+    local admin_redirect=""
+    if [ -n "$ssl_lines" ]; then
+      # 后台入口的 302 跳转由容器按 http 生成，外层把 Location 头的协议改写回 https
+      admin_redirect="        proxy_redirect http://${ADMIN_DOMAIN}/ https://${ADMIN_DOMAIN}/;"
+    fi
     cat <<EOF
 
 # ---- CMS 管理后台 ----
 server {
-    listen 80;
+    listen ${blog_listen};
     server_name ${ADMIN_DOMAIN};
+${ssl_lines}
 
     client_max_body_size 200m;
 
     location / {
         proxy_pass http://127.0.0.1:${ADMIN_PORT};
+${admin_redirect}
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -522,6 +647,44 @@ server {
 }
 EOF
   fi
+  # 公开 API + 媒体块：域名取自 --public-url（媒体 URL 基址），与博客/后台域名重复或缺失时不生成
+  if [ -n "$public_host" ] && [ "$public_host" != "$DOMAIN" ] && [ "$public_host" != "$ADMIN_DOMAIN" ]; then
+    cat <<EOF
+
+# ---- 博客公开 API + 媒体文件（只暴露公开只读接口与媒体，其余 404）----
+server {
+    listen ${blog_listen};
+    server_name ${public_host};
+${ssl_lines}
+
+    client_max_body_size 200m;
+
+    location /api/v1/public/ {
+        proxy_pass http://127.0.0.1:${BLOG_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location /files/ {
+        proxy_pass http://127.0.0.1:${ADMIN_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        expires 1h;
+    }
+
+    location = /health { proxy_pass http://127.0.0.1:${BLOG_PORT}; }
+    location = /ready { proxy_pass http://127.0.0.1:${BLOG_PORT}; }
+
+    location / { return 404; }
+}
+EOF
+  fi
 }
 
 # host_nginx_write_conf 生成 → nginx -t 校验 → reload 的安全写入流程
@@ -530,6 +693,25 @@ host_nginx_write_conf() {
   local conf nginx_bin test_before test_after bak
   conf="$NGINX_CONF_DIR/$(host_nginx_conf_name)"
   nginx_bin="$(nginx_available || true)"
+
+  # 证书自动探测 + 公开接口域名解析（仅用于本次渲染，不写入任何持久化配置）
+  local public_host ssl_cert ssl_key detected cover_domains
+  public_host="$(host_nginx_public_host "${PUBLIC_URL:-}")"
+  if [ -n "$public_host" ] && { [ "$public_host" = "$DOMAIN" ] || [ "$public_host" = "$ADMIN_DOMAIN" ]; }; then
+    public_host=""
+  fi
+  ssl_cert=""; ssl_key=""
+  cover_domains="$DOMAIN"
+  if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then cover_domains="$cover_domains $ADMIN_DOMAIN"; fi
+  if [ -n "$public_host" ]; then cover_domains="$cover_domains $public_host"; fi
+  # shellcheck disable=SC2086
+  if detected="$(host_nginx_detect_ssl_cert $cover_domains)"; then
+    ssl_cert="${detected%%$'\t'*}"
+    ssl_key="${detected#*$'\t'}"
+    c_info "探测到覆盖（${cover_domains}）的证书，生成 HTTPS 反代：${ssl_cert}"
+  else
+    c_info "未探测到覆盖（${cover_domains}）的证书，生成纯 HTTP 反代。"
+  fi
 
   # 自检基线：已有配置本来就坏时，我们的文件照写但不 reload，交由用户核查
   nginx_test "$nginx_bin"; test_before=$?
@@ -546,7 +728,7 @@ host_nginx_write_conf() {
     fi
   fi
 
-  host_nginx_write "$conf" "$(host_nginx_generate)" || { c_err "写入 nginx 配置失败：${conf}"; return 0; }
+  host_nginx_write "$conf" "$(host_nginx_generate "$public_host" "$ssl_cert" "$ssl_key")" || { c_err "写入 nginx 配置失败：${conf}"; return 0; }
   c_info "已生成宿主机反代配置：$conf"
 
   nginx_test "$nginx_bin"; test_after=$?
@@ -572,7 +754,16 @@ host_nginx_write_conf() {
 
   c_info "nginx -t 校验通过，重新加载配置 ..."
   if nginx_reload "$nginx_bin"; then
-    c_info "nginx 已 reload，生效地址：http://${DOMAIN}/（博客）、http://${ADMIN_DOMAIN}/admin/（后台）"
+    local scheme="http"
+    [ -n "$ssl_cert" ] && scheme="https"
+    local eff_msg="nginx 已 reload，生效地址：${scheme}://${DOMAIN}/（博客）"
+    if [ -n "$ADMIN_DOMAIN" ] && [ "$ADMIN_DOMAIN" != "_" ]; then
+      eff_msg="${eff_msg}、${scheme}://${ADMIN_DOMAIN}（后台）"
+    fi
+    if [ -n "$public_host" ]; then
+      eff_msg="${eff_msg}、${scheme}://${public_host}（公开接口/媒体）"
+    fi
+    c_info "$eff_msg"
   else
     c_warn "nginx 未运行或 reload 失败，配置已写入 ${conf}，生效后会按此配置运行（当前无 reload 服务时请手工 nginx -s reload）。"
   fi
@@ -605,6 +796,41 @@ host_nginx_print_info() {
   local conf
   conf="$NGINX_CONF_DIR/$(host_nginx_conf_name)"
   printf '  宿主机反代     %s（域名 %s → 127.0.0.1:%s）\n' "$conf" "$DOMAIN" "$BLOG_PORT"
+}
+
+# host_nginx_conf_is_generated 判定本博客 conf 是否由 deploy.sh 生成（首部标记行）
+# 手工维护的配置（无此标记）在同步时会被识别并保持不变，避免被模板覆盖
+host_nginx_conf_is_generated() {
+  local conf="$NGINX_CONF_DIR/$(host_nginx_conf_name)"
+  [ -f "$conf" ] && grep -q '由 deploy.sh 生成' "$conf" 2>/dev/null
+}
+
+# host_nginx_sync_conf 反代配置同步（升级 / 同配置重新部署共用）：
+#   conf 缺失 → 按 .env 补写，并回写 NOVABLOG_HOST_NGINX=1（--down / --delete 的清理联动依赖它）；
+#   conf 为本脚本生成 → 按当前模板重新生成覆盖（模板升级自动生效，write_conf 自带备份与校验还原）；
+#   conf 为手工维护（无生成标记）→ 保持不变，仅提示。
+# 依赖调用方已就绪 NAME / ENV_FILE / DOMAIN / ADMIN_DOMAIN / BLOG_PORT / ADMIN_PORT / PUBLIC_URL。
+host_nginx_sync_conf() {
+  local conf
+  conf="$NGINX_CONF_DIR/$(host_nginx_conf_name)"
+  if [ -f "$conf" ] && ! host_nginx_conf_is_generated; then
+    c_info "宿主机反代配置 ${conf} 为手工维护（无生成标记），保持不变。"
+    return 0
+  fi
+  if [ -f "$conf" ]; then
+    c_info "宿主机反代配置由 deploy.sh 生成，按当前模板重新生成覆盖 ..."
+  else
+    c_info "宿主机反代配置缺失，按 .env 重新生成 ..."
+  fi
+  if ! host_nginx_write_conf; then
+    return 1
+  fi
+  # 写入成功后补记启用标记；已记录为 1 时不动（=0 的显式禁用在上游调用点已被拦截）
+  if [ "$(env_get NOVABLOG_HOST_NGINX)" != "1" ]; then
+    printf '\nNOVABLOG_HOST_NGINX=1\n' >> "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+  fi
+  return 0
 }
 
 # ============================== 交互管理菜单（零参数入口）==============================
@@ -911,39 +1137,42 @@ redeploy_one() { # $1=博客名称
   fi
 
   if ! wait_healthy "$blog_port"; then
-    c_err "重新部署后服务未就绪，最近日志如下："
-    local cid
-    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
-    if [ -n "$cid" ]; then
-      docker logs --tail 30 "$cid" 2>&1 | tail -30
+    if [ "$WAIT_FAIL_REASON" != "timeout" ]; then
+      c_err "重新部署后服务未就绪，最近日志如下："
+      local cid
+      cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+      if [ -n "$cid" ]; then
+        docker logs --tail 30 "$cid" 2>&1 | tail -30
+      fi
+      case "$WAIT_FAIL_REASON" in
+        unhealthy)
+          c_err "容器健康探针失败。请结合上方日志排查（外部数据库/Redis 连接异常、新版本配置不兼容等）。" ;;
+        exited)
+          c_err "容器已退出，请结合上方日志排查。" ;;
+      esac
+      c_err "完整日志：./deploy.sh --name $name --logs"
+      return 1
     fi
-    case "$WAIT_FAIL_REASON" in
-      unhealthy)
-        c_err "容器健康探针失败。请结合上方日志排查（外部数据库/Redis 连接异常、geoip 首次下载过久等）。" ;;
-      exited)
-        c_err "容器已退出，请结合上方日志排查。" ;;
-      *)
-        c_err "等待超时（120 秒）。常见原因：首次启动需联网下载 geoip 库（国内较慢，重试时已缓存会快很多）。" ;;
-    esac
-    c_err "完整日志：./deploy.sh --name $name --logs"
-    return 1
+    # 纯超时（unhealthy/exited 之外的等待窗口耗尽）：多为启动慢（geoip 首次下载、外部数据库/Redis 连接缓慢），
+    # 不判定失败：按已完成处理并继续后续逻辑（反代同步、摘要），容器在后台继续启动
+    c_warn "等待 5 分钟后服务仍未就绪，可能只是启动较慢（首次联网下载 geoip、外部数据库/Redis 连接缓慢）。按已完成处理，后续逻辑继续执行；容器会继续在后台启动，稍后可确认："
+    c_warn "  ./deploy.sh --name $name --status    查看状态"
+    c_warn "  ./deploy.sh --name $name --logs      查看日志"
   fi
 
-  # 宿主机反代重新注入：记录启用 → 直接按 .env 域名/端口重写；未记录 → 交互询问一次（域名 _ 无法路由，跳过）
+  # 宿主机反代同步：记录启用 → 直接同步；显式禁用跳过；未记录 → 交互询问一次（域名 _ 无法路由，跳过）。
+  # 同步动作由 host_nginx_sync_conf 决定：缺失补写 / 生成版按当前模板更新 / 手工维护跳过
   if [ -n "$domain" ] && [ "$domain" != "_" ]; then
     local inject=0
     if [ "$host_nginx" = "1" ]; then
       inject=1
-    elif [ "$INTERACTIVE" = 1 ]; then
+    elif [ "$host_nginx" != "0" ] && [ "$INTERACTIVE" = 1 ]; then
       [ "$(ask_choice "是否将反代配置写入宿主机 nginx（${domain} → 127.0.0.1:${blog_port}）？" 'y|n' 'n')" = "y" ] && inject=1
     fi
     if [ "$inject" = "1" ]; then
       if host_nginx_available; then
-        host_nginx_write_conf || c_warn "反代配置未完成，容器本身已重建成功，可稍后重试。"
-        if [ "$host_nginx" != "1" ]; then
-          printf '\nNOVABLOG_HOST_NGINX=1\n' >> "$ENV_FILE"
-          chmod 600 "$ENV_FILE"
-        fi
+        PUBLIC_URL="$(env_get NOVABLOG_PUBLIC_URL)"
+        host_nginx_sync_conf || c_warn "反代配置未完成，容器本身已重建成功，可稍后重试。"
       else
         c_warn "未检测到宿主机 nginx（缺 ${NGINX_CONF_DIR}），跳过注入。"
       fi
@@ -1415,33 +1644,39 @@ do_upgrade_one() { # $1=博客名称 $2=目标版本
   fi
 
   if ! wait_healthy "$blog_port"; then
-    c_err "$name 升级后服务未就绪，最近日志如下："
-    local cid
-    cid="$(run_compose ps -q novablog 2>/dev/null || true)"
-    if [ -n "$cid" ]; then
-      docker logs --tail 30 "$cid" 2>&1 | tail -30
+    if [ "$WAIT_FAIL_REASON" != "timeout" ]; then
+      c_err "$name 升级后服务未就绪，最近日志如下："
+      local cid
+      cid="$(run_compose ps -q novablog 2>/dev/null || true)"
+      if [ -n "$cid" ]; then
+        docker logs --tail 30 "$cid" 2>&1 | tail -30
+      fi
+      case "$WAIT_FAIL_REASON" in
+        unhealthy)
+          c_err "容器健康探针失败。请结合上方日志排查（新版本配置不兼容、外部数据库/Redis 连接异常等）。" ;;
+        exited)
+          c_err "容器已退出，请结合上方日志排查。" ;;
+      esac
+      c_err "完整日志：./deploy.sh --name $name --logs"
+      return 1
     fi
-    case "$WAIT_FAIL_REASON" in
-      unhealthy)
-        c_err "容器健康探针失败。请结合上方日志排查（新版本配置不兼容、外部数据库/Redis 连接异常等）。" ;;
-      exited)
-        c_err "容器已退出，请结合上方日志排查。" ;;
-      *)
-        c_err "等待超时（120 秒）。常见原因：首次启动需联网下载 geoip 库（国内较慢），或外部数据库/Redis 连接缓慢。" ;;
-    esac
-    c_err "完整日志：./deploy.sh --name $name --logs"
-    return 1
+    # 纯超时（unhealthy/exited 之外的等待窗口耗尽）：多为启动慢（geoip 首次下载、外部数据库/Redis 连接缓慢），
+    # 不判定失败：按已完成处理并继续后续逻辑（反代同步等），容器在后台继续启动
+    c_warn "等待 5 分钟后服务仍未就绪，可能只是启动较慢（首次联网下载 geoip、外部数据库/Redis 连接缓慢）。按已完成处理，后续逻辑继续执行；容器会继续在后台启动，稍后可确认："
+    c_warn "  ./deploy.sh --name $name --status    查看状态"
+    c_warn "  ./deploy.sh --name $name --logs      查看日志"
   fi
 
-  # 反代配置自愈：记录启用但 conf 丢失（手工误删/换机）时按 .env 域名端口补写；升级本身不动既有 conf
-  if [ "$(blog_env_get "$ENV_FILE" NOVABLOG_HOST_NGINX)" = "1" ] && [ -n "$domain" ] && [ "$domain" != "_" ]; then
+  # 反代配置同步：.env 显式禁用（NOVABLOG_HOST_NGINX=0）时跳过；否则缺失补写 / 生成版更新 / 手工版跳过。
+  # 不再要求显式启用标记：conf 丢失（手工误删/换机）或模板升级后重新部署/升级时都能自动对齐
+  if [ "$(blog_env_get "$ENV_FILE" NOVABLOG_HOST_NGINX)" != "0" ] && [ -n "$domain" ] && [ "$domain" != "_" ]; then
     DOMAIN="$domain"
     ADMIN_DOMAIN="$(blog_env_get "$ENV_FILE" NOVABLOG_ADMIN_DOMAIN)"
     BLOG_PORT="$blog_port"
     ADMIN_PORT="$admin_port"
-    if host_nginx_available && [ ! -f "$NGINX_CONF_DIR/$(host_nginx_conf_name)" ]; then
-      c_info "宿主机反代配置缺失，按 .env 重新生成 ..."
-      host_nginx_write_conf || c_warn "反代配置补写未完成，容器本身已升级成功。"
+    PUBLIC_URL="$(blog_env_get "$ENV_FILE" NOVABLOG_PUBLIC_URL)"
+    if host_nginx_available; then
+      host_nginx_sync_conf || c_warn "反代配置同步未完成，容器本身已升级成功。"
     fi
   fi
   c_info "$name 升级完成：$target"
@@ -1633,12 +1868,12 @@ wait_http_ok() { # $1=宿主机端口
 # wait_healthy 等待 novablog 容器就绪（部署/升级/重新部署共用）；0=就绪 1=未就绪
 # 判定：Health=healthy 成功；unhealthy/exited 立即失败（unhealthy 会打印最近探测输出）；
 # 容器无 Health 对象（旧镜像未内置 HEALTHCHECK）时用宿主机 HTTP /health 兜底；
-# 其余状态轮询等待，总窗口 120s，每 10s 打印一次进度。失败原因写入 WAIT_FAIL_REASON（unhealthy/exited/timeout）
+# 其余状态轮询等待，总窗口 300s（5 分钟），每 10s 打印一次进度。失败原因写入 WAIT_FAIL_REASON（unhealthy/exited/timeout）
 wait_healthy() { # $1=HTTP 兜底探测端口（宿主机博客端口，空则跳过兜底）
   c_info "等待服务就绪 ..."
   WAIT_FAIL_REASON="timeout"
   local cid status elapsed=0 http_port="${1:-}"
-  for _ in $(seq 1 60); do
+  for _ in $(seq 1 150); do
     cid="$(run_compose ps -q novablog 2>/dev/null || true)"
     status=""
     if [ -n "$cid" ]; then
@@ -2168,11 +2403,11 @@ EOF
     fi
     case "$WAIT_FAIL_REASON" in
       unhealthy)
-        c_err "容器健康探针失败。典型原因：外部数据库/Redis 地址或密码填错；首次启动下载 geoip 库过久（120 秒宽限仍不够）。" ;;
+        c_err "容器健康探针失败。典型原因：外部数据库/Redis 地址或密码填错；首次启动下载 geoip 库过久（5 分钟宽限仍不够）。" ;;
       exited)
         c_err "容器已退出。请结合上方日志排查（典型原因：外部数据库/Redis 地址或密码填错）。" ;;
       *)
-        c_err "等待超时（120 秒）。常见原因：首次启动需联网下载 geoip 库（国内较慢，重试时已缓存会快很多）；外部数据库/Redis 地址或密码填错。" ;;
+        c_err "等待超时（5 分钟）。常见原因：首次启动需联网下载 geoip 库（国内较慢，重试时已缓存会快很多）；外部数据库/Redis 地址或密码填错。" ;;
     esac
     c_err "完整日志：./deploy.sh --name $NAME --logs；排除问题后，可在主菜单选「同配置重新部署」按原配置重试。"
     exit 1

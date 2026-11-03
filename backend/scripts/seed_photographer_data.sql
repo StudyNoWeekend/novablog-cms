@@ -3,16 +3,16 @@
 --   1. 本脚本为 NovaBlog 项目填充示例内容，涵盖文章、摄影器材、摄影作品、旅行攻略、个人资料与评论。
 --   2. 图片使用 picsum.photos 占位图，便于本地快速预览；正式上线前请替换为自己的作品或真实图片。
 --   3. 个人资料仅更新文字信息，不会覆盖已有的头像、博客图标和页面背景图。
---   4. 必须先完成数据库迁移（migrations），确保以下表已创建：
+--   4. 需确保以下表已创建（由后端启动时的 AutoMigrate 自动完成，正常启动一次即可）：
 --        - categories, tags, articles, article_tags, media, media_presets
 --        - portfolios, portfolio_items
 --        - travel_guides
 --        - comments
---        - photo_equipment (由 020_photography_equipment 迁移创建)
+--        - photo_equipment
 --        - bloggers
 --
--- 前置迁移命令示例（使用 migrate 工具）：
---   migrate -database "postgres://postgres:密码@localhost:5432/novablog?sslmode=disable" -path backend/migrations up
+-- 建表说明：migrations/ 目录已归档（仅历史参考，代码不再执行），
+--   表结构以 bootstrap 的 AutoMigrate 为唯一事实源。
 --
 -- 使用方法（二选一）：
 --   1. 使用 psql 直接执行：
@@ -25,9 +25,8 @@ BEGIN;
 -- ============================================================
 -- 1. 分类（文章 / 作品集 / 旅行攻略）
 -- ============================================================
--- 兼容可能缺少唯一约束的历史库
-CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
-
+-- categories 的唯一约束为 (type, slug) 联合唯一（旧的全局 slug 唯一索引
+-- idx_categories_slug 已废弃，由启动回填逻辑移除，此处不再重建）。
 INSERT INTO categories (id, name, slug, description, sort_order, type) VALUES
   ('10000000-0000-0000-0000-000000000001', '摄影技巧', 'photo-tips', '从构图到光线的实战心得', 1, 'article'),
   ('10000000-0000-0000-0000-000000000002', '器材评测', 'gear-review', '相机、镜头与配件的真实使用体验', 2, 'article'),
@@ -38,7 +37,7 @@ INSERT INTO categories (id, name, slug, description, sort_order, type) VALUES
   ('10000000-0000-0000-0000-000000000007', '国内旅行', 'domestic-travel', '中国境内的摄影旅行路线', 1, 'travel'),
   ('10000000-0000-0000-0000-000000000008', '海外旅行', 'overseas-travel', '出境摄影旅行目的地', 2, 'travel'),
   ('10000000-0000-0000-0000-000000000009', '航拍作品', 'aerial-portfolio', '俯瞰大地的视角', 4, 'portfolio')
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT (type, slug) DO NOTHING;
 
 -- ============================================================
 -- 2. 文章标签
@@ -769,13 +768,13 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================
 -- 8. 评论
 -- ============================================================
-INSERT INTO comments (id, target_type, target_id, parent_id, nickname, email, avatar, content, is_blogger, status) VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'article', '30000000-0000-0000-0000-000000000001', NULL, '追光者', 'chaser@example.com', 'https://picsum.photos/seed/chaser/100/100', '黄金时刻的拍摄思路很受用，下次去高原试试包围曝光。', false, 2),
-  ('a0000000-0000-0000-0000-000000000002', 'article', '30000000-0000-0000-0000-000000000004', NULL, '器材党小王', 'gear@example.com', 'https://picsum.photos/seed/gearwang/100/100', 'A7R V 的存储压力确实大，请问平时用什么卡？', false, 2),
-  ('a0000000-0000-0000-0000-000000000003', 'article', '30000000-0000-0000-0000-000000000005', NULL, '飞手阿杰', 'drone@example.com', 'https://picsum.photos/seed/dronejie/100/100', '航拍构图那部分讲得很清楚，新手友好。', false, 2),
-  ('a0000000-0000-0000-0000-000000000004', 'travel_guide', '90000000-0000-0000-0000-000000000001', NULL, '川西常客', 'west@example.com', 'https://picsum.photos/seed/west/100/100', '亚丁长线建议带够氧气，风景真的值得。', false, 2),
-  ('a0000000-0000-0000-0000-000000000005', 'travel_guide', '90000000-0000-0000-0000-000000000002', NULL, '雪国旅人', 'snow@example.com', 'https://picsum.photos/seed/snow/100/100', '北海道冬天路面滑，租车一定要换雪胎。', false, 2),
-  ('a0000000-0000-0000-0000-000000000006', 'travel_guide', '90000000-0000-0000-0000-000000000003', NULL, '新疆自驾老李', 'xinjiang@example.com', 'https://picsum.photos/seed/xinjiangli/100/100', '独库公路每年开放时间不固定，出发前一定要查官方公告。', false, 2)
+INSERT INTO comments (id, target_type, target_id, parent_id, nickname, website, content, is_blogger, status) VALUES
+  ('a0000000-0000-0000-0000-000000000001', 'article', '30000000-0000-0000-0000-000000000001', NULL, '追光者', 'https://example.com/chaser', '黄金时刻的拍摄思路很受用，下次去高原试试包围曝光。', false, 2),
+  ('a0000000-0000-0000-0000-000000000002', 'article', '30000000-0000-0000-0000-000000000004', NULL, '器材党小王', '', 'A7R V 的存储压力确实大，请问平时用什么卡？', false, 2),
+  ('a0000000-0000-0000-0000-000000000003', 'article', '30000000-0000-0000-0000-000000000005', NULL, '飞手阿杰', '', '航拍构图那部分讲得很清楚，新手友好。', false, 2),
+  ('a0000000-0000-0000-0000-000000000004', 'travel_guide', '90000000-0000-0000-0000-000000000001', NULL, '川西常客', '', '亚丁长线建议带够氧气，风景真的值得。', false, 2),
+  ('a0000000-0000-0000-0000-000000000005', 'travel_guide', '90000000-0000-0000-0000-000000000002', NULL, '雪国旅人', '', '北海道冬天路面滑，租车一定要换雪胎。', false, 2),
+  ('a0000000-0000-0000-0000-000000000006', 'travel_guide', '90000000-0000-0000-0000-000000000003', NULL, '新疆自驾老李', '', '独库公路每年开放时间不固定，出发前一定要查官方公告。', false, 2)
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================

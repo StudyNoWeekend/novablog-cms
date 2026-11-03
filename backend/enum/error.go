@@ -40,8 +40,6 @@ var (
 	ErrForbidden = NewBizError(403000, "无权限访问该资源", 403)
 	// ErrAlreadyInitialized 系统已初始化，无法重复创建
 	ErrAlreadyInitialized = NewBizError(403001, "系统已初始化，无法重复创建", 403)
-	// ErrIPBlocked IP 已被暂时限制访问
-	ErrIPBlocked = NewBizError(403002, "您已被暂时限制访问，请稍后再试", 403)
 	// ErrInstallCodeInvalid 官方部署初始化密钥错误
 	ErrInstallCodeInvalid = NewBizError(403003, "部署密钥错误，请输入官方邮件中的安装密钥", 403)
 	// ErrInstallCodeRateLimited 初始化密钥尝试过于频繁（防爆破）
@@ -56,16 +54,14 @@ var (
 	ErrMarketBaseURLInvalid = NewBizError(400103, "官方地址不合法，请检查输入", 400)
 	// ErrMarketUpstream 官方主题市场服务不可用
 	ErrMarketUpstream = NewBizError(400102, "官方主题市场服务不可用，请稍后再试", 400)
-	// ErrThemeMarketNotConfigured 未配置官方市场地址，服务端无法拉取主题
-	ErrThemeMarketNotConfigured = NewBizError(400201, "未配置官方市场地址（themes.market_base_url），无法从官方获取主题", 400)
+	// ErrThemeMarketNotConfigured 未配置官方站点地址
+	ErrThemeMarketNotConfigured = NewBizError(400201, "未配置官方站点地址，无法从官方获取主题，请在后台系统设置中完成配置", 400)
 	// ErrThemeManifestInvalid 主题清单校验失败
 	ErrThemeManifestInvalid = NewBizError(400202, "主题清单（theme.json）校验失败", 400)
 	// ErrThemeEngineUnsupported 主题引擎不受支持
 	ErrThemeEngineUnsupported = NewBizError(400203, "主题引擎不受支持，仅支持静态导出主题（next-static）", 400)
 	// ErrThemeAPICompatIncompatible 主题与当前系统 API 版本不兼容
 	ErrThemeAPICompatIncompatible = NewBizError(400204, "主题与当前系统 API 版本不兼容", 400)
-	// ErrThemeChecksumMismatch 制品校验和不匹配
-	ErrThemeChecksumMismatch = NewBizError(400205, "制品校验和不匹配，下载可能被篡改", 400)
 	// ErrThemeArtifactNotFound 未找到预构建制品
 	ErrThemeArtifactNotFound = NewBizError(400206, "未找到预构建制品，请让主题作者在 Release 附带 tar.gz 制品", 400)
 	// ErrThemeVersionExists 该主题版本已安装
@@ -74,8 +70,6 @@ var (
 	ErrThemeActiveCannotDelete = NewBizError(400208, "该主题正在使用中，请先切换到其他主题", 400)
 	// ErrThemeNotFound 主题不存在
 	ErrThemeNotFound = NewBizError(404002, "主题不存在", 404)
-	// ErrThemeInstallRunning 已有主题安装任务进行中
-	ErrThemeInstallRunning = NewBizError(400209, "已有主题安装任务在进行中，请稍候", 400)
 	// ErrAlreadyLatestTheme 该主题已是最新版本
 	ErrAlreadyLatestTheme = NewBizError(400210, "当前已是最新版本", 400)
 	// ErrMCPKeyNotFound MCP 密钥不存在
@@ -96,8 +90,6 @@ var (
 	ErrCommunityPushBaseURLInvalid = NewBizError(400402, "社区地址不合法，请检查输入", 400)
 	// ErrCommunityPushUpstream 社区推送服务不可用
 	ErrCommunityPushUpstream = NewBizError(400403, "社区服务暂不可用，请稍后再试", 400)
-	// ErrCommunityPushTargetInvalid 目标内容不存在或不支持推送
-	ErrCommunityPushTargetInvalid = NewBizError(404004, "目标内容不存在或不支持推送", 404)
 	// ErrCloudDriveProviderInvalid 云盘类型不支持
 	ErrCloudDriveProviderInvalid = NewBizError(400501, "不支持的云盘类型", 400)
 	// ErrCloudDriveConfigMissing 未配置云盘应用凭据
@@ -112,8 +104,6 @@ var (
 	ErrCloudDriveImportLimit = NewBizError(400505, "单次导入文件数超过上限", 400)
 	// ErrCloudDriveFileTooLarge 单文件超过导入大小上限
 	ErrCloudDriveFileTooLarge = NewBizError(400506, "存在超过单文件导入大小上限的文件", 400)
-	// ErrCloudDriveAccountExists 该云盘账号已绑定
-	ErrCloudDriveAccountExists = NewBizError(400507, "该云盘账号已绑定", 400)
 	// ErrInternalServer 系统内部错误
 	ErrInternalServer = NewBizError(500001, "系统内部错误", 500)
 )

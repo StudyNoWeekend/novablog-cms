@@ -1,2 +1,0 @@
-ALTER TABLE bloggers DROP COLUMN IF EXISTS active_theme_id;
-DROP TABLE IF EXISTS themes;

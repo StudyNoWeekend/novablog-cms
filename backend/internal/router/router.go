@@ -4,6 +4,7 @@ package router
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"novablog/internal/cache"
 	"novablog/internal/controller"
@@ -31,7 +32,7 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 	r.Use(middleware.CORSMiddleware())
 
 	// 健康检查路由
-	RegisterHealthRouter(r)
+	RegisterHealthRouter(r, db)
 
 	// 文件服务路由（公开访问，无需认证）
 	r.Static("/files", uploadDir)
@@ -212,15 +213,16 @@ func RegisterRoutes(r *gin.Engine, logger *zap.Logger, db *gorm.DB, accessSecret
 
 	// 博客主题预览路由（以指定主题响应托管逻辑，激活前即可预览真实效果）
 	themeLogic := logic.NewThemeLogic()
-	r.GET("/preview/:theme_id", logic.ThemeHost.PreviewHandler())
-	r.GET("/preview/:theme_id/*path", logic.ThemeHost.PreviewHandler())
+	themeHostController := controller.NewThemeHostController()
+	r.GET("/preview/:theme_id", themeHostController.Preview)
+	r.GET("/preview/:theme_id/*path", themeHostController.Preview)
 
 	// 博客主题静态托管兜底路由（激活主题；注册于所有业务路由之后）
-	r.NoRoute(logic.ThemeHost.Handler(themeLogic))
+	r.NoRoute(themeHostController.Handler(themeLogic))
 }
 
-// RegisterHealthRouter 注册健康检查路由。
-func RegisterHealthRouter(r *gin.Engine) {
+// RegisterHealthRouter 注册健康检查路由。/ready 对数据库做真实连通性检查，供编排层探活。
+func RegisterHealthRouter(r *gin.Engine, db *gorm.DB) {
 	// /health 返回 200
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -229,9 +231,17 @@ func RegisterHealthRouter(r *gin.Engine) {
 		})
 	})
 
-	// /ready 检查数据库连接
+	// /ready 检查数据库连接（2s 超时），失败返回 503
 	r.GET("/ready", func(c *gin.Context) {
-		// 如果需要在 ready 中使用 db，可以通过闭包注入
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+		if err := db.WithContext(ctx).Exec("SELECT 1").Error; err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"status": "not ready",
+				"error":  "database unavailable",
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ready",
 		})

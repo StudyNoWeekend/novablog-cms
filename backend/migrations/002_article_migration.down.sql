@@ -1,6 +1,0 @@
--- 回滚文章相关表迁移
-DROP TABLE IF EXISTS article_tags;
-DROP TABLE IF EXISTS articles;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS tags;
-DROP TABLE IF EXISTS media;

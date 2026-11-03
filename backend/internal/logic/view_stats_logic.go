@@ -8,6 +8,8 @@ import (
 	"novablog/internal/cache"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
+
+	"go.uber.org/zap"
 )
 
 // viewDedupWindow 浏览量 IP 去重窗口（与文章/旅行详情计数保持一致）。
@@ -44,19 +46,10 @@ func (l *ViewStatsLogic) RecordView(ctx context.Context, contentType, contentID,
 		return false, fmt.Errorf("未知的内容类型: %s", contentType)
 	}
 
-	var ok bool
-	if cache.RedisClient == nil {
-		// 未配置 Redis：降级为直接计数
-		ok = true
-	} else {
-		dedupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-		var err error
-		ok, err = cache.RedisClient.SetNX(dedupCtx, "view:"+contentType+":"+contentID+":"+ip, "1", viewDedupWindow).Result()
-		cancel()
-		if err != nil {
-			ok = true
-		}
-	}
+	// IP 去重（fail-open：Redis 未配置或异常时降级为直接计数）
+	dedupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	ok := cache.NewViewStatsCache().MarkViewed(dedupCtx, contentType, contentID, ip, viewDedupWindow)
+	cancel()
 	if !ok {
 		return false, nil
 	}
@@ -66,9 +59,12 @@ func (l *ViewStatsLogic) RecordView(ctx context.Context, contentType, contentID,
 		bgCtx, bgCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer bgCancel()
 		if err := l.model.InsertViewLog(bgCtx, contentType, contentID, ip); err != nil {
+			logicLog().Warn("写入浏览明细失败", zap.String("type", contentType), zap.String("id", contentID), zap.Error(err))
 			return
 		}
-		_ = l.model.IncrementContentView(bgCtx, contentType, contentID)
+		if err := l.model.IncrementContentView(bgCtx, contentType, contentID); err != nil {
+			logicLog().Warn("自增内容浏览量失败", zap.String("type", contentType), zap.String("id", contentID), zap.Error(err))
+		}
 	}()
 	return true, nil
 }
@@ -123,7 +119,9 @@ func (l *ViewStatsLogic) GetTrafficSummary(ctx context.Context) (*res.TrafficSum
 		YesterdayPV: yesterdayPV,
 		TotalPV:     totalPV,
 	}
-	_ = l.cache.SetTrafficSummary(ctx, summary)
+	if err := l.cache.SetTrafficSummary(ctx, summary); err != nil {
+		logicLog().Warn("写入访问概览缓存失败", zap.Error(err))
+	}
 	return summary, nil
 }
 
@@ -198,7 +196,9 @@ func (l *ViewStatsLogic) GetTrafficTrend(ctx context.Context, rangeStr string) (
 	}
 
 	trend := &res.TrafficTrendRes{Range: rangeStr, Items: items}
-	_ = l.cache.SetTrafficTrend(ctx, trend)
+	if err := l.cache.SetTrafficTrend(ctx, trend); err != nil {
+		logicLog().Warn("写入访问趋势缓存失败", zap.Error(err))
+	}
 	return trend, nil
 }
 

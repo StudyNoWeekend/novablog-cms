@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -114,7 +113,7 @@ func (ctrl *ProfileController) UpdateRoles(c *gin.Context) {
 func (ctrl *ProfileController) UploadIcon(c *gin.Context) {
 	media, err := ctrl.uploadImage(c, "icon")
 	if err != nil {
-		response.Error(c, err.Error())
+		response.HandleError(c, err)
 		return
 	}
 	response.Success(c, gin.H{"url": media.URL, "media_id": media.ID})
@@ -124,7 +123,7 @@ func (ctrl *ProfileController) UploadIcon(c *gin.Context) {
 func (ctrl *ProfileController) UploadBackground(c *gin.Context) {
 	media, err := ctrl.uploadImage(c, "background")
 	if err != nil {
-		response.Error(c, err.Error())
+		response.HandleError(c, err)
 		return
 	}
 	response.Success(c, gin.H{"url": media.URL, "media_id": media.ID})
@@ -134,7 +133,7 @@ func (ctrl *ProfileController) UploadBackground(c *gin.Context) {
 func (ctrl *ProfileController) UploadAvatar(c *gin.Context) {
 	media, err := ctrl.uploadImage(c, "avatar")
 	if err != nil {
-		response.Error(c, err.Error())
+		response.HandleError(c, err)
 		return
 	}
 	response.Success(c, gin.H{"url": media.URL, "media_id": media.ID})
@@ -146,18 +145,18 @@ func (ctrl *ProfileController) UploadAvatar(c *gin.Context) {
 func (ctrl *ProfileController) uploadImage(c *gin.Context, subdir string) (*res.MediaRes, error) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		return nil, fmt.Errorf("请选择上传文件")
+		return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "请选择上传文件", enum.ErrInvalidParam.HttpCode)
 	}
 
 	// 限制文件大小 10MB
 	if file.Size > 10*1024*1024 {
-		return nil, fmt.Errorf("文件大小不能超过10MB")
+		return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "文件大小不能超过10MB", enum.ErrInvalidParam.HttpCode)
 	}
 
 	// 校验文件扩展名
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".gif" && ext != ".webp" && ext != ".svg" && ext != ".ico" {
-		return nil, fmt.Errorf("不支持的文件格式，仅支持 .jpg/.jpeg/.png/.gif/.webp/.svg/.ico")
+		return nil, enum.NewBizError(enum.ErrInvalidParam.Code, "不支持的文件格式，仅支持 .jpg/.jpeg/.png/.gif/.webp/.svg/.ico", enum.ErrInvalidParam.HttpCode)
 	}
 
 	return ctrl.mediaLogic.UploadFile(c.Request.Context(), file, logic.MediaUploadOptions{

@@ -9,6 +9,8 @@ import (
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
+
+	"go.uber.org/zap"
 )
 
 // moduleConfigCacheTTL 模块开关配置缓存过期时间。
@@ -130,7 +132,9 @@ func (l *ModuleConfigLogic) GetConfig(ctx context.Context) (*res.ModuleConfigRes
 
 	// 写入缓存（失败不影响主流程）
 	configCache := moduleConfigToCache(config)
-	_ = l.configCache.SetConfig(ctx, configCache, moduleConfigCacheTTL)
+	if err := l.configCache.SetConfig(ctx, configCache, moduleConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新模块配置缓存失败", zap.Error(err))
+	}
 
 	return moduleConfigToRes(config), nil
 }
@@ -191,7 +195,9 @@ func (l *ModuleConfigLogic) UpdateConfig(ctx context.Context, r *req.UpdateModul
 
 	// 直接写入新缓存，确保立即生效（热更新）
 	configCache := moduleConfigToCache(config)
-	_ = l.configCache.SetConfig(ctx, configCache, moduleConfigCacheTTL)
+	if err := l.configCache.SetConfig(ctx, configCache, moduleConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新模块配置缓存失败", zap.Error(err))
+	}
 
 	return nil
 }
@@ -223,7 +229,9 @@ func (l *ModuleConfigLogic) ApplyModuleMap(ctx context.Context, modules map[stri
 	}
 
 	configCache := moduleConfigToCache(config)
-	_ = l.configCache.SetConfig(ctx, configCache, moduleConfigCacheTTL)
+	if err := l.configCache.SetConfig(ctx, configCache, moduleConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新模块配置缓存失败", zap.Error(err))
+	}
 
 	return nil
 }

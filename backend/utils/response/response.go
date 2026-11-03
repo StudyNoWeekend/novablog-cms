@@ -41,20 +41,6 @@ func Success(c *gin.Context, data interface{}) {
 	})
 }
 
-// Error 返回简单错误响应（HTTP 400）。
-func Error(c *gin.Context, msg string) {
-	traceID, _ := c.Get("trace_id")
-	tid := ""
-	if traceID != nil {
-		tid = traceID.(string)
-	}
-	c.JSON(http.StatusBadRequest, Response{
-		Code:    400,
-		Msg:     msg,
-		TraceID: tid,
-	})
-}
-
 // Fail 返回失败响应，使用指定的错误码、错误信息和 HTTP 状态码。
 func Fail(c *gin.Context, code int, msg string, httpCode int) {
 	traceID, _ := c.Get("trace_id")
@@ -118,9 +104,10 @@ func HandleError(c *gin.Context, err error) {
 	if ErrorLogger != nil {
 		ErrorLogger.Error("系统内部错误", logFields...)
 	}
+	// 非业务错误不向客户端透出原始错误详情（可能含 SQL/文件系统等内部信息），原文只进日志。
 	c.JSON(http.StatusInternalServerError, Response{
 		Code:    enum.ErrInternalServer.Code,
-		Msg:     err.Error(),
+		Msg:     enum.ErrInternalServer.Msg,
 		TraceID: tid,
 	})
 }

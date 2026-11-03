@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"novablog/internal/logic"
@@ -97,6 +98,7 @@ func NewApp(cfgPath string) (*App, error) {
 		MaxArtifactMB: systemConfig.GetMaxArtifactMB(context.Background()),
 	})
 	logic.ThemeLogger = logger
+	logic.LogicLogger = logger
 
 	// 注入开源作品模块配置：与主题模块共用 GitHub 访问配置（token 提升限流额度、代理走探测降级）
 	logic.SetOpenSourceSettings(&logic.OpenSourceSettings{
@@ -164,10 +166,16 @@ func NewApp(cfgPath string) (*App, error) {
 }
 
 // loadConfig 加载配置文件。
+// 敏感项支持环境变量覆盖：键名前缀 NOVABLOG_，路径分隔符映射为下划线，
+// 如 postgres.password ← NOVABLOG_POSTGRES_PASSWORD、jwt.access_secret ← NOVABLOG_JWT_ACCESS_SECRET；
+// 未设置环境变量时行为不变。
 func loadConfig(cfgPath string) (*viper.Viper, error) {
 	v := viper.New()
 	v.SetConfigFile(cfgPath)
 	v.SetConfigType("yaml")
+	v.SetEnvPrefix("NOVABLOG")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
 
 	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("读取配置文件失败: %w", err)

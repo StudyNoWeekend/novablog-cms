@@ -279,13 +279,6 @@ func (m *PortfolioItemModel) SoftDelete(ctx context.Context, id string) error {
 	return m.db.WithContext(ctx).Where("id = ?", id).Delete(&PortfolioItem{}).Error
 }
 
-// SoftDeleteByPortfolioID 按作品集 ID 级联软删除所有作品项。
-func (m *PortfolioItemModel) SoftDeleteByPortfolioID(ctx context.Context, portfolioID string) error {
-	return m.db.WithContext(ctx).
-		Where("portfolio_id = ?", portfolioID).
-		Delete(&PortfolioItem{}).Error
-}
-
 // MaxSortOrder 返回指定作品集下最大 sort_order，若无则为 0。
 func (m *PortfolioItemModel) MaxSortOrder(ctx context.Context, portfolioID string) (int, error) {
 	var maxOrder int

@@ -9,6 +9,8 @@ import (
 )
 
 // RedisClient 全局 Redis 客户端实例。
+// 仅由 bootstrap.InitRedis 注入，cache 包内部各结构体构造时读取；
+// logic / middleware 层禁止直接使用，统一经 cache 包封装访问。
 var RedisClient *redis.Client
 
 // TokenCache Token 缓存操作结构体。

@@ -11,6 +11,8 @@ import (
 	"novablog/internal/dto/req"
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
+
+	"go.uber.org/zap"
 )
 
 // AnalyticsLogic 工作台统计业务逻辑结构体。
@@ -364,8 +366,10 @@ func (l *AnalyticsLogic) GetOverview(ctx context.Context) (*res.OverviewRes, err
 		DaysSinceLastPublish: daysSinceLastPublish,
 	}
 
-	// 写入缓存（失败不影响主流程）
-	_ = l.cache.SetOverview(ctx, overview)
+	// 写入缓存（失败不影响主流程，仅记录日志）
+	if err := l.cache.SetOverview(ctx, overview); err != nil {
+		logicLog().Warn("写入访问概览缓存失败", zap.Error(err))
+	}
 
 	return overview, nil
 }
@@ -553,8 +557,10 @@ func (l *AnalyticsLogic) GetDistribution(ctx context.Context) (*res.Distribution
 		Total: total,
 	}
 
-	// 写入缓存（失败不影响主流程）
-	_ = l.cache.SetDistribution(ctx, dist)
+	// 写入缓存（失败不影响主流程，仅记录日志）
+	if err := l.cache.SetDistribution(ctx, dist); err != nil {
+		logicLog().Warn("写入模块分布缓存失败", zap.Error(err))
+	}
 
 	return dist, nil
 }

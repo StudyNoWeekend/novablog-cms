@@ -38,18 +38,10 @@ var parseTaskStore sync.Map
 // biliParseCacheTTL 解析结果在 Redis 中的有效期。
 const biliParseCacheTTL = 7 * 24 * time.Hour
 
-// biliParseCacheKey 生成 Redis 缓存 key。
-func biliParseCacheKey(bvid string) string {
-	return "bili:parse:" + bvid
-}
-
 // getCachedParseResults 从 Redis 获取缓存的解析结果。
 func getCachedParseResults(ctx context.Context, bvid string) []ParseResult {
-	if cache.RedisClient == nil {
-		return nil
-	}
-	data, err := cache.RedisClient.Get(ctx, biliParseCacheKey(bvid)).Bytes()
-	if err != nil || len(data) == 0 {
+	data := cache.NewBilibiliCache().Get(ctx, bvid)
+	if len(data) == 0 {
 		return nil
 	}
 	var results []ParseResult
@@ -61,14 +53,14 @@ func getCachedParseResults(ctx context.Context, bvid string) []ParseResult {
 
 // setCachedParseResults 将解析结果存入 Redis。
 func setCachedParseResults(ctx context.Context, bvid string, results []ParseResult) {
-	if cache.RedisClient == nil || len(results) == 0 {
+	if len(results) == 0 {
 		return
 	}
 	data, err := json.Marshal(results)
 	if err != nil {
 		return
 	}
-	_ = cache.RedisClient.Set(ctx, biliParseCacheKey(bvid), data, biliParseCacheTTL).Err()
+	cache.NewBilibiliCache().Set(ctx, bvid, data, biliParseCacheTTL)
 }
 
 // SaveParseTask 保存解析任务，10 分钟后自动清理。

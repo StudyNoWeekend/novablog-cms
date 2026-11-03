@@ -12,6 +12,7 @@ import (
 	"novablog/internal/middleware"
 	"novablog/internal/model"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -77,7 +78,9 @@ func (l *CorsConfigLogic) GetConfig(ctx context.Context) (*res.CorsConfigRes, er
 
 	// 写入缓存（失败不影响主流程）
 	configCache := corsConfigToCache(config)
-	_ = l.configCache.SetConfig(ctx, configCache, corsConfigCacheTTL)
+	if err := l.configCache.SetConfig(ctx, configCache, corsConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新跨域配置缓存失败", zap.Error(err))
+	}
 
 	return corsConfigToRes(config), nil
 }
@@ -111,7 +114,9 @@ func (l *CorsConfigLogic) UpdateConfig(ctx context.Context, r *req.UpdateCorsCon
 
 	// 直接写入新缓存，确保立即生效（热更新）
 	configCache := corsConfigToCache(config)
-	_ = l.configCache.SetConfig(ctx, configCache, corsConfigCacheTTL)
+	if err := l.configCache.SetConfig(ctx, configCache, corsConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新跨域配置缓存失败", zap.Error(err))
+	}
 
 	// 同步到中间件内存变量，使 CORS 策略即时生效
 	middleware.SetAllowedOrigins(config.AllowedOrigins)
@@ -149,7 +154,9 @@ func (l *CorsConfigLogic) InitFromFallback(ctx context.Context, fallback string)
 	}
 
 	// 刷新缓存并同步中间件
-	_ = l.configCache.SetConfig(ctx, corsConfigToCache(config), corsConfigCacheTTL)
+	if err := l.configCache.SetConfig(ctx, corsConfigToCache(config), corsConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新跨域配置缓存失败", zap.Error(err))
+	}
 	middleware.SetAllowedOrigins(config.AllowedOrigins)
 
 	return nil

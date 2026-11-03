@@ -75,10 +75,14 @@ func main() {
 	fmt.Println("摄影师示例数据导入成功")
 }
 
+// loadConfig 与 bootstrap.loadConfig 保持一致：敏感项支持 NOVABLOG_ 前缀环境变量覆盖。
 func loadConfig(cfgPath string) (*viper.Viper, error) {
 	v := viper.New()
 	v.SetConfigFile(cfgPath)
 	v.SetConfigType("yaml")
+	v.SetEnvPrefix("NOVABLOG")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}

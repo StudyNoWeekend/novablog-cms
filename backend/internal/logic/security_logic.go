@@ -12,6 +12,7 @@ import (
 	"novablog/internal/dto/res"
 	"novablog/internal/model"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -82,7 +83,9 @@ func (l *SecurityLogic) GetConfig(ctx context.Context) (*res.SecurityConfigRes, 
 
 	// 写入缓存（失败不影响主流程）
 	configCache := securityConfigToCache(config)
-	_ = l.securityCache.SetConfig(ctx, configCache, securityConfigCacheTTL)
+	if err := l.securityCache.SetConfig(ctx, configCache, securityConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新安全配置缓存失败", zap.Error(err))
+	}
 
 	return securityConfigToRes(config), nil
 }
@@ -113,7 +116,9 @@ func (l *SecurityLogic) UpdateConfig(ctx context.Context, r *req.UpdateSecurityC
 
 	// 直接写入新缓存，确保立即生效（热更新）
 	configCache := securityConfigToCache(config)
-	_ = l.securityCache.SetConfig(ctx, configCache, securityConfigCacheTTL)
+	if err := l.securityCache.SetConfig(ctx, configCache, securityConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新安全配置缓存失败", zap.Error(err))
+	}
 
 	return nil
 }
@@ -138,7 +143,9 @@ func (l *SecurityLogic) CreateBlacklist(ctx context.Context, r *req.BlacklistReq
 
 	cacheCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	_ = l.securityCache.AddToBlacklist(cacheCtx, record.IP, 0)
+	if err := l.securityCache.AddToBlacklist(cacheCtx, record.IP, 0); err != nil {
+		logicLog().Warn("写入 IP 黑名单缓存失败", zap.String("ip", record.IP), zap.Error(err))
+	}
 
 	return nil
 }
@@ -159,7 +166,9 @@ func (l *SecurityLogic) DeleteBlacklist(ctx context.Context, id uint) error {
 
 	cacheCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	_ = l.securityCache.RemoveFromBlacklist(cacheCtx, record.IP)
+	if err := l.securityCache.RemoveFromBlacklist(cacheCtx, record.IP); err != nil {
+		logicLog().Warn("移除 IP 黑名单缓存失败", zap.String("ip", record.IP), zap.Error(err))
+	}
 
 	return nil
 }
@@ -184,9 +193,13 @@ func (l *SecurityLogic) UpdateBlacklist(ctx context.Context, id uint, r *req.Bla
 	cacheCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if oldIP != record.IP {
-		_ = l.securityCache.RemoveFromBlacklist(cacheCtx, oldIP)
+		if err := l.securityCache.RemoveFromBlacklist(cacheCtx, oldIP); err != nil {
+			logicLog().Warn("移除 IP 黑名单缓存失败", zap.String("ip", oldIP), zap.Error(err))
+		}
 	}
-	_ = l.securityCache.AddToBlacklist(cacheCtx, record.IP, 0)
+	if err := l.securityCache.AddToBlacklist(cacheCtx, record.IP, 0); err != nil {
+		logicLog().Warn("写入 IP 黑名单缓存失败", zap.String("ip", record.IP), zap.Error(err))
+	}
 
 	return nil
 }

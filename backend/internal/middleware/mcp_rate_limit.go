@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -21,11 +20,6 @@ const (
 // Redis 不可用时放行（鉴权已由 MCPAuthMiddleware 保证）。
 func MCPRateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		client := cache.RedisClient
-		if client == nil {
-			c.Next()
-			return
-		}
 		keyID, _ := c.Get("mcp_key_id")
 		if keyID == nil {
 			c.Next()
@@ -34,15 +28,11 @@ func MCPRateLimitMiddleware() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
 		defer cancel()
-		key := fmt.Sprintf("ratelimit:mcp:%s:%d", keyID, time.Now().Unix()/int64(mcpRateLimitWindow.Seconds()))
-		count, err := client.Incr(ctx, key).Result()
-		if err != nil {
+		count, available := cache.NewMCPRateLimitCache().Hit(ctx, keyID.(string), mcpRateLimitWindow)
+		if !available {
 			// 限流器故障不应阻断正常调用
 			c.Next()
 			return
-		}
-		if count == 1 {
-			client.Expire(ctx, key, mcpRateLimitWindow)
 		}
 		if count > mcpRateLimitMaxReqs {
 			c.Header("Retry-After", "60")

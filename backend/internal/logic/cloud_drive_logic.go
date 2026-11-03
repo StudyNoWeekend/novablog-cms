@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -254,9 +255,6 @@ type OAuthCallbackResult struct {
 	Account string
 }
 
-// oauthStateKey Redis 中 OAuth state 的 key 前缀。
-const oauthStateKey = "clouddrive:state:"
-
 // oauthStateTTL state 有效期。
 const oauthStateTTL = 5 * time.Minute
 
@@ -280,10 +278,11 @@ func (l *CloudDriveLogic) GetAuthorizeURL(ctx context.Context, provider string) 
 	if err != nil {
 		return nil, fmt.Errorf("生成授权状态失败: %w", err)
 	}
-	if cache.RedisClient == nil {
-		return nil, fmt.Errorf("Redis 不可用，无法发起授权")
-	}
-	if err := cache.RedisClient.Set(ctx, oauthStateKey+state, provider, oauthStateTTL).Err(); err != nil {
+	cc := cache.NewCloudDriveCache()
+	if err := cc.SetState(ctx, state, provider, oauthStateTTL); err != nil {
+		if errors.Is(err, cache.ErrRedisUnavailable) {
+			return nil, fmt.Errorf("Redis 不可用，无法发起授权")
+		}
 		return nil, fmt.Errorf("存储授权状态失败: %w", err)
 	}
 
@@ -325,17 +324,18 @@ func (l *CloudDriveLogic) HandleCallback(ctx context.Context, provider, code, st
 		return nil, enum.ErrCloudDriveProviderInvalid
 	}
 	// 校验并消费 state（一次性）
-	if cache.RedisClient == nil {
-		return nil, fmt.Errorf("Redis 不可用")
-	}
 	if state == "" {
 		return nil, enum.ErrCloudDriveStateInvalid
 	}
-	saved, err := cache.RedisClient.Get(ctx, oauthStateKey+state).Result()
+	cc := cache.NewCloudDriveCache()
+	saved, err := cc.GetState(ctx, state)
+	if errors.Is(err, cache.ErrRedisUnavailable) {
+		return nil, fmt.Errorf("Redis 不可用")
+	}
 	if err != nil || saved != provider {
 		return nil, enum.ErrCloudDriveStateInvalid
 	}
-	cache.RedisClient.Del(ctx, oauthStateKey+state)
+	cc.DelState(ctx, state)
 
 	config, err := l.configModel.GetByProvider(ctx, provider)
 	if err != nil {

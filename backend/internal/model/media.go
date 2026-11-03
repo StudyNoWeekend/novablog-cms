@@ -142,16 +142,6 @@ func (m *MediaModel) GetByIDs(ctx context.Context, ids []string) ([]Media, error
 	return mediaList, nil
 }
 
-// GetAllIDs 查询所有未软删除的媒体文件 ID 列表。
-func (m *MediaModel) GetAllIDs(ctx context.Context) ([]string, error) {
-	var ids []string
-	err := m.db.WithContext(ctx).Model(&Media{}).Pluck("id", &ids).Error
-	if err != nil {
-		return nil, err
-	}
-	return ids, nil
-}
-
 // UpdateStorageInfo 更新媒体文件的 URL 和存储类型（迁移完成后调用）。
 func (m *MediaModel) UpdateStorageInfo(ctx context.Context, id, url, storageType string) error {
 	return m.db.WithContext(ctx).Model(&Media{}).

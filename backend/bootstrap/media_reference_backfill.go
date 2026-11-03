@@ -1,7 +1,6 @@
 // 媒体引用改造启动回填：把业务表写死的图片 URL 迁移为媒体库文件 ID 引用，
 // 并把 media.url / media_presets.output_url 归一为相对对象键（完整 URL 读取时动态拼接）。
-// 项目没有自动执行 migrations/*.sql 的机制（AutoMigrate 只同步表结构），数据级迁移在此幂等执行，
-// 与 migrations/043_media_reference 的手工执行互不冲突。
+// 项目没有自动执行 SQL 迁移的机制（AutoMigrate 只同步表结构），数据级迁移在此幂等执行。
 // 整个流程在独立 goroutine 中异步运行，不阻塞服务启动；读取解析走「ID 优先、URL 兜底、
 // 历史完整 URL 直通」规则，回填进行中的短暂窗口内页面无感知。
 package bootstrap

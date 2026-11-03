@@ -1,6 +1,6 @@
 package req
 
-// MarketLoginReq 登录官方主题市场请求参数（官方地址通过 X-Market-Base-URL 请求头传递）。
+// MarketLoginReq 登录官方主题市场请求参数（官方地址由后端统一托管，无需前端传递）。
 type MarketLoginReq struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`

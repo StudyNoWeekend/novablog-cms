@@ -14,6 +14,7 @@ import (
 	"novablog/internal/model"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 // MCPKeyPrefix MCP 密钥前缀。
@@ -155,8 +156,10 @@ func (l *MCPKeyLogic) VerifyKey(ctx context.Context, key string) (*model.MCPAPIK
 
 // RecordUsage 记录密钥使用统计（调用次数 + 最近使用时间）。
 func (l *MCPKeyLogic) RecordUsage(ctx context.Context, id string) {
-	// 统计失败不影响主流程
-	_ = l.model.RecordUsage(ctx, id)
+	// 统计失败不影响主流程，仅记录日志
+	if err := l.model.RecordUsage(ctx, id); err != nil {
+		logicLog().Warn("记录 MCP 密钥使用统计失败", zap.String("id", id), zap.Error(err))
+	}
 }
 
 // toMCPKeyRes 转换为密钥响应结构体。

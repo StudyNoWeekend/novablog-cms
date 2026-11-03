@@ -3,8 +3,9 @@
 #   docker build -f deploy/Dockerfile --build-arg VERSION=v1.0.0 -t novablog .
 #
 # 运行层由 supervisord 同时拉起：
-#   - nginx     统一入口，:80 博客入口 / :8080 管理后台入口（反代 127.0.0.1:8111）
-#   - novablog  Go 后端：业务 API + 博客前端静态托管（激活主题或挂载的自备前端）
+#   - nginx          统一入口，:80 博客入口 / :8080 管理后台入口（反代 127.0.0.1:8111）
+#   - novablog       Go 后端：业务 API + 博客前端静态托管（激活主题或挂载的自备前端）
+#   - novablog-cron  Go 后台任务：访问日志清理 / 访问统计维护 / 社区推送重试
 
 ARG VERSION=dev
 
@@ -32,7 +33,8 @@ RUN go mod download
 COPY backend/ ./
 ARG VERSION
 ARG TARGETARCH
-RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/novablog ./cmd/api
+RUN CGO_ENABLED=0 GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/novablog ./cmd/api && \
+    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w" -o /out/novablog-cron ./cmd/cron
 
 # ---------- ③ 运行层（nginx 入口 + Go 后端） ----------
 FROM nginx:1.27-alpine
@@ -49,6 +51,7 @@ RUN apk add --no-cache supervisor tzdata curl
 
 WORKDIR /app
 COPY --from=backend-builder /out/novablog ./novablog
+COPY --from=backend-builder /out/novablog-cron ./novablog-cron
 # 内置一份默认配置，生产经挂载覆盖（见 deploy/README.md）
 COPY backend/config/config.example.yaml ./config/config.yaml
 # 管理后台静态文件（base 路径须与构建期 VITE_BASE_PATH 一致，默认 /admin/）

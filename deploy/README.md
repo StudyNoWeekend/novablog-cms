@@ -150,6 +150,14 @@ CMS 后台端口: 9002
 
 > 「博客对外访问地址」写入 `upload.base_url`，决定媒体文件 URL 形态：直接带端口访问时须填 `http://域名:端口`；走反代时填反代后的对外地址。域名值渲染进 nginx `server_name`，必须为裸域名，带 `http://` 会使域名匹配失效。
 
+**①（可选）让 deploy.sh 自动写入反代配置**
+
+部署/升级时加 `--host-nginx`（或交互时确认），脚本会自动生成 `/etc/nginx/conf.d/<博客名>.conf` 并 reload：
+
+- 生成内容：博客入口 + 后台入口 + 公开接口/媒体入口（公开接口域名取「博客对外访问地址」，与博客/后台域名重复时不生成）；
+- HTTPS：自动探测宿主机 nginx 既有配置引用的证书与常见证书目录（`/etc/letsencrypt/live`、`/etc/nginx/certs` 等），证书须同时覆盖全部对外域名（如通配符证书）；命中即生成 443 + HTTP 跳转结构，未命中生成纯 HTTP；
+- 升级自动同步：conf 缺失时按 `.env` 补写；由脚本生成的 conf 按当前模板重新生成覆盖（写入前自动备份、`nginx -t` 校验失败自动还原）；手工维护的 conf（无生成标记）保持不变。
+
 **② 宿主机 nginx 反代配置**
 
 完整示例见 [`nginx/host-proxy.example.conf`](nginx/host-proxy.example.conf)，核心两块：

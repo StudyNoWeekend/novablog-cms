@@ -54,9 +54,11 @@ func (l *ThemeMarketConfigLogic) GetConfig(ctx context.Context) (*res.ThemeMarke
 		return nil, fmt.Errorf("查询主题运行配置失败: %w", err)
 	}
 
-	_ = l.configCache.SetConfig(ctx, &cache.ThemeMarketConfigCacheData{
+	if err := l.configCache.SetConfig(ctx, &cache.ThemeMarketConfigCacheData{
 		PublicAPIBase: config.PublicAPIBase,
-	}, themeMarketConfigCacheTTL)
+	}, themeMarketConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新主题运行配置缓存失败", zap.Error(err))
+	}
 
 	return &res.ThemeMarketConfigRes{
 		PublicAPIBase: config.PublicAPIBase,
@@ -85,10 +87,12 @@ func (l *ThemeMarketConfigLogic) syncPublicAPIBase(ctx context.Context, raw stri
 	if err := l.configModel.UpdateConfig(ctx, config); err != nil {
 		return fmt.Errorf("更新主题运行配置失败: %w", err)
 	}
-	_ = l.configCache.SetConfig(ctx, &cache.ThemeMarketConfigCacheData{
+	if err := l.configCache.SetConfig(ctx, &cache.ThemeMarketConfigCacheData{
 		PublicAPIBase: base,
 		UpdatedAt:     time.Now(),
-	}, themeMarketConfigCacheTTL)
+	}, themeMarketConfigCacheTTL); err != nil {
+		logicLog().Warn("刷新主题运行配置缓存失败", zap.Error(err))
+	}
 
 	// 同步内存单例：后续主题安装/更新按新地址注入；清空时显式覆盖（区别于启动注入的仅非空语义）
 	getThemeSettings().PublicAPIBase = base

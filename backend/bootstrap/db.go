@@ -3,6 +3,8 @@ package bootstrap
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"novablog/internal/model"
@@ -11,7 +13,6 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
 )
 
 // DBConfig 数据库配置参数。
@@ -36,14 +37,17 @@ func InitDB(cfg *DBConfig, logger *zap.Logger, uploadDir string) (*gorm.DB, erro
 		return nil, fmt.Errorf("确保数据库存在失败: %w", err)
 	}
 
-	// 2. 连接目标数据库
+	// 2. 连接目标数据库（能解析出 IANA 时区名时，DSN 显式指定会话时区为服务器本地时区）
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName, cfg.SSLMode,
 	)
+	if zone := localTimeZone(); zone != "" {
+		dsn += fmt.Sprintf(" TimeZone=%s", zone)
+	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: gormlogger.Default.LogMode(gormlogger.Info),
+		Logger: newGormZapLogger(logger),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("连接数据库失败: %w", err)
@@ -69,7 +73,10 @@ func InitDB(cfg *DBConfig, logger *zap.Logger, uploadDir string) (*gorm.DB, erro
 	backfillCategories(db)
 
 	// 5. 数据一致性回填（幂等）：用真实评论数校正 comment_count/review_count 计数
-	backfillCounters(db)
+	backfillCounters(db, logger)
+
+	// 5.5 废弃库对象幂等清理（孤儿列/死表），失败不阻塞启动，详见 deprecated_cleanup.go
+	cleanupDeprecatedColumns(db, logger)
 
 	// 6. 设置全局 DB
 	model.DB = db
@@ -83,6 +90,21 @@ func InitDB(cfg *DBConfig, logger *zap.Logger, uploadDir string) (*gorm.DB, erro
 	backfillMediaReferencesAsync(db, logger, uploadDir)
 
 	return db, nil
+}
+
+// localTimeZone 解析服务器本地时区的 IANA 名称（如 Asia/Shanghai）。
+// 优先取 TZ 环境变量，其次从 /etc/localtime 符号链接提取；取不到返回空串
+// （此时 DSN 不带 TimeZone 参数，沿用 PostgreSQL 服务端默认时区）。
+func localTimeZone() string {
+	if tz := os.Getenv("TZ"); tz != "" {
+		return tz
+	}
+	if link, err := os.Readlink("/etc/localtime"); err == nil {
+		if i := strings.Index(link, "zoneinfo/"); i >= 0 {
+			return link[i+len("zoneinfo/"):]
+		}
+	}
+	return ""
 }
 
 // ensureDatabaseExists 检查数据库是否存在，不存在则创建。
@@ -140,7 +162,6 @@ func autoMigrate(db *gorm.DB) error {
 		&model.Portfolio{},
 		&model.PortfolioItem{},
 		&model.SecurityConfig{},
-		&model.IPBlacklistRecord{},
 		&model.IPBlacklist{},
 		&model.AccessLog{},
 		&model.ModuleConfig{},
@@ -176,7 +197,7 @@ func autoMigrate(db *gorm.DB) error {
 //
 // 修复历史遗留：评论计数器从未被维护导致文章管理/热门排行始终显示 0。
 // 仅校正有评论但计数明显偏小（相差 >= 1）的内容，其余保持不变。
-func backfillCounters(db *gorm.DB) {
+func backfillCounters(db *gorm.DB, logger *zap.Logger) {
 	// 文章评论数回填
 	if err := db.Exec(`
 		UPDATE articles a
@@ -190,12 +211,12 @@ func backfillCounters(db *gorm.DB) {
 		WHERE a.id = t.target_id
 		  AND t.real_count > a.comment_count
 	`).Error; err != nil {
-		// 回填失败不影响启动
+		logger.Warn("文章评论计数回填失败（跳过，下次启动重试）", zap.Error(err))
 		return
 	}
 
 	// 旅行攻略评论数回填
-	_ = db.Exec(`
+	if err := db.Exec(`
 		UPDATE travel_guides tg
 		SET review_count = t.real_count
 		FROM (
@@ -206,5 +227,7 @@ func backfillCounters(db *gorm.DB) {
 		) t
 		WHERE tg.id = t.target_id
 		  AND t.real_count > tg.review_count
-	`).Error
+	`).Error; err != nil {
+		logger.Warn("旅行攻略评论计数回填失败（跳过，下次启动重试）", zap.Error(err))
+	}
 }

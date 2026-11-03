@@ -61,10 +61,10 @@ func (l *ThemeLogic) List(ctx context.Context) ([]res.ThemeItemRes, error) {
 }
 
 // Install 从官方市场安装指定主题（按市场主题 ID，可指定版本）。
-// marketBaseURL 优先使用传入值，为空时回退 config.yaml 的 themes.market_base_url；
+// 官方地址取统一托管的官方站点地址（official_site_settings）；
 // marketToken 为官方账号 Token，官方代理下载地址必需。
-func (l *ThemeLogic) Install(ctx context.Context, marketID int64, version string, force bool, marketBaseURL, marketToken string) (*model.Theme, error) {
-	baseURL, err := resolveMarketBaseURL(marketBaseURL)
+func (l *ThemeLogic) Install(ctx context.Context, marketID int64, version string, force bool, marketToken string) (*model.Theme, error) {
+	baseURL, err := resolveMarketBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -220,10 +220,15 @@ func (l *ThemeLogic) installFromMarketItem(ctx context.Context, item novablogapi
 		return nil, err
 	}
 
-	// 覆盖安装：先清理旧目录与旧记录
+	// 覆盖安装：先清理旧目录与旧记录（清理失败仅记日志，不阻断本次安装）
 	if existingErr == nil && force {
-		_ = os.RemoveAll(filepath.Join(getThemeSettings().DataDir, existing.ArtifactPath))
-		_ = l.themeModel.Delete(ctx, existing.ID)
+		oldRoot := filepath.Join(getThemeSettings().DataDir, existing.ArtifactPath)
+		if err := os.RemoveAll(oldRoot); err != nil {
+			themeLog().Warn("清理旧主题制品目录失败", zap.String("path", oldRoot), zap.Error(err))
+		}
+		if err := l.themeModel.Delete(ctx, existing.ID); err != nil {
+			themeLog().Warn("清理旧主题记录失败", zap.String("id", existing.ID), zap.Error(err))
+		}
 	}
 
 	rel, err := l.artifact.PlaceArtifact(tmpRoot, manifest.ID, manifest.Version)
@@ -242,9 +247,9 @@ func (l *ThemeLogic) installFromMarketItem(ctx context.Context, item novablogapi
 }
 
 // UpdateTheme 从官方市场更新已安装主题到最新版本。
-// marketBaseURL 优先使用传入值，为空时回退 config.yaml 的 themes.market_base_url；
+// 官方地址取统一托管的官方站点地址（official_site_settings）；
 // marketToken 为官方账号 Token，官方代理下载地址必需。
-func (l *ThemeLogic) UpdateTheme(ctx context.Context, id string, marketBaseURL, marketToken string) (*model.Theme, error) {
+func (l *ThemeLogic) UpdateTheme(ctx context.Context, id string, marketToken string) (*model.Theme, error) {
 	// 1. 获取已安装主题
 	theme, err := l.themeModel.GetByID(ctx, id)
 	if err != nil {
@@ -257,7 +262,7 @@ func (l *ThemeLogic) UpdateTheme(ctx context.Context, id string, marketBaseURL, 
 	}
 
 	// 3. 解析市场地址
-	baseURL, err := resolveMarketBaseURL(marketBaseURL)
+	baseURL, err := resolveMarketBaseURL()
 	if err != nil {
 		return nil, err
 	}
@@ -376,15 +381,9 @@ func sign(x int) int {
 	return 0
 }
 
-// resolveMarketBaseURL 解析官方市场地址：优先使用传入值，为空时回退统一托管的官方站点地址。
+// resolveMarketBaseURL 解析统一托管的官方站点地址（official_site_settings）。
 // 返回归一化后的 baseURL（含 /api/v1 前缀），或 ErrThemeMarketNotConfigured。
-func resolveMarketBaseURL(marketBaseURL string) (string, error) {
-	if marketBaseURL != "" {
-		base, err := novablogapi.NormalizeBaseURL(marketBaseURL)
-		if err == nil {
-			return base, nil
-		}
-	}
+func resolveMarketBaseURL() (string, error) {
 	if OfficialSiteBaseURL() == "" {
 		return "", enum.ErrThemeMarketNotConfigured
 	}
