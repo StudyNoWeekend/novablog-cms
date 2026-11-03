@@ -93,7 +93,11 @@
   },
   "picker": {
     "title": "選擇圖片",
-    "confirm": "確認選擇"
+    "confirm": "確認選擇",
+    "searchPlaceholder": "搜尋資料夾或檔名...",
+    "searchResultFor": "搜尋「{keyword}」的結果",
+    "folderResults": "資料夾",
+    "noResults": "沒有找到符合的資料夾或檔案"
   },
   "chooser": {
     "title": "選擇圖片版本",

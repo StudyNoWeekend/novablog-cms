@@ -93,7 +93,11 @@
   },
   "picker": {
     "title": "Select Image",
-    "confirm": "Confirm Selection"
+    "confirm": "Confirm Selection",
+    "searchPlaceholder": "Search folders or file names...",
+    "searchResultFor": "Results for \"{keyword}\"",
+    "folderResults": "Folders",
+    "noResults": "No matching folders or files"
   },
   "chooser": {
     "title": "Select Image Version",

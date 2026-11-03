@@ -93,7 +93,11 @@
   },
   "picker": {
     "title": "이미지 선택",
-    "confirm": "선택 확인"
+    "confirm": "선택 확인",
+    "searchPlaceholder": "폴더 또는 파일 이름 검색...",
+    "searchResultFor": "\"{keyword}\" 검색 결과",
+    "folderResults": "폴더",
+    "noResults": "일치하는 폴더나 파일이 없습니다"
   },
   "chooser": {
     "title": "이미지 버전 선택",
