@@ -23,6 +23,16 @@
         <h1 ref="pageTitleRef" tabindex="-1" class="page-title">
           {{ pageTitle }}
         </h1>
+        <!-- 就地保存：保持当前状态（草稿/已发布），不跳转 -->
+        <a-button
+          class="title-save-btn"
+          :aria-label="$t('travel.edit.saveAria')"
+          :loading="saving"
+          @click="handleSave"
+        >
+          <SaveOutlined />
+          {{ $t('travel.edit.save') }}
+        </a-button>
       </div>
 
       <div class="action-bar-right">
@@ -243,6 +253,19 @@ async function handleSaveDraft() {
   }
 }
 
+/** 就地保存：保持当前状态（草稿保持草稿、已发布保持已发布），保存后停留在编辑页 */
+async function handleSave() {
+  saving.value = true
+  try {
+    await persistGuide(guide.status)
+    message.success(t('travel.message.saved'))
+  } catch {
+    // 错误已由拦截器处理
+  } finally {
+    saving.value = false
+  }
+}
+
 async function handlePublish() {
   const valid = basicFormRef.value?.isValid()
   if (!valid) {
@@ -331,6 +354,11 @@ function handleBack() {
 
 .page-title:focus {
   outline: none;
+}
+
+/* 标题右侧的就地保存按钮：不随标题省略收缩 */
+.title-save-btn {
+  flex-shrink: 0;
 }
 
 .action-bar-right {

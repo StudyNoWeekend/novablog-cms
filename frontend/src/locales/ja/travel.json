@@ -75,6 +75,8 @@
     "notFoundSubtitle": "お探しのガイドは削除されたか、存在しない可能性があります",
     "backToList": "ガイド一覧に戻る",
     "saveDraft": "下書き保存",
+    "save": "保存",
+    "saveAria": "ガイドを保存",
     "publishAria": "ガイドを公開",
     "openPreview": "プレビューを開く",
     "leaveTitle": "ページを離れますか？",
@@ -150,6 +152,7 @@
   "message": {
     "statusUpdated": "ステータスを更新しました",
     "draftSaved": "下書きを保存しました",
+    "saved": "保存しました",
     "publishSuccess": "公開しました",
     "completeRequired": "必須項目を入力してください"
   },

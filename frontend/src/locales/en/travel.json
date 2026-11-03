@@ -75,6 +75,8 @@
     "notFoundSubtitle": "The guide you are looking for may have been deleted or never created",
     "backToList": "Back to Guides",
     "saveDraft": "Save Draft",
+    "save": "Save",
+    "saveAria": "Save guide",
     "publishAria": "Publish guide",
     "openPreview": "Open preview",
     "leaveTitle": "Leave this page?",
@@ -150,6 +152,7 @@
   "message": {
     "statusUpdated": "Status updated",
     "draftSaved": "Draft saved",
+    "saved": "Saved successfully",
     "publishSuccess": "Published successfully",
     "completeRequired": "Please complete the required fields"
   },

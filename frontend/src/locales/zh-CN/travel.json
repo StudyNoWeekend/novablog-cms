@@ -75,6 +75,8 @@
     "notFoundSubtitle": "您访问的攻略可能已被删除或从未创建",
     "backToList": "返回攻略列表",
     "saveDraft": "保存草稿",
+    "save": "保存",
+    "saveAria": "保存攻略",
     "publishAria": "发布攻略",
     "openPreview": "打开预览",
     "leaveTitle": "确认离开",
@@ -150,6 +152,7 @@
   "message": {
     "statusUpdated": "状态更新成功",
     "draftSaved": "保存草稿成功",
+    "saved": "保存成功",
     "publishSuccess": "发布成功",
     "completeRequired": "请完善必填信息"
   },
