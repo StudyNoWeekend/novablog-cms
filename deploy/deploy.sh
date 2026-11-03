@@ -1337,9 +1337,16 @@ yaml_raw_val() { # $1=文件 $2=顶层键 $3=二级键
   esac
 }
 
-# yaml_insert_sub 在文件的 top: 段头之后插入一行二级键（YAML 段内键序无关）
+# yaml_insert_sub 在文件的 top: 段头之后插入一行二级键（YAML 段内键序无关）。
+# 幂等保护：目标段内已存在该键时直接跳过——即使上游检测误判也不会产生重复键
+# （重复键会导致后端 YAML 严格解析失败、拒绝启动，见 2026-11-03 czfcms 事故）。
 yaml_insert_sub() { # $1=文件 $2=顶层键 $3=插入行
-  local f="$1" top="$2" newline="$3" tmp
+  local f="$1" top="$2" newline="$3" sub tmp
+  sub="$(printf '%s' "$newline" | sed 's/^  \([A-Za-z_][A-Za-z0-9_-]*\):.*/\1/')"
+  if yaml_sub_keys "$f" "$top" | grep -qx "$sub"; then
+    c_warn "  跳过补写 $top.$sub：该键已存在（幂等保护）"
+    return 0
+  fi
   tmp="$(mktemp -t novablog-ins.XXXXXX)" || return 1
   awk -v top="$top" -v nl="$newline" \
     '!done && $0 ~ "^"top":" { print; print nl; done=1; next } { print }' "$f" > "$tmp" \
@@ -1420,6 +1427,9 @@ config_diff_patch() { # $1=本地 config.yaml $2=example 文件 $3=版本标签
 
   echo
   c_info "----- 检测到 $ref 新增配置，逐项确认（回车=example 默认值）-----"
+  # 修改前强制备份：单键插入路径（yaml_insert_sub）会原地改写文件，
+  # 必须与整段追加路径一样可回滚、可取证（原实现无备份，误判时无法还原）
+  cp "$local_cfg" "${local_cfg}.patchbak-$(date '+%Y%m%d%H%M%S')" 2>/dev/null || true
   local patch_file patched_top p top sub raw val line_out
   EXTRA_MOUNTS_NEW=""
   patch_file="$(mktemp -t novablog-patch.XXXXXX)" || return 1
