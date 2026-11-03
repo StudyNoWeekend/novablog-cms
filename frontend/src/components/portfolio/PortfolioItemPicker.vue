@@ -14,14 +14,8 @@
     </a-steps>
 
     <!-- 步骤一：媒体库图片列表 -->
-    <div v-if="currentStep === 0">
+    <div v-show="currentStep === 0">
       <div class="step1-toolbar">
-        <a-input-search
-          v-model:value="mediaKeyword"
-          :placeholder="t('portfolio.picker.searchPlaceholder')"
-          style="width: 240px"
-          allow-clear
-        />
         <input
           ref="uploadInputRef"
           type="file"
@@ -34,41 +28,18 @@
           <UploadOutlined /> {{ t('portfolio.picker.uploadLocal') }}
         </a-button>
       </div>
-      <a-spin :spinning="mediaLoading">
-        <a-empty
-          v-if="!mediaLoading && mediaList.length === 0"
-          :description="t('portfolio.picker.noImage')"
-          style="margin-top: 32px"
-        />
-        <div v-else class="picker-grid">
-          <div
-            v-for="item in mediaList"
-            :key="item.id"
-            class="picker-item"
-            :class="{ selected: selectedMediaId === item.id }"
-            @click="handleSelectMedia(item)"
-          >
-            <img :src="item.url" :alt="item.filename" />
-            <div class="picker-item-name" :title="item.filename">{{ item.filename }}</div>
-            <div v-if="selectedMediaId === item.id" class="selected-overlay">
-              <CheckCircleFilled />
-            </div>
-          </div>
-        </div>
-      </a-spin>
-      <div v-if="mediaTotal > mediaPageSize" class="picker-pagination">
-        <a-pagination
-          :current="mediaPage"
-          :page-size="mediaPageSize"
-          :total="mediaTotal"
-          size="small"
-          @change="handleMediaPageChange"
-        />
-      </div>
+      <!-- 两栏媒体浏览器：文件夹树 + 文件区（含文件夹/文件名搜索） -->
+      <MediaBrowser
+        ref="mediaBrowserRef"
+        module="portfolio"
+        :file-type="1"
+        :selected-id="selectedMediaId"
+        @select="handleSelectMedia"
+      />
     </div>
 
     <!-- 步骤二：预设列表 -->
-    <div v-else-if="currentStep === 1">
+    <div v-show="currentStep === 1">
       <div class="step2-toolbar">
         <span class="step2-hint">{{ t('portfolio.picker.presetHint') }}</span>
         <a-button size="small" :aria-label="t('portfolio.picker.makePreset')" @click="workbenchVisible = true">
@@ -101,7 +72,7 @@
     </div>
 
     <!-- 步骤三：填写信息 -->
-    <div v-else-if="currentStep === 2">
+    <div v-show="currentStep === 2">
       <a-form layout="vertical">
         <a-form-item :label="t('portfolio.item.titleLabel')" required>
           <a-input
@@ -168,7 +139,7 @@ import { CheckCircleFilled, EditOutlined, UploadOutlined } from '@ant-design/ico
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
 import type { MediaPreset } from '@/types/api'
-import { useDebounce } from '@/composables/useDebounce'
+import MediaBrowser from '@/components/media/MediaBrowser.vue'
 import { validateImageFile } from '@/utils/upload'
 import MediaPresetWorkbench from '@/components/media/MediaPresetWorkbench.vue'
 
@@ -198,17 +169,11 @@ const open = ref(props.visible)
 const currentStep = ref(0)
 
 // 步骤一
-const mediaKeyword = ref('')
-const { debouncedValue: debouncedMediaKeyword, setDebounce: setMediaDebounce } = useDebounce(mediaKeyword)
-const mediaList = ref<MediaItem[]>([])
-const mediaLoading = ref(false)
-const mediaPage = ref(1)
-const mediaPageSize = 20
-const mediaTotal = ref(0)
 const selectedMediaId = ref<string | null>(null)
 const selectedMedia = ref<MediaItem | null>(null)
 const uploading = ref(false)
 const uploadInputRef = ref<HTMLInputElement | null>(null)
+const mediaBrowserRef = ref<InstanceType<typeof MediaBrowser> | null>(null)
 
 // 步骤二
 const presetList = ref<MediaPreset[]>([])
@@ -236,7 +201,6 @@ watch(
     open.value = v
     if (v) {
       resetState()
-      fetchMediaList()
     }
   },
 )
@@ -244,37 +208,6 @@ watch(
 watch(open, (v) => {
   if (!v) emit('update:visible', false)
 })
-
-watch(mediaKeyword, setMediaDebounce)
-
-watch(debouncedMediaKeyword, () => {
-  mediaPage.value = 1
-  fetchMediaList()
-})
-
-async function fetchMediaList() {
-  mediaLoading.value = true
-  try {
-    const res = await mediaApi.getList({
-      file_type: 1,
-      keyword: debouncedMediaKeyword.value || undefined,
-      page: mediaPage.value,
-      page_size: mediaPageSize,
-    })
-    mediaList.value = res.list || []
-    mediaTotal.value = res.total || 0
-  } catch {
-    mediaList.value = []
-    mediaTotal.value = 0
-  } finally {
-    mediaLoading.value = false
-  }
-}
-
-function handleMediaPageChange(p: number) {
-  mediaPage.value = p
-  fetchMediaList()
-}
 
 function handleSelectMedia(item: MediaItem) {
   selectedMediaId.value = item.id
@@ -298,8 +231,6 @@ async function handleUploadFile(e: Event) {
   try {
     const res = await mediaApi.uploadWithPreset(file, t('portfolio.picker.defaultPresetName'), { module: 'portfolio' })
     if (res.media && res.preset) {
-      mediaList.value = [res.media, ...mediaList.value]
-      mediaTotal.value += 1
       selectedMediaId.value = res.media.id
       selectedMedia.value = res.media
       currentStep.value = 1
@@ -375,10 +306,6 @@ function handleCancel() {
 
 function resetState() {
   currentStep.value = 0
-  mediaKeyword.value = ''
-  mediaPage.value = 1
-  mediaList.value = []
-  mediaTotal.value = 0
   selectedMediaId.value = null
   selectedMedia.value = null
   presetList.value = []

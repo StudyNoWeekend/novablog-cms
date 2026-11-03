@@ -97,7 +97,8 @@
     "searchPlaceholder": "Search folders or file names...",
     "searchResultFor": "Results for \"{keyword}\"",
     "folderResults": "Folders",
-    "noResults": "No matching folders or files"
+    "noResults": "No matching folders or files",
+    "selectAria": "Select {name}"
   },
   "chooser": {
     "title": "Select Image Version",

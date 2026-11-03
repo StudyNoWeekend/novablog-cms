@@ -2,66 +2,24 @@
   <a-modal
     v-model:open="open"
     :title="$t('travel.coverPicker.title')"
-    width="720px"
+    width="920px"
     :footer="null"
     @cancel="handleClose"
   >
     <div class="cover-picker">
-      <!-- 顶部工具栏 -->
-      <div class="picker-toolbar">
-        <a-input-search
-          v-model:value="keyword"
-          :placeholder="$t('travel.coverPicker.searchPlaceholder')"
-          allow-clear
-          style="width: 260px"
-        />
-      </div>
-
       <!-- 上传进度 -->
       <div v-if="uploading" class="upload-progress-card">
         <a-progress :percent="uploadPercent" size="small" status="active" />
       </div>
 
-      <!-- 图片网格 -->
-      <a-spin :spinning="loading">
-        <div v-if="mediaList.length > 0" class="media-grid">
-          <div
-            v-for="item in mediaList"
-            :key="item.id"
-            class="media-item"
-            :class="{ selected: selectedId === item.id }"
-            role="button"
-            tabindex="0"
-            :aria-label="$t('travel.coverPicker.selectImageAria', { name: item.filename })"
-            :aria-pressed="selectedId === item.id"
-            @click="handleSelect(item)"
-            @keydown.enter="handleSelect(item)"
-          >
-            <img
-              :src="item.thumb_url || item.url"
-              :alt="item.filename"
-              loading="lazy"
-            />
-            <div v-if="selectedId === item.id" class="selected-overlay">
-              <CheckCircleFilled />
-            </div>
-          </div>
-        </div>
-        <a-empty
-          v-else-if="!loading"
-          :description="$t('travel.coverPicker.noImages')"
-          style="margin-top: 48px"
-        />
-      </a-spin>
-
-      <!-- 分页 -->
-      <a-pagination
-        v-if="total > pageSize"
-        :current="page"
-        :page-size="pageSize"
-        :total="total"
-        class="pagination"
-        @change="handlePageChange"
+      <!-- 两栏媒体浏览器：文件夹树 + 文件区（含文件夹/文件名搜索） -->
+      <MediaBrowser
+        v-if="open"
+        ref="browserRef"
+        module="travel"
+        :file-type="1"
+        :selected-id="selectedId"
+        @select="handleSelect"
       />
 
       <!-- 底部操作栏 -->
@@ -124,14 +82,10 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
-import {
-  PictureOutlined,
-  CheckCircleFilled,
-  UploadOutlined,
-  CloseOutlined,
-} from '@ant-design/icons-vue'
+import { UploadOutlined } from '@ant-design/icons-vue'
 import { mediaApi } from '@/api/media'
 import type { MediaItem } from '@/api/media'
+import MediaBrowser from '@/components/media/MediaBrowser.vue'
 import MediaPresetChooser from '@/components/media/MediaPresetChooser.vue'
 
 const { t } = useI18n()
@@ -147,13 +101,8 @@ const emit = defineEmits<{
 }>()
 
 const open = ref(false)
-const mediaList = ref<MediaItem[]>([])
-const loading = ref(false)
-const page = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
-const keyword = ref('')
 const selectedId = ref<string | null>(null)
+const selectedItem = ref<MediaItem | null>(null)
 const selectedUrl = ref('')
 const selectedPresetId = ref<string | undefined>(undefined)
 const selectedFileUrl = ref<string | undefined>(undefined)
@@ -161,22 +110,18 @@ const uploading = ref(false)
 const uploadPercent = ref(0)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const chooserVisible = ref(false)
-
-let keywordDebounceTimer: ReturnType<typeof setTimeout> | null = null
-let skipNextKeywordFetch = false
+const browserRef = ref<InstanceType<typeof MediaBrowser> | null>(null)
 
 watch(
   () => props.visible,
   (v) => {
     open.value = v
     if (v) {
-      page.value = 1
-      skipNextKeywordFetch = true
-      keyword.value = ''
       selectedId.value = null
+      selectedItem.value = null
       selectedUrl.value = ''
       selectedPresetId.value = undefined
-      fetchMedia()
+      selectedFileUrl.value = undefined
     }
   }
 )
@@ -187,48 +132,12 @@ watch(open, (v) => {
   }
 })
 
-watch(keyword, () => {
-  if (skipNextKeywordFetch) {
-    skipNextKeywordFetch = false
-    return
-  }
-  if (keywordDebounceTimer) {
-    clearTimeout(keywordDebounceTimer)
-  }
-  keywordDebounceTimer = setTimeout(() => {
-    page.value = 1
-    fetchMedia()
-  }, 300)
-})
-
-async function fetchMedia() {
-  loading.value = true
-  try {
-    const res = await mediaApi.getList({
-      file_type: 1,
-      keyword: keyword.value || undefined,
-      page: page.value,
-      page_size: pageSize.value,
-    })
-    mediaList.value = res.list || []
-    total.value = res.total || 0
-  } catch {
-    mediaList.value = []
-    total.value = 0
-  } finally {
-    loading.value = false
-  }
-}
-
-function handlePageChange(p: number) {
-  page.value = p
-  fetchMedia()
-}
-
 function handleSelect(item: MediaItem) {
   selectedId.value = item.id
+  selectedItem.value = item
   selectedUrl.value = item.url
   selectedPresetId.value = undefined
+  selectedFileUrl.value = undefined
 }
 
 function handleUploadClick() {
@@ -258,10 +167,11 @@ async function handleFileChange(e: Event) {
     )
     if (res.media && res.preset) {
       selectedId.value = res.media.id
+      selectedItem.value = res.media
       selectedUrl.value = res.preset.output_url || res.media.url
       selectedPresetId.value = res.preset.id
       selectedFileUrl.value = res.preset.file_url || res.media.file_url
-      await fetchMedia()
+      browserRef.value?.refresh()
     }
   } catch {
     message.error(t('travel.coverPicker.uploadFailed'))
@@ -314,10 +224,6 @@ function handleClose() {
   flex-direction: column;
 }
 
-.picker-toolbar {
-  margin-bottom: 16px;
-}
-
 .upload-progress-card {
   margin-bottom: 12px;
   padding: 8px 12px;
@@ -325,75 +231,6 @@ function handleClose() {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
-}
-
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  max-height: 360px;
-  overflow-y: auto;
-  padding: 4px;
-}
-
-@media (max-width: 768px) {
-  .media-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .media-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.media-item {
-  aspect-ratio: 1;
-  position: relative;
-  cursor: pointer;
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  border: 2px solid transparent;
-  background: var(--bg-card);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.media-item:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-card);
-}
-
-.media-item.selected {
-  border-color: var(--color-primary);
-}
-
-.media-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.media-item:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.selected-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(82, 111, 232, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: var(--color-primary);
-}
-
-.pagination {
-  margin-top: 16px;
-  text-align: center;
 }
 
 .picker-footer {

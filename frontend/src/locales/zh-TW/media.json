@@ -97,7 +97,8 @@
     "searchPlaceholder": "搜尋資料夾或檔名...",
     "searchResultFor": "搜尋「{keyword}」的結果",
     "folderResults": "資料夾",
-    "noResults": "沒有找到符合的資料夾或檔案"
+    "noResults": "沒有找到符合的資料夾或檔案",
+    "selectAria": "選擇 {name}"
   },
   "chooser": {
     "title": "選擇圖片版本",

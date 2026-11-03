@@ -97,7 +97,8 @@
     "searchPlaceholder": "フォルダ名またはファイル名を検索...",
     "searchResultFor": "「{keyword}」の検索結果",
     "folderResults": "フォルダ",
-    "noResults": "一致するフォルダやファイルが見つかりません"
+    "noResults": "一致するフォルダやファイルが見つかりません",
+    "selectAria": "{name} を選択"
   },
   "chooser": {
     "title": "画像バージョンを選択",

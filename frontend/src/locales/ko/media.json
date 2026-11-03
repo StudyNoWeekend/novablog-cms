@@ -97,7 +97,8 @@
     "searchPlaceholder": "폴더 또는 파일 이름 검색...",
     "searchResultFor": "\"{keyword}\" 검색 결과",
     "folderResults": "폴더",
-    "noResults": "일치하는 폴더나 파일이 없습니다"
+    "noResults": "일치하는 폴더나 파일이 없습니다",
+    "selectAria": "{name} 선택"
   },
   "chooser": {
     "title": "이미지 버전 선택",

@@ -97,7 +97,8 @@
     "searchPlaceholder": "搜索文件夹或文件名...",
     "searchResultFor": "搜索“{keyword}”的结果",
     "folderResults": "文件夹",
-    "noResults": "没有找到匹配的文件夹或文件"
+    "noResults": "没有找到匹配的文件夹或文件",
+    "selectAria": "选择 {name}"
   },
   "chooser": {
     "title": "选择图片版本",
